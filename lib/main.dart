@@ -3,12 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'app/providers.dart';
 import 'app/router.dart';
 import 'app/theme.dart';
 import 'core/logger.dart';
+import 'data/database.dart';
+import 'data/seed/seed_runner.dart';
 import 'l10n/app_localizations.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -32,7 +35,18 @@ void main() {
     return true;
   };
 
-  runApp(const ProviderScope(child: GymLogApp()));
+  // Reference data + the placeholder exercise catalog (DM 12) must exist
+  // before any screen queries them; done once here, ahead of the first
+  // frame, so the UI never has to special-case an unseeded database.
+  final db = AppDatabase();
+  await SeedRunner(db).run();
+
+  runApp(
+    ProviderScope(
+      overrides: [appDatabaseProvider.overrideWithValue(db)],
+      child: const GymLogApp(),
+    ),
+  );
 }
 
 class GymLogApp extends StatelessWidget {

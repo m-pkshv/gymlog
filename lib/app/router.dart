@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/exercises/create_exercise_screen.dart';
 import '../features/exercises/screen.dart';
 import '../features/history/screen.dart';
 import '../features/more/screen.dart';
@@ -35,6 +36,18 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: '/exercises',
               builder: (_, _) => const ExercisesScreen(),
+              routes: [
+                GoRoute(
+                  path: 'new',
+                  // Creation forms are full-screen modals (04_UI_UX_SPEC.md,
+                  // section 6).
+                  pageBuilder: (_, state) => MaterialPage(
+                    key: state.pageKey,
+                    fullscreenDialog: true,
+                    child: const CreateExerciseScreen(),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

@@ -23,5 +23,65 @@
   "tabMore": "More",
   "@tabMore": {
     "description": "Bottom navigation label for the More tab (S-11)."
+  },
+  "exercisesEmptyTitle": "No exercises yet",
+  "@exercisesEmptyTitle": {
+    "description": "Empty state title on the Exercises list (S-06) when the catalog has no entries."
+  },
+  "exercisesLoadError": "Couldn't load exercises",
+  "@exercisesLoadError": {
+    "description": "Error state message on the Exercises list (S-06)."
+  },
+  "createExerciseAction": "Create exercise",
+  "@createExerciseAction": {
+    "description": "FAB tooltip/label and empty-state action on the Exercises list (S-06)."
+  },
+  "createExerciseTitle": "New exercise",
+  "@createExerciseTitle": {
+    "description": "Title of the create-exercise form (S-08)."
+  },
+  "exerciseNameLabel": "Name",
+  "@exerciseNameLabel": {
+    "description": "Label for the exercise name field on the create-exercise form (S-08)."
+  },
+  "exerciseNameRequiredError": "Enter a name",
+  "@exerciseNameRequiredError": {
+    "description": "Validation error when the exercise name field is left empty (S-08)."
+  },
+  "exerciseTypeLabel": "Type",
+  "@exerciseTypeLabel": {
+    "description": "Label for the exercise type field on the create-exercise form (S-08)."
+  },
+  "exerciseTypeStrength": "Strength",
+  "@exerciseTypeStrength": {
+    "description": "ExerciseType.strength display name."
+  },
+  "exerciseTypeCardio": "Cardio",
+  "@exerciseTypeCardio": {
+    "description": "ExerciseType.cardio display name."
+  },
+  "exerciseTypeReps": "Reps",
+  "@exerciseTypeReps": {
+    "description": "ExerciseType.reps display name."
+  },
+  "exerciseTypeTime": "Time",
+  "@exerciseTypeTime": {
+    "description": "ExerciseType.time display name."
+  },
+  "exerciseTypeStretch": "Stretch",
+  "@exerciseTypeStretch": {
+    "description": "ExerciseType.stretch display name."
+  },
+  "createExerciseError": "Couldn't create the exercise",
+  "@createExerciseError": {
+    "description": "Snackbar shown when creating an exercise fails (S-08)."
+  },
+  "actionCreate": "Create",
+  "@actionCreate": {
+    "description": "Submit button label on creation forms (S-08, S-15, ...)."
+  },
+  "actionCancel": "Cancel",
+  "@actionCancel": {
+    "description": "Cancel button label on creation forms and confirmation dialogs."
   }
 }

@@ -25,4 +25,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tabMore => 'More';
+
+  @override
+  String get exercisesEmptyTitle => 'No exercises yet';
+
+  @override
+  String get exercisesLoadError => 'Couldn\'t load exercises';
+
+  @override
+  String get createExerciseAction => 'Create exercise';
+
+  @override
+  String get createExerciseTitle => 'New exercise';
+
+  @override
+  String get exerciseNameLabel => 'Name';
+
+  @override
+  String get exerciseNameRequiredError => 'Enter a name';
+
+  @override
+  String get exerciseTypeLabel => 'Type';
+
+  @override
+  String get exerciseTypeStrength => 'Strength';
+
+  @override
+  String get exerciseTypeCardio => 'Cardio';
+
+  @override
+  String get exerciseTypeReps => 'Reps';
+
+  @override
+  String get exerciseTypeTime => 'Time';
+
+  @override
+  String get exerciseTypeStretch => 'Stretch';
+
+  @override
+  String get createExerciseError => 'Couldn\'t create the exercise';
+
+  @override
+  String get actionCreate => 'Create';
+
+  @override
+  String get actionCancel => 'Cancel';
 }

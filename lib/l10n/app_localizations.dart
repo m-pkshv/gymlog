@@ -133,6 +133,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More'**
   String get tabMore;
+
+  /// Empty state title on the Exercises list (S-06) when the catalog has no entries.
+  ///
+  /// In en, this message translates to:
+  /// **'No exercises yet'**
+  String get exercisesEmptyTitle;
+
+  /// Error state message on the Exercises list (S-06).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load exercises'**
+  String get exercisesLoadError;
+
+  /// FAB tooltip/label and empty-state action on the Exercises list (S-06).
+  ///
+  /// In en, this message translates to:
+  /// **'Create exercise'**
+  String get createExerciseAction;
+
+  /// Title of the create-exercise form (S-08).
+  ///
+  /// In en, this message translates to:
+  /// **'New exercise'**
+  String get createExerciseTitle;
+
+  /// Label for the exercise name field on the create-exercise form (S-08).
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get exerciseNameLabel;
+
+  /// Validation error when the exercise name field is left empty (S-08).
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name'**
+  String get exerciseNameRequiredError;
+
+  /// Label for the exercise type field on the create-exercise form (S-08).
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get exerciseTypeLabel;
+
+  /// ExerciseType.strength display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Strength'**
+  String get exerciseTypeStrength;
+
+  /// ExerciseType.cardio display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Cardio'**
+  String get exerciseTypeCardio;
+
+  /// ExerciseType.reps display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Reps'**
+  String get exerciseTypeReps;
+
+  /// ExerciseType.time display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get exerciseTypeTime;
+
+  /// ExerciseType.stretch display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Stretch'**
+  String get exerciseTypeStretch;
+
+  /// Snackbar shown when creating an exercise fails (S-08).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create the exercise'**
+  String get createExerciseError;
+
+  /// Submit button label on creation forms (S-08, S-15, ...).
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get actionCreate;
+
+  /// Cancel button label on creation forms and confirmation dialogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get actionCancel;
 }
 
 class _AppLocalizationsDelegate

@@ -5,5 +5,20 @@
   "tabHistory": "История",
   "tabExercises": "Упражнения",
   "tabStats": "Статистика",
-  "tabMore": "Ещё"
+  "tabMore": "Ещё",
+  "exercisesEmptyTitle": "Упражнений пока нет",
+  "exercisesLoadError": "Не удалось загрузить упражнения",
+  "createExerciseAction": "Создать упражнение",
+  "createExerciseTitle": "Новое упражнение",
+  "exerciseNameLabel": "Название",
+  "exerciseNameRequiredError": "Введите название",
+  "exerciseTypeLabel": "Тип",
+  "exerciseTypeStrength": "Силовое",
+  "exerciseTypeCardio": "Кардио",
+  "exerciseTypeReps": "На повторения",
+  "exerciseTypeTime": "На время",
+  "exerciseTypeStretch": "Растяжка",
+  "createExerciseError": "Не удалось создать упражнение",
+  "actionCreate": "Создать",
+  "actionCancel": "Отмена"
 }
