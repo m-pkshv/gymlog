@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/router.dart';
 import 'app/theme.dart';
+import 'core/logger.dart';
 import 'l10n/app_localizations.dart';
 
 void main() {
@@ -12,6 +14,24 @@ void main() {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+
+  // Uncaught errors are logged instead of silently disappearing
+  // (05_AI_INSTRUCTIONS.md, section 10: no swallowed errors) — in release
+  // this is the only place these errors are recorded (TS 11.7).
+  final logger = AppLogger();
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    logger.error(
+      details.exceptionAsString(),
+      error: details.exception,
+      stackTrace: details.stack,
+    );
+  };
+  PlatformDispatcher.instance.onError = (error, stackTrace) {
+    logger.error(error.toString(), error: error, stackTrace: stackTrace);
+    return true;
+  };
+
   runApp(const ProviderScope(child: GymLogApp()));
 }
 
