@@ -1,0 +1,10 @@
+targets:
+  $default:
+    builders:
+      drift_dev:
+        options:
+          # Keep generated SQL column/table names identical to the Dart
+          # identifiers used in 06_DATA_MODEL.md, instead of drift's default
+          # snake_case conversion. Makes CHECK constraints and raw SQL in
+          # the codebase easy to cross-reference against the data model doc.
+          case_from_dart_to_sql: preserve
