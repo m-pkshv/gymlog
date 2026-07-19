@@ -25,6 +25,7 @@ part 'database.g.dart';
     MeasurementTypes,
     Exercises,
     ExerciseSecondaryMuscles,
+    ExerciseL10n,
     WorkoutTags,
     Workouts,
     WorkoutTagLinks,

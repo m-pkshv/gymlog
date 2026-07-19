@@ -1996,6 +1996,330 @@ class ExerciseSecondaryMusclesCompanion
   }
 }
 
+class $ExerciseL10nTable extends ExerciseL10n
+    with TableInfo<$ExerciseL10nTable, ExerciseL10nData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ExerciseL10nTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _exerciseIdMeta = const VerificationMeta(
+    'exerciseId',
+  );
+  @override
+  late final GeneratedColumn<String> exerciseId = GeneratedColumn<String>(
+    'exerciseId',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES Exercises (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _localeMeta = const VerificationMeta('locale');
+  @override
+  late final GeneratedColumn<String> locale = GeneratedColumn<String>(
+    'locale',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL CHECK (locale IN (\'ru\', \'en\'))',
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [exerciseId, locale, name, description];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ExerciseL10n';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ExerciseL10nData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('exerciseId')) {
+      context.handle(
+        _exerciseIdMeta,
+        exerciseId.isAcceptableOrUnknown(data['exerciseId']!, _exerciseIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_exerciseIdMeta);
+    }
+    if (data.containsKey('locale')) {
+      context.handle(
+        _localeMeta,
+        locale.isAcceptableOrUnknown(data['locale']!, _localeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_localeMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {exerciseId, locale};
+  @override
+  ExerciseL10nData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ExerciseL10nData(
+      exerciseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}exerciseId'],
+      )!,
+      locale: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}locale'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+    );
+  }
+
+  @override
+  $ExerciseL10nTable createAlias(String alias) {
+    return $ExerciseL10nTable(attachedDatabase, alias);
+  }
+}
+
+class ExerciseL10nData extends DataClass
+    implements Insertable<ExerciseL10nData> {
+  final String exerciseId;
+  final String locale;
+  final String name;
+  final String? description;
+  const ExerciseL10nData({
+    required this.exerciseId,
+    required this.locale,
+    required this.name,
+    this.description,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['exerciseId'] = Variable<String>(exerciseId);
+    map['locale'] = Variable<String>(locale);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    return map;
+  }
+
+  ExerciseL10nCompanion toCompanion(bool nullToAbsent) {
+    return ExerciseL10nCompanion(
+      exerciseId: Value(exerciseId),
+      locale: Value(locale),
+      name: Value(name),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+    );
+  }
+
+  factory ExerciseL10nData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ExerciseL10nData(
+      exerciseId: serializer.fromJson<String>(json['exerciseId']),
+      locale: serializer.fromJson<String>(json['locale']),
+      name: serializer.fromJson<String>(json['name']),
+      description: serializer.fromJson<String?>(json['description']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'exerciseId': serializer.toJson<String>(exerciseId),
+      'locale': serializer.toJson<String>(locale),
+      'name': serializer.toJson<String>(name),
+      'description': serializer.toJson<String?>(description),
+    };
+  }
+
+  ExerciseL10nData copyWith({
+    String? exerciseId,
+    String? locale,
+    String? name,
+    Value<String?> description = const Value.absent(),
+  }) => ExerciseL10nData(
+    exerciseId: exerciseId ?? this.exerciseId,
+    locale: locale ?? this.locale,
+    name: name ?? this.name,
+    description: description.present ? description.value : this.description,
+  );
+  ExerciseL10nData copyWithCompanion(ExerciseL10nCompanion data) {
+    return ExerciseL10nData(
+      exerciseId: data.exerciseId.present
+          ? data.exerciseId.value
+          : this.exerciseId,
+      locale: data.locale.present ? data.locale.value : this.locale,
+      name: data.name.present ? data.name.value : this.name,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ExerciseL10nData(')
+          ..write('exerciseId: $exerciseId, ')
+          ..write('locale: $locale, ')
+          ..write('name: $name, ')
+          ..write('description: $description')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(exerciseId, locale, name, description);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ExerciseL10nData &&
+          other.exerciseId == this.exerciseId &&
+          other.locale == this.locale &&
+          other.name == this.name &&
+          other.description == this.description);
+}
+
+class ExerciseL10nCompanion extends UpdateCompanion<ExerciseL10nData> {
+  final Value<String> exerciseId;
+  final Value<String> locale;
+  final Value<String> name;
+  final Value<String?> description;
+  final Value<int> rowid;
+  const ExerciseL10nCompanion({
+    this.exerciseId = const Value.absent(),
+    this.locale = const Value.absent(),
+    this.name = const Value.absent(),
+    this.description = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ExerciseL10nCompanion.insert({
+    required String exerciseId,
+    required String locale,
+    required String name,
+    this.description = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : exerciseId = Value(exerciseId),
+       locale = Value(locale),
+       name = Value(name);
+  static Insertable<ExerciseL10nData> custom({
+    Expression<String>? exerciseId,
+    Expression<String>? locale,
+    Expression<String>? name,
+    Expression<String>? description,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (exerciseId != null) 'exerciseId': exerciseId,
+      if (locale != null) 'locale': locale,
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ExerciseL10nCompanion copyWith({
+    Value<String>? exerciseId,
+    Value<String>? locale,
+    Value<String>? name,
+    Value<String?>? description,
+    Value<int>? rowid,
+  }) {
+    return ExerciseL10nCompanion(
+      exerciseId: exerciseId ?? this.exerciseId,
+      locale: locale ?? this.locale,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (exerciseId.present) {
+      map['exerciseId'] = Variable<String>(exerciseId.value);
+    }
+    if (locale.present) {
+      map['locale'] = Variable<String>(locale.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ExerciseL10nCompanion(')
+          ..write('exerciseId: $exerciseId, ')
+          ..write('locale: $locale, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $WorkoutTagsTable extends WorkoutTags
     with TableInfo<$WorkoutTagsTable, WorkoutTag> {
   @override
@@ -10298,6 +10622,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ExercisesTable exercises = $ExercisesTable(this);
   late final $ExerciseSecondaryMusclesTable exerciseSecondaryMuscles =
       $ExerciseSecondaryMusclesTable(this);
+  late final $ExerciseL10nTable exerciseL10n = $ExerciseL10nTable(this);
   late final $WorkoutTagsTable workoutTags = $WorkoutTagsTable(this);
   late final $WorkoutsTable workouts = $WorkoutsTable(this);
   late final $WorkoutTagLinksTable workoutTagLinks = $WorkoutTagLinksTable(
@@ -10379,6 +10704,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     measurementTypes,
     exercises,
     exerciseSecondaryMuscles,
+    exerciseL10n,
     workoutTags,
     workouts,
     workoutTagLinks,
@@ -10415,6 +10741,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       result: [
         TableUpdate('ExerciseSecondaryMuscles', kind: UpdateKind.delete),
       ],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'Exercises',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('ExerciseL10n', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -11463,6 +11796,24 @@ final class $$ExercisesTableReferences
     );
   }
 
+  static MultiTypedResultKey<$ExerciseL10nTable, List<ExerciseL10nData>>
+  _exerciseL10nRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.exerciseL10n,
+    aliasName: 'Exercises__id__ExerciseL10n__exerciseId',
+  );
+
+  $$ExerciseL10nTableProcessedTableManager get exerciseL10nRefs {
+    final manager = $$ExerciseL10nTableTableManager(
+      $_db,
+      $_db.exerciseL10n,
+    ).filter((f) => f.exerciseId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_exerciseL10nRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
   static MultiTypedResultKey<$WorkoutExercisesTable, List<WorkoutExercise>>
   _workoutExercisesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.workoutExercises,
@@ -11694,6 +12045,31 @@ class $$ExercisesTableFilterComposer
                     $removeJoinBuilderFromRootComposer,
               ),
         );
+    return f(composer);
+  }
+
+  Expression<bool> exerciseL10nRefs(
+    Expression<bool> Function($$ExerciseL10nTableFilterComposer f) f,
+  ) {
+    final $$ExerciseL10nTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.exerciseL10n,
+      getReferencedColumn: (t) => t.exerciseId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ExerciseL10nTableFilterComposer(
+            $db: $db,
+            $table: $db.exerciseL10n,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
@@ -12056,6 +12432,31 @@ class $$ExercisesTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> exerciseL10nRefs<T extends Object>(
+    Expression<T> Function($$ExerciseL10nTableAnnotationComposer a) f,
+  ) {
+    final $$ExerciseL10nTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.exerciseL10n,
+      getReferencedColumn: (t) => t.exerciseId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ExerciseL10nTableAnnotationComposer(
+            $db: $db,
+            $table: $db.exerciseL10n,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> workoutExercisesRefs<T extends Object>(
     Expression<T> Function($$WorkoutExercisesTableAnnotationComposer a) f,
   ) {
@@ -12177,6 +12578,7 @@ class $$ExercisesTableTableManager
             bool primaryMuscleGroupId,
             bool equipmentId,
             bool exerciseSecondaryMusclesRefs,
+            bool exerciseL10nRefs,
             bool workoutExercisesRefs,
             bool templateExercisesRefs,
             bool personalRecordsRefs,
@@ -12279,6 +12681,7 @@ class $$ExercisesTableTableManager
                 primaryMuscleGroupId = false,
                 equipmentId = false,
                 exerciseSecondaryMusclesRefs = false,
+                exerciseL10nRefs = false,
                 workoutExercisesRefs = false,
                 templateExercisesRefs = false,
                 personalRecordsRefs = false,
@@ -12289,6 +12692,7 @@ class $$ExercisesTableTableManager
                   explicitlyWatchedTables: [
                     if (exerciseSecondaryMusclesRefs)
                       db.exerciseSecondaryMuscles,
+                    if (exerciseL10nRefs) db.exerciseL10n,
                     if (workoutExercisesRefs) db.workoutExercises,
                     if (templateExercisesRefs) db.templateExercises,
                     if (personalRecordsRefs) db.personalRecords,
@@ -12357,6 +12761,27 @@ class $$ExercisesTableTableManager
                                 table,
                                 p0,
                               ).exerciseSecondaryMusclesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.exerciseId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (exerciseL10nRefs)
+                        await $_getPrefetchedData<
+                          Exercise,
+                          $ExercisesTable,
+                          ExerciseL10nData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ExercisesTableReferences
+                              ._exerciseL10nRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ExercisesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).exerciseL10nRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.exerciseId == item.id,
@@ -12471,6 +12896,7 @@ typedef $$ExercisesTableProcessedTableManager =
         bool primaryMuscleGroupId,
         bool equipmentId,
         bool exerciseSecondaryMusclesRefs,
+        bool exerciseL10nRefs,
         bool workoutExercisesRefs,
         bool templateExercisesRefs,
         bool personalRecordsRefs,
@@ -12847,6 +13273,307 @@ typedef $$ExerciseSecondaryMusclesTableProcessedTableManager =
       (ExerciseSecondaryMuscle, $$ExerciseSecondaryMusclesTableReferences),
       ExerciseSecondaryMuscle,
       PrefetchHooks Function({bool exerciseId, bool muscleGroupId})
+    >;
+typedef $$ExerciseL10nTableCreateCompanionBuilder =
+    ExerciseL10nCompanion Function({
+      required String exerciseId,
+      required String locale,
+      required String name,
+      Value<String?> description,
+      Value<int> rowid,
+    });
+typedef $$ExerciseL10nTableUpdateCompanionBuilder =
+    ExerciseL10nCompanion Function({
+      Value<String> exerciseId,
+      Value<String> locale,
+      Value<String> name,
+      Value<String?> description,
+      Value<int> rowid,
+    });
+
+final class $$ExerciseL10nTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $ExerciseL10nTable, ExerciseL10nData> {
+  $$ExerciseL10nTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $ExercisesTable _exerciseIdTable(_$AppDatabase db) =>
+      db.exercises.createAlias('ExerciseL10n__exerciseId__Exercises__id');
+
+  $$ExercisesTableProcessedTableManager get exerciseId {
+    final $_column = $_itemColumn<String>('exerciseId')!;
+
+    final manager = $$ExercisesTableTableManager(
+      $_db,
+      $_db.exercises,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_exerciseIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ExerciseL10nTableFilterComposer
+    extends Composer<_$AppDatabase, $ExerciseL10nTable> {
+  $$ExerciseL10nTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get locale => $composableBuilder(
+    column: $table.locale,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ExercisesTableFilterComposer get exerciseId {
+    final $$ExercisesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.exerciseId,
+      referencedTable: $db.exercises,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ExercisesTableFilterComposer(
+            $db: $db,
+            $table: $db.exercises,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ExerciseL10nTableOrderingComposer
+    extends Composer<_$AppDatabase, $ExerciseL10nTable> {
+  $$ExerciseL10nTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get locale => $composableBuilder(
+    column: $table.locale,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ExercisesTableOrderingComposer get exerciseId {
+    final $$ExercisesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.exerciseId,
+      referencedTable: $db.exercises,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ExercisesTableOrderingComposer(
+            $db: $db,
+            $table: $db.exercises,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ExerciseL10nTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ExerciseL10nTable> {
+  $$ExerciseL10nTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get locale =>
+      $composableBuilder(column: $table.locale, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  $$ExercisesTableAnnotationComposer get exerciseId {
+    final $$ExercisesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.exerciseId,
+      referencedTable: $db.exercises,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ExercisesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.exercises,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ExerciseL10nTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ExerciseL10nTable,
+          ExerciseL10nData,
+          $$ExerciseL10nTableFilterComposer,
+          $$ExerciseL10nTableOrderingComposer,
+          $$ExerciseL10nTableAnnotationComposer,
+          $$ExerciseL10nTableCreateCompanionBuilder,
+          $$ExerciseL10nTableUpdateCompanionBuilder,
+          (ExerciseL10nData, $$ExerciseL10nTableReferences),
+          ExerciseL10nData,
+          PrefetchHooks Function({bool exerciseId})
+        > {
+  $$ExerciseL10nTableTableManager(_$AppDatabase db, $ExerciseL10nTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ExerciseL10nTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ExerciseL10nTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ExerciseL10nTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> exerciseId = const Value.absent(),
+                Value<String> locale = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ExerciseL10nCompanion(
+                exerciseId: exerciseId,
+                locale: locale,
+                name: name,
+                description: description,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String exerciseId,
+                required String locale,
+                required String name,
+                Value<String?> description = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ExerciseL10nCompanion.insert(
+                exerciseId: exerciseId,
+                locale: locale,
+                name: name,
+                description: description,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ExerciseL10nTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({exerciseId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (exerciseId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.exerciseId,
+                                referencedTable: $$ExerciseL10nTableReferences
+                                    ._exerciseIdTable(db),
+                                referencedColumn: $$ExerciseL10nTableReferences
+                                    ._exerciseIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ExerciseL10nTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ExerciseL10nTable,
+      ExerciseL10nData,
+      $$ExerciseL10nTableFilterComposer,
+      $$ExerciseL10nTableOrderingComposer,
+      $$ExerciseL10nTableAnnotationComposer,
+      $$ExerciseL10nTableCreateCompanionBuilder,
+      $$ExerciseL10nTableUpdateCompanionBuilder,
+      (ExerciseL10nData, $$ExerciseL10nTableReferences),
+      ExerciseL10nData,
+      PrefetchHooks Function({bool exerciseId})
     >;
 typedef $$WorkoutTagsTableCreateCompanionBuilder =
     WorkoutTagsCompanion Function({
@@ -19668,6 +20395,8 @@ class $AppDatabaseManager {
         _db,
         _db.exerciseSecondaryMuscles,
       );
+  $$ExerciseL10nTableTableManager get exerciseL10n =>
+      $$ExerciseL10nTableTableManager(_db, _db.exerciseL10n);
   $$WorkoutTagsTableTableManager get workoutTags =>
       $$WorkoutTagsTableTableManager(_db, _db.workoutTags);
   $$WorkoutsTableTableManager get workouts =>

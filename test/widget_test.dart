@@ -4,7 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymlog/main.dart';
 
 void main() {
-  testWidgets('GymLogApp renders without crashing', (WidgetTester tester) async {
+  testWidgets('GymLogApp renders without crashing', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(const ProviderScope(child: GymLogApp()));
 
     expect(find.text('GymLog'), findsOneWidget);

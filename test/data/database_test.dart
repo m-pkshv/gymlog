@@ -27,6 +27,7 @@ void main() {
         'MeasurementTypes',
         'Exercises',
         'ExerciseSecondaryMuscles',
+        'ExerciseL10n',
         'WorkoutTags',
         'Workouts',
         'WorkoutTagLinks',

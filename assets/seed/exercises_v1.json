@@ -1,0 +1,80 @@
+{
+  "seedVersion": 1,
+  "exercises": [
+    {
+      "id": "squat",
+      "name": { "ru": "Приседания со штангой", "en": "Barbell Squat" },
+      "description": {
+        "ru": "Базовое упражнение для мышц ног со штангой на спине.",
+        "en": "Compound lower-body exercise with a barbell on the back."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": ["glutes", "hamstrings"],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "running",
+      "name": { "ru": "Бег", "en": "Running" },
+      "description": {
+        "ru": "Кардио-нагрузка на беговой дорожке или на улице.",
+        "en": "Cardio activity on a treadmill or outdoors."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "push_up",
+      "name": { "ru": "Отжимания от пола", "en": "Push-Up" },
+      "description": {
+        "ru": "Отжимания с собственным весом для груди и трицепса.",
+        "en": "Bodyweight exercise for chest and triceps."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": ["triceps", "shoulders"],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "plank",
+      "name": { "ru": "Планка", "en": "Plank" },
+      "description": {
+        "ru": "Статическое удержание корпуса на предплечьях и носках.",
+        "en": "Static core hold on forearms and toes."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "time",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "hamstring_stretch",
+      "name": { "ru": "Растяжка задней поверхности бедра", "en": "Hamstring Stretch" },
+      "description": {
+        "ru": "Растяжка задней поверхности бедра сидя или стоя.",
+        "en": "Stretch for the back of the thigh, seated or standing."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "stretch",
+      "primaryMuscle": "hamstrings",
+      "secondaryMuscles": [],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    }
+  ]
+}

@@ -64,3 +64,22 @@ class ExerciseSecondaryMuscles extends Table {
   @override
   Set<Column> get primaryKey => {exerciseId, muscleGroupId};
 }
+
+/// Localized name/description of a built-in exercise (06_DATA_MODEL.md,
+/// section 12). `Exercises.name`/`description` hold the canonical English
+/// text; this table holds the per-locale display text written by the seed.
+/// Not used for user-created exercises (they aren't translated).
+class ExerciseL10n extends Table {
+  TextColumn get exerciseId =>
+      text().references(Exercises, #id, onDelete: KeyAction.cascade)();
+
+  TextColumn get locale =>
+      text().customConstraint("NOT NULL CHECK (locale IN ('ru', 'en'))")();
+
+  TextColumn get name => text()();
+
+  TextColumn get description => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {exerciseId, locale};
+}
