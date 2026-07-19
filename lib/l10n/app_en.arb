@@ -1,0 +1,27 @@
+{
+  "@@locale": "en",
+  "appTitle": "GymLog",
+  "@appTitle": {
+    "description": "Application title, used as the OS task-switcher label."
+  },
+  "tabToday": "Today",
+  "@tabToday": {
+    "description": "Bottom navigation label for the Today tab (S-01)."
+  },
+  "tabHistory": "History",
+  "@tabHistory": {
+    "description": "Bottom navigation label for the History tab (S-02)."
+  },
+  "tabExercises": "Exercises",
+  "@tabExercises": {
+    "description": "Bottom navigation label for the Exercises tab (S-06)."
+  },
+  "tabStats": "Stats",
+  "@tabStats": {
+    "description": "Bottom navigation label for the Stats tab (S-09)."
+  },
+  "tabMore": "More",
+  "@tabMore": {
+    "description": "Bottom navigation label for the More tab (S-11)."
+  }
+}

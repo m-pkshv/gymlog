@@ -1,0 +1,9 @@
+{
+  "@@locale": "ru",
+  "appTitle": "GymLog",
+  "tabToday": "Сегодня",
+  "tabHistory": "История",
+  "tabExercises": "Упражнения",
+  "tabStats": "Статистика",
+  "tabMore": "Ещё"
+}

@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'app/router.dart';
+import 'app/theme.dart';
+import 'l10n/app_localizations.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
@@ -11,19 +15,20 @@ void main() {
   runApp(const ProviderScope(child: GymLogApp()));
 }
 
-/// Placeholder root widget for Stage 0. Full theming, routing (go_router)
-/// and localization are wired in a later Stage 0 step.
 class GymLogApp extends StatelessWidget {
   const GymLogApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'GymLog',
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4C7BD9))),
-      home: const Scaffold(
-        body: Center(child: Text('GymLog')),
-      ),
+    return MaterialApp.router(
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+      theme: buildLightTheme(),
+      darkTheme: buildDarkTheme(),
+      // Default per UX 9; a settings-driven override lands with Stage 9.
+      themeMode: ThemeMode.system,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      routerConfig: appRouter,
     );
   }
 }
