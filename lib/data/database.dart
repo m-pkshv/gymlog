@@ -55,6 +55,11 @@ class AppDatabase extends _$AppDatabase {
       onCreate: (Migrator m) async {
         await m.createAll();
       },
+      beforeOpen: (details) async {
+        // Foreign keys are off by default in SQLite; DM 3 requires them on
+        // (needed for ExerciseSecondaryMuscles' cascade delete, among others).
+        await customStatement('PRAGMA foreign_keys = ON');
+      },
     );
   }
 
