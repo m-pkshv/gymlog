@@ -631,4 +631,70 @@ void main() {
       },
     );
   });
+
+  group('"Delete" + Undo (Stage 3, S-02, DM 10)', () {
+    testWidgets(
+      'deleting a workout hides it immediately and shows an Undo snackbar',
+      (tester) async {
+        await _insertCompletedWorkout(
+          db,
+          id: 'w1',
+          date: '2026-07-01',
+          name: 'Leg day',
+        );
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byIcon(Icons.more_vert));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Delete'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Leg day'), findsNothing);
+        expect(find.text('Workout deleted'), findsOneWidget);
+        expect(find.text('Undo'), findsOneWidget);
+
+        final workout = await (db.select(
+          db.workouts,
+        )..where((w) => w.id.equals('w1'))).getSingle();
+        expect(workout.isDeleted, isTrue);
+
+        // Let the snackbar's own 5s auto-dismiss timer fire and finish its
+        // exit animation before tearing down, or flutter_test flags it as
+        // still pending.
+        await tester.pump(const Duration(seconds: 6));
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets('"Undo" restores the deleted workout', (tester) async {
+      await _insertCompletedWorkout(
+        db,
+        id: 'w1',
+        date: '2026-07-01',
+        name: 'Leg day',
+      );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+      expect(find.text('Leg day'), findsNothing);
+
+      await tester.tap(find.text('Undo'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Leg day'), findsOneWidget);
+      final workout = await (db.select(
+        db.workouts,
+      )..where((w) => w.id.equals('w1'))).getSingle();
+      expect(workout.isDeleted, isFalse);
+
+      await _unmountAndFlush(tester);
+    });
+  });
 }

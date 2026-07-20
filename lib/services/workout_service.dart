@@ -96,4 +96,19 @@ class WorkoutService {
     await _workoutRepository.updateWorkout(updated);
     return Ok(updated);
   }
+
+  /// "⋮ → Удалить" (S-02, DM 10): soft-deletes [workout] with a 5-second
+  /// Undo window. Rejects an `inProgress` workout — DM 10: "Удаление
+  /// inProgress запрещено (сначала отменить)".
+  Future<Result<Workout, AppError>> delete(Workout workout) async {
+    if (workout.status == WorkoutStatus.inProgress) {
+      return const Err(
+        ValidationError(
+          'An in-progress workout cannot be deleted; cancel it first',
+        ),
+      );
+    }
+    await _workoutRepository.deleteWorkout(workout.id);
+    return Ok(workout);
+  }
 }

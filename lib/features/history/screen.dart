@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
+import '../../core/constants.dart';
 import '../../core/date_format.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/workout.dart';
@@ -14,17 +15,17 @@ import '../workout_editor/status_labels.dart';
 import '../workout_editor/widgets/workout_tag_chip.dart';
 import 'copy_workout_flow.dart';
 
-enum _HistoryCardAction { copy }
+enum _HistoryCardAction { copy, delete }
 
 enum _NewWorkoutChoice { scratch, copy }
 
 /// S-02 "История": search by name + date range/statuses/tags filters (all
 /// combinable, 04_UI_UX_SPEC.md section 5; Stage 3). Tapping a card opens
-/// the editor (S-03); the per-card "⋮" menu's "Копировать" action (TS 8
-/// section 8) — "перенести"/"удалить" from the same S-02 menu are separate,
-/// not-yet-done Stage 3 items (move already exists inside the editor;
-/// delete needs the still-pending Undo-delete work); the FAB opens the
-/// "с нуля/из шаблона/копией" creation menu.
+/// the editor (S-03); the per-card "⋮" menu offers "Копировать" (TS 8
+/// section 8) and "Удалить" (soft delete + 5s Undo snackbar, DM 10) —
+/// "перенести" from the same S-02 menu already exists inside the editor
+/// (per-card move is a separate, not-yet-requested Stage 3 item); the FAB
+/// opens the "с нуля/из шаблона/копией" creation menu.
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
 
@@ -145,6 +146,30 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     }
   }
 
+  Future<void> _deleteWorkout(Workout workout) async {
+    final l10n = AppLocalizations.of(context)!;
+    final result = await ref.read(workoutServiceProvider).delete(workout);
+    if (!mounted) return;
+    result.fold(
+      (_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.workoutDeletedMessage),
+            duration: undoSnackbarDuration,
+            action: SnackBarAction(
+              label: l10n.undoAction,
+              onPressed: () =>
+                  ref.read(workoutRepositoryProvider).restoreWorkout(workout.id),
+            ),
+          ),
+        );
+      },
+      (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.deleteWorkoutError))),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -194,6 +219,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   itemBuilder: (context, index) => _WorkoutHistoryTile(
                     entry: entries[index],
                     onCopy: (source) => copyWorkoutFlow(context, ref, source),
+                    onDelete: _deleteWorkout,
                   ),
                 );
               },
@@ -214,10 +240,15 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 }
 
 class _WorkoutHistoryTile extends ConsumerWidget {
-  const _WorkoutHistoryTile({required this.entry, required this.onCopy});
+  const _WorkoutHistoryTile({
+    required this.entry,
+    required this.onCopy,
+    required this.onDelete,
+  });
 
   final WorkoutHistoryEntry entry;
   final void Function(Workout source) onCopy;
+  final void Function(Workout workout) onDelete;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -259,12 +290,18 @@ class _WorkoutHistoryTile extends ConsumerWidget {
               switch (action) {
                 case _HistoryCardAction.copy:
                   onCopy(workout);
+                case _HistoryCardAction.delete:
+                  onDelete(workout);
               }
             },
             itemBuilder: (context) => [
               PopupMenuItem(
                 value: _HistoryCardAction.copy,
                 child: Text(l10n.copyWorkoutAction),
+              ),
+              PopupMenuItem(
+                value: _HistoryCardAction.delete,
+                child: Text(l10n.deleteWorkoutAction),
               ),
             ],
           ),

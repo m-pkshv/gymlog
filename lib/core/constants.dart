@@ -53,3 +53,7 @@ class CommentLengthLimits {
   static const int workoutExercise = 1000;
   static const int exerciseSet = 500;
 }
+
+/// Soft-delete Undo window (06_DATA_MODEL.md, section 10, D-19): how long
+/// the "Отменить" snackbar action stays available after a delete.
+const Duration undoSnackbarDuration = Duration(seconds: 5);

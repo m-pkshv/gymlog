@@ -582,5 +582,21 @@
   "setCommentLabel": "Comment",
   "@setCommentLabel": {
     "description": "Text field label inside the per-set comment dialog (S-03, Stage 3)."
+  },
+  "deleteWorkoutAction": "Delete",
+  "@deleteWorkoutAction": {
+    "description": "\"⋮\" menu action on a History card (S-02, Stage 3, DM 10) that soft-deletes the workout with a 5s Undo snackbar."
+  },
+  "workoutDeletedMessage": "Workout deleted",
+  "@workoutDeletedMessage": {
+    "description": "Snackbar shown after deleting a workout from History (S-02, Stage 3), with an \"Undo\" action."
+  },
+  "undoAction": "Undo",
+  "@undoAction": {
+    "description": "Snackbar action label that reverses a soft delete within the Undo window (DM 10, D-19)."
+  },
+  "deleteWorkoutError": "Couldn't delete the workout",
+  "@deleteWorkoutError": {
+    "description": "Snackbar shown on History (S-02) when deleting a workout is rejected (e.g. it's inProgress, DM 10) or fails."
   }
 }

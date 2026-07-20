@@ -519,4 +519,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setCommentLabel => 'Comment';
+
+  @override
+  String get deleteWorkoutAction => 'Delete';
+
+  @override
+  String get workoutDeletedMessage => 'Workout deleted';
+
+  @override
+  String get undoAction => 'Undo';
+
+  @override
+  String get deleteWorkoutError => 'Couldn\'t delete the workout';
 }

@@ -37,9 +37,9 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
 
   @override
   Future<WorkoutDetails?> getDetails(String workoutId) async {
-    final workoutRow = await (_db.select(
-      _db.workouts,
-    )..where((w) => w.id.equals(workoutId))).getSingleOrNull();
+    final workoutRow = await (_db.select(_db.workouts)..where(
+      (w) => w.id.equals(workoutId) & w.isDeleted.equals(false),
+    )).getSingleOrNull();
     if (workoutRow == null) return null;
 
     final tags = await _tagsForWorkout(workoutId);
@@ -495,5 +495,59 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
         );
       }
     });
+  }
+
+  @override
+  Future<void> deleteWorkout(String workoutId) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await _db.transaction(() async {
+      await (_db.update(
+        _db.workouts,
+      )..where((w) => w.id.equals(workoutId))).write(
+        drift.WorkoutsCompanion(isDeleted: const Value(true), updatedAt: Value(now)),
+      );
+
+      final workoutExerciseIds = await _nonDeletedWorkoutExerciseIds(
+        workoutId,
+      );
+      await (_db.update(_db.workoutExercises)..where(
+        (we) => we.id.isIn(workoutExerciseIds),
+      )).write(drift.WorkoutExercisesCompanion(isDeleted: const Value(true), updatedAt: Value(now)));
+
+      await (_db.update(_db.exerciseSets)..where(
+        (s) => s.workoutExerciseId.isIn(workoutExerciseIds),
+      )).write(drift.ExerciseSetsCompanion(isDeleted: const Value(true), updatedAt: Value(now)));
+    });
+  }
+
+  @override
+  Future<void> restoreWorkout(String workoutId) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await _db.transaction(() async {
+      await (_db.update(
+        _db.workouts,
+      )..where((w) => w.id.equals(workoutId))).write(
+        drift.WorkoutsCompanion(isDeleted: const Value(false), updatedAt: Value(now)),
+      );
+
+      final workoutExerciseIds = await (_db.select(
+        _db.workoutExercises,
+      )..where((we) => we.workoutId.equals(workoutId))).map((we) => we.id).get();
+
+      await (_db.update(_db.workoutExercises)..where(
+        (we) => we.workoutId.equals(workoutId),
+      )).write(drift.WorkoutExercisesCompanion(isDeleted: const Value(false), updatedAt: Value(now)));
+
+      await (_db.update(_db.exerciseSets)..where(
+        (s) => s.workoutExerciseId.isIn(workoutExerciseIds),
+      )).write(drift.ExerciseSetsCompanion(isDeleted: const Value(false), updatedAt: Value(now)));
+    });
+  }
+
+  Future<List<String>> _nonDeletedWorkoutExerciseIds(String workoutId) async {
+    final rows = await (_db.select(_db.workoutExercises)..where(
+      (we) => we.workoutId.equals(workoutId) & we.isDeleted.equals(false),
+    )).get();
+    return rows.map((row) => row.id).toList();
   }
 }

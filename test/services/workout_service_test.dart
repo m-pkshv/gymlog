@@ -188,4 +188,34 @@ void main() {
       },
     );
   });
+
+  group('delete (S-02, DM 10)', () {
+    test('rejects an inProgress workout without touching storage', () async {
+      final workout = _workout(status: WorkoutStatus.inProgress);
+
+      final result = await service.delete(workout);
+
+      expect(result.isErr, isTrue);
+      expect(result.errorOrNull(), isA<ValidationError>());
+      verifyNever(() => repository.deleteWorkout(any()));
+    });
+
+    for (final status in [
+      WorkoutStatus.draft,
+      WorkoutStatus.planned,
+      WorkoutStatus.completed,
+      WorkoutStatus.skipped,
+      WorkoutStatus.cancelled,
+    ]) {
+      test('deletes a ${status.name} workout', () async {
+        when(() => repository.deleteWorkout(any())).thenAnswer((_) async {});
+        final workout = _workout(status: status);
+
+        final result = await service.delete(workout);
+
+        expect(result.isOk, isTrue);
+        verify(() => repository.deleteWorkout(workout.id)).called(1);
+      });
+    }
+  });
 }

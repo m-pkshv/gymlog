@@ -524,4 +524,16 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get setCommentLabel => 'Комментарий';
+
+  @override
+  String get deleteWorkoutAction => 'Удалить';
+
+  @override
+  String get workoutDeletedMessage => 'Тренировка удалена';
+
+  @override
+  String get undoAction => 'Отменить';
+
+  @override
+  String get deleteWorkoutError => 'Не удалось удалить тренировку';
 }

@@ -576,4 +576,78 @@ void main() {
       );
     });
   });
+
+  group('deleteWorkout / restoreWorkout (Stage 3, S-02, DM 10)', () {
+    test(
+      'soft-deletes the workout and cascades to its exercises/sets',
+      () async {
+        final exercise = await exercises.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+        final workout = await workouts.createDraft(
+          date: DateTime(2026, 7, 1),
+        );
+        await workouts.updateWorkout(
+          workout.copyWith(status: WorkoutStatus.completed),
+        );
+        final workoutExercise = await workouts.addExercise(
+          workoutId: workout.id,
+          exerciseId: exercise.id,
+        );
+        await workouts.addSet(
+          workoutExerciseId: workoutExercise.id,
+          isWarmup: false,
+        );
+
+        await workouts.deleteWorkout(workout.id);
+
+        expect(await workouts.getDetails(workout.id), isNull);
+        final history = await workouts.watchHistory().first;
+        expect(history.any((e) => e.workout.id == workout.id), isFalse);
+
+        final workoutRow = await (db.select(
+          db.workouts,
+        )..where((w) => w.id.equals(workout.id))).getSingle();
+        expect(workoutRow.isDeleted, isTrue);
+        final workoutExerciseRow = await (db.select(
+          db.workoutExercises,
+        )..where((we) => we.id.equals(workoutExercise.id))).getSingle();
+        expect(workoutExerciseRow.isDeleted, isTrue);
+        final setRows = await (db.select(
+          db.exerciseSets,
+        )..where((s) => s.workoutExerciseId.equals(workoutExercise.id))).get();
+        expect(setRows.single.isDeleted, isTrue);
+      },
+    );
+
+    test('restoreWorkout reverses a delete within the Undo window', () async {
+      final exercise = await exercises.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 1));
+      await workouts.updateWorkout(
+        workout.copyWith(status: WorkoutStatus.completed),
+      );
+      final workoutExercise = await workouts.addExercise(
+        workoutId: workout.id,
+        exerciseId: exercise.id,
+      );
+      await workouts.addSet(
+        workoutExerciseId: workoutExercise.id,
+        isWarmup: false,
+      );
+      await workouts.deleteWorkout(workout.id);
+
+      await workouts.restoreWorkout(workout.id);
+
+      final details = await workouts.getDetails(workout.id);
+      expect(details, isNotNull);
+      expect(details!.exercises, hasLength(1));
+      expect(details.exercises.single.sets, hasLength(1));
+      final history = await workouts.watchHistory().first;
+      expect(history.any((e) => e.workout.id == workout.id), isTrue);
+    });
+  });
 }

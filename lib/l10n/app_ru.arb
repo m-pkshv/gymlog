@@ -165,5 +165,9 @@
   "exerciseCommentLabel": "Комментарий",
   "setCommentAction": "Комментарий",
   "setCommentTitle": "Комментарий к подходу",
-  "setCommentLabel": "Комментарий"
+  "setCommentLabel": "Комментарий",
+  "deleteWorkoutAction": "Удалить",
+  "workoutDeletedMessage": "Тренировка удалена",
+  "undoAction": "Отменить",
+  "deleteWorkoutError": "Не удалось удалить тренировку"
 }

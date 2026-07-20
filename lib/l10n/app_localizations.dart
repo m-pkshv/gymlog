@@ -1093,6 +1093,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Comment'**
   String get setCommentLabel;
+
+  /// "⋮" menu action on a History card (S-02, Stage 3, DM 10) that soft-deletes the workout with a 5s Undo snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteWorkoutAction;
+
+  /// Snackbar shown after deleting a workout from History (S-02, Stage 3), with an "Undo" action.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout deleted'**
+  String get workoutDeletedMessage;
+
+  /// Snackbar action label that reverses a soft delete within the Undo window (DM 10, D-19).
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undoAction;
+
+  /// Snackbar shown on History (S-02) when deleting a workout is rejected (e.g. it's inProgress, DM 10) or fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the workout'**
+  String get deleteWorkoutError;
 }
 
 class _AppLocalizationsDelegate

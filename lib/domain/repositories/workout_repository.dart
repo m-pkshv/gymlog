@@ -82,4 +82,16 @@ abstract class WorkoutRepository {
     required String workoutId,
     required List<String> orderedWorkoutExerciseIds,
   });
+
+  /// Soft-deletes [workoutId] (S-02 "⋮ → Удалить", DM 10): marks the
+  /// workout and every one of its non-deleted `WorkoutExercise`/
+  /// `ExerciseSet` rows `isDeleted = true`, in one transaction. Callers
+  /// (`workout_service`) are responsible for the DM 10 rule that an
+  /// `inProgress` workout can't be deleted — this just performs the write.
+  Future<void> deleteWorkout(String workoutId);
+
+  /// Reverses [deleteWorkout] within the DM 10 5-second Undo window:
+  /// un-marks `isDeleted` on the workout and the same `WorkoutExercise`/
+  /// `ExerciseSet` rows it cascaded to.
+  Future<void> restoreWorkout(String workoutId);
 }
