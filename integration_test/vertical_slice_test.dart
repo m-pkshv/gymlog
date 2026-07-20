@@ -74,7 +74,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), 'Overhead Press');
+    await tester.enterText(find.byType(TextField).first, 'Overhead Press');
     await tester.pump();
     await tester.tap(find.widgetWithText(FilledButton, 'Create'));
     await tester.pumpAndSettle();

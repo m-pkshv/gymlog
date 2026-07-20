@@ -379,6 +379,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{minutes} min'**
   String workoutDurationMinutes(int minutes);
+
+  /// No description provided for @muscleGroupChest.
+  ///
+  /// In en, this message translates to:
+  /// **'Chest'**
+  String get muscleGroupChest;
+
+  /// No description provided for @muscleGroupBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get muscleGroupBack;
+
+  /// No description provided for @muscleGroupShoulders.
+  ///
+  /// In en, this message translates to:
+  /// **'Shoulders'**
+  String get muscleGroupShoulders;
+
+  /// No description provided for @muscleGroupBiceps.
+  ///
+  /// In en, this message translates to:
+  /// **'Biceps'**
+  String get muscleGroupBiceps;
+
+  /// No description provided for @muscleGroupTriceps.
+  ///
+  /// In en, this message translates to:
+  /// **'Triceps'**
+  String get muscleGroupTriceps;
+
+  /// No description provided for @muscleGroupForearms.
+  ///
+  /// In en, this message translates to:
+  /// **'Forearms'**
+  String get muscleGroupForearms;
+
+  /// No description provided for @muscleGroupAbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Abs'**
+  String get muscleGroupAbs;
+
+  /// No description provided for @muscleGroupGlutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Glutes'**
+  String get muscleGroupGlutes;
+
+  /// No description provided for @muscleGroupQuads.
+  ///
+  /// In en, this message translates to:
+  /// **'Quads'**
+  String get muscleGroupQuads;
+
+  /// No description provided for @muscleGroupHamstrings.
+  ///
+  /// In en, this message translates to:
+  /// **'Hamstrings'**
+  String get muscleGroupHamstrings;
+
+  /// No description provided for @muscleGroupCalves.
+  ///
+  /// In en, this message translates to:
+  /// **'Calves'**
+  String get muscleGroupCalves;
+
+  /// No description provided for @muscleGroupFullBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Full body'**
+  String get muscleGroupFullBody;
+
+  /// No description provided for @muscleGroupCardioSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Cardio'**
+  String get muscleGroupCardioSystem;
+
+  /// No description provided for @equipmentBarbell.
+  ///
+  /// In en, this message translates to:
+  /// **'Barbell'**
+  String get equipmentBarbell;
+
+  /// No description provided for @equipmentDumbbell.
+  ///
+  /// In en, this message translates to:
+  /// **'Dumbbell'**
+  String get equipmentDumbbell;
+
+  /// No description provided for @equipmentKettlebell.
+  ///
+  /// In en, this message translates to:
+  /// **'Kettlebell'**
+  String get equipmentKettlebell;
+
+  /// No description provided for @equipmentMachine.
+  ///
+  /// In en, this message translates to:
+  /// **'Machine'**
+  String get equipmentMachine;
+
+  /// No description provided for @equipmentCable.
+  ///
+  /// In en, this message translates to:
+  /// **'Cable machine'**
+  String get equipmentCable;
+
+  /// No description provided for @equipmentBodyweight.
+  ///
+  /// In en, this message translates to:
+  /// **'Bodyweight'**
+  String get equipmentBodyweight;
+
+  /// No description provided for @equipmentBand.
+  ///
+  /// In en, this message translates to:
+  /// **'Resistance band'**
+  String get equipmentBand;
+
+  /// No description provided for @equipmentCardioMachine.
+  ///
+  /// In en, this message translates to:
+  /// **'Cardio machine'**
+  String get equipmentCardioMachine;
+
+  /// No description provided for @equipmentOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get equipmentOther;
+
+  /// No description provided for @effortMetricNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get effortMetricNone;
+
+  /// No description provided for @effortMetricRpe.
+  ///
+  /// In en, this message translates to:
+  /// **'RPE'**
+  String get effortMetricRpe;
+
+  /// No description provided for @effortMetricRir.
+  ///
+  /// In en, this message translates to:
+  /// **'RIR'**
+  String get effortMetricRir;
+
+  /// Label for the primary muscle group field on the exercise form (S-08).
+  ///
+  /// In en, this message translates to:
+  /// **'Primary muscle'**
+  String get exercisePrimaryMuscleLabel;
+
+  /// Label for the secondary muscle groups field on the exercise form (S-08).
+  ///
+  /// In en, this message translates to:
+  /// **'Secondary muscles'**
+  String get exerciseSecondaryMusclesLabel;
+
+  /// Label for the equipment field on the exercise form (S-08).
+  ///
+  /// In en, this message translates to:
+  /// **'Equipment'**
+  String get exerciseEquipmentLabel;
+
+  /// Label for the effort metric field on the exercise form (S-08), shown only for strength exercises.
+  ///
+  /// In en, this message translates to:
+  /// **'Effort metric'**
+  String get exerciseEffortMetricLabel;
+
+  /// Label for the description field on the exercise form (S-08).
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get exerciseDescriptionLabel;
+
+  /// Label for the YouTube URL field on the exercise form (S-08).
+  ///
+  /// In en, this message translates to:
+  /// **'YouTube link'**
+  String get exerciseYoutubeUrlLabel;
+
+  /// Non-blocking hint under the YouTube field when the URL doesn't look like a youtube.com/youtu.be link (DM 6.1: a soft rule, saving stays allowed).
+  ///
+  /// In en, this message translates to:
+  /// **'Doesn\'t look like a YouTube link'**
+  String get exerciseYoutubeUrlWarning;
+
+  /// "No selection" option for the optional primary muscle/equipment dropdowns on the exercise form (S-08).
+  ///
+  /// In en, this message translates to:
+  /// **'Not specified'**
+  String get exerciseNotSpecified;
 }
 
 class _AppLocalizationsDelegate

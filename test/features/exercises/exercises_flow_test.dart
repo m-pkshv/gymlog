@@ -100,7 +100,7 @@ void main() {
     expect(createButtonFinder, findsOneWidget);
     expect(tester.widget<FilledButton>(createButtonFinder).onPressed, isNull);
 
-    await tester.enterText(find.byType(TextField), 'Push-Up');
+    await tester.enterText(find.byType(TextField).first, 'Push-Up');
     await tester.pump();
 
     expect(
@@ -121,7 +121,7 @@ void main() {
       await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'Push-Up');
+      await tester.enterText(find.byType(TextField).first, 'Push-Up');
       await tester.pump();
       await tester.tap(find.widgetWithText(FilledButton, 'Create'));
       await tester.pumpAndSettle();
@@ -138,4 +138,93 @@ void main() {
       await _unmountAndFlush(tester);
     },
   );
+
+  testWidgets(
+    'effort metric field only shows for strength exercises (S-08, DM 6.1)',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 5000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+
+      // Default type is strength.
+      expect(find.text('Effort metric'), findsOneWidget);
+
+      await tester.tap(find.text('Strength'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Reps').last);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Effort metric'), findsNothing);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'a non-YouTube link shows a warning but does not block creating (DM 6.1)',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 5000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField).first, 'Push-Up');
+      await tester.enterText(
+        find.widgetWithText(TextField, 'YouTube link'),
+        'not a real url',
+      );
+      await tester.pump();
+
+      expect(find.text("Doesn't look like a YouTube link"), findsOneWidget);
+      final createButtonFinder = find.widgetWithText(FilledButton, 'Create');
+      expect(
+        tester.widget<FilledButton>(createButtonFinder).onPressed,
+        isNotNull,
+      );
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets('selecting a secondary muscle group saves the link (DM 6.1)', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 5000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await db
+        .into(db.muscleGroups)
+        .insert(MuscleGroupsCompanion.insert(id: 'triceps', sortOrder: 4));
+
+    await tester.pumpWidget(_appUnderTest(db));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).first, 'Bench Press');
+    await tester.tap(find.widgetWithText(FilterChip, 'Triceps'));
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+    await tester.pumpAndSettle();
+
+    final exercise = await (db.select(
+      db.exercises,
+    )..where((e) => e.name.equals('Bench Press'))).getSingle();
+    final links = await (db.select(
+      db.exerciseSecondaryMuscles,
+    )..where((s) => s.exerciseId.equals(exercise.id))).get();
+    expect(links.map((l) => l.muscleGroupId), ['triceps']);
+
+    await _unmountAndFlush(tester);
+  });
 }

@@ -1,35 +1,19 @@
+import '../../core/reference_data_ids.dart';
 import '../database.dart';
 
-/// Built-in muscle groups (06_DATA_MODEL.md, section 5.1). Localized names
-/// live in ARB under `muscleGroup.<id>`, not here.
+/// Built-in muscle groups (06_DATA_MODEL.md, section 5.1), built from the
+/// canonical id list so the seed can never drift from the exercise form's
+/// picker. Localized names live in ARB.
 final List<MuscleGroupsCompanion> muscleGroupSeed = [
-  MuscleGroupsCompanion.insert(id: 'chest', sortOrder: 0),
-  MuscleGroupsCompanion.insert(id: 'back', sortOrder: 1),
-  MuscleGroupsCompanion.insert(id: 'shoulders', sortOrder: 2),
-  MuscleGroupsCompanion.insert(id: 'biceps', sortOrder: 3),
-  MuscleGroupsCompanion.insert(id: 'triceps', sortOrder: 4),
-  MuscleGroupsCompanion.insert(id: 'forearms', sortOrder: 5),
-  MuscleGroupsCompanion.insert(id: 'abs', sortOrder: 6),
-  MuscleGroupsCompanion.insert(id: 'glutes', sortOrder: 7),
-  MuscleGroupsCompanion.insert(id: 'quads', sortOrder: 8),
-  MuscleGroupsCompanion.insert(id: 'hamstrings', sortOrder: 9),
-  MuscleGroupsCompanion.insert(id: 'calves', sortOrder: 10),
-  MuscleGroupsCompanion.insert(id: 'full_body', sortOrder: 11),
-  MuscleGroupsCompanion.insert(id: 'cardio_system', sortOrder: 12),
+  for (var i = 0; i < muscleGroupIds.length; i++)
+    MuscleGroupsCompanion.insert(id: muscleGroupIds[i], sortOrder: i),
 ];
 
-/// Built-in equipment list (06_DATA_MODEL.md, section 5.2). Localized names
-/// live in ARB under `equipment.<id>`, not here.
+/// Built-in equipment list (06_DATA_MODEL.md, section 5.2), same rationale
+/// as [muscleGroupSeed].
 final List<EquipmentsCompanion> equipmentSeed = [
-  EquipmentsCompanion.insert(id: 'barbell', sortOrder: 0),
-  EquipmentsCompanion.insert(id: 'dumbbell', sortOrder: 1),
-  EquipmentsCompanion.insert(id: 'kettlebell', sortOrder: 2),
-  EquipmentsCompanion.insert(id: 'machine', sortOrder: 3),
-  EquipmentsCompanion.insert(id: 'cable', sortOrder: 4),
-  EquipmentsCompanion.insert(id: 'bodyweight', sortOrder: 5),
-  EquipmentsCompanion.insert(id: 'band', sortOrder: 6),
-  EquipmentsCompanion.insert(id: 'cardio_machine', sortOrder: 7),
-  EquipmentsCompanion.insert(id: 'other', sortOrder: 8),
+  for (var i = 0; i < equipmentIds.length; i++)
+    EquipmentsCompanion.insert(id: equipmentIds[i], sortOrder: i),
 ];
 
 /// Built-in body measurement types (06_DATA_MODEL.md, section 5.3).

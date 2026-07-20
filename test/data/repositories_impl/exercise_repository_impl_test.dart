@@ -43,6 +43,40 @@ void main() {
     expect(await repository.getById('does-not-exist'), isNull);
   });
 
+  test('create stores the full DM 6.1 field set and secondary muscles', () async {
+    await db
+        .into(db.muscleGroups)
+        .insert(MuscleGroupsCompanion.insert(id: 'chest', sortOrder: 0));
+    await db
+        .into(db.muscleGroups)
+        .insert(MuscleGroupsCompanion.insert(id: 'triceps', sortOrder: 1));
+    await db
+        .into(db.equipments)
+        .insert(EquipmentsCompanion.insert(id: 'barbell', sortOrder: 0));
+
+    final exercise = await repository.create(
+      name: 'Bench Press',
+      exerciseType: ExerciseType.strength,
+      description: 'Lie on a bench and press.',
+      youtubeUrl: 'https://youtu.be/abc123',
+      primaryMuscleGroupId: 'chest',
+      equipmentId: 'barbell',
+      effortMetric: EffortMetric.rpe,
+      secondaryMuscleGroupIds: ['triceps'],
+    );
+
+    expect(exercise.description, 'Lie on a bench and press.');
+    expect(exercise.youtubeUrl, 'https://youtu.be/abc123');
+    expect(exercise.primaryMuscleGroupId, 'chest');
+    expect(exercise.equipmentId, 'barbell');
+    expect(exercise.effortMetric, EffortMetric.rpe);
+    expect(exercise.secondaryMuscleGroupIds, ['triceps']);
+
+    final reloaded = await repository.getById(exercise.id);
+    expect(reloaded!.description, 'Lie on a bench and press.');
+    expect(reloaded.secondaryMuscleGroupIds, ['triceps']);
+  });
+
   test(
     'watchAll emits created exercises and includes secondary muscle groups',
     () async {

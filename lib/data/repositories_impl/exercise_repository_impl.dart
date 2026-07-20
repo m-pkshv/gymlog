@@ -51,21 +51,43 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
   Future<Exercise> create({
     required String name,
     required ExerciseType exerciseType,
+    String? description,
+    String? youtubeUrl,
+    String? primaryMuscleGroupId,
+    String? equipmentId,
+    EffortMetric effortMetric = EffortMetric.none,
+    List<String> secondaryMuscleGroupIds = const [],
   }) async {
     final now = DateTime.now().toUtc();
     final exercise = Exercise(
       id: const Uuid().v4(),
       name: name,
       exerciseType: exerciseType,
-      effortMetric: EffortMetric.none,
+      description: description,
+      youtubeUrl: youtubeUrl,
+      primaryMuscleGroupId: primaryMuscleGroupId,
+      equipmentId: equipmentId,
+      effortMetric: effortMetric,
       isBuiltIn: false,
       isArchived: false,
-      secondaryMuscleGroupIds: const [],
+      secondaryMuscleGroupIds: secondaryMuscleGroupIds,
       createdAt: now,
       updatedAt: now,
       isDeleted: false,
     );
-    await _db.into(_db.exercises).insert(exercise.toInsertCompanion());
+    await _db.transaction(() async {
+      await _db.into(_db.exercises).insert(exercise.toInsertCompanion());
+      for (final muscleGroupId in secondaryMuscleGroupIds) {
+        await _db
+            .into(_db.exerciseSecondaryMuscles)
+            .insert(
+              drift.ExerciseSecondaryMusclesCompanion.insert(
+                exerciseId: exercise.id,
+                muscleGroupId: muscleGroupId,
+              ),
+            );
+      }
+    });
     return exercise;
   }
 

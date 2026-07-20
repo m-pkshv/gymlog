@@ -160,4 +160,103 @@ class AppLocalizationsRu extends AppLocalizations {
   String workoutDurationMinutes(int minutes) {
     return '$minutes мин';
   }
+
+  @override
+  String get muscleGroupChest => 'Грудь';
+
+  @override
+  String get muscleGroupBack => 'Спина';
+
+  @override
+  String get muscleGroupShoulders => 'Плечи';
+
+  @override
+  String get muscleGroupBiceps => 'Бицепс';
+
+  @override
+  String get muscleGroupTriceps => 'Трицепс';
+
+  @override
+  String get muscleGroupForearms => 'Предплечья';
+
+  @override
+  String get muscleGroupAbs => 'Пресс';
+
+  @override
+  String get muscleGroupGlutes => 'Ягодицы';
+
+  @override
+  String get muscleGroupQuads => 'Квадрицепсы';
+
+  @override
+  String get muscleGroupHamstrings => 'Бицепс бедра';
+
+  @override
+  String get muscleGroupCalves => 'Икры';
+
+  @override
+  String get muscleGroupFullBody => 'Всё тело';
+
+  @override
+  String get muscleGroupCardioSystem => 'Кардио';
+
+  @override
+  String get equipmentBarbell => 'Штанга';
+
+  @override
+  String get equipmentDumbbell => 'Гантели';
+
+  @override
+  String get equipmentKettlebell => 'Гиря';
+
+  @override
+  String get equipmentMachine => 'Тренажёр';
+
+  @override
+  String get equipmentCable => 'Блочный тренажёр';
+
+  @override
+  String get equipmentBodyweight => 'Свой вес';
+
+  @override
+  String get equipmentBand => 'Резинка-эспандер';
+
+  @override
+  String get equipmentCardioMachine => 'Кардиотренажёр';
+
+  @override
+  String get equipmentOther => 'Другое';
+
+  @override
+  String get effortMetricNone => 'Нет';
+
+  @override
+  String get effortMetricRpe => 'RPE';
+
+  @override
+  String get effortMetricRir => 'RIR';
+
+  @override
+  String get exercisePrimaryMuscleLabel => 'Основная группа мышц';
+
+  @override
+  String get exerciseSecondaryMusclesLabel => 'Дополнительные группы мышц';
+
+  @override
+  String get exerciseEquipmentLabel => 'Оборудование';
+
+  @override
+  String get exerciseEffortMetricLabel => 'Метрика усилия';
+
+  @override
+  String get exerciseDescriptionLabel => 'Описание';
+
+  @override
+  String get exerciseYoutubeUrlLabel => 'Ссылка на YouTube';
+
+  @override
+  String get exerciseYoutubeUrlWarning => 'Не похоже на ссылку YouTube';
+
+  @override
+  String get exerciseNotSpecified => 'Не указано';
 }

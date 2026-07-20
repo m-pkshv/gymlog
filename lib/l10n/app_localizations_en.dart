@@ -158,4 +158,103 @@ class AppLocalizationsEn extends AppLocalizations {
   String workoutDurationMinutes(int minutes) {
     return '$minutes min';
   }
+
+  @override
+  String get muscleGroupChest => 'Chest';
+
+  @override
+  String get muscleGroupBack => 'Back';
+
+  @override
+  String get muscleGroupShoulders => 'Shoulders';
+
+  @override
+  String get muscleGroupBiceps => 'Biceps';
+
+  @override
+  String get muscleGroupTriceps => 'Triceps';
+
+  @override
+  String get muscleGroupForearms => 'Forearms';
+
+  @override
+  String get muscleGroupAbs => 'Abs';
+
+  @override
+  String get muscleGroupGlutes => 'Glutes';
+
+  @override
+  String get muscleGroupQuads => 'Quads';
+
+  @override
+  String get muscleGroupHamstrings => 'Hamstrings';
+
+  @override
+  String get muscleGroupCalves => 'Calves';
+
+  @override
+  String get muscleGroupFullBody => 'Full body';
+
+  @override
+  String get muscleGroupCardioSystem => 'Cardio';
+
+  @override
+  String get equipmentBarbell => 'Barbell';
+
+  @override
+  String get equipmentDumbbell => 'Dumbbell';
+
+  @override
+  String get equipmentKettlebell => 'Kettlebell';
+
+  @override
+  String get equipmentMachine => 'Machine';
+
+  @override
+  String get equipmentCable => 'Cable machine';
+
+  @override
+  String get equipmentBodyweight => 'Bodyweight';
+
+  @override
+  String get equipmentBand => 'Resistance band';
+
+  @override
+  String get equipmentCardioMachine => 'Cardio machine';
+
+  @override
+  String get equipmentOther => 'Other';
+
+  @override
+  String get effortMetricNone => 'None';
+
+  @override
+  String get effortMetricRpe => 'RPE';
+
+  @override
+  String get effortMetricRir => 'RIR';
+
+  @override
+  String get exercisePrimaryMuscleLabel => 'Primary muscle';
+
+  @override
+  String get exerciseSecondaryMusclesLabel => 'Secondary muscles';
+
+  @override
+  String get exerciseEquipmentLabel => 'Equipment';
+
+  @override
+  String get exerciseEffortMetricLabel => 'Effort metric';
+
+  @override
+  String get exerciseDescriptionLabel => 'Description';
+
+  @override
+  String get exerciseYoutubeUrlLabel => 'YouTube link';
+
+  @override
+  String get exerciseYoutubeUrlWarning => 'Doesn\'t look like a YouTube link';
+
+  @override
+  String get exerciseNotSpecified => 'Not specified';
 }

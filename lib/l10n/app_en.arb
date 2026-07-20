@@ -193,5 +193,62 @@
     "placeholders": {
       "minutes": {"type": "int"}
     }
+  },
+  "muscleGroupChest": "Chest",
+  "muscleGroupBack": "Back",
+  "muscleGroupShoulders": "Shoulders",
+  "muscleGroupBiceps": "Biceps",
+  "muscleGroupTriceps": "Triceps",
+  "muscleGroupForearms": "Forearms",
+  "muscleGroupAbs": "Abs",
+  "muscleGroupGlutes": "Glutes",
+  "muscleGroupQuads": "Quads",
+  "muscleGroupHamstrings": "Hamstrings",
+  "muscleGroupCalves": "Calves",
+  "muscleGroupFullBody": "Full body",
+  "muscleGroupCardioSystem": "Cardio",
+  "equipmentBarbell": "Barbell",
+  "equipmentDumbbell": "Dumbbell",
+  "equipmentKettlebell": "Kettlebell",
+  "equipmentMachine": "Machine",
+  "equipmentCable": "Cable machine",
+  "equipmentBodyweight": "Bodyweight",
+  "equipmentBand": "Resistance band",
+  "equipmentCardioMachine": "Cardio machine",
+  "equipmentOther": "Other",
+  "effortMetricNone": "None",
+  "effortMetricRpe": "RPE",
+  "effortMetricRir": "RIR",
+  "exercisePrimaryMuscleLabel": "Primary muscle",
+  "@exercisePrimaryMuscleLabel": {
+    "description": "Label for the primary muscle group field on the exercise form (S-08)."
+  },
+  "exerciseSecondaryMusclesLabel": "Secondary muscles",
+  "@exerciseSecondaryMusclesLabel": {
+    "description": "Label for the secondary muscle groups field on the exercise form (S-08)."
+  },
+  "exerciseEquipmentLabel": "Equipment",
+  "@exerciseEquipmentLabel": {
+    "description": "Label for the equipment field on the exercise form (S-08)."
+  },
+  "exerciseEffortMetricLabel": "Effort metric",
+  "@exerciseEffortMetricLabel": {
+    "description": "Label for the effort metric field on the exercise form (S-08), shown only for strength exercises."
+  },
+  "exerciseDescriptionLabel": "Description",
+  "@exerciseDescriptionLabel": {
+    "description": "Label for the description field on the exercise form (S-08)."
+  },
+  "exerciseYoutubeUrlLabel": "YouTube link",
+  "@exerciseYoutubeUrlLabel": {
+    "description": "Label for the YouTube URL field on the exercise form (S-08)."
+  },
+  "exerciseYoutubeUrlWarning": "Doesn't look like a YouTube link",
+  "@exerciseYoutubeUrlWarning": {
+    "description": "Non-blocking hint under the YouTube field when the URL doesn't look like a youtube.com/youtu.be link (DM 6.1: a soft rule, saving stays allowed)."
+  },
+  "exerciseNotSpecified": "Not specified",
+  "@exerciseNotSpecified": {
+    "description": "\"No selection\" option for the optional primary muscle/equipment dropdowns on the exercise form (S-08)."
   }
 }

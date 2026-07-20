@@ -153,7 +153,7 @@ void main() {
       await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'Push-Up');
+      await tester.enterText(find.byType(TextField).first, 'Push-Up');
       await tester.pump();
       await tester.tap(find.widgetWithText(FilledButton, 'Create'));
       await tester.pumpAndSettle();

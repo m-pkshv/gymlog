@@ -11,12 +11,18 @@ abstract class ExerciseRepository {
 
   Future<Exercise?> getById(String id);
 
-  /// Creates a user-created exercise with just a name and type (S-08,
-  /// Stage 1 scope — the full form with muscles/equipment/description
-  /// lands in Stage 2).
+  /// Creates a user-created exercise (S-08, full form — DM 6.1). Only
+  /// [name] and [exerciseType] are required; the rest default to "not set"
+  /// the same way a fresh `Exercise` row does.
   Future<Exercise> create({
     required String name,
     required ExerciseType exerciseType,
+    String? description,
+    String? youtubeUrl,
+    String? primaryMuscleGroupId,
+    String? equipmentId,
+    EffortMetric effortMetric = EffortMetric.none,
+    List<String> secondaryMuscleGroupIds = const [],
   });
 
   /// Whether [exerciseId] appears in any non-deleted `WorkoutExercise`
