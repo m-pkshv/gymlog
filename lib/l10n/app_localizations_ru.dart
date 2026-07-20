@@ -424,4 +424,34 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get copyLastPerformanceEmpty =>
       'Нет прошлых результатов для копирования';
+
+  @override
+  String get workoutTagsAddAction => 'Добавить тег';
+
+  @override
+  String get workoutTagsSheetTitle => 'Теги тренировки';
+
+  @override
+  String get workoutTagsEmpty => 'Тегов пока нет';
+
+  @override
+  String get workoutTagsLoadError => 'Не удалось загрузить теги';
+
+  @override
+  String get createTagAction => 'Создать тег';
+
+  @override
+  String get createTagTitle => 'Новый тег';
+
+  @override
+  String get createTagError => 'Не удалось создать тег';
+
+  @override
+  String get tagNameLabel => 'Название';
+
+  @override
+  String get settingsShowTagsLabel => 'Показывать теги';
+
+  @override
+  String get settingsLoadError => 'Не удалось загрузить настройки';
 }

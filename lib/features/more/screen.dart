@@ -1,19 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/providers.dart';
 import '../../l10n/app_localizations.dart';
 
 /// S-11 "Ещё" placeholder (04_UI_UX_SPEC.md, section 5) — menu to
 /// templates/measurements/import-export/settings. Real content lands with
 /// Stages 5, 6, 8, 9.
-class MoreScreen extends StatelessWidget {
+///
+/// ASSUMPTION(temp-show-tags-toggle): the full S-17 settings screen
+/// (unit system, theme, language, rest timer, ...) is Stage 9 scope. Stage
+/// 3 only needs the `showTags` flag to exist somewhere reachable, so a
+/// single switch is added directly to this placeholder — same pattern as
+/// the temporary "New workout" FAB on the History placeholder in Stage 1
+/// (`ASSUMPTION(temp-new-workout-entry)`, since replaced). This switch moves
+/// into the real settings screen at Stage 9.
+class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final settingsAsync = ref.watch(appSettingsProvider);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.tabMore)),
-      body: Center(child: Text(l10n.tabMore)),
+      body: settingsAsync.when(
+        data: (settings) => ListView(
+          children: [
+            SwitchListTile(
+              title: Text(l10n.settingsShowTagsLabel),
+              value: settings.showTags,
+              onChanged: (value) =>
+                  ref.read(appSettingsRepositoryProvider).setShowTags(value),
+            ),
+          ],
+        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stackTrace) =>
+            Center(child: Text(l10n.settingsLoadError)),
+      ),
     );
   }
 }

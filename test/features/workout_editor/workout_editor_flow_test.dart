@@ -74,6 +74,25 @@ Future<void> _seedExercise(
       );
 }
 
+Future<void> _seedTag(
+  AppDatabase db, {
+  String id = 'tag1',
+  String name = 'Leg day',
+  String colorHex = '#4C7BD9',
+}) {
+  return db
+      .into(db.workoutTags)
+      .insert(
+        WorkoutTagsCompanion.insert(
+          id: id,
+          name: name,
+          colorHex: Value(colorHex),
+          createdAt: '2026-07-19T00:00:00Z',
+          updatedAt: '2026-07-19T00:00:00Z',
+        ),
+      );
+}
+
 /// Same rationale as `exercises_flow_test.dart`: let drift's watch-stream
 /// unsubscribe timer fire before flutter_test's pending-timer check runs.
 Future<void> _unmountAndFlush(WidgetTester tester) async {
@@ -739,6 +758,106 @@ void main() {
           db.workouts,
         )..where((w) => w.id.equals('active'))).getSingle();
         expect(active.status, 'cancelled');
+
+        await _unmountAndFlush(tester);
+      },
+    );
+  });
+
+  group('workout tags (Stage 3, S-03, DM 6.3/6.5)', () {
+    testWidgets(
+      'the tag row shows an "Add tag" action and no chip for an unassigned '
+      'tag',
+      (tester) async {
+        await _seedTag(db);
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(FloatingActionButton));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Add tag'), findsOneWidget);
+        expect(find.text('Leg day'), findsNothing);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'tapping an existing tag in the picker sheet assigns it',
+      (tester) async {
+        await _seedTag(db);
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(FloatingActionButton));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Add tag'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.widgetWithText(FilterChip, 'Leg day'));
+        await tester.pumpAndSettle();
+
+        final links = await db.select(db.workoutTagLinks).get();
+        expect(links, hasLength(1));
+        expect(links.single.tagId, 'tag1');
+        final chip = tester.widget<FilterChip>(
+          find.widgetWithText(FilterChip, 'Leg day'),
+        );
+        expect(chip.selected, isTrue);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'creating a new tag from the picker sheet assigns it immediately',
+      (tester) async {
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(FloatingActionButton));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Add tag'));
+        await tester.pumpAndSettle();
+        expect(find.text('No tags yet'), findsOneWidget);
+
+        await tester.tap(find.text('Create tag'));
+        await tester.pumpAndSettle();
+        await tester.enterText(find.byType(TextField), 'Push');
+        await tester.pump();
+        await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+        await tester.pumpAndSettle();
+
+        final tags = await db.select(db.workoutTags).get();
+        expect(tags.single.name, 'Push');
+        final links = await db.select(db.workoutTagLinks).get();
+        expect(links.single.tagId, tags.single.id);
+        expect(find.widgetWithText(FilterChip, 'Push'), findsOneWidget);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'the tag row is hidden entirely when showTags is off (S-17)',
+      (tester) async {
+        await db
+            .into(db.appSettingsTable)
+            .insert(
+              AppSettingsTableCompanion.insert(
+                id: 'singleton',
+                showTags: const Value(false),
+                updatedAt: '2026-07-19T00:00:00Z',
+              ),
+            );
+        await _seedTag(db);
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(FloatingActionButton));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Add tag'), findsNothing);
 
         await _unmountAndFlush(tester);
       },

@@ -3,17 +3,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/repositories_impl/exercise_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_repository_impl.dart';
+import 'package:gymlog/data/repositories_impl/workout_tag_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
 
 void main() {
   late AppDatabase db;
   late WorkoutRepositoryImpl workouts;
   late ExerciseRepositoryImpl exercises;
+  late WorkoutTagRepositoryImpl tags;
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
     workouts = WorkoutRepositoryImpl(db);
     exercises = ExerciseRepositoryImpl(db);
+    tags = WorkoutTagRepositoryImpl(db);
   });
 
   tearDown(() async {
@@ -214,5 +217,51 @@ void main() {
 
       expect(await workouts.getExerciseHistory(exercise.id), isEmpty);
     });
+  });
+
+  group('workout tags (Stage 3, DM 6.3/6.5)', () {
+    test('a fresh workout has no tags', () async {
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 20));
+      final details = await workouts.getDetails(workout.id);
+      expect(details!.tags, isEmpty);
+    });
+
+    test('setWorkoutTags assigns tags, reflected in getDetails', () async {
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 20));
+      final legs = await tags.create(name: 'Leg day', colorHex: '#4C7BD9');
+      final push = await tags.create(name: 'Push', colorHex: '#2E9E6B');
+
+      await workouts.setWorkoutTags(
+        workoutId: workout.id,
+        tagIds: [legs.id, push.id],
+      );
+
+      final details = await workouts.getDetails(workout.id);
+      expect(details!.tags.map((t) => t.id), containsAll([legs.id, push.id]));
+      expect(details.tags, hasLength(2));
+    });
+
+    test(
+      'setWorkoutTags replaces the previous set, not adds to it',
+      () async {
+        final workout = await workouts.createDraft(
+          date: DateTime(2026, 7, 20),
+        );
+        final legs = await tags.create(name: 'Leg day', colorHex: '#4C7BD9');
+        final push = await tags.create(name: 'Push', colorHex: '#2E9E6B');
+
+        await workouts.setWorkoutTags(
+          workoutId: workout.id,
+          tagIds: [legs.id],
+        );
+        await workouts.setWorkoutTags(
+          workoutId: workout.id,
+          tagIds: [push.id],
+        );
+
+        final details = await workouts.getDetails(workout.id);
+        expect(details!.tags.map((t) => t.id), [push.id]);
+      },
+    );
   });
 }

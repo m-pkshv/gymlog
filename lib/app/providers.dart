@@ -9,17 +9,24 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import '../core/logger.dart';
 import '../data/database.dart' as drift;
+import '../data/repositories_impl/app_settings_repository_impl.dart';
 import '../data/repositories_impl/exercise_repository_impl.dart';
 import '../data/repositories_impl/workout_repository_impl.dart';
+import '../data/repositories_impl/workout_tag_repository_impl.dart';
+import '../domain/models/app_settings.dart';
 import '../domain/models/exercise.dart';
 import '../domain/models/exercise_catalog_filter.dart';
 import '../domain/models/workout_details.dart';
 import '../domain/models/workout_history_entry.dart';
+import '../domain/models/workout_tag.dart';
+import '../domain/repositories/app_settings_repository.dart';
 import '../domain/repositories/exercise_repository.dart';
 import '../domain/repositories/workout_repository.dart';
+import '../domain/repositories/workout_tag_repository.dart';
 import '../features/workout_editor/controller.dart';
 import '../services/exercise_service.dart';
 import '../services/workout_service.dart';
+import '../services/workout_tag_service.dart';
 
 final loggerProvider = Provider<AppLogger>((ref) => AppLogger());
 
@@ -41,6 +48,18 @@ final workoutServiceProvider = Provider<WorkoutService>((ref) {
   return WorkoutService(ref.watch(workoutRepositoryProvider));
 });
 
+final workoutTagRepositoryProvider = Provider<WorkoutTagRepository>((ref) {
+  return WorkoutTagRepositoryImpl(ref.watch(appDatabaseProvider));
+});
+
+final workoutTagServiceProvider = Provider<WorkoutTagService>((ref) {
+  return WorkoutTagService(ref.watch(workoutTagRepositoryProvider));
+});
+
+final appSettingsRepositoryProvider = Provider<AppSettingsRepository>((ref) {
+  return AppSettingsRepositoryImpl(ref.watch(appDatabaseProvider));
+});
+
 /// The single point of truth for the catalog's archive/delete rules and
 /// exerciseType lock (DM 10, DM 6.1).
 final exerciseServiceProvider = Provider<ExerciseService>((ref) {
@@ -60,6 +79,18 @@ final exercisesListProvider = StreamProvider.family<
 /// The history list (S-02). Stage 1 has no filters/calendar view yet.
 final historyListProvider = StreamProvider<List<WorkoutHistoryEntry>>((ref) {
   return ref.watch(workoutRepositoryProvider).watchHistory();
+});
+
+/// All non-deleted workout tags (S-03 tag picker).
+final workoutTagsListProvider = StreamProvider<List<WorkoutTag>>((ref) {
+  return ref.watch(workoutTagRepositoryProvider).watchAll();
+});
+
+/// The singleton app settings row — currently only `showTags` (Stage 3) has
+/// a reader/writer; `AppSettingsRepositoryImpl.ensureInitialized` is called
+/// once in `main.dart` before this is ever watched.
+final appSettingsProvider = StreamProvider<AppSettings>((ref) {
+  return ref.watch(appSettingsRepositoryProvider).watchSettings();
 });
 
 /// The workout editor (S-03) controller, one instance per workout. Owns the

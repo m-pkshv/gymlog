@@ -420,4 +420,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get copyLastPerformanceEmpty => 'No past results to copy yet';
+
+  @override
+  String get workoutTagsAddAction => 'Add tag';
+
+  @override
+  String get workoutTagsSheetTitle => 'Workout tags';
+
+  @override
+  String get workoutTagsEmpty => 'No tags yet';
+
+  @override
+  String get workoutTagsLoadError => 'Couldn\'t load tags';
+
+  @override
+  String get createTagAction => 'Create tag';
+
+  @override
+  String get createTagTitle => 'New tag';
+
+  @override
+  String get createTagError => 'Couldn\'t create the tag';
+
+  @override
+  String get tagNameLabel => 'Name';
+
+  @override
+  String get settingsShowTagsLabel => 'Show tags';
+
+  @override
+  String get settingsLoadError => 'Couldn\'t load settings';
 }

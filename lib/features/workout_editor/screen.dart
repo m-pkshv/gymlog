@@ -10,10 +10,13 @@ import '../../domain/enums.dart';
 import '../../domain/models/exercise.dart';
 import '../../domain/models/workout.dart';
 import '../../domain/models/workout_details.dart';
+import '../../domain/models/workout_tag.dart';
 import '../../l10n/app_localizations.dart';
 import 'controller.dart';
 import 'status_labels.dart';
 import 'widgets/exercise_card.dart';
+import 'widgets/tag_picker_sheet.dart';
+import 'widgets/workout_tag_chip.dart';
 
 enum _ActiveWorkoutConflictResolution { finishOther, cancelOther }
 
@@ -253,6 +256,7 @@ class _EditorBody extends StatelessWidget {
             ],
           ),
         ),
+        _TagsRow(workoutId: workout.id, tags: details.tags),
         Expanded(
           child: details.exercises.isEmpty
               ? Center(child: Text(l10n.workoutExercisesEmpty))
@@ -328,6 +332,47 @@ class _StatusMenu extends StatelessWidget {
       child: Chip(
         label: Text(workoutStatusLabel(l10n, status)),
         avatar: const Icon(Icons.arrow_drop_down, size: 18),
+      ),
+    );
+  }
+}
+
+/// Assigned-tags row (S-03: "теги (чипы + «+»)") — read-only chips for each
+/// tag plus a trailing "+" that opens [TagPickerSheet]. Hidden entirely
+/// when `AppSettings.showTags` is off (S-17: "выключение скрывает чипы и
+/// фильтр тегов, данные не меняются") — this only affects visibility, the
+/// workout's tag links are untouched.
+class _TagsRow extends ConsumerWidget {
+  const _TagsRow({required this.workoutId, required this.tags});
+
+  final String workoutId;
+  final List<WorkoutTag> tags;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final showTags = ref.watch(appSettingsProvider).value?.showTags ?? true;
+    if (!showTags) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context)!;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          for (final tag in tags) WorkoutTagChip(tag: tag),
+          ActionChip(
+            avatar: const Icon(Icons.add, size: 18),
+            label: Text(l10n.workoutTagsAddAction),
+            visualDensity: VisualDensity.compact,
+            onPressed: () => showModalBottomSheet<void>(
+              context: context,
+              showDragHandle: true,
+              builder: (context) => TagPickerSheet(workoutId: workoutId),
+            ),
+          ),
+        ],
       ),
     );
   }

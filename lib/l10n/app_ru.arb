@@ -132,5 +132,15 @@
   "pastResultsEmpty": "Пока нет завершённых выполнений этого упражнения",
   "pastResultsLoadError": "Не удалось загрузить прошлые результаты",
   "copyLastPerformanceAction": "Копировать показатели прошлого выполнения",
-  "copyLastPerformanceEmpty": "Нет прошлых результатов для копирования"
+  "copyLastPerformanceEmpty": "Нет прошлых результатов для копирования",
+  "workoutTagsAddAction": "Добавить тег",
+  "workoutTagsSheetTitle": "Теги тренировки",
+  "workoutTagsEmpty": "Тегов пока нет",
+  "workoutTagsLoadError": "Не удалось загрузить теги",
+  "createTagAction": "Создать тег",
+  "createTagTitle": "Новый тег",
+  "createTagError": "Не удалось создать тег",
+  "tagNameLabel": "Название",
+  "settingsShowTagsLabel": "Показывать теги",
+  "settingsLoadError": "Не удалось загрузить настройки"
 }

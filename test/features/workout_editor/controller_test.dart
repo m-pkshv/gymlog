@@ -5,6 +5,7 @@ import 'package:gymlog/core/logger.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/repositories_impl/exercise_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_repository_impl.dart';
+import 'package:gymlog/data/repositories_impl/workout_tag_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/features/workout_editor/controller.dart';
 import 'package:gymlog/services/workout_service.dart';
@@ -365,6 +366,28 @@ void main() {
       );
       final stored = await workouts.getDetails(workout.id);
       expect(stored!.workout.date, DateTime(2026, 7, 25));
+    });
+  });
+
+  group('setTags (S-03, DM 6.3/6.5)', () {
+    test('assigns tags and reloads local state', () async {
+      final tags = WorkoutTagRepositoryImpl(db);
+      final tag = await tags.create(name: 'Leg day', colorHex: '#4C7BD9');
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 20));
+      final controller = WorkoutEditorController(
+        workout.id,
+        workouts,
+        service,
+        logger,
+      );
+      addTearDown(controller.dispose);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      await controller.setTags([tag.id]);
+
+      expect(controller.state.value!.tags.map((t) => t.id), [tag.id]);
+      final stored = await workouts.getDetails(workout.id);
+      expect(stored!.tags.map((t) => t.id), [tag.id]);
     });
   });
 }

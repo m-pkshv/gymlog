@@ -44,4 +44,12 @@ abstract class WorkoutRepository {
   /// most recent date first — the exercise card's "История" tab (S-07,
   /// Stage 2).
   Future<List<ExerciseHistoryEntry>> getExerciseHistory(String exerciseId);
+
+  /// Replaces the full set of tags assigned to [workoutId] with [tagIds]
+  /// (S-03 "теги (чипы + «+»)"): existing `WorkoutTagLink` rows for this
+  /// workout are dropped and the new set inserted, in one transaction.
+  Future<void> setWorkoutTags({
+    required String workoutId,
+    required List<String> tagIds,
+  });
 }

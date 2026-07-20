@@ -8,6 +8,7 @@ import 'app/router.dart';
 import 'app/theme.dart';
 import 'core/logger.dart';
 import 'data/database.dart';
+import 'data/repositories_impl/app_settings_repository_impl.dart';
 import 'data/seed/seed_runner.dart';
 import 'l10n/app_localizations.dart';
 
@@ -40,6 +41,9 @@ Future<void> main() async {
   // frame, so the UI never has to special-case an unseeded database.
   final db = AppDatabase();
   await SeedRunner(db).run();
+  // The settings singleton row (DM 6.12) must exist before any screen
+  // watches it, same reasoning as the seed above.
+  await AppSettingsRepositoryImpl(db).ensureInitialized();
 
   runApp(
     ProviderScope(

@@ -300,6 +300,25 @@ class WorkoutEditorController
     return result;
   }
 
+  /// Assigns exactly [tagIds] to this workout (S-03 tag picker/create
+  /// dialog), replacing whatever was assigned before. No debounce — tag
+  /// membership is a discrete toggle, like [setWarmup]/[setCompleted].
+  Future<void> setTags(List<String> tagIds) async {
+    try {
+      await _workoutRepository.setWorkoutTags(
+        workoutId: _workoutId,
+        tagIds: tagIds,
+      );
+      await _load();
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to set tags for workout $_workoutId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
   /// "Перенос на другую дату" (DM 6.4.1: allowed in any status except
   /// `inProgress` — the UI only wires up the date tap in that case, this
   /// doesn't re-check it). A plain field write, not a status transition, so

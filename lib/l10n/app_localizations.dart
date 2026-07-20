@@ -895,6 +895,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No past results to copy yet'**
   String get copyLastPerformanceEmpty;
+
+  /// Trailing chip in the workout editor's tag row (S-03) that opens the tag picker sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tag'**
+  String get workoutTagsAddAction;
+
+  /// Title of the tag picker bottom sheet (S-03, DM 6.3/6.5).
+  ///
+  /// In en, this message translates to:
+  /// **'Workout tags'**
+  String get workoutTagsSheetTitle;
+
+  /// Empty state inside the tag picker sheet (S-03) before any tag has been created.
+  ///
+  /// In en, this message translates to:
+  /// **'No tags yet'**
+  String get workoutTagsEmpty;
+
+  /// Error state inside the tag picker sheet (S-03).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load tags'**
+  String get workoutTagsLoadError;
+
+  /// Button in the tag picker sheet (S-03) that opens the create-tag dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Create tag'**
+  String get createTagAction;
+
+  /// Title of the create-tag dialog (S-03, DM 6.3).
+  ///
+  /// In en, this message translates to:
+  /// **'New tag'**
+  String get createTagTitle;
+
+  /// Error shown in the create-tag dialog (S-03) when WorkoutTagService.create rejects the name (empty, too long, or a duplicate).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create the tag'**
+  String get createTagError;
+
+  /// Text field label in the create-tag dialog (S-03, DM 6.3: 1-30 chars).
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get tagNameLabel;
+
+  /// Temporary switch on the "More" placeholder (ASSUMPTION(temp-show-tags-toggle)) that toggles AppSettings.showTags; moves to the real S-17 settings screen at Stage 9.
+  ///
+  /// In en, this message translates to:
+  /// **'Show tags'**
+  String get settingsShowTagsLabel;
+
+  /// Error state on the "More" placeholder (and anywhere else appSettingsProvider is watched) when the settings row fails to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load settings'**
+  String get settingsLoadError;
 }
 
 class _AppLocalizationsDelegate

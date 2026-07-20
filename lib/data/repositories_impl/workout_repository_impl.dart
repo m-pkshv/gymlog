@@ -8,10 +8,12 @@ import '../../domain/models/workout.dart';
 import '../../domain/models/workout_details.dart';
 import '../../domain/models/workout_exercise.dart';
 import '../../domain/models/workout_history_entry.dart';
+import '../../domain/models/workout_tag.dart';
 import '../../domain/repositories/workout_repository.dart';
 import '../database.dart' as drift;
 import '../mappers/exercise_mapper.dart';
 import '../mappers/workout_mapper.dart';
+import '../mappers/workout_tag_mapper.dart';
 
 /// Drift-backed `WorkoutRepository` for the Workout aggregate
 /// (06_DATA_MODEL.md, sections 6.4, 6.6, 6.7).
@@ -39,6 +41,8 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
     )..where((w) => w.id.equals(workoutId))).getSingleOrNull();
     if (workoutRow == null) return null;
 
+    final tags = await _tagsForWorkout(workoutId);
+
     final workoutExerciseRows =
         await (_db.select(_db.workoutExercises)
               ..where(
@@ -52,6 +56,7 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
       return WorkoutDetails(
         workout: workoutRow.toDomain(),
         exercises: const [],
+        tags: tags,
       );
     }
 
@@ -92,7 +97,25 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
       );
     }).toList();
 
-    return WorkoutDetails(workout: workoutRow.toDomain(), exercises: exercises);
+    return WorkoutDetails(
+      workout: workoutRow.toDomain(),
+      exercises: exercises,
+      tags: tags,
+    );
+  }
+
+  Future<List<WorkoutTag>> _tagsForWorkout(String workoutId) async {
+    final query = _db.select(_db.workoutTags).join([
+      innerJoin(
+        _db.workoutTagLinks,
+        _db.workoutTagLinks.tagId.equalsExp(_db.workoutTags.id),
+      ),
+    ])..where(
+      _db.workoutTagLinks.workoutId.equals(workoutId) &
+          _db.workoutTags.isDeleted.equals(false),
+    );
+    final rows = await query.get();
+    return rows.map((row) => row.readTable(_db.workoutTags).toDomain()).toList();
   }
 
   @override
@@ -274,5 +297,27 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
         sets: sets.map((s) => s.toDomain()).toList(),
       );
     }).toList();
+  }
+
+  @override
+  Future<void> setWorkoutTags({
+    required String workoutId,
+    required List<String> tagIds,
+  }) async {
+    await _db.transaction(() async {
+      await (_db.delete(
+        _db.workoutTagLinks,
+      )..where((l) => l.workoutId.equals(workoutId))).go();
+      for (final tagId in tagIds) {
+        await _db
+            .into(_db.workoutTagLinks)
+            .insert(
+              drift.WorkoutTagLinksCompanion.insert(
+                workoutId: workoutId,
+                tagId: tagId,
+              ),
+            );
+      }
+    });
   }
 }

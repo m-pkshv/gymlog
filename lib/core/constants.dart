@@ -21,3 +21,25 @@ class SetFieldRange {
 /// Autosave debounce for text fields (03_TECHNICAL_SPEC.md, section 5): a
 /// killed process loses at most this much of the last unflushed field.
 const Duration autosaveDebounce = Duration(milliseconds: 500);
+
+/// `WorkoutTag.name` bounds (06_DATA_MODEL.md, section 6.3), validated in
+/// `WorkoutTagService.create`.
+class WorkoutTagRules {
+  const WorkoutTagRules._();
+
+  static const int minNameLength = 1;
+  static const int maxNameLength = 30;
+}
+
+/// The 8-color tag palette (04_UI_UX_SPEC.md, section 9, UX-1). The first
+/// entry is also `WorkoutTagsTable`'s default `colorHex`.
+const List<String> workoutTagColorPalette = [
+  '#4C7BD9',
+  '#2E9E6B',
+  '#D9774C',
+  '#B34CD9',
+  '#D9B84C',
+  '#4CC3D9',
+  '#D94C6B',
+  '#7B8794',
+];

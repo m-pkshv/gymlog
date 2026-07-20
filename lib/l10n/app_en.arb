@@ -450,5 +450,45 @@
   "copyLastPerformanceEmpty": "No past results to copy yet",
   "@copyLastPerformanceEmpty": {
     "description": "Snackbar shown when \"Copy last performance\" is tapped but this exercise has no completed history yet (S-03)."
+  },
+  "workoutTagsAddAction": "Add tag",
+  "@workoutTagsAddAction": {
+    "description": "Trailing chip in the workout editor's tag row (S-03) that opens the tag picker sheet."
+  },
+  "workoutTagsSheetTitle": "Workout tags",
+  "@workoutTagsSheetTitle": {
+    "description": "Title of the tag picker bottom sheet (S-03, DM 6.3/6.5)."
+  },
+  "workoutTagsEmpty": "No tags yet",
+  "@workoutTagsEmpty": {
+    "description": "Empty state inside the tag picker sheet (S-03) before any tag has been created."
+  },
+  "workoutTagsLoadError": "Couldn't load tags",
+  "@workoutTagsLoadError": {
+    "description": "Error state inside the tag picker sheet (S-03)."
+  },
+  "createTagAction": "Create tag",
+  "@createTagAction": {
+    "description": "Button in the tag picker sheet (S-03) that opens the create-tag dialog."
+  },
+  "createTagTitle": "New tag",
+  "@createTagTitle": {
+    "description": "Title of the create-tag dialog (S-03, DM 6.3)."
+  },
+  "createTagError": "Couldn't create the tag",
+  "@createTagError": {
+    "description": "Error shown in the create-tag dialog (S-03) when WorkoutTagService.create rejects the name (empty, too long, or a duplicate)."
+  },
+  "tagNameLabel": "Name",
+  "@tagNameLabel": {
+    "description": "Text field label in the create-tag dialog (S-03, DM 6.3: 1-30 chars)."
+  },
+  "settingsShowTagsLabel": "Show tags",
+  "@settingsShowTagsLabel": {
+    "description": "Temporary switch on the \"More\" placeholder (ASSUMPTION(temp-show-tags-toggle)) that toggles AppSettings.showTags; moves to the real S-17 settings screen at Stage 9."
+  },
+  "settingsLoadError": "Couldn't load settings",
+  "@settingsLoadError": {
+    "description": "Error state on the \"More\" placeholder (and anywhere else appSettingsProvider is watched) when the settings row fails to load."
   }
 }
