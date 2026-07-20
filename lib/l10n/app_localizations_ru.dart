@@ -259,4 +259,41 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get exerciseNotSpecified => 'Не указано';
+
+  @override
+  String get exerciseDetailLoadError => 'Не удалось загрузить упражнение';
+
+  @override
+  String get exerciseAboutTab => 'О упражнении';
+
+  @override
+  String get exerciseHistoryTab => 'История';
+
+  @override
+  String get exerciseHistoryEmpty =>
+      'Пока нет завершённых тренировок с этим упражнением';
+
+  @override
+  String get exerciseArchivedBadge => 'В архиве';
+
+  @override
+  String get archiveExerciseAction => 'Архивировать';
+
+  @override
+  String get unarchiveExerciseAction => 'Разархивировать';
+
+  @override
+  String get deleteExerciseAction => 'Удалить';
+
+  @override
+  String get deleteExerciseConfirmTitle => 'Удалить упражнение?';
+
+  @override
+  String get deleteExerciseConfirmMessage => 'Это действие необратимо.';
+
+  @override
+  String get deleteExerciseError => 'Не удалось удалить упражнение';
+
+  @override
+  String get archiveExerciseError => 'Не удалось обновить упражнение';
 }

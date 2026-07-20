@@ -250,5 +250,53 @@
   "exerciseNotSpecified": "Not specified",
   "@exerciseNotSpecified": {
     "description": "\"No selection\" option for the optional primary muscle/equipment dropdowns on the exercise form (S-08)."
+  },
+  "exerciseDetailLoadError": "Couldn't load the exercise",
+  "@exerciseDetailLoadError": {
+    "description": "Error state on the exercise card (S-07)."
+  },
+  "exerciseAboutTab": "About",
+  "@exerciseAboutTab": {
+    "description": "\"About\" tab label on the exercise card (S-07)."
+  },
+  "exerciseHistoryTab": "History",
+  "@exerciseHistoryTab": {
+    "description": "\"History\" tab label on the exercise card (S-07)."
+  },
+  "exerciseHistoryEmpty": "No completed workouts with this exercise yet",
+  "@exerciseHistoryEmpty": {
+    "description": "Empty state for the \"History\" tab on the exercise card (S-07)."
+  },
+  "exerciseArchivedBadge": "Archived",
+  "@exerciseArchivedBadge": {
+    "description": "Badge shown on the exercise card (S-07) when the exercise is archived."
+  },
+  "archiveExerciseAction": "Archive",
+  "@archiveExerciseAction": {
+    "description": "Menu action on the exercise card (S-07)."
+  },
+  "unarchiveExerciseAction": "Unarchive",
+  "@unarchiveExerciseAction": {
+    "description": "Menu action on the exercise card (S-07)."
+  },
+  "deleteExerciseAction": "Delete",
+  "@deleteExerciseAction": {
+    "description": "Menu action on the exercise card (S-07), only offered for an unused user-created exercise (DM 10)."
+  },
+  "deleteExerciseConfirmTitle": "Delete this exercise?",
+  "@deleteExerciseConfirmTitle": {
+    "description": "AlertDialog title confirming exercise deletion (S-07, DM 10 — permanent, no Undo)."
+  },
+  "deleteExerciseConfirmMessage": "This can't be undone.",
+  "@deleteExerciseConfirmMessage": {
+    "description": "AlertDialog body confirming exercise deletion (S-07)."
+  },
+  "deleteExerciseError": "Couldn't delete the exercise",
+  "@deleteExerciseError": {
+    "description": "Snackbar shown when deleting an exercise fails (S-07)."
+  },
+  "archiveExerciseError": "Couldn't update the exercise",
+  "@archiveExerciseError": {
+    "description": "Snackbar shown when archiving/unarchiving an exercise fails (S-07)."
   }
 }

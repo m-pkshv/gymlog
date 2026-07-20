@@ -130,6 +130,55 @@ void main() {
     });
   });
 
+  group('canDelete (DM 10)', () {
+    test('false for a built-in exercise', () async {
+      final builtIn = _builtIn('squat', name: 'Barbell Squat');
+      await db.into(db.exercises).insert(builtIn.toInsertCompanion());
+
+      expect(await service.canDelete(builtIn), isFalse);
+    });
+
+    test('true for an unused user-created exercise', () async {
+      final exercise = await repository.create(
+        name: 'Lunges',
+        exerciseType: ExerciseType.strength,
+      );
+
+      expect(await service.canDelete(exercise), isTrue);
+    });
+
+    test('false for a user-created exercise used in a workout', () async {
+      final exercise = await repository.create(
+        name: 'Lunges',
+        exerciseType: ExerciseType.strength,
+      );
+      await db
+          .into(db.workouts)
+          .insert(
+            WorkoutsCompanion.insert(
+              id: 'w1',
+              date: '2026-07-20',
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      await db
+          .into(db.workoutExercises)
+          .insert(
+            WorkoutExercisesCompanion.insert(
+              id: 'we1',
+              workoutId: 'w1',
+              exerciseId: exercise.id,
+              orderIndex: 0,
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+
+      expect(await service.canDelete(exercise), isFalse);
+    });
+  });
+
   group('delete (DM 10)', () {
     test('rejects deleting a built-in exercise', () async {
       final builtIn = _builtIn('squat', name: 'Barbell Squat');

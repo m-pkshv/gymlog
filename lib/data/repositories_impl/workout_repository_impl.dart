@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../domain/enums.dart';
+import '../../domain/models/exercise_history_entry.dart';
 import '../../domain/models/exercise_set.dart';
 import '../../domain/models/workout.dart';
 import '../../domain/models/workout_details.dart';
@@ -220,5 +221,58 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
     await (_db.update(
       _db.exerciseSets,
     )..where((s) => s.id.equals(set.id))).write(set.toUpdateCompanion());
+  }
+
+  @override
+  Future<List<ExerciseHistoryEntry>> getExerciseHistory(
+    String exerciseId,
+  ) async {
+    final query =
+        _db.select(_db.workoutExercises).join([
+            innerJoin(
+              _db.workouts,
+              _db.workouts.id.equalsExp(_db.workoutExercises.workoutId),
+            ),
+          ])
+          ..where(
+            _db.workoutExercises.exerciseId.equals(exerciseId) &
+                _db.workoutExercises.isDeleted.equals(false) &
+                _db.workouts.status.equals(WorkoutStatus.completed.name) &
+                _db.workouts.isDeleted.equals(false),
+          )
+          ..orderBy([OrderingTerm.desc(_db.workouts.date)]);
+    final rows = await query.get();
+    if (rows.isEmpty) return const [];
+
+    final workoutExerciseIds = rows
+        .map((row) => row.readTable(_db.workoutExercises).id)
+        .toList();
+    final setRows =
+        await (_db.select(_db.exerciseSets)
+              ..where(
+                (s) =>
+                    s.workoutExerciseId.isIn(workoutExerciseIds) &
+                    s.isDeleted.equals(false),
+              )
+              ..orderBy([(s) => OrderingTerm.asc(s.setNumber)]))
+            .get();
+    final setsByWorkoutExercise = <String, List<drift.ExerciseSet>>{};
+    for (final row in setRows) {
+      setsByWorkoutExercise
+          .putIfAbsent(row.workoutExerciseId, () => [])
+          .add(row);
+    }
+
+    return rows.map((row) {
+      final workoutExercise = row.readTable(_db.workoutExercises);
+      final workout = row.readTable(_db.workouts);
+      final sets =
+          setsByWorkoutExercise[workoutExercise.id] ??
+          const <drift.ExerciseSet>[];
+      return ExerciseHistoryEntry(
+        workout: workout.toDomain(),
+        sets: sets.map((s) => s.toDomain()).toList(),
+      );
+    }).toList();
   }
 }

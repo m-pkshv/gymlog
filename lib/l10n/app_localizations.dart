@@ -577,6 +577,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not specified'**
   String get exerciseNotSpecified;
+
+  /// Error state on the exercise card (S-07).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the exercise'**
+  String get exerciseDetailLoadError;
+
+  /// "About" tab label on the exercise card (S-07).
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get exerciseAboutTab;
+
+  /// "History" tab label on the exercise card (S-07).
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get exerciseHistoryTab;
+
+  /// Empty state for the "History" tab on the exercise card (S-07).
+  ///
+  /// In en, this message translates to:
+  /// **'No completed workouts with this exercise yet'**
+  String get exerciseHistoryEmpty;
+
+  /// Badge shown on the exercise card (S-07) when the exercise is archived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get exerciseArchivedBadge;
+
+  /// Menu action on the exercise card (S-07).
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get archiveExerciseAction;
+
+  /// Menu action on the exercise card (S-07).
+  ///
+  /// In en, this message translates to:
+  /// **'Unarchive'**
+  String get unarchiveExerciseAction;
+
+  /// Menu action on the exercise card (S-07), only offered for an unused user-created exercise (DM 10).
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteExerciseAction;
+
+  /// AlertDialog title confirming exercise deletion (S-07, DM 10 — permanent, no Undo).
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this exercise?'**
+  String get deleteExerciseConfirmTitle;
+
+  /// AlertDialog body confirming exercise deletion (S-07).
+  ///
+  /// In en, this message translates to:
+  /// **'This can\'t be undone.'**
+  String get deleteExerciseConfirmMessage;
+
+  /// Snackbar shown when deleting an exercise fails (S-07).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the exercise'**
+  String get deleteExerciseError;
+
+  /// Snackbar shown when archiving/unarchiving an exercise fails (S-07).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update the exercise'**
+  String get archiveExerciseError;
 }
 
 class _AppLocalizationsDelegate

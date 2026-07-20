@@ -55,6 +55,7 @@ class _ExerciseListTile extends StatelessWidget {
       leading: Icon(exerciseTypeIcon(exercise.exerciseType)),
       title: Text(exercise.name),
       subtitle: Text(exerciseTypeLabel(l10n, exercise.exerciseType)),
+      onTap: () => context.push('/exercises/${exercise.id}'),
     );
   }
 }

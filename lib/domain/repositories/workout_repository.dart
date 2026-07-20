@@ -1,3 +1,4 @@
+import '../models/exercise_history_entry.dart';
 import '../models/exercise_set.dart';
 import '../models/workout.dart';
 import '../models/workout_details.dart';
@@ -38,4 +39,9 @@ abstract class WorkoutRepository {
 
   /// Persists set field changes — the autosave write (TS 5).
   Future<void> updateSet(ExerciseSet set);
+
+  /// Past occurrences of [exerciseId] in completed, non-deleted workouts,
+  /// most recent date first — the exercise card's "История" tab (S-07,
+  /// Stage 2).
+  Future<List<ExerciseHistoryEntry>> getExerciseHistory(String exerciseId);
 }

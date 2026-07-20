@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/exercises/create_exercise_screen.dart';
+import '../features/exercises/exercise_detail_screen.dart';
 import '../features/exercises/screen.dart';
 import '../features/history/screen.dart';
 import '../features/more/screen.dart';
@@ -83,6 +84,12 @@ final GoRouter appRouter = GoRouter(
                     key: state.pageKey,
                     fullscreenDialog: true,
                     child: const CreateExerciseScreen(),
+                  ),
+                ),
+                GoRoute(
+                  path: ':exerciseId',
+                  builder: (_, state) => ExerciseDetailScreen(
+                    exerciseId: state.pathParameters['exerciseId']!,
                   ),
                 ),
               ],

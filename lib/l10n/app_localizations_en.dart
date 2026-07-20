@@ -257,4 +257,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exerciseNotSpecified => 'Not specified';
+
+  @override
+  String get exerciseDetailLoadError => 'Couldn\'t load the exercise';
+
+  @override
+  String get exerciseAboutTab => 'About';
+
+  @override
+  String get exerciseHistoryTab => 'History';
+
+  @override
+  String get exerciseHistoryEmpty =>
+      'No completed workouts with this exercise yet';
+
+  @override
+  String get exerciseArchivedBadge => 'Archived';
+
+  @override
+  String get archiveExerciseAction => 'Archive';
+
+  @override
+  String get unarchiveExerciseAction => 'Unarchive';
+
+  @override
+  String get deleteExerciseAction => 'Delete';
+
+  @override
+  String get deleteExerciseConfirmTitle => 'Delete this exercise?';
+
+  @override
+  String get deleteExerciseConfirmMessage => 'This can\'t be undone.';
+
+  @override
+  String get deleteExerciseError => 'Couldn\'t delete the exercise';
+
+  @override
+  String get archiveExerciseError => 'Couldn\'t update the exercise';
 }

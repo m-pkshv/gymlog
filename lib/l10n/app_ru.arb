@@ -79,5 +79,17 @@
   "exerciseDescriptionLabel": "Описание",
   "exerciseYoutubeUrlLabel": "Ссылка на YouTube",
   "exerciseYoutubeUrlWarning": "Не похоже на ссылку YouTube",
-  "exerciseNotSpecified": "Не указано"
+  "exerciseNotSpecified": "Не указано",
+  "exerciseDetailLoadError": "Не удалось загрузить упражнение",
+  "exerciseAboutTab": "О упражнении",
+  "exerciseHistoryTab": "История",
+  "exerciseHistoryEmpty": "Пока нет завершённых тренировок с этим упражнением",
+  "exerciseArchivedBadge": "В архиве",
+  "archiveExerciseAction": "Архивировать",
+  "unarchiveExerciseAction": "Разархивировать",
+  "deleteExerciseAction": "Удалить",
+  "deleteExerciseConfirmTitle": "Удалить упражнение?",
+  "deleteExerciseConfirmMessage": "Это действие необратимо.",
+  "deleteExerciseError": "Не удалось удалить упражнение",
+  "archiveExerciseError": "Не удалось обновить упражнение"
 }

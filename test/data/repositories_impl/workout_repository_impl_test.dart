@@ -127,4 +127,64 @@ void main() {
   test('getDetails returns null for an unknown workout', () async {
     expect(await workouts.getDetails('does-not-exist'), isNull);
   });
+
+  group('getExerciseHistory (S-07)', () {
+    test(
+      'only completed occurrences are returned, most recent date first',
+      () async {
+        final exercise = await exercises.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+
+        final older = await workouts.createDraft(date: DateTime(2026, 7, 1));
+        final olderWe = await workouts.addExercise(
+          workoutId: older.id,
+          exerciseId: exercise.id,
+        );
+        final olderSet = await workouts.addSet(
+          workoutExerciseId: olderWe.id,
+          isWarmup: false,
+        );
+        await workouts.updateSet(
+          olderSet.copyWith(actualWeightKg: 80, actualReps: 5),
+        );
+        await workouts.updateWorkout(
+          older.copyWith(status: WorkoutStatus.completed),
+        );
+
+        final newer = await workouts.createDraft(date: DateTime(2026, 7, 19));
+        final newerWe = await workouts.addExercise(
+          workoutId: newer.id,
+          exerciseId: exercise.id,
+        );
+        await workouts.addSet(workoutExerciseId: newerWe.id, isWarmup: false);
+        await workouts.updateWorkout(
+          newer.copyWith(status: WorkoutStatus.completed),
+        );
+
+        // Draft workout with the exercise: not completed, must not show up.
+        final draft = await workouts.createDraft(date: DateTime(2026, 7, 20));
+        await workouts.addExercise(
+          workoutId: draft.id,
+          exerciseId: exercise.id,
+        );
+
+        final history = await workouts.getExerciseHistory(exercise.id);
+
+        expect(history.map((e) => e.workout.id), [newer.id, older.id]);
+        expect(history[1].sets.single.actualWeightKg, 80);
+        expect(history[1].sets.single.actualReps, 5);
+      },
+    );
+
+    test('returns nothing for an exercise never used', () async {
+      final exercise = await exercises.create(
+        name: 'Unused',
+        exerciseType: ExerciseType.reps,
+      );
+
+      expect(await workouts.getExerciseHistory(exercise.id), isEmpty);
+    });
+  });
 }

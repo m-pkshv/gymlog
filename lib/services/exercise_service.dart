@@ -38,6 +38,15 @@ class ExerciseService {
     );
   }
 
+  /// Whether the UI should offer "Delete" at all (S-07) — DM 10: built-in
+  /// exercises never can, user-created ones only once unused. [delete]
+  /// re-checks this itself; this is for the UI to decide which action
+  /// ("Delete" vs. "Archive") to show in the first place.
+  Future<bool> canDelete(Exercise exercise) async {
+    if (exercise.isBuiltIn) return false;
+    return !(await _exerciseRepository.isUsedInWorkouts(exercise.id));
+  }
+
   /// DM 10: built-in exercises can never be physically deleted; a
   /// user-created exercise can only be deleted once it isn't used anywhere
   /// — otherwise the caller should archive instead (the UI substitutes
