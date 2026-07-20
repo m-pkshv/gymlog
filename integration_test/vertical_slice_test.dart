@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymlog/app/providers.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/seed/seed_runner.dart';
+import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/main.dart';
 import 'package:integration_test/integration_test.dart';
 
@@ -58,7 +59,7 @@ void main() {
     // FAB creates a draft and opens the editor (S-03).
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
-    expect(find.text('Start workout'), findsOneWidget);
+    expect(find.text('Draft'), findsOneWidget);
     expect(find.text('No exercises added yet'), findsOneWidget);
 
     // Add an existing catalog exercise (seeded by SeedRunner, DM 12).
@@ -95,11 +96,16 @@ void main() {
     await tester.tap(find.byType(Checkbox).last);
     await tester.pumpAndSettle();
 
-    // Start -> Finish (draft -> inProgress -> completed, workout_service).
+    // Start -> Finish (draft -> inProgress -> completed, workout_service),
+    // via the status chip's menu (S-03, DM 6.4.1).
+    await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Start workout'));
     await tester.pumpAndSettle();
     expect(find.text('In progress'), findsOneWidget);
 
+    await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Finish'));
     await tester.pumpAndSettle();
     expect(find.text('Completed'), findsOneWidget);

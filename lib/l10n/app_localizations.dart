@@ -266,6 +266,60 @@ abstract class AppLocalizations {
   /// **'Completed'**
   String get statusCompleted;
 
+  /// WorkoutStatus.planned display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned'**
+  String get statusPlanned;
+
+  /// WorkoutStatus.skipped display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped'**
+  String get statusSkipped;
+
+  /// WorkoutStatus.cancelled display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get statusCancelled;
+
+  /// Status menu action for draft -> planned (S-03, DM 6.4.1).
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get transitionScheduleAction;
+
+  /// Status menu action for completed -> inProgress, within the 24h resume window (S-03, DM 6.4.1).
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get transitionResumeAction;
+
+  /// Status menu action for planned/inProgress -> cancelled (S-03, DM 6.4.1).
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get transitionCancelAction;
+
+  /// Status menu action for planned -> skipped (S-03, DM 6.4.1).
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get transitionSkipAction;
+
+  /// Status menu action for skipped/cancelled -> planned (S-03, DM 6.4.1).
+  ///
+  /// In en, this message translates to:
+  /// **'Back to planned'**
+  String get transitionBackToPlanAction;
+
+  /// Status menu action for planned -> draft (S-03, DM 6.4.1).
+  ///
+  /// In en, this message translates to:
+  /// **'Back to draft'**
+  String get transitionBackToDraftAction;
+
   /// Button on the workout editor (S-03) that transitions draft -> inProgress.
   ///
   /// In en, this message translates to:

@@ -112,6 +112,42 @@
   "@statusCompleted": {
     "description": "WorkoutStatus.completed display name."
   },
+  "statusPlanned": "Planned",
+  "@statusPlanned": {
+    "description": "WorkoutStatus.planned display name."
+  },
+  "statusSkipped": "Skipped",
+  "@statusSkipped": {
+    "description": "WorkoutStatus.skipped display name."
+  },
+  "statusCancelled": "Cancelled",
+  "@statusCancelled": {
+    "description": "WorkoutStatus.cancelled display name."
+  },
+  "transitionScheduleAction": "Schedule",
+  "@transitionScheduleAction": {
+    "description": "Status menu action for draft -> planned (S-03, DM 6.4.1)."
+  },
+  "transitionResumeAction": "Resume",
+  "@transitionResumeAction": {
+    "description": "Status menu action for completed -> inProgress, within the 24h resume window (S-03, DM 6.4.1)."
+  },
+  "transitionCancelAction": "Cancel",
+  "@transitionCancelAction": {
+    "description": "Status menu action for planned/inProgress -> cancelled (S-03, DM 6.4.1)."
+  },
+  "transitionSkipAction": "Skip",
+  "@transitionSkipAction": {
+    "description": "Status menu action for planned -> skipped (S-03, DM 6.4.1)."
+  },
+  "transitionBackToPlanAction": "Back to planned",
+  "@transitionBackToPlanAction": {
+    "description": "Status menu action for skipped/cancelled -> planned (S-03, DM 6.4.1)."
+  },
+  "transitionBackToDraftAction": "Back to draft",
+  "@transitionBackToDraftAction": {
+    "description": "Status menu action for planned -> draft (S-03, DM 6.4.1)."
+  },
   "startWorkoutAction": "Start workout",
   "@startWorkoutAction": {
     "description": "Button on the workout editor (S-03) that transitions draft -> inProgress."

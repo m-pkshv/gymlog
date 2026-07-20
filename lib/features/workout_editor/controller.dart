@@ -274,16 +274,13 @@ class WorkoutEditorController
     }
   }
 
-  /// "Начать тренировку": `draft -> inProgress` via `workout_service`
-  /// (Stage 1 scope — no full status menu yet).
-  Future<Result<Workout, AppError>> start() =>
-      _changeStatus(WorkoutStatus.inProgress);
-
-  /// "Завершить": `inProgress -> completed` via `workout_service`.
-  Future<Result<Workout, AppError>> finish() =>
-      _changeStatus(WorkoutStatus.completed);
-
-  Future<Result<Workout, AppError>> _changeStatus(
+  /// Changes the workout's status via `workout_service` (the status menu,
+  /// S-03 — every DM 6.4.1 transition, not just draft -> inProgress ->
+  /// completed). The service rejects anything not on
+  /// `WorkoutService.allowedTransitions`; the UI only ever offers allowed
+  /// targets, but this doesn't re-check that itself — the service is the
+  /// single point of truth.
+  Future<Result<Workout, AppError>> changeStatus(
     WorkoutStatus newStatus,
   ) async {
     await flushAll();
@@ -301,6 +298,31 @@ class WorkoutEditorController
       );
     }, (_) {});
     return result;
+  }
+
+  /// "Перенос на другую дату" (DM 6.4.1: allowed in any status except
+  /// `inProgress` — the UI only wires up the date tap in that case, this
+  /// doesn't re-check it). A plain field write, not a status transition, so
+  /// it doesn't go through `workout_service`.
+  Future<void> moveDate(DateTime newDate) async {
+    final details = _details;
+    if (details == null) return;
+    try {
+      final updated = details.workout.copyWith(
+        date: newDate,
+        updatedAt: DateTime.now().toUtc(),
+      );
+      await _workoutRepository.updateWorkout(updated);
+      state = AsyncValue.data(
+        WorkoutDetails(workout: updated, exercises: details.exercises),
+      );
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to move workout $_workoutId to $newDate',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   @override

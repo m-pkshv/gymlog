@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gymlog/app/providers.dart';
 import 'package:gymlog/core/constants.dart';
+import 'package:gymlog/core/date_format.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/features/exercises/create_exercise_screen.dart';
@@ -142,7 +143,7 @@ void main() {
       await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
 
-      expect(find.text('Start workout'), findsOneWidget);
+      expect(find.text('Draft'), findsOneWidget);
       expect(find.text('No exercises added yet'), findsOneWidget);
 
       final workouts = await db.select(db.workouts).get();
@@ -340,19 +341,23 @@ void main() {
       await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
 
+      // Status chip -> menu -> "Start workout" (draft -> inProgress).
+      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Start workout'));
       await tester.pumpAndSettle();
       expect(find.text('In progress'), findsOneWidget);
-      expect(find.text('Finish'), findsOneWidget);
 
       var workouts = await db.select(db.workouts).get();
       expect(workouts.single.status, WorkoutStatus.inProgress.name);
       expect(workouts.single.startedAt, isNotNull);
 
+      // Status chip -> menu -> "Finish" (inProgress -> completed).
+      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Finish'));
       await tester.pumpAndSettle();
       expect(find.text('Completed'), findsOneWidget);
-      expect(find.text('Finish'), findsNothing);
 
       workouts = await db.select(db.workouts).get();
       expect(workouts.single.status, WorkoutStatus.completed.name);
@@ -538,6 +543,74 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('No past results to copy yet'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'the status menu only offers the transitions allowed from draft (DM 6.4.1)',
+    (tester) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+      await tester.pumpAndSettle();
+
+      // draft -> {planned, inProgress} only (WorkoutService.allowedTransitions).
+      expect(find.text('Schedule'), findsOneWidget);
+      expect(find.text('Start workout'), findsOneWidget);
+      expect(find.text('Finish'), findsNothing);
+      expect(find.text('Cancel'), findsNothing);
+      expect(find.text('Skip'), findsNothing);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'tapping the date opens a date picker, movable except while inProgress '
+    '(DM 6.4.1)',
+    (tester) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(formatShortDate(DateTime.now())));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DatePickerDialog), findsOneWidget);
+
+      // Dismiss without picking a new day -- the picker opening at all is
+      // the thing under test; `moveDate` itself is covered at the
+      // controller level (controller_test.dart) against a real database.
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'the date is not tappable while the workout is inProgress (DM 6.4.1)',
+    (tester) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Start workout'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(formatShortDate(DateTime.now())));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DatePickerDialog), findsNothing);
 
       await _unmountAndFlush(tester);
     },

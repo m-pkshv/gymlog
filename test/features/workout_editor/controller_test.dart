@@ -301,4 +301,70 @@ void main() {
       },
     );
   });
+
+  group('changeStatus (S-03, DM 6.4.1 full status menu)', () {
+    test('applies any allowed transition, not just start/finish', () async {
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 20));
+      final controller = WorkoutEditorController(
+        workout.id,
+        workouts,
+        service,
+        logger,
+      );
+      addTearDown(controller.dispose);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      // draft -> planned ("Запланировать") isn't reachable via start()/
+      // finish() in the old Stage 1 UI -- exercising it here locks in that
+      // the controller now delegates the full DM 6.4.1 table.
+      final result = await controller.changeStatus(WorkoutStatus.planned);
+
+      expect(result.isOk, isTrue);
+      final stored = await workouts.getDetails(workout.id);
+      expect(stored!.workout.status, WorkoutStatus.planned);
+    });
+
+    test('rejects a transition workout_service doesn\'t allow', () async {
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 20));
+      final controller = WorkoutEditorController(
+        workout.id,
+        workouts,
+        service,
+        logger,
+      );
+      addTearDown(controller.dispose);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      // draft -> completed is not on WorkoutService.allowedTransitions.
+      final result = await controller.changeStatus(WorkoutStatus.completed);
+
+      expect(result.isErr, isTrue);
+      final stored = await workouts.getDetails(workout.id);
+      expect(stored!.workout.status, WorkoutStatus.draft);
+    });
+  });
+
+  group('moveDate (S-03, DM 6.4.1: allowed in any status but inProgress)', () {
+    test('updates the workout date and local state', () async {
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 10));
+      final controller = WorkoutEditorController(
+        workout.id,
+        workouts,
+        service,
+        logger,
+      );
+      addTearDown(controller.dispose);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      await controller.moveDate(DateTime(2026, 7, 25));
+
+      expect(
+        controller.state.value!.workout.date,
+        DateTime(2026, 7, 25),
+        reason: 'local state updates immediately, no reload needed',
+      );
+      final stored = await workouts.getDetails(workout.id);
+      expect(stored!.workout.date, DateTime(2026, 7, 25));
+    });
+  });
 }

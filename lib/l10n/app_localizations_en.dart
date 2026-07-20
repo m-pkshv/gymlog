@@ -93,6 +93,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusCompleted => 'Completed';
 
   @override
+  String get statusPlanned => 'Planned';
+
+  @override
+  String get statusSkipped => 'Skipped';
+
+  @override
+  String get statusCancelled => 'Cancelled';
+
+  @override
+  String get transitionScheduleAction => 'Schedule';
+
+  @override
+  String get transitionResumeAction => 'Resume';
+
+  @override
+  String get transitionCancelAction => 'Cancel';
+
+  @override
+  String get transitionSkipAction => 'Skip';
+
+  @override
+  String get transitionBackToPlanAction => 'Back to planned';
+
+  @override
+  String get transitionBackToDraftAction => 'Back to draft';
+
+  @override
   String get startWorkoutAction => 'Start workout';
 
   @override

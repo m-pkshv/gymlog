@@ -14,11 +14,11 @@ import 'controller.dart';
 import 'status_labels.dart';
 import 'widgets/exercise_card.dart';
 
-/// S-03 workout editor, Stage 1 minimum (02_DEVELOPMENT_PLAN.md): add
-/// exercises, add sets, edit plan/fact with autosave, "✓" (DM 6.7), and
-/// draft -> inProgress -> completed via "Начать"/"Завершить". Tags, the
-/// full status menu, progression, reorder, comments and "прошлые
-/// результаты" are out of scope until later stages.
+/// S-03 workout editor: add exercises, add sets, edit plan/fact with
+/// autosave, "✓" (DM 6.7), "прошлые результаты"/"копировать показатели
+/// прошлого выполнения" (TS 8), the full DM 6.4.1 status menu (Stage 3),
+/// and moving the date. Tags, progression, reorder and comments are Stage
+/// 3+ scope not yet covered here.
 class WorkoutEditorScreen extends ConsumerStatefulWidget {
   const WorkoutEditorScreen({super.key, required this.workoutId});
 
@@ -79,18 +79,28 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
 
   Future<void> _changeStatus(WorkoutStatus newStatus) async {
     final l10n = AppLocalizations.of(context)!;
-    final controller = ref.read(
-      workoutEditorControllerProvider(widget.workoutId).notifier,
-    );
-    final result = newStatus == WorkoutStatus.inProgress
-        ? await controller.start()
-        : await controller.finish();
+    final result = await ref
+        .read(workoutEditorControllerProvider(widget.workoutId).notifier)
+        .changeStatus(newStatus);
     if (!mounted) return;
     result.fold((_) {}, (error) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.workoutStatusChangeError)));
     });
+  }
+
+  Future<void> _moveDate(DateTime currentDate) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: currentDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null || !mounted) return;
+    await ref
+        .read(workoutEditorControllerProvider(widget.workoutId).notifier)
+        .moveDate(picked);
   }
 
   @override
@@ -112,6 +122,7 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
           onAddExercise: _addExercise,
           onChangeStatus: _changeStatus,
           onCopyLastPerformance: _copyLastPerformance,
+          onMoveDate: _moveDate,
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) =>
@@ -128,6 +139,7 @@ class _EditorBody extends StatelessWidget {
     required this.onAddExercise,
     required this.onChangeStatus,
     required this.onCopyLastPerformance,
+    required this.onMoveDate,
   });
 
   final WorkoutDetails details;
@@ -135,6 +147,7 @@ class _EditorBody extends StatelessWidget {
   final VoidCallback onAddExercise;
   final void Function(WorkoutStatus newStatus) onChangeStatus;
   final void Function(String workoutExerciseId) onCopyLastPerformance;
+  final void Function(DateTime currentDate) onMoveDate;
 
   @override
   Widget build(BuildContext context) {
@@ -147,20 +160,25 @@ class _EditorBody extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: Row(
             children: [
-              Text(formatShortDate(workout.date)),
-              const SizedBox(width: 12),
-              Chip(label: Text(workoutStatusLabel(l10n, workout.status))),
-              const Spacer(),
-              if (workout.status == WorkoutStatus.draft)
-                FilledButton(
-                  onPressed: () => onChangeStatus(WorkoutStatus.inProgress),
-                  child: Text(l10n.startWorkoutAction),
-                )
-              else if (workout.status == WorkoutStatus.inProgress)
-                FilledButton(
-                  onPressed: () => onChangeStatus(WorkoutStatus.completed),
-                  child: Text(l10n.finishWorkoutAction),
+              // DM 6.4.1: moving the date is allowed in any status except
+              // inProgress.
+              if (workout.status == WorkoutStatus.inProgress)
+                Text(formatShortDate(workout.date))
+              else
+                InkWell(
+                  borderRadius: BorderRadius.circular(4),
+                  onTap: () => onMoveDate(workout.date),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
+                    child: Text(formatShortDate(workout.date)),
+                  ),
                 ),
+              const SizedBox(width: 8),
+              _StatusMenu(status: workout.status, onSelected: onChangeStatus),
+              const Spacer(),
             ],
           ),
         ),
@@ -210,6 +228,36 @@ class _EditorBody extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Status chip with a menu of the transitions currently allowed from
+/// [status] (S-03, DM 6.4.1 — "статус-чип с меню переходов (только
+/// разрешённые)"). Every status has at least one allowed transition, so the
+/// menu is never empty.
+class _StatusMenu extends StatelessWidget {
+  const _StatusMenu({required this.status, required this.onSelected});
+
+  final WorkoutStatus status;
+  final void Function(WorkoutStatus newStatus) onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return PopupMenuButton<WorkoutStatus>(
+      onSelected: onSelected,
+      itemBuilder: (context) => [
+        for (final target in allowedNextStatuses(status))
+          PopupMenuItem(
+            value: target,
+            child: Text(workoutTransitionActionLabel(l10n, status, target)),
+          ),
+      ],
+      child: Chip(
+        label: Text(workoutStatusLabel(l10n, status)),
+        avatar: const Icon(Icons.arrow_drop_down, size: 18),
+      ),
     );
   }
 }

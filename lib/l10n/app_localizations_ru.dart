@@ -93,6 +93,33 @@ class AppLocalizationsRu extends AppLocalizations {
   String get statusCompleted => 'Завершена';
 
   @override
+  String get statusPlanned => 'Запланирована';
+
+  @override
+  String get statusSkipped => 'Пропущена';
+
+  @override
+  String get statusCancelled => 'Отменена';
+
+  @override
+  String get transitionScheduleAction => 'Запланировать';
+
+  @override
+  String get transitionResumeAction => 'Возобновить';
+
+  @override
+  String get transitionCancelAction => 'Отменить';
+
+  @override
+  String get transitionSkipAction => 'Пропустить';
+
+  @override
+  String get transitionBackToPlanAction => 'Вернуть в план';
+
+  @override
+  String get transitionBackToDraftAction => 'Вернуть в черновик';
+
+  @override
   String get startWorkoutAction => 'Начать тренировку';
 
   @override
