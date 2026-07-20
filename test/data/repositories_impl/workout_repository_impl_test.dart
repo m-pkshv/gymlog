@@ -128,6 +128,34 @@ void main() {
     expect(await workouts.getDetails('does-not-exist'), isNull);
   });
 
+  test(
+    'an old workout still displays an exercise that was archived after '
+    '(Stage 2 acceptance criteria and manual check ★: "архивное упражнение '
+    'скрыто из выбора, но открывается из старой тренировки")',
+    () async {
+      final exercise = await exercises.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 1));
+      await workouts.addExercise(
+        workoutId: workout.id,
+        exerciseId: exercise.id,
+      );
+
+      await exercises.setArchived(exercise.id, archived: true);
+
+      // Archived: hidden from the catalog picker (S-06/add-exercise).
+      expect(await exercises.watchAll().first, isEmpty);
+
+      // But the old workout that already references it still shows it
+      // correctly -- getDetails fetches by id, unfiltered by isArchived.
+      final details = await workouts.getDetails(workout.id);
+      expect(details!.exercises.single.exercise.name, 'Squat');
+      expect(details.exercises.single.exercise.isArchived, isTrue);
+    },
+  );
+
   group('getExerciseHistory (S-07)', () {
     test(
       'only completed occurrences are returned, most recent date first',
