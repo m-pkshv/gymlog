@@ -92,7 +92,8 @@ void main() {
   );
 
   test(
-    'watchHistory only lists completed workouts, most recent first',
+    'watchHistory only lists completed workouts, most recent first, with '
+    'their exercise count',
     () async {
       final older = await workouts.createDraft(date: DateTime(2026, 7, 1));
       await workouts.updateWorkout(
@@ -100,6 +101,11 @@ void main() {
       );
 
       final newer = await workouts.createDraft(date: DateTime(2026, 7, 19));
+      final exercise = await exercises.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      await workouts.addExercise(workoutId: newer.id, exerciseId: exercise.id);
       await workouts.updateWorkout(
         newer.copyWith(status: WorkoutStatus.completed),
       );
@@ -108,8 +114,13 @@ void main() {
       // draft stays in draft status - should not show up in history
 
       final history = await workouts.watchHistory().first;
-      expect(history.map((w) => w.id), [newer.id, older.id]);
-      expect(history.any((w) => w.id == draft.id), isFalse);
+      expect(history.map((e) => e.workout.id), [newer.id, older.id]);
+      expect(history.any((e) => e.workout.id == draft.id), isFalse);
+
+      final newerEntry = history.firstWhere((e) => e.workout.id == newer.id);
+      expect(newerEntry.exerciseCount, 1);
+      final olderEntry = history.firstWhere((e) => e.workout.id == older.id);
+      expect(olderEntry.exerciseCount, 0);
     },
   );
 

@@ -2,6 +2,7 @@ import '../models/exercise_set.dart';
 import '../models/workout.dart';
 import '../models/workout_details.dart';
 import '../models/workout_exercise.dart';
+import '../models/workout_history_entry.dart';
 
 /// Storage contract for the workout aggregate — `Workout` +
 /// `WorkoutExercise` + `ExerciseSet` (06_DATA_MODEL.md, sections 6.4, 6.6,
@@ -15,9 +16,10 @@ abstract class WorkoutRepository {
 
   Future<WorkoutDetails?> getDetails(String workoutId);
 
-  /// Completed, non-deleted workouts, most recent date first (S-02,
-  /// Stage 1 scope — no filters yet, those arrive in Stage 3).
-  Stream<List<Workout>> watchHistory();
+  /// Completed, non-deleted workouts with their exercise count, most
+  /// recent date first (S-02, Stage 1 scope — no filters/pagination yet,
+  /// those arrive in Stage 3).
+  Stream<List<WorkoutHistoryEntry>> watchHistory();
 
   Future<Workout> createDraft({required DateTime date});
 

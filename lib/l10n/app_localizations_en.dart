@@ -133,4 +133,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setFieldDurationSec => 'Duration, s';
+
+  @override
+  String get historyEmptyTitle => 'No completed workouts yet';
+
+  @override
+  String get historyLoadError => 'Couldn\'t load history';
+
+  @override
+  String get workoutDefaultNamePrefix => 'Workout';
+
+  @override
+  String workoutExerciseCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count exercises',
+      one: '$count exercise',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String workoutDurationMinutes(int minutes) {
+    return '$minutes min';
+  }
 }

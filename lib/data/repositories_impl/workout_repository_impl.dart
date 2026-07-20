@@ -6,6 +6,7 @@ import '../../domain/models/exercise_set.dart';
 import '../../domain/models/workout.dart';
 import '../../domain/models/workout_details.dart';
 import '../../domain/models/workout_exercise.dart';
+import '../../domain/models/workout_history_entry.dart';
 import '../../domain/repositories/workout_repository.dart';
 import '../database.dart' as drift;
 import '../mappers/exercise_mapper.dart';
@@ -94,16 +95,34 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
   }
 
   @override
-  Stream<List<Workout>> watchHistory() {
-    final query = _db.select(_db.workouts)
-      ..where(
-        (w) =>
-            w.status.equals(WorkoutStatus.completed.name) &
-            w.isDeleted.equals(false),
-      )
-      ..orderBy([(w) => OrderingTerm.desc(w.date)]);
+  Stream<List<WorkoutHistoryEntry>> watchHistory() {
+    // `exerciseCount` per workout is a SQL aggregate (TS 11.6: aggregate in
+    // the query, not by fetching every WorkoutExercise into Dart).
+    final exerciseCount = _db.workoutExercises.id.count();
+    final query =
+        _db.select(_db.workouts).join([
+            leftOuterJoin(
+              _db.workoutExercises,
+              _db.workoutExercises.workoutId.equalsExp(_db.workouts.id) &
+                  _db.workoutExercises.isDeleted.equals(false),
+            ),
+          ])
+          ..addColumns([exerciseCount])
+          ..where(
+            _db.workouts.status.equals(WorkoutStatus.completed.name) &
+                _db.workouts.isDeleted.equals(false),
+          )
+          ..groupBy([_db.workouts.id])
+          ..orderBy([OrderingTerm.desc(_db.workouts.date)]);
+
     return query.watch().map(
-      (rows) => rows.map((row) => row.toDomain()).toList(),
+      (rows) => rows.map((row) {
+        final workout = row.readTable(_db.workouts);
+        return WorkoutHistoryEntry(
+          workout: workout.toDomain(),
+          exerciseCount: row.read(exerciseCount) ?? 0,
+        );
+      }).toList(),
     );
   }
 

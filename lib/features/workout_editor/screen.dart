@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
+import '../../core/date_format.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/exercise.dart';
 import '../../domain/models/workout_details.dart';
@@ -132,7 +133,7 @@ class _EditorBody extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: Row(
             children: [
-              Text(_formatDate(workout.date)),
+              Text(formatShortDate(workout.date)),
               const SizedBox(width: 12),
               Chip(label: Text(workoutStatusLabel(l10n, workout.status))),
               const Spacer(),
@@ -193,11 +194,5 @@ class _EditorBody extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  String _formatDate(DateTime date) {
-    final day = date.day.toString().padLeft(2, '0');
-    final month = date.month.toString().padLeft(2, '0');
-    return '$day.$month.${date.year}';
   }
 }

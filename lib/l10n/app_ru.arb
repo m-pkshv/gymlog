@@ -41,5 +41,10 @@
   "setFieldWeightKg": "Вес, кг",
   "setFieldReps": "Повторения",
   "setFieldDistanceKm": "Дистанция, км",
-  "setFieldDurationSec": "Время, с"
+  "setFieldDurationSec": "Время, с",
+  "historyEmptyTitle": "Завершённых тренировок пока нет",
+  "historyLoadError": "Не удалось загрузить историю",
+  "workoutDefaultNamePrefix": "Тренировка",
+  "workoutExerciseCount": "{count, plural, one{{count} упражнение} few{{count} упражнения} many{{count} упражнений} other{{count} упражнений}}",
+  "workoutDurationMinutes": "{minutes} мин"
 }

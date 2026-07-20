@@ -13,6 +13,7 @@ import '../data/repositories_impl/exercise_repository_impl.dart';
 import '../data/repositories_impl/workout_repository_impl.dart';
 import '../domain/models/exercise.dart';
 import '../domain/models/workout_details.dart';
+import '../domain/models/workout_history_entry.dart';
 import '../domain/repositories/exercise_repository.dart';
 import '../domain/repositories/workout_repository.dart';
 import '../features/workout_editor/controller.dart';
@@ -41,6 +42,11 @@ final workoutServiceProvider = Provider<WorkoutService>((ref) {
 /// The exercise catalog list (S-06). Stage 1 has no search/filters yet.
 final exercisesListProvider = StreamProvider<List<Exercise>>((ref) {
   return ref.watch(exerciseRepositoryProvider).watchAll();
+});
+
+/// The history list (S-02). Stage 1 has no filters/calendar view yet.
+final historyListProvider = StreamProvider<List<WorkoutHistoryEntry>>((ref) {
+  return ref.watch(workoutRepositoryProvider).watchHistory();
 });
 
 /// The workout editor (S-03) controller, one instance per workout. Owns the

@@ -349,6 +349,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Duration, s'**
   String get setFieldDurationSec;
+
+  /// Empty state title on the History list (S-02) when there are no completed workouts.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed workouts yet'**
+  String get historyEmptyTitle;
+
+  /// Error state message on the History list (S-02).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load history'**
+  String get historyLoadError;
+
+  /// Prefix used as the display name of a Workout with name = null, followed by its date (06_DATA_MODEL.md, section 6.4: "Тренировка + дата").
+  ///
+  /// In en, this message translates to:
+  /// **'Workout'**
+  String get workoutDefaultNamePrefix;
+
+  /// Exercise count on a History list card (S-02).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} exercise} other{{count} exercises}}'**
+  String workoutExerciseCount(int count);
+
+  /// Duration on a History list card (S-02), rounded to whole minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String workoutDurationMinutes(int minutes);
 }
 
 class _AppLocalizationsDelegate

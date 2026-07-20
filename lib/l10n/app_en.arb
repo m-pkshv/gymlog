@@ -167,5 +167,31 @@
   "setFieldDurationSec": "Duration, s",
   "@setFieldDurationSec": {
     "description": "Duration field label in the sets table (S-03, cardio/time/stretch exercises)."
+  },
+  "historyEmptyTitle": "No completed workouts yet",
+  "@historyEmptyTitle": {
+    "description": "Empty state title on the History list (S-02) when there are no completed workouts."
+  },
+  "historyLoadError": "Couldn't load history",
+  "@historyLoadError": {
+    "description": "Error state message on the History list (S-02)."
+  },
+  "workoutDefaultNamePrefix": "Workout",
+  "@workoutDefaultNamePrefix": {
+    "description": "Prefix used as the display name of a Workout with name = null, followed by its date (06_DATA_MODEL.md, section 6.4: \"Тренировка + дата\")."
+  },
+  "workoutExerciseCount": "{count, plural, one{{count} exercise} other{{count} exercises}}",
+  "@workoutExerciseCount": {
+    "description": "Exercise count on a History list card (S-02).",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "workoutDurationMinutes": "{minutes} min",
+  "@workoutDurationMinutes": {
+    "description": "Duration on a History list card (S-02), rounded to whole minutes.",
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
   }
 }

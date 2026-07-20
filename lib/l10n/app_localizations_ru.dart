@@ -133,4 +133,31 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get setFieldDurationSec => 'Время, с';
+
+  @override
+  String get historyEmptyTitle => 'Завершённых тренировок пока нет';
+
+  @override
+  String get historyLoadError => 'Не удалось загрузить историю';
+
+  @override
+  String get workoutDefaultNamePrefix => 'Тренировка';
+
+  @override
+  String workoutExerciseCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count упражнений',
+      many: '$count упражнений',
+      few: '$count упражнения',
+      one: '$count упражнение',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String workoutDurationMinutes(int minutes) {
+    return '$minutes мин';
+  }
 }
