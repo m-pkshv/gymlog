@@ -18,4 +18,21 @@ abstract class ExerciseRepository {
     required String name,
     required ExerciseType exerciseType,
   });
+
+  /// Whether [exerciseId] appears in any non-deleted `WorkoutExercise`
+  /// (06_DATA_MODEL.md, section 10: "есть в истории" — the deletion rule).
+  /// Used regardless of whether any set has actually been logged yet.
+  Future<bool> isUsedInWorkouts(String exerciseId);
+
+  /// Whether [exerciseId] has at least one non-deleted `ExerciseSet`
+  /// logged against it (06_DATA_MODEL.md, section 6.1: "хоть один подход
+  /// в истории" — the exerciseType lock, stricter than [isUsedInWorkouts]).
+  Future<bool> hasLoggedSets(String exerciseId);
+
+  Future<void> setArchived(String exerciseId, {required bool archived});
+
+  /// Physically removes the exercise (and cascades its secondary-muscle
+  /// links). Callers must have already established it's safe to do so
+  /// (`exercise_service`, DM 10) — this just performs the write.
+  Future<void> delete(String exerciseId);
 }

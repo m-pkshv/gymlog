@@ -69,6 +69,60 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
     return exercise;
   }
 
+  @override
+  Future<bool> isUsedInWorkouts(String exerciseId) async {
+    final row =
+        await (_db.select(_db.workoutExercises)
+              ..where(
+                (we) =>
+                    we.exerciseId.equals(exerciseId) &
+                    we.isDeleted.equals(false),
+              )
+              ..limit(1))
+            .getSingleOrNull();
+    return row != null;
+  }
+
+  @override
+  Future<bool> hasLoggedSets(String exerciseId) async {
+    final query =
+        _db.select(_db.exerciseSets).join([
+            innerJoin(
+              _db.workoutExercises,
+              _db.workoutExercises.id.equalsExp(
+                _db.exerciseSets.workoutExerciseId,
+              ),
+            ),
+          ])
+          ..where(
+            _db.workoutExercises.exerciseId.equals(exerciseId) &
+                _db.workoutExercises.isDeleted.equals(false) &
+                _db.exerciseSets.isDeleted.equals(false),
+          )
+          ..limit(1);
+    final row = await query.getSingleOrNull();
+    return row != null;
+  }
+
+  @override
+  Future<void> setArchived(String exerciseId, {required bool archived}) async {
+    await (_db.update(
+      _db.exercises,
+    )..where((e) => e.id.equals(exerciseId))).write(
+      drift.ExercisesCompanion(
+        isArchived: Value(archived),
+        updatedAt: Value(DateTime.now().toUtc().toIso8601String()),
+      ),
+    );
+  }
+
+  @override
+  Future<void> delete(String exerciseId) async {
+    await (_db.delete(
+      _db.exercises,
+    )..where((e) => e.id.equals(exerciseId))).go();
+  }
+
   Future<Map<String, List<String>>> _secondaryMuscleGroupIdsByExercise(
     List<String> exerciseIds,
   ) async {

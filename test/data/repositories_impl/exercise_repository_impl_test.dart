@@ -84,4 +84,131 @@ void main() {
     final all = await repository.watchAll().first;
     expect(all, isEmpty);
   });
+
+  test('setArchived flips isArchived and getById reflects it', () async {
+    final exercise = await repository.create(
+      name: 'Lunges',
+      exerciseType: ExerciseType.strength,
+    );
+
+    await repository.setArchived(exercise.id, archived: true);
+    expect((await repository.getById(exercise.id))!.isArchived, isTrue);
+
+    await repository.setArchived(exercise.id, archived: false);
+    expect((await repository.getById(exercise.id))!.isArchived, isFalse);
+  });
+
+  test('delete physically removes the exercise row', () async {
+    final exercise = await repository.create(
+      name: 'Unused Move',
+      exerciseType: ExerciseType.reps,
+    );
+
+    await repository.delete(exercise.id);
+
+    expect(await repository.getById(exercise.id), isNull);
+  });
+
+  test('delete cascades to ExerciseSecondaryMuscles (DM 10)', () async {
+    await db
+        .into(db.muscleGroups)
+        .insert(MuscleGroupsCompanion.insert(id: 'chest', sortOrder: 0));
+    final exercise = await repository.create(
+      name: 'Fly',
+      exerciseType: ExerciseType.strength,
+    );
+    await db
+        .into(db.exerciseSecondaryMuscles)
+        .insert(
+          ExerciseSecondaryMusclesCompanion.insert(
+            exerciseId: exercise.id,
+            muscleGroupId: 'chest',
+          ),
+        );
+
+    await repository.delete(exercise.id);
+
+    final links = await db.select(db.exerciseSecondaryMuscles).get();
+    expect(links, isEmpty);
+  });
+
+  Future<String> addToWorkout(
+    ExerciseRepositoryImpl repository,
+    String exerciseId, {
+    bool withLoggedSet = false,
+  }) async {
+    final workoutId = 'w-${exerciseId}_$withLoggedSet';
+    await db
+        .into(db.workouts)
+        .insert(
+          WorkoutsCompanion.insert(
+            id: workoutId,
+            date: '2026-07-20',
+            createdAt: '2026-07-19T00:00:00Z',
+            updatedAt: '2026-07-19T00:00:00Z',
+          ),
+        );
+    final workoutExerciseId = '${workoutId}_we';
+    await db
+        .into(db.workoutExercises)
+        .insert(
+          WorkoutExercisesCompanion.insert(
+            id: workoutExerciseId,
+            workoutId: workoutId,
+            exerciseId: exerciseId,
+            orderIndex: 0,
+            createdAt: '2026-07-19T00:00:00Z',
+            updatedAt: '2026-07-19T00:00:00Z',
+          ),
+        );
+    if (withLoggedSet) {
+      await db
+          .into(db.exerciseSets)
+          .insert(
+            ExerciseSetsCompanion.insert(
+              id: '${workoutExerciseId}_s1',
+              workoutExerciseId: workoutExerciseId,
+              setNumber: 1,
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+    }
+    return workoutId;
+  }
+
+  test('isUsedInWorkouts is false until the exercise is added to a workout', () async {
+    final exercise = await repository.create(
+      name: 'Deadlift',
+      exerciseType: ExerciseType.strength,
+    );
+    expect(await repository.isUsedInWorkouts(exercise.id), isFalse);
+
+    await addToWorkout(repository, exercise.id);
+    expect(await repository.isUsedInWorkouts(exercise.id), isTrue);
+  });
+
+  test(
+    'hasLoggedSets stays false when added to a workout with no sets, true '
+    'once a set is logged (DM 6.1 exerciseType lock)',
+    () async {
+      final exercise = await repository.create(
+        name: 'Pull-Up',
+        exerciseType: ExerciseType.reps,
+      );
+      await addToWorkout(repository, exercise.id);
+      expect(
+        await repository.hasLoggedSets(exercise.id),
+        isFalse,
+        reason: 'added to a workout, but no set logged yet',
+      );
+
+      final exercise2 = await repository.create(
+        name: 'Chin-Up',
+        exerciseType: ExerciseType.reps,
+      );
+      await addToWorkout(repository, exercise2.id, withLoggedSet: true);
+      expect(await repository.hasLoggedSets(exercise2.id), isTrue);
+    },
+  );
 }

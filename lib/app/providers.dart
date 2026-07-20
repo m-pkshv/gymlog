@@ -17,6 +17,7 @@ import '../domain/models/workout_history_entry.dart';
 import '../domain/repositories/exercise_repository.dart';
 import '../domain/repositories/workout_repository.dart';
 import '../features/workout_editor/controller.dart';
+import '../services/exercise_service.dart';
 import '../services/workout_service.dart';
 
 final loggerProvider = Provider<AppLogger>((ref) => AppLogger());
@@ -37,6 +38,12 @@ final workoutRepositoryProvider = Provider<WorkoutRepository>((ref) {
 
 final workoutServiceProvider = Provider<WorkoutService>((ref) {
   return WorkoutService(ref.watch(workoutRepositoryProvider));
+});
+
+/// The single point of truth for the catalog's archive/delete rules and
+/// exerciseType lock (DM 10, DM 6.1).
+final exerciseServiceProvider = Provider<ExerciseService>((ref) {
+  return ExerciseService(ref.watch(exerciseRepositoryProvider));
 });
 
 /// The exercise catalog list (S-06). Stage 1 has no search/filters yet.
