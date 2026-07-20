@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -214,5 +214,94 @@ void main() {
     expect(find.text('No exercises added yet'), findsOneWidget);
 
     await _unmountAndFlush(tester);
+  });
+
+  group('"Copy" (Stage 3, S-02, TS 8 section 8)', () {
+    testWidgets(
+      'copies exercises/order/planned values into a new draft, without '
+      'facts or completion marks, and opens it in the editor',
+      (tester) async {
+        await _insertCompletedWorkout(
+          db,
+          id: 'w1',
+          date: '2026-07-01',
+          exerciseCount: 1,
+        );
+        await db
+            .into(db.exerciseSets)
+            .insert(
+              ExerciseSetsCompanion.insert(
+                id: 's1',
+                workoutExerciseId: 'w1_we0',
+                setNumber: 1,
+                isCompleted: const Value(true),
+                plannedWeightKg: const Value(60),
+                plannedReps: const Value(8),
+                actualWeightKg: const Value(60),
+                actualReps: const Value(8),
+                createdAt: '2026-07-01T00:00:00Z',
+                updatedAt: '2026-07-01T00:00:00Z',
+              ),
+            );
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byIcon(Icons.more_vert));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Copy'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(DatePickerDialog), findsOneWidget);
+        await tester.tap(find.text('OK'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(WorkoutEditorScreen), findsOneWidget);
+        expect(find.text('Draft'), findsOneWidget);
+        expect(find.text('Squat'), findsOneWidget);
+
+        final workouts = await db.select(db.workouts).get();
+        expect(workouts, hasLength(2));
+        final copy = workouts.firstWhere((w) => w.id != 'w1');
+        expect(copy.status, 'draft');
+
+        final copiedWorkoutExercises = await (db.select(
+          db.workoutExercises,
+        )..where((we) => we.workoutId.equals(copy.id))).get();
+        expect(copiedWorkoutExercises, hasLength(1));
+
+        final copiedSets = await (db.select(
+          db.exerciseSets,
+        )..where(
+          (s) => s.workoutExerciseId.equals(copiedWorkoutExercises.single.id),
+        )).get();
+        expect(copiedSets.single.plannedWeightKg, 60.0);
+        expect(copiedSets.single.plannedReps, 8);
+        expect(copiedSets.single.actualWeightKg, isNull);
+        expect(copiedSets.single.actualReps, isNull);
+        expect(copiedSets.single.isCompleted, isFalse);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets('cancelling the date picker copies nothing', (tester) async {
+      await _insertCompletedWorkout(db, id: 'w1', date: '2026-07-01');
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Copy'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(await db.select(db.workouts).get(), hasLength(1));
+
+      await _unmountAndFlush(tester);
+    });
   });
 }

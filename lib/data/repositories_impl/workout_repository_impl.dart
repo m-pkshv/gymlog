@@ -320,4 +320,69 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
       }
     });
   }
+
+  @override
+  Future<Workout> copyWorkout({
+    required String sourceWorkoutId,
+    required DateTime date,
+  }) async {
+    final source = await getDetails(sourceWorkoutId);
+    if (source == null) {
+      throw ArgumentError('Workout $sourceWorkoutId not found');
+    }
+
+    final now = DateTime.now().toUtc();
+    final copy = Workout(
+      id: const Uuid().v4(),
+      date: date,
+      status: WorkoutStatus.draft,
+      createdAt: now,
+      updatedAt: now,
+      isDeleted: false,
+    );
+
+    await _db.transaction(() async {
+      await _db.into(_db.workouts).insert(copy.toInsertCompanion());
+      for (final exerciseDetails in source.exercises) {
+        final sourceWorkoutExercise = exerciseDetails.workoutExercise;
+        final workoutExercise = WorkoutExercise(
+          id: const Uuid().v4(),
+          workoutId: copy.id,
+          exerciseId: sourceWorkoutExercise.exerciseId,
+          orderIndex: sourceWorkoutExercise.orderIndex,
+          comment: sourceWorkoutExercise.comment,
+          progressionDecision: ProgressionDecision.none,
+          createdAt: now,
+          updatedAt: now,
+          isDeleted: false,
+        );
+        await _db
+            .into(_db.workoutExercises)
+            .insert(workoutExercise.toInsertCompanion());
+
+        for (final sourceSet in exerciseDetails.sets) {
+          final copiedSet = ExerciseSet(
+            id: const Uuid().v4(),
+            workoutExerciseId: workoutExercise.id,
+            setNumber: sourceSet.setNumber,
+            isWarmup: sourceSet.isWarmup,
+            isCompleted: false,
+            plannedWeightKg: sourceSet.plannedWeightKg,
+            plannedReps: sourceSet.plannedReps,
+            plannedDurationSec: sourceSet.plannedDurationSec,
+            plannedDistanceM: sourceSet.plannedDistanceM,
+            side: sourceSet.side,
+            createdAt: now,
+            updatedAt: now,
+            isDeleted: false,
+          );
+          await _db
+              .into(_db.exerciseSets)
+              .insert(copiedSet.toInsertCompanion());
+        }
+      }
+    });
+
+    return copy;
+  }
 }

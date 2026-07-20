@@ -264,4 +264,88 @@ void main() {
       },
     );
   });
+
+  group('copyWorkout (Stage 3, S-02, TS 8 section 8)', () {
+    test(
+      'copies exercises, order, comment and planned values into a new '
+      'draft dated by the caller -- actuals, completion and progression '
+      'are never copied',
+      () async {
+        final exercise = await exercises.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+        final source = await workouts.createDraft(
+          date: DateTime(2026, 7, 1),
+        );
+        final sourceWe = await workouts.addExercise(
+          workoutId: source.id,
+          exerciseId: exercise.id,
+        );
+        final sourceSet = await workouts.addSet(
+          workoutExerciseId: sourceWe.id,
+          isWarmup: false,
+        );
+        await workouts.updateSet(
+          sourceSet.copyWith(
+            plannedWeightKg: 60,
+            plannedReps: 8,
+            actualWeightKg: 62,
+            actualReps: 7,
+          ),
+        );
+        await workouts.updateSet(
+          (await workouts.getDetails(source.id))!.exercises.single.sets.single
+              .markCompleted(),
+        );
+        await workouts.updateWorkout(
+          source.copyWith(status: WorkoutStatus.completed),
+        );
+
+        final copy = await workouts.copyWorkout(
+          sourceWorkoutId: source.id,
+          date: DateTime(2026, 7, 20),
+        );
+
+        expect(copy.date, DateTime(2026, 7, 20));
+        expect(copy.status, WorkoutStatus.draft);
+        expect(copy.id, isNot(source.id));
+
+        final details = await workouts.getDetails(copy.id);
+        expect(details!.exercises, hasLength(1));
+        final copiedExerciseDetails = details.exercises.single;
+        expect(copiedExerciseDetails.exercise.id, exercise.id);
+        expect(
+          copiedExerciseDetails.workoutExercise.orderIndex,
+          sourceWe.orderIndex,
+        );
+        expect(
+          copiedExerciseDetails.workoutExercise.progressionDecision,
+          ProgressionDecision.none,
+        );
+
+        final copiedSet = copiedExerciseDetails.sets.single;
+        expect(copiedSet.plannedWeightKg, 60.0);
+        expect(copiedSet.plannedReps, 8);
+        expect(copiedSet.actualWeightKg, isNull);
+        expect(copiedSet.actualReps, isNull);
+        expect(copiedSet.isCompleted, isFalse);
+
+        // The source workout is untouched by the copy.
+        final sourceDetails = await workouts.getDetails(source.id);
+        expect(sourceDetails!.workout.status, WorkoutStatus.completed);
+        expect(sourceDetails.exercises.single.sets.single.isCompleted, isTrue);
+      },
+    );
+
+    test('throws for an unknown source workout', () {
+      expect(
+        () => workouts.copyWorkout(
+          sourceWorkoutId: 'does-not-exist',
+          date: DateTime(2026, 7, 20),
+        ),
+        throwsArgumentError,
+      );
+    });
+  });
 }

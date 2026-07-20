@@ -490,5 +490,13 @@
   "settingsLoadError": "Couldn't load settings",
   "@settingsLoadError": {
     "description": "Error state on the \"More\" placeholder (and anywhere else appSettingsProvider is watched) when the settings row fails to load."
+  },
+  "copyWorkoutAction": "Copy",
+  "@copyWorkoutAction": {
+    "description": "\"⋮\" menu action on a History card (S-02, TS 8 section 8) that copies the workout's exercises/order/planned values into a new draft dated by the owner."
+  },
+  "copyWorkoutError": "Couldn't copy the workout",
+  "@copyWorkoutError": {
+    "description": "Snackbar shown on the History screen (S-02) when copying a workout fails."
   }
 }

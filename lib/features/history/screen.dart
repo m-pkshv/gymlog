@@ -4,16 +4,59 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../core/date_format.dart';
+import '../../domain/models/workout.dart';
 import '../../domain/models/workout_history_entry.dart';
 import '../../l10n/app_localizations.dart';
 import '../workout_editor/status_labels.dart';
 
+enum _HistoryCardAction { copy }
+
 /// S-02 "История", simplified for Stage 1: a plain list of completed
-/// workouts, no filters/calendar/tags/pagination yet
-/// (02_DEVELOPMENT_PLAN.md — those arrive in Stage 3). Tapping a card opens
-/// the editor (S-03); the FAB creates a draft and opens it there too.
+/// workouts, no filters/calendar/pagination yet (02_DEVELOPMENT_PLAN.md —
+/// those arrive later in Stage 3). Tapping a card opens the editor (S-03);
+/// the FAB creates a draft and opens it there too. Stage 3 added the
+/// per-card "⋮" menu's "Копировать" action (TS 8 section 8) — "перенести"/
+/// "удалить" from the same S-02 menu are separate, not-yet-done Stage 3
+/// items (move already exists inside the editor; delete needs the
+/// still-pending Undo-delete work).
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});
+
+  Future<void> _copyWorkout(
+    BuildContext context,
+    WidgetRef ref,
+    Workout source,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    // TS 8: the copy's date is chosen by the owner, not silently reused.
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null) return;
+
+    try {
+      final copy = await ref
+          .read(workoutRepositoryProvider)
+          .copyWorkout(sourceWorkoutId: source.id, date: picked);
+      if (context.mounted) context.push('/history/workout/${copy.id}');
+    } catch (error, stackTrace) {
+      ref
+          .read(loggerProvider)
+          .error(
+            'Failed to copy workout ${source.id}',
+            error: error,
+            stackTrace: stackTrace,
+          );
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.copyWorkoutError)));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,8 +72,10 @@ class HistoryScreen extends ConsumerWidget {
           }
           return ListView.builder(
             itemCount: entries.length,
-            itemBuilder: (context, index) =>
-                _WorkoutHistoryTile(entry: entries[index]),
+            itemBuilder: (context, index) => _WorkoutHistoryTile(
+              entry: entries[index],
+              onCopy: (source) => _copyWorkout(context, ref, source),
+            ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -54,9 +99,10 @@ class HistoryScreen extends ConsumerWidget {
 }
 
 class _WorkoutHistoryTile extends StatelessWidget {
-  const _WorkoutHistoryTile({required this.entry});
+  const _WorkoutHistoryTile({required this.entry, required this.onCopy});
 
   final WorkoutHistoryEntry entry;
+  final void Function(Workout source) onCopy;
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +118,26 @@ class _WorkoutHistoryTile extends StatelessWidget {
         '${l10n.workoutExerciseCount(entry.exerciseCount)}'
         '${durationSec != null ? ' · ${l10n.workoutDurationMinutes(durationSec ~/ 60)}' : ''}',
       ),
-      trailing: Chip(label: Text(workoutStatusLabel(l10n, workout.status))),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Chip(label: Text(workoutStatusLabel(l10n, workout.status))),
+          PopupMenuButton<_HistoryCardAction>(
+            onSelected: (action) {
+              switch (action) {
+                case _HistoryCardAction.copy:
+                  onCopy(workout);
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: _HistoryCardAction.copy,
+                child: Text(l10n.copyWorkoutAction),
+              ),
+            ],
+          ),
+        ],
+      ),
       onTap: () => context.push('/history/workout/${workout.id}'),
     );
   }

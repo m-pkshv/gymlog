@@ -454,4 +454,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsLoadError => 'Не удалось загрузить настройки';
+
+  @override
+  String get copyWorkoutAction => 'Копировать';
+
+  @override
+  String get copyWorkoutError => 'Не удалось скопировать тренировку';
 }

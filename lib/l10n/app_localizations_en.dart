@@ -450,4 +450,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsLoadError => 'Couldn\'t load settings';
+
+  @override
+  String get copyWorkoutAction => 'Copy';
+
+  @override
+  String get copyWorkoutError => 'Couldn\'t copy the workout';
 }

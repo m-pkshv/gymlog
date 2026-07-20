@@ -955,6 +955,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load settings'**
   String get settingsLoadError;
+
+  /// "⋮" menu action on a History card (S-02, TS 8 section 8) that copies the workout's exercises/order/planned values into a new draft dated by the owner.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copyWorkoutAction;
+
+  /// Snackbar shown on the History screen (S-02) when copying a workout fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t copy the workout'**
+  String get copyWorkoutError;
 }
 
 class _AppLocalizationsDelegate

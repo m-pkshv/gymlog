@@ -52,4 +52,15 @@ abstract class WorkoutRepository {
     required String workoutId,
     required List<String> tagIds,
   });
+
+  /// "Скопировать прошлую" (S-02, TS 8 section 8): duplicates
+  /// [sourceWorkoutId]'s exercises (order + `WorkoutExercise.comment`) and
+  /// each set's planned values into a brand-new `draft` workout dated
+  /// [date]. Actuals, `isCompleted`, and `progressionDecision` are never
+  /// copied — the copy starts with nothing performed yet. Throws
+  /// `ArgumentError` if [sourceWorkoutId] doesn't exist.
+  Future<Workout> copyWorkout({
+    required String sourceWorkoutId,
+    required DateTime date,
+  });
 }
