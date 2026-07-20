@@ -92,6 +92,50 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
   }
 
   @override
+  Future<Exercise> update({
+    required String id,
+    required String name,
+    required ExerciseType exerciseType,
+    String? description,
+    String? youtubeUrl,
+    String? primaryMuscleGroupId,
+    String? equipmentId,
+    EffortMetric effortMetric = EffortMetric.none,
+    List<String> secondaryMuscleGroupIds = const [],
+  }) async {
+    await _db.transaction(() async {
+      await (_db.update(
+        _db.exercises,
+      )..where((e) => e.id.equals(id))).write(
+        drift.ExercisesCompanion(
+          name: Value(name),
+          exerciseType: Value(exerciseType.name),
+          description: Value(description),
+          youtubeUrl: Value(youtubeUrl),
+          primaryMuscleGroupId: Value(primaryMuscleGroupId),
+          equipmentId: Value(equipmentId),
+          effortMetric: Value(effortMetric.name),
+          updatedAt: Value(DateTime.now().toUtc().toIso8601String()),
+        ),
+      );
+      await (_db.delete(
+        _db.exerciseSecondaryMuscles,
+      )..where((s) => s.exerciseId.equals(id))).go();
+      for (final muscleGroupId in secondaryMuscleGroupIds) {
+        await _db
+            .into(_db.exerciseSecondaryMuscles)
+            .insert(
+              drift.ExerciseSecondaryMusclesCompanion.insert(
+                exerciseId: id,
+                muscleGroupId: muscleGroupId,
+              ),
+            );
+      }
+    });
+    return (await getById(id))!;
+  }
+
+  @override
   Future<bool> isUsedInWorkouts(String exerciseId) async {
     final row =
         await (_db.select(_db.workoutExercises)

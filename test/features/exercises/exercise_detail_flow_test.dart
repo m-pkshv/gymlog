@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gymlog/app/providers.dart';
-import 'package:gymlog/data/database.dart';
+import 'package:gymlog/data/database.dart' hide Exercise;
 import 'package:gymlog/domain/enums.dart';
+import 'package:gymlog/domain/models/exercise.dart';
+import 'package:gymlog/features/exercises/create_exercise_screen.dart';
 import 'package:gymlog/features/exercises/exercise_detail_screen.dart';
 import 'package:gymlog/features/exercises/screen.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
@@ -21,6 +23,16 @@ Widget _appUnderTest(AppDatabase db) {
         builder: (_, state) => ExerciseDetailScreen(
           exerciseId: state.pathParameters['exerciseId']!,
         ),
+        routes: [
+          GoRoute(
+            path: 'edit',
+            pageBuilder: (_, state) => MaterialPage(
+              key: state.pageKey,
+              fullscreenDialog: true,
+              child: CreateExerciseScreen(exercise: state.extra as Exercise),
+            ),
+          ),
+        ],
       ),
     ],
   );
@@ -258,6 +270,130 @@ void main() {
 
       expect(await (db.select(db.exercises)).get(), isEmpty);
       expect(find.text('No exercises yet'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets('a built-in exercise has no Edit action', (tester) async {
+    await _insertExercise(
+      db,
+      id: 'squat',
+      name: 'Barbell Squat',
+      isBuiltIn: true,
+    );
+
+    await tester.pumpWidget(_appUnderTest(db));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Barbell Squat'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Edit'), findsNothing);
+
+    await _unmountAndFlush(tester);
+  });
+
+  testWidgets(
+    'editing a user-created exercise pre-fills the form and saves changes',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 5000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await _insertExercise(db, id: 'squat', name: 'Barbell Squat');
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Barbell Squat'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Edit'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit exercise'), findsOneWidget);
+      final nameField = tester.widget<TextField>(
+        find.byType(TextField).first,
+      );
+      expect(nameField.controller!.text, 'Barbell Squat');
+
+      await tester.enterText(find.byType(TextField).first, 'Front Squat');
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Front Squat'), findsWidgets);
+      final exercise = await (db.select(
+        db.exercises,
+      )..where((e) => e.id.equals('squat'))).getSingle();
+      expect(exercise.name, 'Front Squat');
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'the type dropdown is locked once a set has been logged (DM 6.1)',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 5000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await _insertExercise(db, id: 'squat', name: 'Barbell Squat');
+      await db
+          .into(db.workouts)
+          .insert(
+            WorkoutsCompanion.insert(
+              id: 'w1',
+              date: '2026-07-20',
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      await db
+          .into(db.workoutExercises)
+          .insert(
+            WorkoutExercisesCompanion.insert(
+              id: 'we1',
+              workoutId: 'w1',
+              exerciseId: 'squat',
+              orderIndex: 0,
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      await db
+          .into(db.exerciseSets)
+          .insert(
+            ExerciseSetsCompanion.insert(
+              id: 's1',
+              workoutExerciseId: 'we1',
+              setNumber: 1,
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Barbell Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Edit'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text("Can't be changed: this exercise already has logged sets"),
+        findsOneWidget,
+      );
+      final dropdown = tester.widget<DropdownButtonFormField<ExerciseType>>(
+        find.byType(DropdownButtonFormField<ExerciseType>),
+      );
+      expect(dropdown.onChanged, isNull);
 
       await _unmountAndFlush(tester);
     },

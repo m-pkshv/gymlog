@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../domain/models/exercise.dart';
 import '../features/exercises/create_exercise_screen.dart';
 import '../features/exercises/exercise_detail_screen.dart';
 import '../features/exercises/screen.dart';
@@ -91,6 +92,22 @@ final GoRouter appRouter = GoRouter(
                   builder: (_, state) => ExerciseDetailScreen(
                     exerciseId: state.pathParameters['exerciseId']!,
                   ),
+                  routes: [
+                    GoRoute(
+                      path: 'edit',
+                      // Edit form is a full-screen modal, like creation
+                      // (04_UI_UX_SPEC.md, section 6). The exercise is
+                      // passed via `extra` — the detail screen already has
+                      // it loaded, no need to re-fetch.
+                      pageBuilder: (_, state) => MaterialPage(
+                        key: state.pageKey,
+                        fullscreenDialog: true,
+                        child: CreateExerciseScreen(
+                          exercise: state.extra as Exercise,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

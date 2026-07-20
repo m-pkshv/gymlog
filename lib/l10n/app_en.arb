@@ -298,5 +298,25 @@
   "archiveExerciseError": "Couldn't update the exercise",
   "@archiveExerciseError": {
     "description": "Snackbar shown when archiving/unarchiving an exercise fails (S-07)."
+  },
+  "editExerciseTitle": "Edit exercise",
+  "@editExerciseTitle": {
+    "description": "Title of the exercise form (S-08) when opened in edit mode from the exercise card (S-07)."
+  },
+  "editExerciseAction": "Edit",
+  "@editExerciseAction": {
+    "description": "Menu action on the exercise card (S-07), only offered for user-created exercises (built-in ones can only be archived)."
+  },
+  "editExerciseError": "Couldn't save the exercise",
+  "@editExerciseError": {
+    "description": "Snackbar shown when saving edits to an exercise fails (S-07/S-08)."
+  },
+  "actionSave": "Save",
+  "@actionSave": {
+    "description": "Submit button label on the exercise form (S-08) when in edit mode."
+  },
+  "exerciseTypeLockedHint": "Can't be changed: this exercise already has logged sets",
+  "@exerciseTypeLockedHint": {
+    "description": "Helper text under the disabled type dropdown on the exercise form (S-08) in edit mode, once DM 6.1's exerciseType lock applies."
   }
 }

@@ -1,5 +1,6 @@
 import '../core/app_error.dart';
 import '../core/result.dart';
+import '../domain/enums.dart';
 import '../domain/models/exercise.dart';
 import '../domain/repositories/exercise_repository.dart';
 
@@ -19,6 +20,45 @@ class ExerciseService {
   /// vs. [ExerciseRepository.isUsedInWorkouts]).
   Future<bool> canChangeType(String exerciseId) async {
     return !(await _exerciseRepository.hasLoggedSets(exerciseId));
+  }
+
+  /// Saves edits to an existing exercise (S-07 "Edit" → S-08 form in edit
+  /// mode, DM 6.1). Re-checks the exerciseType lock server-side even though
+  /// the UI already disables the field once locked — the single point of
+  /// truth for this rule shouldn't trust the caller (mirrors
+  /// [canChangeType]'s role for the UI-side check).
+  Future<Result<Exercise, AppError>> update({
+    required Exercise current,
+    required String name,
+    required ExerciseType exerciseType,
+    String? description,
+    String? youtubeUrl,
+    String? primaryMuscleGroupId,
+    String? equipmentId,
+    EffortMetric effortMetric = EffortMetric.none,
+    List<String> secondaryMuscleGroupIds = const [],
+  }) async {
+    if (exerciseType != current.exerciseType &&
+        !(await canChangeType(current.id))) {
+      return const Err(
+        ValidationError(
+          'exerciseType is locked once a set has been logged against this '
+          'exercise',
+        ),
+      );
+    }
+    final updated = await _exerciseRepository.update(
+      id: current.id,
+      name: name,
+      exerciseType: exerciseType,
+      description: description,
+      youtubeUrl: youtubeUrl,
+      primaryMuscleGroupId: primaryMuscleGroupId,
+      equipmentId: equipmentId,
+      effortMetric: effortMetric,
+      secondaryMuscleGroupIds: secondaryMuscleGroupIds,
+    );
+    return Ok(updated);
   }
 
   /// Archiving is always available — built-in or user-created, used or not

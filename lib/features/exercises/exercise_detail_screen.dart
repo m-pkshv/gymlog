@@ -16,9 +16,9 @@ import 'reference_data_labels.dart';
 /// muscles/equipment/description, YouTube link (shown as plain text — the
 /// owner decided against adding `url_launcher` for now, so there is no
 /// "open in browser" button yet), "About"/"История" tabs. The "Рекорды" tab
-/// arrives in Stage 7 with `records_service`/`PersonalRecord`. Editing is
-/// not wired in yet — the form is still create-only until this screen
-/// exists to launch an edit from (this step); that lands next.
+/// arrives in Stage 7 with `records_service`/`PersonalRecord`. "Edit" opens
+/// `CreateExerciseScreen` in edit mode; only offered for user-created
+/// exercises (built-in ones can only be archived, DM 10).
 class ExerciseDetailScreen extends ConsumerStatefulWidget {
   const ExerciseDetailScreen({super.key, required this.exerciseId});
 
@@ -75,6 +75,18 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen>
             stackTrace: stackTrace,
           );
       if (mounted) setState(() => _loadError = true);
+    }
+  }
+
+  Future<void> _edit() async {
+    final exercise = _exercise;
+    if (exercise == null || _isBusy) return;
+    final updated = await context.push<Exercise>(
+      '/exercises/${exercise.id}/edit',
+      extra: exercise,
+    );
+    if (updated != null && mounted) {
+      setState(() => _exercise = updated);
     }
   }
 
@@ -148,6 +160,8 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen>
                   enabled: !_isBusy,
                   onSelected: (action) {
                     switch (action) {
+                      case _ExerciseAction.edit:
+                        _edit();
                       case _ExerciseAction.archive:
                         _archive(archived: true);
                       case _ExerciseAction.unarchive:
@@ -157,6 +171,11 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen>
                     }
                   },
                   itemBuilder: (context) => [
+                    if (!exercise.isBuiltIn)
+                      PopupMenuItem(
+                        value: _ExerciseAction.edit,
+                        child: Text(l10n.editExerciseAction),
+                      ),
                     PopupMenuItem(
                       value: exercise.isArchived
                           ? _ExerciseAction.unarchive
@@ -200,7 +219,7 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen>
   }
 }
 
-enum _ExerciseAction { archive, unarchive, delete }
+enum _ExerciseAction { edit, archive, unarchive, delete }
 
 class _AboutTab extends StatelessWidget {
   const _AboutTab({required this.exercise});

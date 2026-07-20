@@ -25,6 +25,25 @@ abstract class ExerciseRepository {
     List<String> secondaryMuscleGroupIds = const [],
   });
 
+  /// Overwrites the full DM 6.1 field set of an existing exercise (S-07
+  /// "Edit" → S-08 form in edit mode) — every field is replaced with the
+  /// value passed in, including nulling out an optional field the caller
+  /// omits; there is no partial-update semantics here, the caller always
+  /// submits the complete new state. Secondary muscle links are replaced
+  /// wholesale in the same transaction. `exerciseType` re-validation
+  /// (DM 6.1 lock) is the caller's (`exercise_service`) responsibility.
+  Future<Exercise> update({
+    required String id,
+    required String name,
+    required ExerciseType exerciseType,
+    String? description,
+    String? youtubeUrl,
+    String? primaryMuscleGroupId,
+    String? equipmentId,
+    EffortMetric effortMetric = EffortMetric.none,
+    List<String> secondaryMuscleGroupIds = const [],
+  });
+
   /// Whether [exerciseId] appears in any non-deleted `WorkoutExercise`
   /// (06_DATA_MODEL.md, section 10: "есть в истории" — the deletion rule).
   /// Used regardless of whether any set has actually been logged yet.

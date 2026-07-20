@@ -5,17 +5,25 @@ import 'package:go_router/go_router.dart';
 import '../../app/providers.dart';
 import '../../core/reference_data_ids.dart';
 import '../../domain/enums.dart';
+import '../../domain/models/exercise.dart';
 import '../../l10n/app_localizations.dart';
 import 'exercise_type_labels.dart';
 import 'reference_data_labels.dart';
 
 /// S-08 form (06_DATA_MODEL.md, section 6.1), full field set: name, type,
 /// primary/secondary muscle groups, equipment, effort metric (strength
-/// only), description, YouTube link. Only [name] is required. exerciseType
-/// re-editing/locking and archive/delete actions belong to the edit flow
-/// (S-07), not this create-only form.
+/// only), description, YouTube link. Only [name] is required.
+///
+/// Doubles as the S-07 "Edit" form when [exercise] is passed: fields are
+/// pre-filled and saving calls `ExerciseService.update` instead of
+/// `ExerciseRepository.create`. The exerciseType dropdown is disabled in
+/// edit mode once `ExerciseService.canChangeType` says it's locked (DM 6.1:
+/// at least one set has been logged against this exercise).
 class CreateExerciseScreen extends ConsumerStatefulWidget {
-  const CreateExerciseScreen({super.key});
+  const CreateExerciseScreen({super.key, this.exercise});
+
+  /// When set, edits this exercise instead of creating a new one.
+  final Exercise? exercise;
 
   @override
   ConsumerState<CreateExerciseScreen> createState() =>
@@ -32,7 +40,34 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
   String? _equipmentId;
   final Set<String> _secondaryMuscleGroupIds = {};
   bool _isSubmitting = false;
+  bool _typeLocked = false;
   String? _nameError;
+
+  bool get _isEditing => widget.exercise != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final exercise = widget.exercise;
+    if (exercise != null) {
+      _nameController.text = exercise.name;
+      _descriptionController.text = exercise.description ?? '';
+      _youtubeUrlController.text = exercise.youtubeUrl ?? '';
+      _selectedType = exercise.exerciseType;
+      _effortMetric = exercise.effortMetric;
+      _primaryMuscleGroupId = exercise.primaryMuscleGroupId;
+      _equipmentId = exercise.equipmentId;
+      _secondaryMuscleGroupIds.addAll(exercise.secondaryMuscleGroupIds);
+      _loadTypeLock(exercise.id);
+    }
+  }
+
+  Future<void> _loadTypeLock(String exerciseId) async {
+    final canChange = await ref
+        .read(exerciseServiceProvider)
+        .canChangeType(exerciseId);
+    if (mounted) setState(() => _typeLocked = !canChange);
+  }
 
   @override
   void dispose() {
@@ -65,37 +100,67 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
       return;
     }
 
+    final existing = widget.exercise;
+    final description = _descriptionController.text.trim();
+    final youtubeUrl = _youtubeUrlController.text.trim();
+    final effortMetric = _selectedType == ExerciseType.strength
+        ? _effortMetric
+        : EffortMetric.none;
+
     setState(() => _isSubmitting = true);
     try {
-      final description = _descriptionController.text.trim();
-      final youtubeUrl = _youtubeUrlController.text.trim();
-      final created = await ref
-          .read(exerciseRepositoryProvider)
-          .create(
+      if (existing == null) {
+        final created = await ref
+            .read(exerciseRepositoryProvider)
+            .create(
+              name: name,
+              exerciseType: _selectedType,
+              description: description.isEmpty ? null : description,
+              youtubeUrl: youtubeUrl.isEmpty ? null : youtubeUrl,
+              primaryMuscleGroupId: _primaryMuscleGroupId,
+              equipmentId: _equipmentId,
+              effortMetric: effortMetric,
+              secondaryMuscleGroupIds: _secondaryMuscleGroupIds.toList(),
+            );
+        if (mounted) context.pop(created);
+        return;
+      }
+
+      final result = await ref
+          .read(exerciseServiceProvider)
+          .update(
+            current: existing,
             name: name,
             exerciseType: _selectedType,
             description: description.isEmpty ? null : description,
             youtubeUrl: youtubeUrl.isEmpty ? null : youtubeUrl,
             primaryMuscleGroupId: _primaryMuscleGroupId,
             equipmentId: _equipmentId,
-            effortMetric: _selectedType == ExerciseType.strength
-                ? _effortMetric
-                : EffortMetric.none,
+            effortMetric: effortMetric,
             secondaryMuscleGroupIds: _secondaryMuscleGroupIds.toList(),
           );
-      if (mounted) context.pop(created);
+      if (!mounted) return;
+      result.fold(
+        (updated) => context.pop(updated),
+        (_) => ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.editExerciseError))),
+      );
     } catch (error, stackTrace) {
       ref
           .read(loggerProvider)
           .error(
-            'Failed to create exercise',
+            'Failed to save exercise',
             error: error,
             stackTrace: stackTrace,
           );
       if (mounted) {
+        final message = existing == null
+            ? l10n.createExerciseError
+            : l10n.editExerciseError;
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.createExerciseError)));
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -107,7 +172,9 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.createExerciseTitle)),
+      appBar: AppBar(
+        title: Text(_isEditing ? l10n.editExerciseTitle : l10n.createExerciseTitle),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -134,6 +201,9 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
                     initialValue: _selectedType,
                     decoration: InputDecoration(
                       labelText: l10n.exerciseTypeLabel,
+                      helperText: _typeLocked
+                          ? l10n.exerciseTypeLockedHint
+                          : null,
                     ),
                     items: ExerciseType.values
                         .map(
@@ -150,9 +220,13 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
                           ),
                         )
                         .toList(),
-                    onChanged: (type) {
-                      if (type != null) setState(() => _selectedType = type);
-                    },
+                    onChanged: _typeLocked
+                        ? null
+                        : (type) {
+                            if (type != null) {
+                              setState(() => _selectedType = type);
+                            }
+                          },
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String?>(
@@ -275,7 +349,7 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(l10n.actionCreate),
+                    : Text(_isEditing ? l10n.actionSave : l10n.actionCreate),
               ),
             ),
           ],

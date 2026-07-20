@@ -77,6 +77,98 @@ void main() {
     expect(reloaded.secondaryMuscleGroupIds, ['triceps']);
   });
 
+  test('update overwrites the full field set and returns the new state', () async {
+    await db
+        .into(db.muscleGroups)
+        .insert(MuscleGroupsCompanion.insert(id: 'chest', sortOrder: 0));
+    await db
+        .into(db.muscleGroups)
+        .insert(MuscleGroupsCompanion.insert(id: 'triceps', sortOrder: 1));
+    await db
+        .into(db.equipments)
+        .insert(EquipmentsCompanion.insert(id: 'barbell', sortOrder: 0));
+    final exercise = await repository.create(
+      name: 'Bench Press',
+      exerciseType: ExerciseType.strength,
+      description: 'old description',
+      primaryMuscleGroupId: 'chest',
+      secondaryMuscleGroupIds: ['triceps'],
+    );
+
+    final updated = await repository.update(
+      id: exercise.id,
+      name: 'Incline Bench Press',
+      exerciseType: ExerciseType.strength,
+      description: 'new description',
+      youtubeUrl: 'https://youtu.be/xyz',
+      primaryMuscleGroupId: 'chest',
+      equipmentId: 'barbell',
+      effortMetric: EffortMetric.rir,
+      secondaryMuscleGroupIds: ['triceps'],
+    );
+
+    expect(updated.name, 'Incline Bench Press');
+    expect(updated.description, 'new description');
+    expect(updated.youtubeUrl, 'https://youtu.be/xyz');
+    expect(updated.equipmentId, 'barbell');
+    expect(updated.effortMetric, EffortMetric.rir);
+    expect(updated.secondaryMuscleGroupIds, ['triceps']);
+
+    final reloaded = await repository.getById(exercise.id);
+    expect(reloaded!.name, 'Incline Bench Press');
+    expect(reloaded.equipmentId, 'barbell');
+  });
+
+  test('update clears optional fields when the caller omits them', () async {
+    await db
+        .into(db.muscleGroups)
+        .insert(MuscleGroupsCompanion.insert(id: 'chest', sortOrder: 0));
+    final exercise = await repository.create(
+      name: 'Bench Press',
+      exerciseType: ExerciseType.strength,
+      description: 'old description',
+      youtubeUrl: 'https://youtu.be/old',
+      primaryMuscleGroupId: 'chest',
+    );
+
+    final updated = await repository.update(
+      id: exercise.id,
+      name: 'Bench Press',
+      exerciseType: ExerciseType.strength,
+    );
+
+    expect(updated.description, isNull);
+    expect(updated.youtubeUrl, isNull);
+    expect(updated.primaryMuscleGroupId, isNull);
+    final reloaded = await repository.getById(exercise.id);
+    expect(reloaded!.description, isNull);
+    expect(reloaded.primaryMuscleGroupId, isNull);
+  });
+
+  test('update replaces the secondary muscle links wholesale', () async {
+    await db
+        .into(db.muscleGroups)
+        .insert(MuscleGroupsCompanion.insert(id: 'chest', sortOrder: 0));
+    await db
+        .into(db.muscleGroups)
+        .insert(MuscleGroupsCompanion.insert(id: 'triceps', sortOrder: 1));
+    final exercise = await repository.create(
+      name: 'Bench Press',
+      exerciseType: ExerciseType.strength,
+      secondaryMuscleGroupIds: ['triceps'],
+    );
+
+    await repository.update(
+      id: exercise.id,
+      name: 'Bench Press',
+      exerciseType: ExerciseType.strength,
+      secondaryMuscleGroupIds: ['chest'],
+    );
+
+    final reloaded = await repository.getById(exercise.id);
+    expect(reloaded!.secondaryMuscleGroupIds, ['chest']);
+  });
+
   test(
     'watchAll emits created exercises and includes secondary muscle groups',
     () async {

@@ -91,5 +91,10 @@
   "deleteExerciseConfirmTitle": "Удалить упражнение?",
   "deleteExerciseConfirmMessage": "Это действие необратимо.",
   "deleteExerciseError": "Не удалось удалить упражнение",
-  "archiveExerciseError": "Не удалось обновить упражнение"
+  "archiveExerciseError": "Не удалось обновить упражнение",
+  "editExerciseTitle": "Редактировать упражнение",
+  "editExerciseAction": "Редактировать",
+  "editExerciseError": "Не удалось сохранить упражнение",
+  "actionSave": "Сохранить",
+  "exerciseTypeLockedHint": "Нельзя изменить: уже есть выполненные подходы"
 }

@@ -296,4 +296,20 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get archiveExerciseError => 'Не удалось обновить упражнение';
+
+  @override
+  String get editExerciseTitle => 'Редактировать упражнение';
+
+  @override
+  String get editExerciseAction => 'Редактировать';
+
+  @override
+  String get editExerciseError => 'Не удалось сохранить упражнение';
+
+  @override
+  String get actionSave => 'Сохранить';
+
+  @override
+  String get exerciseTypeLockedHint =>
+      'Нельзя изменить: уже есть выполненные подходы';
 }

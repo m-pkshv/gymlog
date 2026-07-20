@@ -294,4 +294,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get archiveExerciseError => 'Couldn\'t update the exercise';
+
+  @override
+  String get editExerciseTitle => 'Edit exercise';
+
+  @override
+  String get editExerciseAction => 'Edit';
+
+  @override
+  String get editExerciseError => 'Couldn\'t save the exercise';
+
+  @override
+  String get actionSave => 'Save';
+
+  @override
+  String get exerciseTypeLockedHint =>
+      'Can\'t be changed: this exercise already has logged sets';
 }

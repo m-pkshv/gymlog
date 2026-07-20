@@ -649,6 +649,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t update the exercise'**
   String get archiveExerciseError;
+
+  /// Title of the exercise form (S-08) when opened in edit mode from the exercise card (S-07).
+  ///
+  /// In en, this message translates to:
+  /// **'Edit exercise'**
+  String get editExerciseTitle;
+
+  /// Menu action on the exercise card (S-07), only offered for user-created exercises (built-in ones can only be archived).
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editExerciseAction;
+
+  /// Snackbar shown when saving edits to an exercise fails (S-07/S-08).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the exercise'**
+  String get editExerciseError;
+
+  /// Submit button label on the exercise form (S-08) when in edit mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get actionSave;
+
+  /// Helper text under the disabled type dropdown on the exercise form (S-08) in edit mode, once DM 6.1's exerciseType lock applies.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t be changed: this exercise already has logged sets'**
+  String get exerciseTypeLockedHint;
 }
 
 class _AppLocalizationsDelegate
