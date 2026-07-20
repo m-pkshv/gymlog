@@ -469,4 +469,24 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
 
     return copy;
   }
+
+  @override
+  Future<void> reorderExercises({
+    required String workoutId,
+    required List<String> orderedWorkoutExerciseIds,
+  }) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await _db.transaction(() async {
+      for (var i = 0; i < orderedWorkoutExerciseIds.length; i++) {
+        await (_db.update(_db.workoutExercises)..where(
+          (we) => we.id.equals(orderedWorkoutExerciseIds[i]),
+        )).write(
+          drift.WorkoutExercisesCompanion(
+            orderIndex: Value(i),
+            updatedAt: Value(now),
+          ),
+        );
+      }
+    });
+  }
 }

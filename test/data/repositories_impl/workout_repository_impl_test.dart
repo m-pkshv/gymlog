@@ -515,4 +515,41 @@ void main() {
       expect(history.single.tags.map((t) => t.id), [legs.id]);
     });
   });
+
+  group('reorderExercises (Stage 3, S-03 drag handle + "⋮ → Вверх/Вниз")', () {
+    test(
+      'rewrites orderIndex to match the given id order (DM 6.6: no '
+      'continuity required)',
+      () async {
+        final exercise = await exercises.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+        final workout = await workouts.createDraft(date: DateTime(2026, 7, 20));
+        final first = await workouts.addExercise(
+          workoutId: workout.id,
+          exerciseId: exercise.id,
+        );
+        final second = await workouts.addExercise(
+          workoutId: workout.id,
+          exerciseId: exercise.id,
+        );
+        final third = await workouts.addExercise(
+          workoutId: workout.id,
+          exerciseId: exercise.id,
+        );
+
+        await workouts.reorderExercises(
+          workoutId: workout.id,
+          orderedWorkoutExerciseIds: [third.id, first.id, second.id],
+        );
+
+        final details = await workouts.getDetails(workout.id);
+        expect(
+          details!.exercises.map((e) => e.workoutExercise.id),
+          [third.id, first.id, second.id],
+        );
+      },
+    );
+  });
 }

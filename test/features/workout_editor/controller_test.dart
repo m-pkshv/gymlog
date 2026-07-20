@@ -367,6 +367,31 @@ void main() {
       final stored = await workouts.getDetails(workout.id);
       expect(stored!.workout.date, DateTime(2026, 7, 25));
     });
+
+    test(
+      'preserves already-assigned tags in local state (regression: '
+      'moveDate used to drop them from WorkoutDetails.tags)',
+      () async {
+        final tags = WorkoutTagRepositoryImpl(db);
+        final tag = await tags.create(name: 'Leg day', colorHex: '#4C7BD9');
+        final workout = await workouts.createDraft(
+          date: DateTime(2026, 7, 10),
+        );
+        await workouts.setWorkoutTags(workoutId: workout.id, tagIds: [tag.id]);
+        final controller = WorkoutEditorController(
+          workout.id,
+          workouts,
+          service,
+          logger,
+        );
+        addTearDown(controller.dispose);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        await controller.moveDate(DateTime(2026, 7, 25));
+
+        expect(controller.state.value!.tags.map((t) => t.id), [tag.id]);
+      },
+    );
   });
 
   group('setTags (S-03, DM 6.3/6.5)', () {
@@ -390,4 +415,109 @@ void main() {
       expect(stored!.tags.map((t) => t.id), [tag.id]);
     });
   });
+
+  group(
+    'reorderExercises / moveExercise (S-03, drag handle + "⋮ → Вверх/Вниз")',
+    () {
+      Future<(WorkoutEditorController, List<String>)> seedThreeExercises(
+        AppDatabase db,
+      ) async {
+        final exercises = ExerciseRepositoryImpl(db);
+        final exercise = await exercises.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+        final workout = await workouts.createDraft(
+          date: DateTime(2026, 7, 20),
+        );
+        final ids = <String>[];
+        for (var i = 0; i < 3; i++) {
+          final we = await workouts.addExercise(
+            workoutId: workout.id,
+            exerciseId: exercise.id,
+          );
+          ids.add(we.id);
+        }
+        final controller = WorkoutEditorController(
+          workout.id,
+          workouts,
+          service,
+          logger,
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        return (controller, ids);
+      }
+
+      test(
+        'reorderExercises updates local state immediately and persists',
+        () async {
+          final (controller, ids) = await seedThreeExercises(db);
+          addTearDown(controller.dispose);
+
+          final newOrder = [ids[2], ids[0], ids[1]];
+          await controller.reorderExercises(newOrder);
+
+          expect(
+            controller.state.value!.exercises
+                .map((e) => e.workoutExercise.id),
+            newOrder,
+            reason: 'local state updates immediately, no reload needed',
+          );
+          final stored = await workouts.getDetails(controller.state.value!.workout.id);
+          expect(
+            stored!.exercises.map((e) => e.workoutExercise.id),
+            newOrder,
+          );
+        },
+      );
+
+      test('moveExercise(up: true) swaps with the previous exercise', () async {
+        final (controller, ids) = await seedThreeExercises(db);
+        addTearDown(controller.dispose);
+
+        await controller.moveExercise(ids[1], up: true);
+
+        expect(
+          controller.state.value!.exercises.map((e) => e.workoutExercise.id),
+          [ids[1], ids[0], ids[2]],
+        );
+      });
+
+      test('moveExercise(up: false) swaps with the next exercise', () async {
+        final (controller, ids) = await seedThreeExercises(db);
+        addTearDown(controller.dispose);
+
+        await controller.moveExercise(ids[1], up: false);
+
+        expect(
+          controller.state.value!.exercises.map((e) => e.workoutExercise.id),
+          [ids[0], ids[2], ids[1]],
+        );
+      });
+
+      test('moveExercise is a no-op at the top of the list', () async {
+        final (controller, ids) = await seedThreeExercises(db);
+        addTearDown(controller.dispose);
+
+        await controller.moveExercise(ids[0], up: true);
+
+        expect(
+          controller.state.value!.exercises.map((e) => e.workoutExercise.id),
+          ids,
+        );
+      });
+
+      test('moveExercise is a no-op at the bottom of the list', () async {
+        final (controller, ids) = await seedThreeExercises(db);
+        addTearDown(controller.dispose);
+
+        await controller.moveExercise(ids[2], up: false);
+
+        expect(
+          controller.state.value!.exercises.map((e) => e.workoutExercise.id),
+          ids,
+        );
+      });
+    },
+  );
 }

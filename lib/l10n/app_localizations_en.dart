@@ -498,4 +498,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get historySearchEmptyTitle => 'No matches found';
+
+  @override
+  String get moveExerciseUpAction => 'Move up';
+
+  @override
+  String get moveExerciseDownAction => 'Move down';
 }

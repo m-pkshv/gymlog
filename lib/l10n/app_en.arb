@@ -554,5 +554,13 @@
   "historySearchEmptyTitle": "No matches found",
   "@historySearchEmptyTitle": {
     "description": "Empty state title on History (S-02, Stage 3) when a search/filter is active but matches nothing — distinct from historyEmptyTitle (genuinely no workouts yet)."
+  },
+  "moveExerciseUpAction": "Move up",
+  "@moveExerciseUpAction": {
+    "description": "Menu action on an exercise card in the workout editor (S-03, Stage 3) — the gesture-free alternative to the drag handle. Hidden when the card is already first."
+  },
+  "moveExerciseDownAction": "Move down",
+  "@moveExerciseDownAction": {
+    "description": "Menu action on an exercise card in the workout editor (S-03, Stage 3) — the gesture-free alternative to the drag handle. Hidden when the card is already last."
   }
 }

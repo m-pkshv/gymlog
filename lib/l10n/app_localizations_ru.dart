@@ -503,4 +503,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get historySearchEmptyTitle => 'Ничего не найдено';
+
+  @override
+  String get moveExerciseUpAction => 'Переместить вверх';
+
+  @override
+  String get moveExerciseDownAction => 'Переместить вниз';
 }

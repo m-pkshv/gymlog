@@ -851,4 +851,74 @@ void main() {
       },
     );
   });
+
+  group('reorder exercises (Stage 3, S-03 drag handle + "⋮ → Вверх/Вниз")', () {
+    testWidgets(
+      '"Move up" in the exercise card menu swaps it with the previous card',
+      (tester) async {
+        await _seedExercise(db, id: 'squat', name: 'Squat');
+        await _seedExercise(db, id: 'bench', name: 'Bench Press');
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Bench Press'));
+        await tester.pumpAndSettle();
+
+        var order =
+            await (db.select(db.workoutExercises)
+                  ..orderBy([(we) => OrderingTerm.asc(we.orderIndex)]))
+                .get();
+        expect(order.map((we) => we.exerciseId), ['squat', 'bench']);
+
+        // The second card (Bench Press, last -> no "Move down") moves up.
+        await tester.tap(find.byIcon(Icons.more_vert).last);
+        await tester.pumpAndSettle();
+        expect(find.text('Move down'), findsNothing);
+        await tester.tap(find.text('Move up'));
+        await tester.pumpAndSettle();
+
+        order = await (db.select(db.workoutExercises)
+              ..orderBy([(we) => OrderingTerm.asc(we.orderIndex)]))
+            .get();
+        expect(order.map((we) => we.exerciseId), ['bench', 'squat']);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'the first card\'s menu has no "Move up" action',
+      (tester) async {
+        await _seedExercise(db, id: 'squat', name: 'Squat');
+        await _seedExercise(db, id: 'bench', name: 'Bench Press');
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Bench Press'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byIcon(Icons.more_vert).first);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Move up'), findsNothing);
+        expect(find.text('Move down'), findsOneWidget);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+  });
 }

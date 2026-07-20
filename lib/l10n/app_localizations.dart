@@ -1051,6 +1051,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No matches found'**
   String get historySearchEmptyTitle;
+
+  /// Menu action on an exercise card in the workout editor (S-03, Stage 3) — the gesture-free alternative to the drag handle. Hidden when the card is already first.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get moveExerciseUpAction;
+
+  /// Menu action on an exercise card in the workout editor (S-03, Stage 3) — the gesture-free alternative to the drag handle. Hidden when the card is already last.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get moveExerciseDownAction;
 }
 
 class _AppLocalizationsDelegate

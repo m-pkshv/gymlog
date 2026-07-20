@@ -158,5 +158,7 @@
   "filterAnyDate": "Любая дата",
   "filterStatusesLabel": "Статусы",
   "filterTagsLabel": "Теги",
-  "historySearchEmptyTitle": "Ничего не найдено"
+  "historySearchEmptyTitle": "Ничего не найдено",
+  "moveExerciseUpAction": "Переместить вверх",
+  "moveExerciseDownAction": "Переместить вниз"
 }

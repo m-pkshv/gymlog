@@ -260,35 +260,60 @@ class _EditorBody extends StatelessWidget {
         Expanded(
           child: details.exercises.isEmpty
               ? Center(child: Text(l10n.workoutExercisesEmpty))
-              : ListView(
-                  children: [
-                    for (final exerciseDetails in details.exercises)
-                      ExerciseCard(
-                        details: exerciseDetails,
-                        onFieldChanged: (setId, field, actual, value) {
-                          controller.editSet(setId, (set) {
-                            return actual
-                                ? field.setActual(set, value)
-                                : field.setPlanned(set, value);
-                          });
-                        },
-                        onFieldCommit: (setId, field, actual) {
-                          controller.flushSet(setId);
-                        },
-                        onWarmupChanged: (setId, value) {
-                          controller.setWarmup(setId, value: value);
-                        },
-                        onCompletedChanged: (setId, value) {
-                          controller.setCompleted(setId, value: value);
-                        },
-                        onAddSet: () => controller.addSet(
-                          exerciseDetails.workoutExercise.id,
-                        ),
-                        onCopyLastPerformance: () => onCopyLastPerformance(
-                          exerciseDetails.workoutExercise.id,
-                        ),
+              : ReorderableListView.builder(
+                  // ExerciseCard supplies its own drag handle (04_UI_UX_SPEC.md,
+                  // section 5), so the default trailing handle is redundant.
+                  buildDefaultDragHandles: false,
+                  itemCount: details.exercises.length,
+                  // `newIndex` here is already adjusted for the removed
+                  // item at `oldIndex` (unlike the deprecated `onReorder`).
+                  onReorderItem: (oldIndex, newIndex) {
+                    final ids = details.exercises
+                        .map((e) => e.workoutExercise.id)
+                        .toList();
+                    final movedId = ids.removeAt(oldIndex);
+                    ids.insert(newIndex, movedId);
+                    controller.reorderExercises(ids);
+                  },
+                  itemBuilder: (context, index) {
+                    final exerciseDetails = details.exercises[index];
+                    final workoutExerciseId =
+                        exerciseDetails.workoutExercise.id;
+                    return ExerciseCard(
+                      key: ValueKey(workoutExerciseId),
+                      details: exerciseDetails,
+                      index: index,
+                      canMoveUp: index > 0,
+                      canMoveDown: index < details.exercises.length - 1,
+                      onFieldChanged: (setId, field, actual, value) {
+                        controller.editSet(setId, (set) {
+                          return actual
+                              ? field.setActual(set, value)
+                              : field.setPlanned(set, value);
+                        });
+                      },
+                      onFieldCommit: (setId, field, actual) {
+                        controller.flushSet(setId);
+                      },
+                      onWarmupChanged: (setId, value) {
+                        controller.setWarmup(setId, value: value);
+                      },
+                      onCompletedChanged: (setId, value) {
+                        controller.setCompleted(setId, value: value);
+                      },
+                      onAddSet: () => controller.addSet(workoutExerciseId),
+                      onCopyLastPerformance: () =>
+                          onCopyLastPerformance(workoutExerciseId),
+                      onMoveUp: () => controller.moveExercise(
+                        workoutExerciseId,
+                        up: true,
                       ),
-                  ],
+                      onMoveDown: () => controller.moveExercise(
+                        workoutExerciseId,
+                        up: false,
+                      ),
+                    );
+                  },
                 ),
         ),
         SafeArea(

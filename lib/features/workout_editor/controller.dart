@@ -294,7 +294,11 @@ class WorkoutEditorController
     );
     result.fold((updated) {
       state = AsyncValue.data(
-        WorkoutDetails(workout: updated, exercises: details.exercises),
+        WorkoutDetails(
+          workout: updated,
+          exercises: details.exercises,
+          tags: details.tags,
+        ),
       );
     }, (_) {});
     return result;
@@ -333,7 +337,11 @@ class WorkoutEditorController
       );
       await _workoutRepository.updateWorkout(updated);
       state = AsyncValue.data(
-        WorkoutDetails(workout: updated, exercises: details.exercises),
+        WorkoutDetails(
+          workout: updated,
+          exercises: details.exercises,
+          tags: details.tags,
+        ),
       );
     } catch (error, stackTrace) {
       _logger.error(
@@ -342,6 +350,65 @@ class WorkoutEditorController
         stackTrace: stackTrace,
       );
     }
+  }
+
+  /// Full reorder from the drag handle (S-03): rewrites every
+  /// `orderIndex` to match [orderedWorkoutExerciseIds]' order. Applied to
+  /// local state immediately (so the dropped card doesn't snap back while
+  /// the write is in flight); a failed write re-syncs from the database
+  /// instead of leaving local and stored order diverged.
+  Future<void> reorderExercises(List<String> orderedWorkoutExerciseIds) async {
+    final details = _details;
+    if (details == null) return;
+    final byId = {
+      for (final e in details.exercises) e.workoutExercise.id: e,
+    };
+    final reordered = [
+      for (final id in orderedWorkoutExerciseIds)
+        if (byId[id] != null) byId[id]!,
+    ];
+    state = AsyncValue.data(
+      WorkoutDetails(
+        workout: details.workout,
+        exercises: reordered,
+        tags: details.tags,
+      ),
+    );
+    try {
+      await _workoutRepository.reorderExercises(
+        workoutId: _workoutId,
+        orderedWorkoutExerciseIds: orderedWorkoutExerciseIds,
+      );
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to reorder exercises for workout $_workoutId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      await _load();
+    }
+  }
+
+  /// "⋮ → Вверх/Вниз" (S-03) — the gesture-free alternative to dragging:
+  /// swaps [workoutExerciseId] with its immediate neighbor. A no-op at
+  /// either end of the list (the UI only offers the direction that's
+  /// actually available, but this doesn't re-check that itself).
+  Future<void> moveExercise(
+    String workoutExerciseId, {
+    required bool up,
+  }) async {
+    final details = _details;
+    if (details == null) return;
+    final ids = details.exercises.map((e) => e.workoutExercise.id).toList();
+    final index = ids.indexOf(workoutExerciseId);
+    if (index == -1) return;
+    final swapWith = up ? index - 1 : index + 1;
+    if (swapWith < 0 || swapWith >= ids.length) return;
+    final reordered = List<String>.from(ids);
+    final tmp = reordered[index];
+    reordered[index] = reordered[swapWith];
+    reordered[swapWith] = tmp;
+    await reorderExercises(reordered);
   }
 
   @override

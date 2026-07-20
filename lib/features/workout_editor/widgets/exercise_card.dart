@@ -7,25 +7,39 @@ import '../set_field_config.dart';
 import 'past_results_sheet.dart';
 import 'set_row.dart';
 
-enum _ExerciseCardAction { pastResults, copyLastPerformance }
+enum _ExerciseCardAction { pastResults, copyLastPerformance, moveUp, moveDown }
 
 /// Card for one exercise entry in the workout editor (S-03): header + the
 /// sets table + "+ Подход" + "Прошлые результаты"/"Копировать показатели
-/// прошлого выполнения" (menu, TS 8 section 8). Tags, comment, and the
-/// progression segment are Stage 3+ scope, not included here.
+/// прошлого выполнения" (menu, TS 8 section 8) + reorder — a leading drag
+/// handle (04_UI_UX_SPEC.md, section 5: "ручка-иконка (drag)") plus
+/// "⋮ → Вверх/Вниз" as the gesture-free alternative (05_AI_INSTRUCTIONS.md,
+/// rule: every gesture needs one). Tags, comment, and the progression
+/// segment are Stage 3+ scope not yet included here.
 class ExerciseCard extends StatelessWidget {
   const ExerciseCard({
     super.key,
     required this.details,
+    required this.index,
+    required this.canMoveUp,
+    required this.canMoveDown,
     required this.onFieldChanged,
     required this.onFieldCommit,
     required this.onWarmupChanged,
     required this.onCompletedChanged,
     required this.onAddSet,
     required this.onCopyLastPerformance,
+    required this.onMoveUp,
+    required this.onMoveDown,
   });
 
   final WorkoutExerciseDetails details;
+
+  /// This card's position in the exercise list — required by
+  /// [ReorderableDragStartListener] to identify the drag handle's item.
+  final int index;
+  final bool canMoveUp;
+  final bool canMoveDown;
   final void Function(
     String setId,
     SetFieldSpec field,
@@ -39,6 +53,8 @@ class ExerciseCard extends StatelessWidget {
   final void Function(String setId, bool value) onCompletedChanged;
   final VoidCallback onAddSet;
   final VoidCallback onCopyLastPerformance;
+  final VoidCallback onMoveUp;
+  final VoidCallback onMoveDown;
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +70,11 @@ class ExerciseCard extends StatelessWidget {
           children: [
             Row(
               children: [
+                ReorderableDragStartListener(
+                  index: index,
+                  child: const Icon(Icons.drag_handle),
+                ),
+                const SizedBox(width: 8),
                 Icon(exerciseTypeIcon(details.exercise.exerciseType)),
                 const SizedBox(width: 8),
                 Expanded(
@@ -75,6 +96,10 @@ class ExerciseCard extends StatelessWidget {
                         );
                       case _ExerciseCardAction.copyLastPerformance:
                         onCopyLastPerformance();
+                      case _ExerciseCardAction.moveUp:
+                        onMoveUp();
+                      case _ExerciseCardAction.moveDown:
+                        onMoveDown();
                     }
                   },
                   itemBuilder: (context) => [
@@ -86,6 +111,16 @@ class ExerciseCard extends StatelessWidget {
                       value: _ExerciseCardAction.copyLastPerformance,
                       child: Text(l10n.copyLastPerformanceAction),
                     ),
+                    if (canMoveUp)
+                      PopupMenuItem(
+                        value: _ExerciseCardAction.moveUp,
+                        child: Text(l10n.moveExerciseUpAction),
+                      ),
+                    if (canMoveDown)
+                      PopupMenuItem(
+                        value: _ExerciseCardAction.moveDown,
+                        child: Text(l10n.moveExerciseDownAction),
+                      ),
                   ],
                 ),
               ],

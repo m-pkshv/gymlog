@@ -69,4 +69,13 @@ abstract class WorkoutRepository {
     required String sourceWorkoutId,
     required DateTime date,
   });
+
+  /// Reorder (S-03, drag handle + "⋮ → Вверх/Вниз"): rewrites `orderIndex`
+  /// so it matches each id's position in [orderedWorkoutExerciseIds] (DM
+  /// 6.6: "непрерывность не требуется", so this doesn't need to preserve
+  /// any particular numbering, just the relative order).
+  Future<void> reorderExercises({
+    required String workoutId,
+    required List<String> orderedWorkoutExerciseIds,
+  });
 }
