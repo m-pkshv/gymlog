@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants.dart';
 import '../../../domain/models/workout_details.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/exercise_type_labels.dart';
 import '../set_field_config.dart';
+import 'comment_field.dart';
 import 'past_results_sheet.dart';
 import 'set_row.dart';
 
@@ -14,8 +16,8 @@ enum _ExerciseCardAction { pastResults, copyLastPerformance, moveUp, moveDown }
 /// прошлого выполнения" (menu, TS 8 section 8) + reorder — a leading drag
 /// handle (04_UI_UX_SPEC.md, section 5: "ручка-иконка (drag)") plus
 /// "⋮ → Вверх/Вниз" as the gesture-free alternative (05_AI_INSTRUCTIONS.md,
-/// rule: every gesture needs one). Tags, comment, and the progression
-/// segment are Stage 3+ scope not yet included here.
+/// rule: every gesture needs one) + a comment field. The progression
+/// segment is Stage 3+ scope not yet included here.
 class ExerciseCard extends StatelessWidget {
   const ExerciseCard({
     super.key,
@@ -31,6 +33,9 @@ class ExerciseCard extends StatelessWidget {
     required this.onCopyLastPerformance,
     required this.onMoveUp,
     required this.onMoveDown,
+    required this.onCommentChanged,
+    required this.onCommentCommit,
+    required this.onSetCommentSaved,
   });
 
   final WorkoutExerciseDetails details;
@@ -55,6 +60,9 @@ class ExerciseCard extends StatelessWidget {
   final VoidCallback onCopyLastPerformance;
   final VoidCallback onMoveUp;
   final VoidCallback onMoveDown;
+  final ValueChanged<String> onCommentChanged;
+  final VoidCallback onCommentCommit;
+  final void Function(String setId, String comment) onSetCommentSaved;
 
   @override
   Widget build(BuildContext context) {
@@ -137,6 +145,8 @@ class ExerciseCard extends StatelessWidget {
                 onWarmupChanged: (value) => onWarmupChanged(set.id, value),
                 onCompletedChanged: (value) =>
                     onCompletedChanged(set.id, value),
+                onCommentSaved: (comment) =>
+                    onSetCommentSaved(set.id, comment),
               ),
             Align(
               alignment: Alignment.centerLeft,
@@ -145,6 +155,14 @@ class ExerciseCard extends StatelessWidget {
                 icon: const Icon(Icons.add),
                 label: Text(l10n.addSetAction),
               ),
+            ),
+            CommentField(
+              key: ValueKey('exercise-comment-${details.workoutExercise.id}'),
+              value: details.workoutExercise.comment,
+              label: l10n.exerciseCommentLabel,
+              maxLength: CommentLengthLimits.workoutExercise,
+              onChanged: onCommentChanged,
+              onCommit: onCommentCommit,
             ),
           ],
         ),

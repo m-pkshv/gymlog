@@ -13,6 +13,8 @@ import 'package:gymlog/features/exercises/create_exercise_screen.dart';
 import 'package:gymlog/features/history/screen.dart';
 import 'package:gymlog/features/workout_editor/add_exercise_screen.dart';
 import 'package:gymlog/features/workout_editor/screen.dart';
+import 'package:gymlog/features/workout_editor/widgets/comment_field.dart';
+import 'package:gymlog/features/workout_editor/widgets/set_row.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
 /// Mirrors the subset of `app/router.dart` the workout editor needs (S-03,
@@ -99,6 +101,20 @@ Future<void> _unmountAndFlush(WidgetTester tester) async {
   await tester.pumpWidget(const SizedBox.shrink());
   await tester.pumpAndSettle();
 }
+
+/// The plan/fact `TextField`s of a set row, scoped past the workout- and
+/// exercise-level comment fields Stage 3 added elsewhere on this screen
+/// (otherwise a bare `find.byType(TextField)` is ambiguous).
+Finder _setFieldTextFields() =>
+    find.descendant(of: find.byType(SetRow), matching: find.byType(TextField));
+
+/// The [index]-th `CommentField`'s underlying `TextField` — index 0 is
+/// always the workout-level comment (it sits above the exercise list),
+/// index 1+ are each exercise card's comment field in list order.
+Finder _commentField(int index) => find.descendant(
+  of: find.byType(CommentField).at(index),
+  matching: find.byType(TextField),
+);
 
 /// Stage 3 turned History's FAB into a "с нуля/из шаблона/копией" creation
 /// menu (`_openNewWorkoutMenu`); most tests here only care about ending up
@@ -295,7 +311,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Weight, kg: first plan field of a strength exercise.
-      await tester.enterText(find.byType(TextField).first, '100');
+      await tester.enterText(_setFieldTextFields().first, '100');
       await tester.pump();
 
       var sets = await db.select(db.exerciseSets).get();
@@ -329,7 +345,7 @@ void main() {
       await tester.tap(find.text('Add set'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField).first, '80');
+      await tester.enterText(_setFieldTextFields().first, '80');
       await tester.pump();
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pump();
@@ -356,10 +372,10 @@ void main() {
     await tester.pumpAndSettle();
 
     // Plan weight, then plan reps (the two TextFields of a strength row).
-    await tester.enterText(find.byType(TextField).at(0), '60');
+    await tester.enterText(_setFieldTextFields().at(0), '60');
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pump();
-    await tester.enterText(find.byType(TextField).at(2), '10');
+    await tester.enterText(_setFieldTextFields().at(2), '10');
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pump();
 
@@ -812,7 +828,13 @@ void main() {
 
         await tester.tap(find.text('Create tag'));
         await tester.pumpAndSettle();
-        await tester.enterText(find.byType(TextField), 'Push');
+        await tester.enterText(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.byType(TextField),
+          ),
+          'Push',
+        );
         await tester.pump();
         await tester.tap(find.widgetWithText(FilledButton, 'Create'));
         await tester.pumpAndSettle();
@@ -920,5 +942,78 @@ void main() {
         await _unmountAndFlush(tester);
       },
     );
+  });
+
+  group('comments (Stage 3, S-03)', () {
+    testWidgets(
+      'editing the workout comment debounces the write, then autosaves',
+      (tester) async {
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+
+        await tester.enterText(_commentField(0), 'Great session');
+        await tester.pump();
+
+        var workouts = await db.select(db.workouts).get();
+        expect(workouts.single.comment, isNull, reason: 'not flushed yet');
+
+        await tester.pump(autosaveDebounce + const Duration(milliseconds: 50));
+        workouts = await db.select(db.workouts).get();
+        expect(workouts.single.comment, 'Great session');
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets('editing an exercise comment autosaves', (tester) async {
+      await _seedExercise(db);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(_commentField(1), 'Felt heavy');
+      await tester.pump();
+      await tester.pump(autosaveDebounce + const Duration(milliseconds: 50));
+
+      final workoutExercises = await db.select(db.workoutExercises).get();
+      expect(workoutExercises.single.comment, 'Felt heavy');
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets('the set comment dialog saves a comment', (tester) async {
+      await _seedExercise(db);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add set'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Comment'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(TextField),
+        ),
+        'Left knee twinge',
+      );
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      final sets = await db.select(db.exerciseSets).get();
+      expect(sets.single.comment, 'Left knee twinge');
+
+      await _unmountAndFlush(tester);
+    });
   });
 }

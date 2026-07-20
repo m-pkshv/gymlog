@@ -562,5 +562,25 @@
   "moveExerciseDownAction": "Move down",
   "@moveExerciseDownAction": {
     "description": "Menu action on an exercise card in the workout editor (S-03, Stage 3) — the gesture-free alternative to the drag handle. Hidden when the card is already last."
+  },
+  "workoutCommentLabel": "Comment",
+  "@workoutCommentLabel": {
+    "description": "Label of the workout-level comment field in the editor header (S-03, Stage 3, DM 6.4, max 2000 chars)."
+  },
+  "exerciseCommentLabel": "Comment",
+  "@exerciseCommentLabel": {
+    "description": "Label of the per-exercise comment field on an exercise card (S-03, Stage 3, DM 6.6, max 1000 chars)."
+  },
+  "setCommentAction": "Comment",
+  "@setCommentAction": {
+    "description": "Tooltip on the per-set comment icon button in the sets table (S-03, Stage 3) that opens the comment dialog."
+  },
+  "setCommentTitle": "Set comment",
+  "@setCommentTitle": {
+    "description": "Title of the per-set comment dialog (S-03, Stage 3, DM 6.7, max 500 chars)."
+  },
+  "setCommentLabel": "Comment",
+  "@setCommentLabel": {
+    "description": "Text field label inside the per-set comment dialog (S-03, Stage 3)."
   }
 }

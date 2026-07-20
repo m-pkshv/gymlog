@@ -504,4 +504,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moveExerciseDownAction => 'Move down';
+
+  @override
+  String get workoutCommentLabel => 'Comment';
+
+  @override
+  String get exerciseCommentLabel => 'Comment';
+
+  @override
+  String get setCommentAction => 'Comment';
+
+  @override
+  String get setCommentTitle => 'Set comment';
+
+  @override
+  String get setCommentLabel => 'Comment';
 }

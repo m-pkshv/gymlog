@@ -92,6 +92,15 @@ extension WorkoutExerciseCompanionMapper on WorkoutExercise {
       updatedAt: updatedAt.toUtc().toIso8601String(),
     );
   }
+
+  drift.WorkoutExercisesCompanion toUpdateCompanion() {
+    return drift.WorkoutExercisesCompanion(
+      orderIndex: Value(orderIndex),
+      comment: Value(comment),
+      progressionDecision: Value(progressionDecision.name),
+      updatedAt: Value(updatedAt.toUtc().toIso8601String()),
+    );
+  }
 }
 
 extension ExerciseSetRowMapper on drift.ExerciseSet {

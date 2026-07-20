@@ -43,3 +43,13 @@ const List<String> workoutTagColorPalette = [
   '#D94C6B',
   '#7B8794',
 ];
+
+/// Comment field length limits (06_DATA_MODEL.md, sections 6.4/6.6/6.7),
+/// enforced via `maxLength` on the S-03 comment fields.
+class CommentLengthLimits {
+  const CommentLengthLimits._();
+
+  static const int workout = 2000;
+  static const int workoutExercise = 1000;
+  static const int exerciseSet = 500;
+}

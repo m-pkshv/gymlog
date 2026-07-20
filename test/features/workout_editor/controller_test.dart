@@ -520,4 +520,139 @@ void main() {
       });
     },
   );
+
+  group('comments (Stage 3, S-03)', () {
+    test(
+      'editWorkoutComment debounces the write, flushWorkoutComment writes '
+      'immediately',
+      () async {
+        final workout = await workouts.createDraft(
+          date: DateTime(2026, 7, 20),
+        );
+        final controller = WorkoutEditorController(
+          workout.id,
+          workouts,
+          service,
+          logger,
+        );
+        addTearDown(controller.dispose);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        controller.editWorkoutComment('Great session');
+        expect(controller.state.value!.workout.comment, 'Great session');
+        var stored = await workouts.getDetails(workout.id);
+        expect(stored!.workout.comment, isNull, reason: 'not flushed yet');
+
+        await controller.flushWorkoutComment();
+        stored = await workouts.getDetails(workout.id);
+        expect(stored!.workout.comment, 'Great session');
+      },
+    );
+
+    test(
+      'editExerciseComment debounces the write, flushExerciseComment '
+      'writes immediately',
+      () async {
+        final exercise = await exercises.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+        final workout = await workouts.createDraft(
+          date: DateTime(2026, 7, 20),
+        );
+        final workoutExercise = await workouts.addExercise(
+          workoutId: workout.id,
+          exerciseId: exercise.id,
+        );
+        final controller = WorkoutEditorController(
+          workout.id,
+          workouts,
+          service,
+          logger,
+        );
+        addTearDown(controller.dispose);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        controller.editExerciseComment(workoutExercise.id, 'Felt heavy');
+        expect(
+          controller.state.value!.exercises.single.workoutExercise.comment,
+          'Felt heavy',
+        );
+        var stored = await workouts.getDetails(workout.id);
+        expect(
+          stored!.exercises.single.workoutExercise.comment,
+          isNull,
+          reason: 'not flushed yet',
+        );
+
+        await controller.flushExerciseComment(workoutExercise.id);
+        stored = await workouts.getDetails(workout.id);
+        expect(stored!.exercises.single.workoutExercise.comment, 'Felt heavy');
+      },
+    );
+
+    test('flushAll flushes pending workout and exercise comments', () async {
+      final exercise = await exercises.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 20));
+      final workoutExercise = await workouts.addExercise(
+        workoutId: workout.id,
+        exerciseId: exercise.id,
+      );
+      final controller = WorkoutEditorController(
+        workout.id,
+        workouts,
+        service,
+        logger,
+      );
+      addTearDown(controller.dispose);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      controller.editWorkoutComment('Workout note');
+      controller.editExerciseComment(workoutExercise.id, 'Exercise note');
+      await controller.flushAll();
+
+      final stored = await workouts.getDetails(workout.id);
+      expect(stored!.workout.comment, 'Workout note');
+      expect(stored.exercises.single.workoutExercise.comment, 'Exercise note');
+    });
+
+    test(
+      'dispose() flushes pending workout and exercise comments',
+      () async {
+        final exercise = await exercises.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+        final workout = await workouts.createDraft(
+          date: DateTime(2026, 7, 20),
+        );
+        final workoutExercise = await workouts.addExercise(
+          workoutId: workout.id,
+          exerciseId: exercise.id,
+        );
+        final controller = WorkoutEditorController(
+          workout.id,
+          workouts,
+          service,
+          logger,
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        controller.editWorkoutComment('Workout note');
+        controller.editExerciseComment(workoutExercise.id, 'Exercise note');
+        controller.dispose();
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        final stored = await workouts.getDetails(workout.id);
+        expect(stored!.workout.comment, 'Workout note');
+        expect(
+          stored.exercises.single.workoutExercise.comment,
+          'Exercise note',
+        );
+      },
+    );
+  });
 }

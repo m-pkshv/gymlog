@@ -552,4 +552,28 @@ void main() {
       },
     );
   });
+
+  group('updateWorkoutExercise (Stage 3, S-03 exercise comment)', () {
+    test('persists a comment change', () async {
+      final exercise = await exercises.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 20));
+      final workoutExercise = await workouts.addExercise(
+        workoutId: workout.id,
+        exerciseId: exercise.id,
+      );
+
+      await workouts.updateWorkoutExercise(
+        workoutExercise.copyWith(comment: 'Felt strong today'),
+      );
+
+      final details = await workouts.getDetails(workout.id);
+      expect(
+        details!.exercises.single.workoutExercise.comment,
+        'Felt strong today',
+      );
+    });
+  });
 }

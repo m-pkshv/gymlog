@@ -38,6 +38,10 @@ abstract class WorkoutRepository {
     required String exerciseId,
   });
 
+  /// Persists `WorkoutExercise`-level field changes — the comment autosave
+  /// write (S-03, TS 5).
+  Future<void> updateWorkoutExercise(WorkoutExercise workoutExercise);
+
   Future<ExerciseSet> addSet({
     required String workoutExerciseId,
     required bool isWarmup,

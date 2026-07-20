@@ -11,6 +11,7 @@ import '../../domain/enums.dart';
 import '../../domain/models/exercise_set.dart';
 import '../../domain/models/workout.dart';
 import '../../domain/models/workout_details.dart';
+import '../../domain/models/workout_exercise.dart';
 import '../../domain/repositories/workout_repository.dart';
 import '../../services/workout_service.dart';
 import 'set_field_config.dart';
@@ -39,6 +40,8 @@ class WorkoutEditorController
   final WorkoutService _workoutService;
   final AppLogger _logger;
   final Map<String, Timer> _debounceTimers = {};
+  Timer? _workoutCommentDebounceTimer;
+  final Map<String, Timer> _exerciseCommentDebounceTimers = {};
 
   Future<void> _load() async {
     try {
@@ -73,6 +76,37 @@ class WorkoutEditorController
       }
     }
     return null;
+  }
+
+  WorkoutExercise? _findWorkoutExercise(String workoutExerciseId) {
+    for (final workoutExercise
+        in _details?.exercises ?? const <WorkoutExerciseDetails>[]) {
+      if (workoutExercise.workoutExercise.id == workoutExerciseId) {
+        return workoutExercise.workoutExercise;
+      }
+    }
+    return null;
+  }
+
+  void _replaceWorkoutExercise(WorkoutExercise updated) {
+    final details = _details;
+    if (details == null) return;
+    state = AsyncValue.data(
+      WorkoutDetails(
+        workout: details.workout,
+        tags: details.tags,
+        exercises: [
+          for (final workoutExercise in details.exercises)
+            workoutExercise.workoutExercise.id == updated.id
+                ? WorkoutExerciseDetails(
+                    workoutExercise: updated,
+                    exercise: workoutExercise.exercise,
+                    sets: workoutExercise.sets,
+                  )
+                : workoutExercise,
+        ],
+      ),
+    );
   }
 
   void _replaceSet(ExerciseSet updated) {
@@ -130,11 +164,19 @@ class WorkoutEditorController
     }
   }
 
-  /// Flushes every set with a pending debounced write — screen exit and
-  /// `AppLifecycleState.paused` call this (03_TECHNICAL_SPEC.md, section 5).
+  /// Flushes every set/comment with a pending debounced write — screen
+  /// exit and `AppLifecycleState.paused` call this (03_TECHNICAL_SPEC.md,
+  /// section 5).
   Future<void> flushAll() async {
     for (final setId in _debounceTimers.keys.toList()) {
       await flushSet(setId);
+    }
+    if (_workoutCommentDebounceTimer != null) {
+      await flushWorkoutComment();
+    }
+    for (final workoutExerciseId
+        in _exerciseCommentDebounceTimers.keys.toList()) {
+      await flushExerciseComment(workoutExerciseId);
     }
   }
 
@@ -352,6 +394,74 @@ class WorkoutEditorController
     }
   }
 
+  /// Edits the workout-level comment (S-03), same debounce/flush contract
+  /// as [editSet]/[flushSet] (03_TECHNICAL_SPEC.md, section 5).
+  void editWorkoutComment(String value) {
+    final details = _details;
+    if (details == null) return;
+    final updated = details.workout.copyWith(
+      comment: value,
+      updatedAt: DateTime.now().toUtc(),
+    );
+    state = AsyncValue.data(
+      WorkoutDetails(
+        workout: updated,
+        exercises: details.exercises,
+        tags: details.tags,
+      ),
+    );
+    _workoutCommentDebounceTimer?.cancel();
+    _workoutCommentDebounceTimer = Timer(autosaveDebounce, flushWorkoutComment);
+  }
+
+  /// Immediate write of the workout comment, bypassing the debounce.
+  Future<void> flushWorkoutComment() async {
+    _workoutCommentDebounceTimer?.cancel();
+    _workoutCommentDebounceTimer = null;
+    final details = _details;
+    if (details == null) return;
+    try {
+      await _workoutRepository.updateWorkout(details.workout);
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to save comment for workout $_workoutId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  /// Edits an exercise's comment (S-03), same debounce/flush contract as
+  /// [editSet]/[flushSet].
+  void editExerciseComment(String workoutExerciseId, String value) {
+    final current = _findWorkoutExercise(workoutExerciseId);
+    if (current == null) return;
+    _replaceWorkoutExercise(
+      current.copyWith(comment: value, updatedAt: DateTime.now().toUtc()),
+    );
+    _exerciseCommentDebounceTimers[workoutExerciseId]?.cancel();
+    _exerciseCommentDebounceTimers[workoutExerciseId] = Timer(
+      autosaveDebounce,
+      () => flushExerciseComment(workoutExerciseId),
+    );
+  }
+
+  /// Immediate write of an exercise's comment, bypassing the debounce.
+  Future<void> flushExerciseComment(String workoutExerciseId) async {
+    _exerciseCommentDebounceTimers.remove(workoutExerciseId)?.cancel();
+    final workoutExercise = _findWorkoutExercise(workoutExerciseId);
+    if (workoutExercise == null) return;
+    try {
+      await _workoutRepository.updateWorkoutExercise(workoutExercise);
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to save comment for exercise $workoutExerciseId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
   /// Full reorder from the drag handle (S-03): rewrites every
   /// `orderIndex` to match [orderedWorkoutExerciseIds]' order. Applied to
   /// local state immediately (so the dropped card doesn't snap back while
@@ -425,6 +535,25 @@ class WorkoutEditorController
       }
     }
     _debounceTimers.clear();
+
+    if (_workoutCommentDebounceTimer != null) {
+      _workoutCommentDebounceTimer!.cancel();
+      _workoutCommentDebounceTimer = null;
+      final details = _details;
+      if (details != null) {
+        unawaited(_workoutRepository.updateWorkout(details.workout));
+      }
+    }
+
+    for (final entry in _exerciseCommentDebounceTimers.entries) {
+      entry.value.cancel();
+      final workoutExercise = _findWorkoutExercise(entry.key);
+      if (workoutExercise != null) {
+        unawaited(_workoutRepository.updateWorkoutExercise(workoutExercise));
+      }
+    }
+    _exerciseCommentDebounceTimers.clear();
+
     super.dispose();
   }
 }

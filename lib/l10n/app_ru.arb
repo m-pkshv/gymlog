@@ -160,5 +160,10 @@
   "filterTagsLabel": "Теги",
   "historySearchEmptyTitle": "Ничего не найдено",
   "moveExerciseUpAction": "Переместить вверх",
-  "moveExerciseDownAction": "Переместить вниз"
+  "moveExerciseDownAction": "Переместить вниз",
+  "workoutCommentLabel": "Комментарий",
+  "exerciseCommentLabel": "Комментарий",
+  "setCommentAction": "Комментарий",
+  "setCommentTitle": "Комментарий к подходу",
+  "setCommentLabel": "Комментарий"
 }

@@ -1063,6 +1063,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Move down'**
   String get moveExerciseDownAction;
+
+  /// Label of the workout-level comment field in the editor header (S-03, Stage 3, DM 6.4, max 2000 chars).
+  ///
+  /// In en, this message translates to:
+  /// **'Comment'**
+  String get workoutCommentLabel;
+
+  /// Label of the per-exercise comment field on an exercise card (S-03, Stage 3, DM 6.6, max 1000 chars).
+  ///
+  /// In en, this message translates to:
+  /// **'Comment'**
+  String get exerciseCommentLabel;
+
+  /// Tooltip on the per-set comment icon button in the sets table (S-03, Stage 3) that opens the comment dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment'**
+  String get setCommentAction;
+
+  /// Title of the per-set comment dialog (S-03, Stage 3, DM 6.7, max 500 chars).
+  ///
+  /// In en, this message translates to:
+  /// **'Set comment'**
+  String get setCommentTitle;
+
+  /// Text field label inside the per-set comment dialog (S-03, Stage 3).
+  ///
+  /// In en, this message translates to:
+  /// **'Comment'**
+  String get setCommentLabel;
 }
 
 class _AppLocalizationsDelegate

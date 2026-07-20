@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
+import '../../core/constants.dart';
 import '../../core/date_format.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/exercise.dart';
@@ -14,6 +15,7 @@ import '../../domain/models/workout_tag.dart';
 import '../../l10n/app_localizations.dart';
 import 'controller.dart';
 import 'status_labels.dart';
+import 'widgets/comment_field.dart';
 import 'widgets/exercise_card.dart';
 import 'widgets/tag_picker_sheet.dart';
 import 'widgets/workout_tag_chip.dart';
@@ -257,6 +259,17 @@ class _EditorBody extends StatelessWidget {
           ),
         ),
         _TagsRow(workoutId: workout.id, tags: details.tags),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: CommentField(
+            key: ValueKey('workout-comment-${workout.id}'),
+            value: workout.comment,
+            label: l10n.workoutCommentLabel,
+            maxLength: CommentLengthLimits.workout,
+            onChanged: controller.editWorkoutComment,
+            onCommit: controller.flushWorkoutComment,
+          ),
+        ),
         Expanded(
           child: details.exercises.isEmpty
               ? Center(child: Text(l10n.workoutExercisesEmpty))
@@ -312,6 +325,20 @@ class _EditorBody extends StatelessWidget {
                         workoutExerciseId,
                         up: false,
                       ),
+                      onCommentChanged: (value) =>
+                          controller.editExerciseComment(
+                            workoutExerciseId,
+                            value,
+                          ),
+                      onCommentCommit: () =>
+                          controller.flushExerciseComment(workoutExerciseId),
+                      onSetCommentSaved: (setId, comment) {
+                        controller.editSet(
+                          setId,
+                          (set) => set.copyWith(comment: comment),
+                        );
+                        controller.flushSet(setId);
+                      },
                     );
                   },
                 ),

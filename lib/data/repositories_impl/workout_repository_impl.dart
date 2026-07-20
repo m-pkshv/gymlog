@@ -278,6 +278,13 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
     return workoutExercise;
   }
 
+  @override
+  Future<void> updateWorkoutExercise(WorkoutExercise workoutExercise) async {
+    await (_db.update(_db.workoutExercises)..where(
+      (we) => we.id.equals(workoutExercise.id),
+    )).write(workoutExercise.toUpdateCompanion());
+  }
+
   Future<int> _maxOrderIndex(String workoutId) async {
     final rows =
         await (_db.select(_db.workoutExercises)..where(

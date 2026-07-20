@@ -509,4 +509,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get moveExerciseDownAction => 'Переместить вниз';
+
+  @override
+  String get workoutCommentLabel => 'Комментарий';
+
+  @override
+  String get exerciseCommentLabel => 'Комментарий';
+
+  @override
+  String get setCommentAction => 'Комментарий';
+
+  @override
+  String get setCommentTitle => 'Комментарий к подходу';
+
+  @override
+  String get setCommentLabel => 'Комментарий';
 }
