@@ -8,17 +8,22 @@ import '../../app/providers.dart';
 import '../../core/date_format.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/exercise.dart';
+import '../../domain/models/workout.dart';
 import '../../domain/models/workout_details.dart';
 import '../../l10n/app_localizations.dart';
 import 'controller.dart';
 import 'status_labels.dart';
 import 'widgets/exercise_card.dart';
 
+enum _ActiveWorkoutConflictResolution { finishOther, cancelOther }
+
 /// S-03 workout editor: add exercises, add sets, edit plan/fact with
 /// autosave, "✓" (DM 6.7), "прошлые результаты"/"копировать показатели
 /// прошлого выполнения" (TS 8), the full DM 6.4.1 status menu (Stage 3),
-/// and moving the date. Tags, progression, reorder and comments are Stage
-/// 3+ scope not yet covered here.
+/// moving the date, and the "Завершить/отменить текущую?" conflict dialog
+/// when starting/resuming this workout would violate the "at most one
+/// inProgress" invariant. Tags, progression, reorder and comments are
+/// Stage 3+ scope not yet covered here.
 class WorkoutEditorScreen extends ConsumerStatefulWidget {
   const WorkoutEditorScreen({super.key, required this.workoutId});
 
@@ -79,6 +84,22 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
 
   Future<void> _changeStatus(WorkoutStatus newStatus) async {
     final l10n = AppLocalizations.of(context)!;
+
+    // DM 6.4.1 invariant: at most one workout may be inProgress. Check
+    // proactively (rather than reacting to the service's rejection) so we
+    // can offer the "Завершить/отменить текущую?" dialog the spec calls
+    // for, instead of just a generic error snackbar.
+    if (newStatus == WorkoutStatus.inProgress) {
+      final conflict = await ref
+          .read(workoutRepositoryProvider)
+          .getInProgressWorkout();
+      if (!mounted) return;
+      if (conflict != null && conflict.id != widget.workoutId) {
+        final resolved = await _resolveActiveWorkoutConflict(conflict);
+        if (!resolved || !mounted) return;
+      }
+    }
+
     final result = await ref
         .read(workoutEditorControllerProvider(widget.workoutId).notifier)
         .changeStatus(newStatus);
@@ -87,6 +108,56 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.workoutStatusChangeError)));
+    });
+  }
+
+  /// Shows the DM 6.4.1 conflict dialog and, if the owner picks an action,
+  /// finishes or cancels [conflict] (a *different* workout, not the one
+  /// this screen is editing) via `workout_service` directly — this doesn't
+  /// go through [WorkoutEditorController], which is scoped to this screen's
+  /// own workout only. Returns whether the conflict was resolved, so the
+  /// caller knows it's now safe to retry its own transition.
+  Future<bool> _resolveActiveWorkoutConflict(Workout conflict) async {
+    final l10n = AppLocalizations.of(context)!;
+    final resolution = await showDialog<_ActiveWorkoutConflictResolution>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.activeWorkoutConflictTitle),
+        content: Text(l10n.activeWorkoutConflictMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l10n.actionCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(
+              context,
+            ).pop(_ActiveWorkoutConflictResolution.cancelOther),
+            child: Text(l10n.activeWorkoutConflictCancelOtherAction),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(
+              context,
+            ).pop(_ActiveWorkoutConflictResolution.finishOther),
+            child: Text(l10n.activeWorkoutConflictFinishOtherAction),
+          ),
+        ],
+      ),
+    );
+    if (resolution == null || !mounted) return false;
+
+    final targetStatus = resolution == _ActiveWorkoutConflictResolution.finishOther
+        ? WorkoutStatus.completed
+        : WorkoutStatus.cancelled;
+    final result = await ref
+        .read(workoutServiceProvider)
+        .changeStatus(workout: conflict, newStatus: targetStatus);
+    if (!mounted) return false;
+    return result.fold((_) => true, (error) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.workoutStatusChangeError)));
+      return false;
     });
   }
 

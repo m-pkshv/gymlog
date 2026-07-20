@@ -120,6 +120,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get transitionBackToDraftAction => 'Вернуть в черновик';
 
   @override
+  String get activeWorkoutConflictTitle => 'Уже есть активная тренировка';
+
+  @override
+  String get activeWorkoutConflictMessage =>
+      'Одновременно может выполняться только одна тренировка. Сначала завершите или отмените текущую активную тренировку.';
+
+  @override
+  String get activeWorkoutConflictCancelOtherAction => 'Отменить её';
+
+  @override
+  String get activeWorkoutConflictFinishOtherAction => 'Завершить её';
+
+  @override
   String get startWorkoutAction => 'Начать тренировку';
 
   @override

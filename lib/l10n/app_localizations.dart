@@ -320,6 +320,30 @@ abstract class AppLocalizations {
   /// **'Back to draft'**
   String get transitionBackToDraftAction;
 
+  /// Title of the conflict dialog (S-03, DM 6.4.1) shown when starting/resuming this workout would violate the "at most one inProgress" invariant.
+  ///
+  /// In en, this message translates to:
+  /// **'A workout is already in progress'**
+  String get activeWorkoutConflictTitle;
+
+  /// Body of the conflict dialog (S-03, DM 6.4.1).
+  ///
+  /// In en, this message translates to:
+  /// **'Only one workout can be in progress at a time. Finish or cancel the current one first.'**
+  String get activeWorkoutConflictMessage;
+
+  /// Conflict dialog action (S-03, DM 6.4.1) that cancels the other, currently inProgress workout.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel it'**
+  String get activeWorkoutConflictCancelOtherAction;
+
+  /// Conflict dialog action (S-03, DM 6.4.1) that finishes the other, currently inProgress workout.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish it'**
+  String get activeWorkoutConflictFinishOtherAction;
+
   /// Button on the workout editor (S-03) that transitions draft -> inProgress.
   ///
   /// In en, this message translates to:

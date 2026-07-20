@@ -81,6 +81,24 @@ Future<void> _unmountAndFlush(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// An already-inProgress workout, distinct from whatever the test creates
+/// through the FAB — the "another workout is already active" conflict
+/// dialog tests' fixture (S-03, DM 6.4.1).
+Future<void> _seedActiveWorkout(AppDatabase db, {String id = 'active'}) {
+  return db
+      .into(db.workouts)
+      .insert(
+        WorkoutsCompanion.insert(
+          id: id,
+          date: '2026-07-15',
+          status: const Value('inProgress'),
+          startedAt: const Value('2026-07-15T10:00:00Z'),
+          createdAt: '2026-07-15T10:00:00Z',
+          updatedAt: '2026-07-15T10:00:00Z',
+        ),
+      );
+}
+
 /// A completed workout from 2026-07-10 with one logged set of the seeded
 /// 'squat' exercise (actual: 60 kg × 8) — the "Прошлые результаты"/
 /// "Копировать показатели прошлого выполнения" tests' fixture (S-03, TS 8).
@@ -615,4 +633,115 @@ void main() {
       await _unmountAndFlush(tester);
     },
   );
+
+  group('active-workout conflict dialog (S-03, DM 6.4.1)', () {
+    testWidgets(
+      'starting a workout while another is inProgress shows the conflict '
+      'dialog instead of a generic error',
+      (tester) async {
+        await _seedActiveWorkout(db);
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(FloatingActionButton));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Start workout'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('A workout is already in progress'), findsOneWidget);
+        expect(find.text('Finish it'), findsOneWidget);
+        expect(find.text('Cancel it'), findsOneWidget);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'dismissing the dialog leaves both workouts untouched',
+      (tester) async {
+        await _seedActiveWorkout(db);
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(FloatingActionButton));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Start workout'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Draft'), findsOneWidget);
+        final active = await (db.select(
+          db.workouts,
+        )..where((w) => w.id.equals('active'))).getSingle();
+        expect(active.status, 'inProgress');
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      '"Finish it" completes the other workout and starts this one',
+      (tester) async {
+        await _seedActiveWorkout(db);
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(FloatingActionButton));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Start workout'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Finish it'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('In progress'), findsOneWidget);
+        final active = await (db.select(
+          db.workouts,
+        )..where((w) => w.id.equals('active'))).getSingle();
+        expect(active.status, 'completed');
+        expect(active.finishedAt, isNotNull);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      '"Cancel it" cancels the other workout and starts this one',
+      (tester) async {
+        await _seedActiveWorkout(db);
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(FloatingActionButton));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Start workout'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Cancel it'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('In progress'), findsOneWidget);
+        final active = await (db.select(
+          db.workouts,
+        )..where((w) => w.id.equals('active'))).getSingle();
+        expect(active.status, 'cancelled');
+
+        await _unmountAndFlush(tester);
+      },
+    );
+  });
 }

@@ -120,6 +120,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transitionBackToDraftAction => 'Back to draft';
 
   @override
+  String get activeWorkoutConflictTitle => 'A workout is already in progress';
+
+  @override
+  String get activeWorkoutConflictMessage =>
+      'Only one workout can be in progress at a time. Finish or cancel the current one first.';
+
+  @override
+  String get activeWorkoutConflictCancelOtherAction => 'Cancel it';
+
+  @override
+  String get activeWorkoutConflictFinishOtherAction => 'Finish it';
+
+  @override
   String get startWorkoutAction => 'Start workout';
 
   @override

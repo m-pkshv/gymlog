@@ -148,6 +148,22 @@
   "@transitionBackToDraftAction": {
     "description": "Status menu action for planned -> draft (S-03, DM 6.4.1)."
   },
+  "activeWorkoutConflictTitle": "A workout is already in progress",
+  "@activeWorkoutConflictTitle": {
+    "description": "Title of the conflict dialog (S-03, DM 6.4.1) shown when starting/resuming this workout would violate the \"at most one inProgress\" invariant."
+  },
+  "activeWorkoutConflictMessage": "Only one workout can be in progress at a time. Finish or cancel the current one first.",
+  "@activeWorkoutConflictMessage": {
+    "description": "Body of the conflict dialog (S-03, DM 6.4.1)."
+  },
+  "activeWorkoutConflictCancelOtherAction": "Cancel it",
+  "@activeWorkoutConflictCancelOtherAction": {
+    "description": "Conflict dialog action (S-03, DM 6.4.1) that cancels the other, currently inProgress workout."
+  },
+  "activeWorkoutConflictFinishOtherAction": "Finish it",
+  "@activeWorkoutConflictFinishOtherAction": {
+    "description": "Conflict dialog action (S-03, DM 6.4.1) that finishes the other, currently inProgress workout."
+  },
   "startWorkoutAction": "Start workout",
   "@startWorkoutAction": {
     "description": "Button on the workout editor (S-03) that transitions draft -> inProgress."
