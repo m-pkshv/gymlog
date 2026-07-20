@@ -8,53 +8,67 @@ import '../../domain/models/workout.dart';
 import '../../domain/models/workout_history_entry.dart';
 import '../../l10n/app_localizations.dart';
 import '../workout_editor/status_labels.dart';
+import 'copy_workout_flow.dart';
 
 enum _HistoryCardAction { copy }
 
+enum _NewWorkoutChoice { scratch, copy }
+
 /// S-02 "История", simplified for Stage 1: a plain list of completed
 /// workouts, no filters/calendar/pagination yet (02_DEVELOPMENT_PLAN.md —
-/// those arrive later in Stage 3). Tapping a card opens the editor (S-03);
-/// the FAB creates a draft and opens it there too. Stage 3 added the
-/// per-card "⋮" menu's "Копировать" action (TS 8 section 8) — "перенести"/
-/// "удалить" from the same S-02 menu are separate, not-yet-done Stage 3
-/// items (move already exists inside the editor; delete needs the
-/// still-pending Undo-delete work).
+/// those arrive later in Stage 3). Tapping a card opens the editor (S-03).
+/// Stage 3 added the per-card "⋮" menu's "Копировать" action (TS 8 section
+/// 8) — "перенести"/"удалить" from the same S-02 menu are separate,
+/// not-yet-done Stage 3 items (move already exists inside the editor;
+/// delete needs the still-pending Undo-delete work) — and turned the FAB
+/// into the "с нуля/из шаблона/копией" creation menu (02_DEVELOPMENT_PLAN.md,
+/// Stage 3 функциональность).
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});
 
-  Future<void> _copyWorkout(
-    BuildContext context,
-    WidgetRef ref,
-    Workout source,
-  ) async {
+  Future<void> _openNewWorkoutMenu(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
-    // TS 8: the copy's date is chosen by the owner, not silently reused.
-    final picked = await showDatePicker(
+    final choice = await showModalBottomSheet<_NewWorkoutChoice>(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.add),
+              title: Text(l10n.newWorkoutFromScratchAction),
+              onTap: () => Navigator.of(
+                sheetContext,
+              ).pop(_NewWorkoutChoice.scratch),
+            ),
+            ListTile(
+              leading: const Icon(Icons.copy_outlined),
+              title: Text(l10n.newWorkoutFromCopyAction),
+              onTap: () => Navigator.of(sheetContext).pop(_NewWorkoutChoice.copy),
+            ),
+            ListTile(
+              enabled: false,
+              leading: const Icon(Icons.description_outlined),
+              title: Text(l10n.newWorkoutFromTemplateAction),
+              subtitle: Text(l10n.comingSoonLabel),
+            ),
+          ],
+        ),
+      ),
     );
-    if (picked == null) return;
+    if (choice == null || !context.mounted) return;
 
-    try {
-      final copy = await ref
-          .read(workoutRepositoryProvider)
-          .copyWorkout(sourceWorkoutId: source.id, date: picked);
-      if (context.mounted) context.push('/history/workout/${copy.id}');
-    } catch (error, stackTrace) {
-      ref
-          .read(loggerProvider)
-          .error(
-            'Failed to copy workout ${source.id}',
-            error: error,
-            stackTrace: stackTrace,
-          );
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.copyWorkoutError)));
-      }
+    switch (choice) {
+      case _NewWorkoutChoice.scratch:
+        final workout = await ref
+            .read(workoutRepositoryProvider)
+            .createDraft(date: DateTime.now());
+        if (context.mounted) {
+          context.push('/history/workout/${workout.id}');
+        }
+      case _NewWorkoutChoice.copy:
+        context.push('/history/copy-source');
     }
   }
 
@@ -74,7 +88,7 @@ class HistoryScreen extends ConsumerWidget {
             itemCount: entries.length,
             itemBuilder: (context, index) => _WorkoutHistoryTile(
               entry: entries[index],
-              onCopy: (source) => _copyWorkout(context, ref, source),
+              onCopy: (source) => copyWorkoutFlow(context, ref, source),
             ),
           );
         },
@@ -83,14 +97,7 @@ class HistoryScreen extends ConsumerWidget {
             Center(child: Text(l10n.historyLoadError)),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final workout = await ref
-              .read(workoutRepositoryProvider)
-              .createDraft(date: DateTime.now());
-          if (context.mounted) {
-            context.push('/history/workout/${workout.id}');
-          }
-        },
+        onPressed: () => _openNewWorkoutMenu(context, ref),
         tooltip: l10n.newWorkoutAction,
         child: const Icon(Icons.add),
       ),

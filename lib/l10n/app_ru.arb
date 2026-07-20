@@ -144,5 +144,11 @@
   "settingsShowTagsLabel": "Показывать теги",
   "settingsLoadError": "Не удалось загрузить настройки",
   "copyWorkoutAction": "Копировать",
-  "copyWorkoutError": "Не удалось скопировать тренировку"
+  "copyWorkoutError": "Не удалось скопировать тренировку",
+  "newWorkoutFromScratchAction": "С нуля",
+  "newWorkoutFromCopyAction": "Копией",
+  "newWorkoutFromTemplateAction": "Из шаблона",
+  "comingSoonLabel": "Скоро",
+  "copySourcePickerTitle": "Копировать из…",
+  "copySourcePickerEmpty": "Пока нет завершённых тренировок для копирования"
 }

@@ -456,4 +456,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get copyWorkoutError => 'Couldn\'t copy the workout';
+
+  @override
+  String get newWorkoutFromScratchAction => 'From scratch';
+
+  @override
+  String get newWorkoutFromCopyAction => 'From a copy';
+
+  @override
+  String get newWorkoutFromTemplateAction => 'From a template';
+
+  @override
+  String get comingSoonLabel => 'Coming soon';
+
+  @override
+  String get copySourcePickerTitle => 'Copy from...';
+
+  @override
+  String get copySourcePickerEmpty => 'No completed workouts to copy from yet';
 }

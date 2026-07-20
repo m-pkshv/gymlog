@@ -460,4 +460,23 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get copyWorkoutError => 'Не удалось скопировать тренировку';
+
+  @override
+  String get newWorkoutFromScratchAction => 'С нуля';
+
+  @override
+  String get newWorkoutFromCopyAction => 'Копией';
+
+  @override
+  String get newWorkoutFromTemplateAction => 'Из шаблона';
+
+  @override
+  String get comingSoonLabel => 'Скоро';
+
+  @override
+  String get copySourcePickerTitle => 'Копировать из…';
+
+  @override
+  String get copySourcePickerEmpty =>
+      'Пока нет завершённых тренировок для копирования';
 }

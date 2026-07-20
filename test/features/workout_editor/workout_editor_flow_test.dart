@@ -100,6 +100,16 @@ Future<void> _unmountAndFlush(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// Stage 3 turned History's FAB into a "с нуля/из шаблона/копией" creation
+/// menu (`_openNewWorkoutMenu`); most tests here only care about ending up
+/// with a fresh draft, so this does the "From scratch" tap for them.
+Future<void> _createDraftViaFab(WidgetTester tester) async {
+  await tester.tap(find.byType(FloatingActionButton));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('From scratch'));
+  await tester.pumpAndSettle();
+}
+
 /// An already-inProgress workout, distinct from whatever the test creates
 /// through the FAB — the "another workout is already active" conflict
 /// dialog tests' fixture (S-03, DM 6.4.1).
@@ -177,8 +187,7 @@ void main() {
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
 
       expect(find.text('Draft'), findsOneWidget);
       expect(find.text('No exercises added yet'), findsOneWidget);
@@ -198,8 +207,7 @@ void main() {
     await tester.pumpWidget(_appUnderTest(db));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(FloatingActionButton));
-    await tester.pumpAndSettle();
+    await _createDraftViaFab(tester);
 
     await tester.tap(find.text('Add exercise'));
     await tester.pumpAndSettle();
@@ -222,14 +230,14 @@ void main() {
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
 
       await tester.tap(find.text('Add exercise'));
       await tester.pumpAndSettle();
       expect(find.text('No exercises yet'), findsOneWidget);
 
-      // The picker's own FAB opens the create form (S-08).
+      // The picker's own FAB opens the create form (S-08) directly -- it
+      // isn't History's FAB, so it doesn't go through the creation menu.
       await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
 
@@ -256,8 +264,7 @@ void main() {
     await tester.pumpWidget(_appUnderTest(db));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(FloatingActionButton));
-    await tester.pumpAndSettle();
+    await _createDraftViaFab(tester);
     await tester.tap(find.text('Add exercise'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Squat'));
@@ -279,8 +286,7 @@ void main() {
       await _seedExercise(db);
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
       await tester.tap(find.text('Add exercise'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Squat'));
@@ -315,8 +321,7 @@ void main() {
       await _seedExercise(db);
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
       await tester.tap(find.text('Add exercise'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Squat'));
@@ -342,8 +347,7 @@ void main() {
     await _seedExercise(db);
     await tester.pumpWidget(_appUnderTest(db));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(FloatingActionButton));
-    await tester.pumpAndSettle();
+    await _createDraftViaFab(tester);
     await tester.tap(find.text('Add exercise'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Squat'));
@@ -375,8 +379,7 @@ void main() {
     (tester) async {
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
 
       // Status chip -> menu -> "Start workout" (draft -> inProgress).
       await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
@@ -482,8 +485,7 @@ void main() {
 
     await tester.pumpWidget(_appUnderTest(db));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(FloatingActionButton));
-    await tester.pumpAndSettle();
+    await _createDraftViaFab(tester);
     await tester.tap(find.text('Add exercise'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Squat'));
@@ -507,8 +509,7 @@ void main() {
 
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
       await tester.tap(find.text('Add exercise'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Squat'));
@@ -537,8 +538,7 @@ void main() {
 
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
       await tester.tap(find.text('Add exercise'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Squat'));
@@ -567,8 +567,7 @@ void main() {
 
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
       await tester.tap(find.text('Add exercise'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Squat'));
@@ -590,8 +589,7 @@ void main() {
     (tester) async {
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
 
       await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
       await tester.pumpAndSettle();
@@ -613,8 +611,7 @@ void main() {
     (tester) async {
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
 
       await tester.tap(find.text(formatShortDate(DateTime.now())));
       await tester.pumpAndSettle();
@@ -636,8 +633,7 @@ void main() {
     (tester) async {
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
 
       await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
       await tester.pumpAndSettle();
@@ -662,8 +658,7 @@ void main() {
 
         await tester.pumpWidget(_appUnderTest(db));
         await tester.pumpAndSettle();
-        await tester.tap(find.byType(FloatingActionButton));
-        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
 
         await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
         await tester.pumpAndSettle();
@@ -685,8 +680,7 @@ void main() {
 
         await tester.pumpWidget(_appUnderTest(db));
         await tester.pumpAndSettle();
-        await tester.tap(find.byType(FloatingActionButton));
-        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
 
         await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
         await tester.pumpAndSettle();
@@ -713,8 +707,7 @@ void main() {
 
         await tester.pumpWidget(_appUnderTest(db));
         await tester.pumpAndSettle();
-        await tester.tap(find.byType(FloatingActionButton));
-        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
 
         await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
         await tester.pumpAndSettle();
@@ -742,8 +735,7 @@ void main() {
 
         await tester.pumpWidget(_appUnderTest(db));
         await tester.pumpAndSettle();
-        await tester.tap(find.byType(FloatingActionButton));
-        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
 
         await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
         await tester.pumpAndSettle();
@@ -772,8 +764,7 @@ void main() {
         await _seedTag(db);
         await tester.pumpWidget(_appUnderTest(db));
         await tester.pumpAndSettle();
-        await tester.tap(find.byType(FloatingActionButton));
-        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
 
         expect(find.text('Add tag'), findsOneWidget);
         expect(find.text('Leg day'), findsNothing);
@@ -788,8 +779,7 @@ void main() {
         await _seedTag(db);
         await tester.pumpWidget(_appUnderTest(db));
         await tester.pumpAndSettle();
-        await tester.tap(find.byType(FloatingActionButton));
-        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
 
         await tester.tap(find.text('Add tag'));
         await tester.pumpAndSettle();
@@ -814,8 +804,7 @@ void main() {
       (tester) async {
         await tester.pumpWidget(_appUnderTest(db));
         await tester.pumpAndSettle();
-        await tester.tap(find.byType(FloatingActionButton));
-        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
 
         await tester.tap(find.text('Add tag'));
         await tester.pumpAndSettle();
@@ -854,8 +843,7 @@ void main() {
 
         await tester.pumpWidget(_appUnderTest(db));
         await tester.pumpAndSettle();
-        await tester.tap(find.byType(FloatingActionButton));
-        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
 
         expect(find.text('Add tag'), findsNothing);
 

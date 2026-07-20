@@ -967,6 +967,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t copy the workout'**
   String get copyWorkoutError;
+
+  /// Option in the History FAB's creation menu (Stage 3) that creates a blank draft, same as the old direct FAB tap.
+  ///
+  /// In en, this message translates to:
+  /// **'From scratch'**
+  String get newWorkoutFromScratchAction;
+
+  /// Option in the History FAB's creation menu (Stage 3) that opens the copy-source picker.
+  ///
+  /// In en, this message translates to:
+  /// **'From a copy'**
+  String get newWorkoutFromCopyAction;
+
+  /// Disabled stub option in the History FAB's creation menu (Stage 3) — templates are Stage 5 scope.
+  ///
+  /// In en, this message translates to:
+  /// **'From a template'**
+  String get newWorkoutFromTemplateAction;
+
+  /// Subtitle under the disabled "From a template" creation menu option.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get comingSoonLabel;
+
+  /// AppBar title of the copy-source picker screen (Stage 3, "Копией").
+  ///
+  /// In en, this message translates to:
+  /// **'Copy from...'**
+  String get copySourcePickerTitle;
+
+  /// Empty state on the copy-source picker screen (Stage 3) when there are no completed workouts.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed workouts to copy from yet'**
+  String get copySourcePickerEmpty;
 }
 
 class _AppLocalizationsDelegate

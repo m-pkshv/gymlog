@@ -498,5 +498,29 @@
   "copyWorkoutError": "Couldn't copy the workout",
   "@copyWorkoutError": {
     "description": "Snackbar shown on the History screen (S-02) when copying a workout fails."
+  },
+  "newWorkoutFromScratchAction": "From scratch",
+  "@newWorkoutFromScratchAction": {
+    "description": "Option in the History FAB's creation menu (Stage 3) that creates a blank draft, same as the old direct FAB tap."
+  },
+  "newWorkoutFromCopyAction": "From a copy",
+  "@newWorkoutFromCopyAction": {
+    "description": "Option in the History FAB's creation menu (Stage 3) that opens the copy-source picker."
+  },
+  "newWorkoutFromTemplateAction": "From a template",
+  "@newWorkoutFromTemplateAction": {
+    "description": "Disabled stub option in the History FAB's creation menu (Stage 3) — templates are Stage 5 scope."
+  },
+  "comingSoonLabel": "Coming soon",
+  "@comingSoonLabel": {
+    "description": "Subtitle under the disabled \"From a template\" creation menu option."
+  },
+  "copySourcePickerTitle": "Copy from...",
+  "@copySourcePickerTitle": {
+    "description": "AppBar title of the copy-source picker screen (Stage 3, \"Копией\")."
+  },
+  "copySourcePickerEmpty": "No completed workouts to copy from yet",
+  "@copySourcePickerEmpty": {
+    "description": "Empty state on the copy-source picker screen (Stage 3) when there are no completed workouts."
   }
 }

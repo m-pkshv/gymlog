@@ -5,6 +5,7 @@ import '../domain/models/exercise.dart';
 import '../features/exercises/create_exercise_screen.dart';
 import '../features/exercises/exercise_detail_screen.dart';
 import '../features/exercises/screen.dart';
+import '../features/history/copy_source_picker_screen.dart';
 import '../features/history/screen.dart';
 import '../features/more/screen.dart';
 import '../features/stats/screen.dart';
@@ -37,6 +38,17 @@ final GoRouter appRouter = GoRouter(
               path: '/history',
               builder: (_, _) => const HistoryScreen(),
               routes: [
+                GoRoute(
+                  path: 'copy-source',
+                  // "Копией" in the creation menu — a picker, so a
+                  // full-screen modal like the other pickers/forms
+                  // (04_UI_UX_SPEC.md, section 6).
+                  pageBuilder: (_, state) => MaterialPage(
+                    key: state.pageKey,
+                    fullscreenDialog: true,
+                    child: const CopySourcePickerScreen(),
+                  ),
+                ),
                 GoRoute(
                   path: 'workout/:workoutId',
                   builder: (_, state) => WorkoutEditorScreen(

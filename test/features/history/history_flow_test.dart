@@ -7,17 +7,28 @@ import 'package:go_router/go_router.dart';
 import 'package:gymlog/app/providers.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/domain/enums.dart';
+import 'package:gymlog/features/history/copy_source_picker_screen.dart';
 import 'package:gymlog/features/history/screen.dart';
 import 'package:gymlog/features/workout_editor/screen.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
-/// Mirrors the `/history` + `/history/workout/:workoutId` slice of the real
-/// router (S-02, Stage 1 minimum: list + tap-to-open, no filters yet).
+/// Mirrors the `/history` + `/history/workout/:workoutId` +
+/// `/history/copy-source` slice of the real router (S-02; the "Копией"
+/// creation menu option and its picker are Stage 3).
 Widget _appUnderTest(AppDatabase db) {
   final router = GoRouter(
     initialLocation: '/history',
     routes: [
-      GoRoute(path: '/history', builder: (_, _) => const HistoryScreen()),
+      GoRoute(
+        path: '/history',
+        builder: (_, _) => const HistoryScreen(),
+        routes: [
+          GoRoute(
+            path: 'copy-source',
+            builder: (_, _) => const CopySourcePickerScreen(),
+          ),
+        ],
+      ),
       GoRoute(
         path: '/history/workout/:workoutId',
         builder: (_, state) => WorkoutEditorScreen(
@@ -304,4 +315,108 @@ void main() {
       await _unmountAndFlush(tester);
     });
   });
+
+  group(
+    'creation menu (Stage 3, 02_DEVELOPMENT_PLAN.md: "с нуля/из шаблона/копией")',
+    () {
+      testWidgets(
+        'the FAB offers all three creation options, template disabled',
+        (tester) async {
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
+
+          await tester.tap(find.byType(FloatingActionButton));
+          await tester.pumpAndSettle();
+
+          expect(find.text('From scratch'), findsOneWidget);
+          expect(find.text('From a copy'), findsOneWidget);
+          expect(find.text('From a template'), findsOneWidget);
+          expect(find.text('Coming soon'), findsOneWidget);
+
+          final templateTile = tester.widget<ListTile>(
+            find.widgetWithText(ListTile, 'From a template'),
+          );
+          expect(templateTile.enabled, isFalse);
+
+          await _unmountAndFlush(tester);
+        },
+      );
+
+      testWidgets('"From scratch" creates a draft and opens it', (
+        tester,
+      ) async {
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(FloatingActionButton));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('From scratch'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(WorkoutEditorScreen), findsOneWidget);
+        expect(find.text('Draft'), findsOneWidget);
+
+        await _unmountAndFlush(tester);
+      });
+
+      testWidgets(
+        '"From a copy" opens the source picker; picking a workout copies '
+        'it and opens the copy',
+        (tester) async {
+          await _insertCompletedWorkout(
+            db,
+            id: 'w1',
+            date: '2026-07-01',
+            name: 'Leg day',
+            exerciseCount: 1,
+          );
+
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
+
+          await tester.tap(find.byType(FloatingActionButton));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('From a copy'));
+          await tester.pumpAndSettle();
+
+          expect(find.byType(CopySourcePickerScreen), findsOneWidget);
+          expect(find.text('Leg day'), findsOneWidget);
+
+          await tester.tap(find.text('Leg day'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('OK'));
+          await tester.pumpAndSettle();
+
+          expect(find.byType(WorkoutEditorScreen), findsOneWidget);
+          expect(find.text('Draft'), findsOneWidget);
+          expect(find.text('Squat'), findsOneWidget);
+
+          final workouts = await db.select(db.workouts).get();
+          expect(workouts, hasLength(2));
+
+          await _unmountAndFlush(tester);
+        },
+      );
+
+      testWidgets(
+        'the source picker shows an empty state with no completed workouts',
+        (tester) async {
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
+
+          await tester.tap(find.byType(FloatingActionButton));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('From a copy'));
+          await tester.pumpAndSettle();
+
+          expect(
+            find.text('No completed workouts to copy from yet'),
+            findsOneWidget,
+          );
+
+          await _unmountAndFlush(tester);
+        },
+      );
+    },
+  );
 }
