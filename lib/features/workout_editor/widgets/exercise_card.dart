@@ -4,10 +4,14 @@ import '../../../domain/models/workout_details.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/exercise_type_labels.dart';
 import '../set_field_config.dart';
+import 'past_results_sheet.dart';
 import 'set_row.dart';
 
+enum _ExerciseCardAction { pastResults, copyLastPerformance }
+
 /// Card for one exercise entry in the workout editor (S-03): header + the
-/// sets table + "+ Подход". Tags, comment, "Прошлые результаты" and the
+/// sets table + "+ Подход" + "Прошлые результаты"/"Копировать показатели
+/// прошлого выполнения" (menu, TS 8 section 8). Tags, comment, and the
 /// progression segment are Stage 3+ scope, not included here.
 class ExerciseCard extends StatelessWidget {
   const ExerciseCard({
@@ -18,6 +22,7 @@ class ExerciseCard extends StatelessWidget {
     required this.onWarmupChanged,
     required this.onCompletedChanged,
     required this.onAddSet,
+    required this.onCopyLastPerformance,
   });
 
   final WorkoutExerciseDetails details;
@@ -33,6 +38,7 @@ class ExerciseCard extends StatelessWidget {
   final void Function(String setId, bool value) onWarmupChanged;
   final void Function(String setId, bool value) onCompletedChanged;
   final VoidCallback onAddSet;
+  final VoidCallback onCopyLastPerformance;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +61,32 @@ class ExerciseCard extends StatelessWidget {
                     details.exercise.name,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
+                ),
+                PopupMenuButton<_ExerciseCardAction>(
+                  onSelected: (action) {
+                    switch (action) {
+                      case _ExerciseCardAction.pastResults:
+                        showModalBottomSheet<void>(
+                          context: context,
+                          showDragHandle: true,
+                          isScrollControlled: true,
+                          builder: (context) =>
+                              PastResultsSheet(exercise: details.exercise),
+                        );
+                      case _ExerciseCardAction.copyLastPerformance:
+                        onCopyLastPerformance();
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: _ExerciseCardAction.pastResults,
+                      child: Text(l10n.pastResultsAction),
+                    ),
+                    PopupMenuItem(
+                      value: _ExerciseCardAction.copyLastPerformance,
+                      child: Text(l10n.copyLastPerformanceAction),
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymlog/core/logger.dart';
@@ -115,5 +116,189 @@ void main() {
 
     final stored = await workouts.getDetails(workout.id);
     expect(stored!.exercises.single.sets.single.plannedWeightKg, 33.0);
+  });
+
+  group('copyLastPerformance (S-03, TS 8 section 8)', () {
+    test('returns false when the exercise has no completed history', () async {
+      final exercise = await exercises.create(
+        name: 'Bench Press',
+        exerciseType: ExerciseType.strength,
+      );
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 20));
+      final workoutExercise = await workouts.addExercise(
+        workoutId: workout.id,
+        exerciseId: exercise.id,
+      );
+
+      final controller = WorkoutEditorController(
+        workout.id,
+        workouts,
+        service,
+        logger,
+      );
+      addTearDown(controller.dispose);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      final copied = await controller.copyLastPerformance(workoutExercise.id);
+
+      expect(copied, isFalse);
+    });
+
+    test(
+      'copies actuals into planned matched by set order, appends missing '
+      'sets, and leaves extra current sets untouched',
+      () async {
+        final exercise = await exercises.create(
+          name: 'Bench Press',
+          exerciseType: ExerciseType.strength,
+        );
+
+        // A past, completed occurrence with 3 logged sets.
+        final pastWorkout = await workouts.createDraft(
+          date: DateTime(2026, 7, 10),
+        );
+        final pastWorkoutExercise = await workouts.addExercise(
+          workoutId: pastWorkout.id,
+          exerciseId: exercise.id,
+        );
+        const pastValues = [(60.0, 8), (65.0, 6), (70.0, 4)];
+        for (final (weight, reps) in pastValues) {
+          final set = await workouts.addSet(
+            workoutExerciseId: pastWorkoutExercise.id,
+            isWarmup: false,
+          );
+          await workouts.updateSet(
+            set.copyWith(actualWeightKg: weight, actualReps: reps),
+          );
+        }
+        await (db.update(
+          db.workouts,
+        )..where((w) => w.id.equals(pastWorkout.id))).write(
+          WorkoutsCompanion(status: Value(WorkoutStatus.completed.name)),
+        );
+
+        // Today's workout: only 2 sets already added (fewer than history),
+        // plus one extra set that history has nothing to say about.
+        final workout = await workouts.createDraft(
+          date: DateTime(2026, 7, 20),
+        );
+        final workoutExercise = await workouts.addExercise(
+          workoutId: workout.id,
+          exerciseId: exercise.id,
+        );
+        final set1 = await workouts.addSet(
+          workoutExerciseId: workoutExercise.id,
+          isWarmup: false,
+        );
+        final set2 = await workouts.addSet(
+          workoutExerciseId: workoutExercise.id,
+          isWarmup: false,
+        );
+
+        final controller = WorkoutEditorController(
+          workout.id,
+          workouts,
+          service,
+          logger,
+        );
+        addTearDown(controller.dispose);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        final copied = await controller.copyLastPerformance(
+          workoutExercise.id,
+        );
+        expect(copied, isTrue);
+
+        final stored = await workouts.getDetails(workout.id);
+        final sets = stored!.exercises.single.sets
+          ..sort((a, b) => a.setNumber.compareTo(b.setNumber));
+
+        expect(sets, hasLength(3), reason: 'the missing 3rd set was appended');
+        expect(sets[0].id, set1.id);
+        expect(sets[0].plannedWeightKg, 60.0);
+        expect(sets[0].plannedReps, 8);
+        expect(sets[1].id, set2.id);
+        expect(sets[1].plannedWeightKg, 65.0);
+        expect(sets[1].plannedReps, 6);
+        expect(sets[2].plannedWeightKg, 70.0);
+        expect(sets[2].plannedReps, 4);
+        expect(
+          sets.every((s) => s.actualWeightKg == null),
+          isTrue,
+          reason: 'only planned values are set, never actuals',
+        );
+      },
+    );
+
+    test(
+      'leaves an extra current set untouched when history has fewer sets',
+      () async {
+        final exercise = await exercises.create(
+          name: 'Bench Press',
+          exerciseType: ExerciseType.strength,
+        );
+
+        final pastWorkout = await workouts.createDraft(
+          date: DateTime(2026, 7, 10),
+        );
+        final pastWorkoutExercise = await workouts.addExercise(
+          workoutId: pastWorkout.id,
+          exerciseId: exercise.id,
+        );
+        final pastSet = await workouts.addSet(
+          workoutExerciseId: pastWorkoutExercise.id,
+          isWarmup: false,
+        );
+        await workouts.updateSet(
+          pastSet.copyWith(actualWeightKg: 50.0, actualReps: 10),
+        );
+        await (db.update(
+          db.workouts,
+        )..where((w) => w.id.equals(pastWorkout.id))).write(
+          WorkoutsCompanion(status: Value(WorkoutStatus.completed.name)),
+        );
+
+        final workout = await workouts.createDraft(
+          date: DateTime(2026, 7, 20),
+        );
+        final workoutExercise = await workouts.addExercise(
+          workoutId: workout.id,
+          exerciseId: exercise.id,
+        );
+        final set1 = await workouts.addSet(
+          workoutExerciseId: workoutExercise.id,
+          isWarmup: false,
+        );
+        final set2 = await workouts.addSet(
+          workoutExerciseId: workoutExercise.id,
+          isWarmup: false,
+        );
+        await workouts.updateSet(set2.copyWith(plannedWeightKg: 99.0));
+
+        final controller = WorkoutEditorController(
+          workout.id,
+          workouts,
+          service,
+          logger,
+        );
+        addTearDown(controller.dispose);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        await controller.copyLastPerformance(workoutExercise.id);
+
+        final stored = await workouts.getDetails(workout.id);
+        final sets = stored!.exercises.single.sets
+          ..sort((a, b) => a.setNumber.compareTo(b.setNumber));
+
+        expect(sets, hasLength(2), reason: 'no set was added or removed');
+        expect(sets[0].id, set1.id);
+        expect(sets[0].plannedWeightKg, 50.0);
+        expect(
+          sets[1].plannedWeightKg,
+          99.0,
+          reason: 'the extra current set is left exactly as it was',
+        );
+      },
+    );
   });
 }

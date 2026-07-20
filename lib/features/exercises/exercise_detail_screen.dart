@@ -4,11 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../core/date_format.dart';
-import '../../domain/enums.dart';
 import '../../domain/models/exercise.dart';
 import '../../domain/models/exercise_history_entry.dart';
-import '../../domain/models/exercise_set.dart';
 import '../../l10n/app_localizations.dart';
+import 'exercise_set_format.dart';
 import 'exercise_type_labels.dart';
 import 'reference_data_labels.dart';
 
@@ -346,7 +345,9 @@ class _HistoryTab extends ConsumerWidget {
                 title: Text(formatShortDate(entry.workout.date)),
                 subtitle: Text(
                   entry.sets
-                      .map((set) => _formatSet(set, exercise.exerciseType))
+                      .map(
+                        (set) => formatSetSummary(set, exercise.exerciseType),
+                      )
                       .join(', '),
                 ),
               ),
@@ -355,25 +356,5 @@ class _HistoryTab extends ConsumerWidget {
         );
       },
     );
-  }
-
-  String _formatSet(ExerciseSet set, ExerciseType type) {
-    switch (type) {
-      case ExerciseType.strength:
-        final weight = set.actualWeightKg?.toStringAsFixed(1) ?? '—';
-        final reps = set.actualReps?.toString() ?? '—';
-        return '$weight kg × $reps';
-      case ExerciseType.reps:
-        return '${set.actualReps?.toString() ?? '—'} reps';
-      case ExerciseType.cardio:
-        final km = set.actualDistanceM != null
-            ? (set.actualDistanceM! / 1000).toStringAsFixed(2)
-            : '—';
-        final duration = set.actualDurationSec?.toString() ?? '—';
-        return '$km km · ${duration}s';
-      case ExerciseType.time:
-      case ExerciseType.stretch:
-        return '${set.actualDurationSec?.toString() ?? '—'}s';
-    }
   }
 }

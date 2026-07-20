@@ -80,6 +80,48 @@ Future<void> _unmountAndFlush(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// A completed workout from 2026-07-10 with one logged set of the seeded
+/// 'squat' exercise (actual: 60 kg × 8) — the "Прошлые результаты"/
+/// "Копировать показатели прошлого выполнения" tests' fixture (S-03, TS 8).
+Future<void> _seedPastCompletedOccurrence(AppDatabase db) async {
+  await db
+      .into(db.workouts)
+      .insert(
+        WorkoutsCompanion.insert(
+          id: 'past',
+          date: '2026-07-10',
+          status: const Value('completed'),
+          createdAt: '2026-07-10T00:00:00Z',
+          updatedAt: '2026-07-10T00:00:00Z',
+        ),
+      );
+  await db
+      .into(db.workoutExercises)
+      .insert(
+        WorkoutExercisesCompanion.insert(
+          id: 'past_we',
+          workoutId: 'past',
+          exerciseId: 'squat',
+          orderIndex: 0,
+          createdAt: '2026-07-10T00:00:00Z',
+          updatedAt: '2026-07-10T00:00:00Z',
+        ),
+      );
+  await db
+      .into(db.exerciseSets)
+      .insert(
+        ExerciseSetsCompanion.insert(
+          id: 'past_s1',
+          workoutExerciseId: 'past_we',
+          setNumber: 1,
+          actualWeightKg: const Value(60),
+          actualReps: const Value(8),
+          createdAt: '2026-07-10T00:00:00Z',
+          updatedAt: '2026-07-10T00:00:00Z',
+        ),
+      );
+}
+
 void main() {
   late AppDatabase db;
 
@@ -389,4 +431,115 @@ void main() {
 
     await _unmountAndFlush(tester);
   });
+
+  testWidgets('"Past results" shows the last completed occurrence (S-03)', (
+    tester,
+  ) async {
+    await _seedExercise(db);
+    await _seedPastCompletedOccurrence(db);
+
+    await tester.pumpWidget(_appUnderTest(db));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add exercise'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Squat'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Past results'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('10.07.2026'), findsOneWidget);
+    expect(find.textContaining('60.0 kg'), findsOneWidget);
+
+    await _unmountAndFlush(tester);
+  });
+
+  testWidgets(
+    '"Past results" shows an empty state when there is no history yet',
+    (tester) async {
+      await _seedExercise(db);
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Past results'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('No completed occurrences of this exercise yet'),
+        findsOneWidget,
+      );
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    '"Copy last performance" fills planned values from the last completed '
+    'occurrence (TS 8)',
+    (tester) async {
+      await _seedExercise(db);
+      await _seedPastCompletedOccurrence(db);
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Copy last performance'));
+      await tester.pumpAndSettle();
+
+      final sets = await db.select(db.exerciseSets).get();
+      final newSet = sets.singleWhere((s) => s.workoutExerciseId != 'past_we');
+      expect(newSet.plannedWeightKg, 60.0);
+      expect(newSet.plannedReps, 8);
+      expect(find.text('60.0'), findsOneWidget);
+      expect(find.text('8'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    '"Copy last performance" tells the user when there is nothing to copy',
+    (tester) async {
+      await _seedExercise(db);
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Copy last performance'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('No past results to copy yet'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
 }

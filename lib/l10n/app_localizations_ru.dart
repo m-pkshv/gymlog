@@ -363,4 +363,25 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get resetFiltersAction => 'Сбросить фильтры';
+
+  @override
+  String get pastResultsAction => 'Прошлые результаты';
+
+  @override
+  String get pastResultsTitle => 'Прошлые результаты';
+
+  @override
+  String get pastResultsEmpty =>
+      'Пока нет завершённых выполнений этого упражнения';
+
+  @override
+  String get pastResultsLoadError => 'Не удалось загрузить прошлые результаты';
+
+  @override
+  String get copyLastPerformanceAction =>
+      'Копировать показатели прошлого выполнения';
+
+  @override
+  String get copyLastPerformanceEmpty =>
+      'Нет прошлых результатов для копирования';
 }

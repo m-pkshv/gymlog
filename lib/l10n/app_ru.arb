@@ -113,5 +113,11 @@
   "filterResetAction": "Сбросить",
   "filterApplyAction": "Применить",
   "exercisesSearchEmptyTitle": "Ничего не найдено",
-  "resetFiltersAction": "Сбросить фильтры"
+  "resetFiltersAction": "Сбросить фильтры",
+  "pastResultsAction": "Прошлые результаты",
+  "pastResultsTitle": "Прошлые результаты",
+  "pastResultsEmpty": "Пока нет завершённых выполнений этого упражнения",
+  "pastResultsLoadError": "Не удалось загрузить прошлые результаты",
+  "copyLastPerformanceAction": "Копировать показатели прошлого выполнения",
+  "copyLastPerformanceEmpty": "Нет прошлых результатов для копирования"
 }

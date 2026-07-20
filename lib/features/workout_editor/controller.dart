@@ -13,6 +13,7 @@ import '../../domain/models/workout.dart';
 import '../../domain/models/workout_details.dart';
 import '../../domain/repositories/workout_repository.dart';
 import '../../services/workout_service.dart';
+import 'set_field_config.dart';
 
 /// Controller for the workout editor (S-03, Stage 1 minimum:
 /// 02_DEVELOPMENT_PLAN.md). Owns the autosave debounce for set fields
@@ -210,6 +211,66 @@ class WorkoutEditorController
         error: error,
         stackTrace: stackTrace,
       );
+    }
+  }
+
+  /// "Копировать показатели прошлого выполнения" (S-03, TS 8): the actual
+  /// values of this exercise's most recent *completed* occurrence become
+  /// the *planned* values of the current sets, matched by `setNumber`
+  /// order. A mismatched count is handled per TS 8: missing sets are
+  /// appended (new rows, isWarmup copied from the historical set), extra
+  /// current sets are left untouched. Returns `false` (no write attempted)
+  /// if this exercise has no completed history yet or the write failed —
+  /// the caller decides what to tell the user either way.
+  Future<bool> copyLastPerformance(String workoutExerciseId) async {
+    final details = _details;
+    if (details == null) return false;
+    WorkoutExerciseDetails? target;
+    for (final workoutExercise in details.exercises) {
+      if (workoutExercise.workoutExercise.id == workoutExerciseId) {
+        target = workoutExercise;
+        break;
+      }
+    }
+    if (target == null) return false;
+
+    try {
+      final history = await _workoutRepository.getExerciseHistory(
+        target.exercise.id,
+      );
+      if (history.isEmpty) return false;
+
+      final lastSets = List<ExerciseSet>.from(history.first.sets)
+        ..sort((a, b) => a.setNumber.compareTo(b.setNumber));
+      final currentSets = List<ExerciseSet>.from(target.sets)
+        ..sort((a, b) => a.setNumber.compareTo(b.setNumber));
+      final type = target.exercise.exerciseType;
+
+      for (var i = 0; i < lastSets.length; i++) {
+        final historical = lastSets[i];
+        final destination = i < currentSets.length
+            ? currentSets[i]
+            : await _workoutRepository.addSet(
+                workoutExerciseId: workoutExerciseId,
+                isWarmup: historical.isWarmup,
+              );
+        await _workoutRepository.updateSet(
+          copyActualsToPlanned(
+            historical,
+            destination,
+            type,
+          ).copyWith(updatedAt: DateTime.now().toUtc()),
+        );
+      }
+      await _load();
+      return true;
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to copy last performance for $workoutExerciseId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return false;
     }
   }
 

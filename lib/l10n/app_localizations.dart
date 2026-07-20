@@ -781,6 +781,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reset filters'**
   String get resetFiltersAction;
+
+  /// Menu action on an exercise card in the workout editor (S-03) that opens the past-results bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Past results'**
+  String get pastResultsAction;
+
+  /// Title of the past-results bottom sheet (S-03) — the last 5 completed occurrences of the exercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Past results'**
+  String get pastResultsTitle;
+
+  /// Empty state inside the past-results bottom sheet (S-03).
+  ///
+  /// In en, this message translates to:
+  /// **'No completed occurrences of this exercise yet'**
+  String get pastResultsEmpty;
+
+  /// Error state inside the past-results bottom sheet (S-03).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load past results'**
+  String get pastResultsLoadError;
+
+  /// Menu action on an exercise card in the workout editor (S-03, TS 8 section 8) that copies the actual values of the most recent completed occurrence into the current sets' planned values.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy last performance'**
+  String get copyLastPerformanceAction;
+
+  /// Snackbar shown when "Copy last performance" is tapped but this exercise has no completed history yet (S-03).
+  ///
+  /// In en, this message translates to:
+  /// **'No past results to copy yet'**
+  String get copyLastPerformanceEmpty;
 }
 
 class _AppLocalizationsDelegate

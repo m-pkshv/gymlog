@@ -361,4 +361,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resetFiltersAction => 'Reset filters';
+
+  @override
+  String get pastResultsAction => 'Past results';
+
+  @override
+  String get pastResultsTitle => 'Past results';
+
+  @override
+  String get pastResultsEmpty =>
+      'No completed occurrences of this exercise yet';
+
+  @override
+  String get pastResultsLoadError => 'Couldn\'t load past results';
+
+  @override
+  String get copyLastPerformanceAction => 'Copy last performance';
+
+  @override
+  String get copyLastPerformanceEmpty => 'No past results to copy yet';
 }

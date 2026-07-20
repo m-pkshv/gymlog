@@ -374,5 +374,29 @@
   "resetFiltersAction": "Reset filters",
   "@resetFiltersAction": {
     "description": "Empty-state action on the Exercises list (S-06) when search/filters are active and return no matches."
+  },
+  "pastResultsAction": "Past results",
+  "@pastResultsAction": {
+    "description": "Menu action on an exercise card in the workout editor (S-03) that opens the past-results bottom sheet."
+  },
+  "pastResultsTitle": "Past results",
+  "@pastResultsTitle": {
+    "description": "Title of the past-results bottom sheet (S-03) — the last 5 completed occurrences of the exercise."
+  },
+  "pastResultsEmpty": "No completed occurrences of this exercise yet",
+  "@pastResultsEmpty": {
+    "description": "Empty state inside the past-results bottom sheet (S-03)."
+  },
+  "pastResultsLoadError": "Couldn't load past results",
+  "@pastResultsLoadError": {
+    "description": "Error state inside the past-results bottom sheet (S-03)."
+  },
+  "copyLastPerformanceAction": "Copy last performance",
+  "@copyLastPerformanceAction": {
+    "description": "Menu action on an exercise card in the workout editor (S-03, TS 8 section 8) that copies the actual values of the most recent completed occurrence into the current sets' planned values."
+  },
+  "copyLastPerformanceEmpty": "No past results to copy yet",
+  "@copyLastPerformanceEmpty": {
+    "description": "Snackbar shown when \"Copy last performance\" is tapped but this exercise has no completed history yet (S-03)."
   }
 }

@@ -66,6 +66,17 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
         .addExercise(exercise.id);
   }
 
+  Future<void> _copyLastPerformance(String workoutExerciseId) async {
+    final l10n = AppLocalizations.of(context)!;
+    final copied = await ref
+        .read(workoutEditorControllerProvider(widget.workoutId).notifier)
+        .copyLastPerformance(workoutExerciseId);
+    if (!mounted || copied) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.copyLastPerformanceEmpty)));
+  }
+
   Future<void> _changeStatus(WorkoutStatus newStatus) async {
     final l10n = AppLocalizations.of(context)!;
     final controller = ref.read(
@@ -100,6 +111,7 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
           controller: controller,
           onAddExercise: _addExercise,
           onChangeStatus: _changeStatus,
+          onCopyLastPerformance: _copyLastPerformance,
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) =>
@@ -115,12 +127,14 @@ class _EditorBody extends StatelessWidget {
     required this.controller,
     required this.onAddExercise,
     required this.onChangeStatus,
+    required this.onCopyLastPerformance,
   });
 
   final WorkoutDetails details;
   final WorkoutEditorController controller;
   final VoidCallback onAddExercise;
   final void Function(WorkoutStatus newStatus) onChangeStatus;
+  final void Function(String workoutExerciseId) onCopyLastPerformance;
 
   @override
   Widget build(BuildContext context) {
@@ -175,6 +189,9 @@ class _EditorBody extends StatelessWidget {
                           controller.setCompleted(setId, value: value);
                         },
                         onAddSet: () => controller.addSet(
+                          exerciseDetails.workoutExercise.id,
+                        ),
+                        onCopyLastPerformance: () => onCopyLastPerformance(
                           exerciseDetails.workoutExercise.id,
                         ),
                       ),

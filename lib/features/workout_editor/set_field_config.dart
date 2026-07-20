@@ -120,3 +120,33 @@ List<SetFieldSpec> setFieldsFor(ExerciseType type, AppLocalizations l10n) {
       return [durationSec];
   }
 }
+
+/// "Копировать показатели прошлого выполнения" (S-03, TS 8 section 8):
+/// [from]'s *actual* values become [into]'s *planned* values, for whichever
+/// fields [type] uses (same mapping as [setFieldsFor], kept in sync with it
+/// deliberately — this is the locale-independent half of that mapping, used
+/// by the controller which has no `AppLocalizations` to build the full
+/// field list with).
+ExerciseSet copyActualsToPlanned(
+  ExerciseSet from,
+  ExerciseSet into,
+  ExerciseType type,
+) {
+  switch (type) {
+    case ExerciseType.strength:
+      return into.copyWith(
+        plannedWeightKg: from.actualWeightKg,
+        plannedReps: from.actualReps,
+      );
+    case ExerciseType.reps:
+      return into.copyWith(plannedReps: from.actualReps);
+    case ExerciseType.cardio:
+      return into.copyWith(
+        plannedDistanceM: from.actualDistanceM,
+        plannedDurationSec: from.actualDurationSec,
+      );
+    case ExerciseType.time:
+    case ExerciseType.stretch:
+      return into.copyWith(plannedDurationSec: from.actualDurationSec);
+  }
+}
