@@ -34,18 +34,23 @@ void main() {
       final l10n = await db.select(db.exerciseL10n).get();
       final seedInfo = await db.select(db.seedInfoTable).getSingle();
 
-      expect(muscleGroups, hasLength(13));
+      // 17 groups: the original 13 (DM 5.1) plus rear_delts/obliques/
+      // hip_flexors/adductors, added once the owner's full list (Q-1)
+      // showed they're needed as primary-muscle assignments.
+      expect(muscleGroups, hasLength(17));
       expect(equipments, hasLength(9));
       expect(measurementTypes, hasLength(15));
 
-      // Q-1: first real batch from the owner (9 exercises, 2026-07-20),
-      // replacing the old 5-placeholder set.
-      expect(exercises, hasLength(9));
-      expect(exercises.every((exercise) => exercise.exerciseType == 'strength'), isTrue);
+      // Q-1: the owner's full base list (199 exercises, 2026-07-20).
+      expect(exercises, hasLength(199));
+      expect(
+        exercises.map((exercise) => exercise.exerciseType).toSet(),
+        {'strength', 'cardio', 'reps', 'time'},
+      );
       expect(exercises.every((exercise) => exercise.isBuiltIn), isTrue);
       expect(exercises.map((exercise) => exercise.id), contains('barbell_back_squat'));
       expect(secondaryMuscles, isNotEmpty);
-      expect(l10n, hasLength(18)); // 9 exercises x 2 locales (ru, en)
+      expect(l10n, hasLength(398)); // 199 exercises x 2 locales (ru, en)
       expect(l10n.map((row) => row.locale).toSet(), {'ru', 'en'});
       expect(seedInfo.seedVersion, currentSeedVersion);
     },
@@ -59,9 +64,9 @@ void main() {
     final exercises = await db.select(db.exercises).get();
     final l10n = await db.select(db.exerciseL10n).get();
 
-    expect(muscleGroups, hasLength(13));
-    expect(exercises, hasLength(9));
-    expect(l10n, hasLength(18));
+    expect(muscleGroups, hasLength(17));
+    expect(exercises, hasLength(199));
+    expect(l10n, hasLength(398));
   });
 
   test(
@@ -95,13 +100,13 @@ void main() {
           .select(db.exerciseSecondaryMuscles)
           .get();
       final l10n = await db.select(db.exerciseL10n).get();
-      expect(exercises, hasLength(9));
-      expect(l10n, hasLength(18));
+      expect(exercises, hasLength(199));
+      expect(l10n, hasLength(398));
       expect(
         secondaryMuscles
             .where((row) => row.exerciseId == 'barbell_back_squat')
             .length,
-        3, // glutes, hamstrings, abs — not duplicated by the re-run
+        4, // glutes, hamstrings, abs, back — not duplicated by the re-run
       );
     },
   );

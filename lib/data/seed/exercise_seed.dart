@@ -6,8 +6,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import '../database.dart';
 
 /// Path to the built-in exercise seed file (06_DATA_MODEL.md, section 12).
-/// `D-4`: content arrives from the owner incrementally (Q-1) — as of v2
-/// this holds the first batch of real exercises, not the full catalog yet.
+/// `D-4`/Q-1: as of v3 this holds the owner's full base list (199
+/// exercises, 2026-07-20).
 const String exerciseSeedAssetPath = 'assets/seed/exercises_v1.json';
 
 /// Parses [exerciseSeedAssetPath] and upserts the built-in exercises, their

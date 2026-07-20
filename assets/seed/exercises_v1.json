@@ -1,111 +1,2203 @@
 {
-  "seedVersion": 2,
+  "seedVersion": 3,
   "exercises": [
     {
       "id": "barbell_bench_press",
-      "name": { "ru": "Жим штанги лёжа", "en": "Barbell Bench Press" },
+      "name": {
+        "ru": "Жим штанги лёжа",
+        "en": "Barbell Bench Press"
+      },
       "description": {
-        "ru": "Базовое многосуставное упражнение для развития грудных мышц. Выполняется лёжа на горизонтальной скамье.",
-        "en": "A compound exercise for developing the chest muscles, performed lying on a flat bench."
+        "ru": "Базовый жим штанги лёжа на горизонтальной скамье.",
+        "en": "Compound barbell chest press on a flat bench."
       },
       "youtubeUrl": null,
       "image": null,
       "type": "strength",
       "primaryMuscle": "chest",
-      "secondaryMuscles": ["triceps", "shoulders"],
+      "secondaryMuscles": [
+        "triceps",
+        "shoulders"
+      ],
       "equipment": "barbell",
       "effortMetric": "rpe"
     },
     {
       "id": "incline_barbell_bench_press",
       "name": {
-        "ru": "Жим штанги лёжа на наклонной скамье",
+        "ru": "Жим штанги на наклонной скамье",
         "en": "Incline Barbell Bench Press"
       },
       "description": {
-        "ru": "Вариант жима штанги с акцентом на верхнюю часть грудных мышц. Выполняется на скамье с положительным наклоном.",
-        "en": "A barbell press variation that emphasizes the upper chest, performed on an incline bench."
+        "ru": "Жим штанги с акцентом на верхнюю часть груди.",
+        "en": "Incline barbell press emphasizing the upper chest."
       },
       "youtubeUrl": null,
       "image": null,
       "type": "strength",
       "primaryMuscle": "chest",
-      "secondaryMuscles": ["shoulders", "triceps"],
+      "secondaryMuscles": [
+        "triceps",
+        "shoulders"
+      ],
       "equipment": "barbell",
       "effortMetric": "rpe"
     },
     {
-      "id": "incline_dumbbell_bench_press",
+      "id": "decline_barbell_bench_press",
       "name": {
-        "ru": "Жим гантелей лёжа на наклонной скамье",
-        "en": "Incline Dumbbell Bench Press"
+        "ru": "Жим штанги на скамье с отрицательным наклоном",
+        "en": "Decline Barbell Bench Press"
       },
       "description": {
-        "ru": "Упражнение для верхней части груди с увеличенной амплитудой движения. Каждая рука работает независимо.",
-        "en": "An upper-chest exercise with an increased range of motion, allowing each arm to work independently."
+        "ru": "Жим штанги с акцентом на нижнюю часть груди.",
+        "en": "Decline barbell press emphasizing the lower chest."
       },
       "youtubeUrl": null,
       "image": null,
       "type": "strength",
       "primaryMuscle": "chest",
-      "secondaryMuscles": ["shoulders", "triceps"],
+      "secondaryMuscles": [
+        "triceps",
+        "shoulders"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "dumbbell_bench_press",
+      "name": {
+        "ru": "Жим гантелей лёжа",
+        "en": "Dumbbell Bench Press"
+      },
+      "description": {
+        "ru": "Жим гантелей лёжа с увеличенной амплитудой движения.",
+        "en": "Dumbbell chest press with an increased range of motion."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": [
+        "triceps",
+        "shoulders"
+      ],
       "equipment": "dumbbell",
       "effortMetric": "rpe"
     },
     {
-      "id": "barbell_back_squat",
-      "name": { "ru": "Присед со штангой", "en": "Barbell Back Squat" },
+      "id": "incline_dumbbell_press",
+      "name": {
+        "ru": "Жим гантелей на наклонной скамье",
+        "en": "Incline Dumbbell Press"
+      },
       "description": {
-        "ru": "Базовое многосуставное упражнение для развития мышц ног и ягодиц. Штанга располагается на верхней части спины.",
-        "en": "A compound exercise for developing the legs and glutes, with the barbell positioned on the upper back."
+        "ru": "Жим гантелей с акцентом на верх груди.",
+        "en": "Incline dumbbell press targeting the upper chest."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": [
+        "triceps",
+        "shoulders"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "decline_dumbbell_press",
+      "name": {
+        "ru": "Жим гантелей на скамье с отрицательным наклоном",
+        "en": "Decline Dumbbell Press"
+      },
+      "description": {
+        "ru": "Жим гантелей с акцентом на нижнюю часть груди.",
+        "en": "Decline dumbbell press targeting the lower chest."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": [
+        "triceps",
+        "shoulders"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "machine_chest_press",
+      "name": {
+        "ru": "Жим в тренажёре сидя",
+        "en": "Machine Chest Press"
+      },
+      "description": {
+        "ru": "Горизонтальный жим в тренажёре по фиксированной траектории.",
+        "en": "Seated machine chest press with a fixed movement path."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": [
+        "triceps",
+        "shoulders"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "smith_machine_bench_press",
+      "name": {
+        "ru": "Жим в тренажёре Смита лёжа",
+        "en": "Smith Machine Bench Press"
+      },
+      "description": {
+        "ru": "Жим лёжа со штангой по фиксированной вертикальной траектории.",
+        "en": "Bench press performed on a Smith machine."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": [
+        "triceps",
+        "shoulders"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "incline_smith_machine_press",
+      "name": {
+        "ru": "Жим в Смите на наклонной скамье",
+        "en": "Incline Smith Machine Press"
+      },
+      "description": {
+        "ru": "Наклонный жим в машине Смита с акцентом на верх груди.",
+        "en": "Incline Smith machine press targeting the upper chest."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": [
+        "triceps",
+        "shoulders"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "push_up",
+      "name": {
+        "ru": "Отжимания от пола",
+        "en": "Push-Up"
+      },
+      "description": {
+        "ru": "Базовое упражнение с собственным весом для груди и трицепса.",
+        "en": "Basic bodyweight exercise for the chest and triceps."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": [
+        "triceps",
+        "shoulders",
+        "abs"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "chest_dip",
+      "name": {
+        "ru": "Отжимания на брусьях с акцентом на грудь",
+        "en": "Chest Dip"
+      },
+      "description": {
+        "ru": "Отжимания на брусьях с наклоном корпуса вперёд.",
+        "en": "Parallel bar dips performed with a forward lean."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": [
+        "triceps",
+        "shoulders"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "dumbbell_fly",
+      "name": {
+        "ru": "Разведение гантелей лёжа",
+        "en": "Dumbbell Fly"
+      },
+      "description": {
+        "ru": "Изолирующее сведение рук с гантелями лёжа.",
+        "en": "Dumbbell fly movement isolating the chest."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": [
+        "shoulders"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "incline_dumbbell_fly",
+      "name": {
+        "ru": "Разведение гантелей на наклонной скамье",
+        "en": "Incline Dumbbell Fly"
+      },
+      "description": {
+        "ru": "Разведение гантелей с акцентом на верх груди.",
+        "en": "Incline dumbbell fly targeting the upper chest."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": [
+        "shoulders"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "pec_deck_fly",
+      "name": {
+        "ru": "Сведение рук в тренажёре",
+        "en": "Pec Deck Fly"
+      },
+      "description": {
+        "ru": "Изолирующее сведение рук в тренажёре «бабочка».",
+        "en": "Chest fly performed on a pec deck machine."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": [
+        "shoulders"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "cable_crossover",
+      "name": {
+        "ru": "Сведение рук в кроссовере",
+        "en": "Cable Crossover"
+      },
+      "description": {
+        "ru": "Сведение рук перед собой на верхних блоках.",
+        "en": "Standing cable crossover using high pulleys."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": [
+        "shoulders"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "low_to_high_cable_fly",
+      "name": {
+        "ru": "Сведение рук снизу вверх в кроссовере",
+        "en": "Low-to-High Cable Fly"
+      },
+      "description": {
+        "ru": "Сведение рук снизу вверх с акцентом на верх груди.",
+        "en": "Low-to-high cable fly emphasizing the upper chest."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": [
+        "shoulders"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "high_to_low_cable_fly",
+      "name": {
+        "ru": "Сведение рук сверху вниз в кроссовере",
+        "en": "High-to-Low Cable Fly"
+      },
+      "description": {
+        "ru": "Сведение рук сверху вниз с акцентом на нижнюю часть груди.",
+        "en": "High-to-low cable fly emphasizing the lower chest."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": [
+        "shoulders"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "dumbbell_pullover",
+      "name": {
+        "ru": "Пуловер с гантелью",
+        "en": "Dumbbell Pullover"
+      },
+      "description": {
+        "ru": "Опускание гантели за голову лёжа на скамье.",
+        "en": "Dumbbell pullover performed lying on a bench."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": [
+        "back",
+        "triceps"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "conventional_deadlift",
+      "name": {
+        "ru": "Становая тяга",
+        "en": "Conventional Deadlift"
+      },
+      "description": {
+        "ru": "Базовое упражнение на всю заднюю цепь тела.",
+        "en": "Compound lift targeting the entire posterior chain."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "glutes",
+        "quads",
+        "hamstrings",
+        "forearms"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "sumo_deadlift",
+      "name": {
+        "ru": "Становая тяга сумо",
+        "en": "Sumo Deadlift"
+      },
+      "description": {
+        "ru": "Становая тяга с широкой постановкой ног.",
+        "en": "Deadlift performed with a wide sumo stance."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "glutes",
+        "quads",
+        "hamstrings"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "barbell_bent_over_row",
+      "name": {
+        "ru": "Тяга штанги в наклоне",
+        "en": "Barbell Bent-Over Row"
+      },
+      "description": {
+        "ru": "Горизонтальная тяга штанги к корпусу в наклоне.",
+        "en": "Bent-over barbell row toward the torso."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "biceps",
+        "rear_delts",
+        "forearms"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "reverse_grip_barbell_row",
+      "name": {
+        "ru": "Тяга штанги обратным хватом",
+        "en": "Reverse-Grip Barbell Row"
+      },
+      "description": {
+        "ru": "Тяга штанги в наклоне обратным хватом.",
+        "en": "Bent-over barbell row using an underhand grip."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "biceps",
+        "forearms"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "pendlay_row",
+      "name": {
+        "ru": "Тяга Пендли",
+        "en": "Pendlay Row"
+      },
+      "description": {
+        "ru": "Взрывная тяга штанги с пола к нижней части груди.",
+        "en": "Explosive barbell row starting from the floor."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "biceps",
+        "rear_delts"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "t_bar_row",
+      "name": {
+        "ru": "Тяга Т-грифа",
+        "en": "T-Bar Row"
+      },
+      "description": {
+        "ru": "Тяга Т-грифа к корпусу для развития толщины спины.",
+        "en": "T-bar row for developing back thickness."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "biceps",
+        "rear_delts"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "one_arm_dumbbell_row",
+      "name": {
+        "ru": "Тяга гантели одной рукой",
+        "en": "One-Arm Dumbbell Row"
+      },
+      "description": {
+        "ru": "Односторонняя тяга гантели к поясу с опорой.",
+        "en": "Single-arm dumbbell row performed with support."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "biceps",
+        "rear_delts"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "dumbbell_bent_over_row",
+      "name": {
+        "ru": "Тяга двух гантелей в наклоне",
+        "en": "Dumbbell Bent-Over Row"
+      },
+      "description": {
+        "ru": "Одновременная тяга двух гантелей к корпусу в наклоне.",
+        "en": "Bent-over row performed with two dumbbells."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "biceps",
+        "rear_delts"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "pull_up",
+      "name": {
+        "ru": "Подтягивания прямым хватом",
+        "en": "Pull-Up"
+      },
+      "description": {
+        "ru": "Подтягивания на перекладине прямым хватом.",
+        "en": "Bodyweight pull-up using an overhand grip."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "biceps",
+        "forearms"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "chin_up",
+      "name": {
+        "ru": "Подтягивания обратным хватом",
+        "en": "Chin-Up"
+      },
+      "description": {
+        "ru": "Подтягивания обратным хватом с повышенной нагрузкой на бицепс.",
+        "en": "Underhand-grip pull-up with greater biceps involvement."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "biceps",
+        "forearms"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "neutral_grip_pull_up",
+      "name": {
+        "ru": "Подтягивания нейтральным хватом",
+        "en": "Neutral-Grip Pull-Up"
+      },
+      "description": {
+        "ru": "Подтягивания параллельным нейтральным хватом.",
+        "en": "Pull-up performed with a neutral grip."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "biceps",
+        "forearms"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "assisted_pull_up",
+      "name": {
+        "ru": "Подтягивания в гравитроне",
+        "en": "Assisted Pull-Up"
+      },
+      "description": {
+        "ru": "Подтягивания с регулируемой противовесной поддержкой.",
+        "en": "Assisted pull-up performed on a counterweight machine."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "biceps"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "lat_pulldown",
+      "name": {
+        "ru": "Тяга верхнего блока к груди",
+        "en": "Lat Pulldown"
+      },
+      "description": {
+        "ru": "Вертикальная тяга рукояти верхнего блока к груди.",
+        "en": "Cable pulldown from overhead toward the chest."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "biceps",
+        "forearms"
+      ],
+      "equipment": "cable",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "close_grip_lat_pulldown",
+      "name": {
+        "ru": "Тяга верхнего блока узким хватом",
+        "en": "Close-Grip Lat Pulldown"
+      },
+      "description": {
+        "ru": "Тяга верхнего блока узкой рукоятью к груди.",
+        "en": "Lat pulldown performed with a close grip."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "biceps",
+        "forearms"
+      ],
+      "equipment": "cable",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "reverse_grip_lat_pulldown",
+      "name": {
+        "ru": "Тяга верхнего блока обратным хватом",
+        "en": "Reverse-Grip Lat Pulldown"
+      },
+      "description": {
+        "ru": "Вертикальная тяга верхнего блока обратным хватом.",
+        "en": "Underhand-grip lat pulldown."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "biceps"
+      ],
+      "equipment": "cable",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "seated_cable_row",
+      "name": {
+        "ru": "Тяга горизонтального блока",
+        "en": "Seated Cable Row"
+      },
+      "description": {
+        "ru": "Горизонтальная тяга рукояти блока к животу сидя.",
+        "en": "Seated cable row toward the abdomen."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "biceps",
+        "rear_delts"
+      ],
+      "equipment": "cable",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "wide_grip_seated_cable_row",
+      "name": {
+        "ru": "Тяга горизонтального блока широким хватом",
+        "en": "Wide-Grip Seated Cable Row"
+      },
+      "description": {
+        "ru": "Тяга широкой рукояти к верхней части корпуса.",
+        "en": "Seated cable row using a wide grip."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "rear_delts",
+        "biceps"
+      ],
+      "equipment": "cable",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "plate_loaded_machine_row",
+      "name": {
+        "ru": "Тяга в рычажном тренажёре",
+        "en": "Plate-Loaded Machine Row"
+      },
+      "description": {
+        "ru": "Горизонтальная тяга в рычажном тренажёре.",
+        "en": "Row performed on a plate-loaded machine."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "biceps",
+        "rear_delts"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "straight_arm_pulldown",
+      "name": {
+        "ru": "Пуловер на верхнем блоке",
+        "en": "Straight-Arm Pulldown"
+      },
+      "description": {
+        "ru": "Тяга блока прямыми руками сверху вниз.",
+        "en": "Cable pulldown performed with straight arms."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "triceps",
+        "abs"
+      ],
+      "equipment": "cable",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "back_extension",
+      "name": {
+        "ru": "Гиперэкстензия",
+        "en": "Back Extension"
+      },
+      "description": {
+        "ru": "Разгибание корпуса на специальной скамье.",
+        "en": "Trunk extension performed on a hyperextension bench."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "reverse_hyperextension",
+      "name": {
+        "ru": "Обратная гиперэкстензия",
+        "en": "Reverse Hyperextension"
+      },
+      "description": {
+        "ru": "Подъём ног назад при зафиксированном корпусе.",
+        "en": "Reverse hyperextension with the torso supported."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "equipment": "machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "barbell_shrug",
+      "name": {
+        "ru": "Шраги со штангой",
+        "en": "Barbell Shrug"
+      },
+      "description": {
+        "ru": "Подъём плеч со штангой для верхней части трапеций.",
+        "en": "Barbell shrug targeting the upper trapezius."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "dumbbell_shrug",
+      "name": {
+        "ru": "Шраги с гантелями",
+        "en": "Dumbbell Shrug"
+      },
+      "description": {
+        "ru": "Подъём плеч с гантелями вдоль корпуса.",
+        "en": "Dumbbell shrug targeting the upper trapezius."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "standing_barbell_overhead_press",
+      "name": {
+        "ru": "Жим штанги стоя",
+        "en": "Standing Barbell Overhead Press"
+      },
+      "description": {
+        "ru": "Вертикальный жим штанги над головой стоя.",
+        "en": "Standing barbell press performed overhead."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "triceps",
+        "abs"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "military_press",
+      "name": {
+        "ru": "Армейский жим",
+        "en": "Military Press"
+      },
+      "description": {
+        "ru": "Строгий жим штанги стоя без помощи ног.",
+        "en": "Strict standing barbell overhead press."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "triceps",
+        "abs"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "seated_barbell_shoulder_press",
+      "name": {
+        "ru": "Жим штанги сидя",
+        "en": "Seated Barbell Shoulder Press"
+      },
+      "description": {
+        "ru": "Вертикальный жим штанги над головой сидя.",
+        "en": "Seated barbell overhead press."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "triceps"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "seated_dumbbell_shoulder_press",
+      "name": {
+        "ru": "Жим гантелей сидя",
+        "en": "Seated Dumbbell Shoulder Press"
+      },
+      "description": {
+        "ru": "Жим двух гантелей вверх из положения сидя.",
+        "en": "Seated overhead press using dumbbells."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "triceps"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "standing_dumbbell_shoulder_press",
+      "name": {
+        "ru": "Жим гантелей стоя",
+        "en": "Standing Dumbbell Shoulder Press"
+      },
+      "description": {
+        "ru": "Жим гантелей над головой из положения стоя.",
+        "en": "Standing overhead dumbbell press."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "triceps",
+        "abs"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "arnold_press",
+      "name": {
+        "ru": "Жим Арнольда",
+        "en": "Arnold Press"
+      },
+      "description": {
+        "ru": "Жим гантелей с вращением предплечий.",
+        "en": "Dumbbell shoulder press with rotational movement."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "triceps"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "machine_shoulder_press",
+      "name": {
+        "ru": "Жим в тренажёре на плечи",
+        "en": "Machine Shoulder Press"
+      },
+      "description": {
+        "ru": "Вертикальный жим в тренажёре по фиксированной траектории.",
+        "en": "Machine overhead press with a fixed path."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "triceps"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "smith_machine_shoulder_press",
+      "name": {
+        "ru": "Жим в машине Смита сидя",
+        "en": "Smith Machine Shoulder Press"
+      },
+      "description": {
+        "ru": "Жим штанги над головой сидя в машине Смита.",
+        "en": "Seated overhead press on a Smith machine."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "triceps"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "dumbbell_lateral_raise",
+      "name": {
+        "ru": "Подъём гантелей в стороны",
+        "en": "Dumbbell Lateral Raise"
+      },
+      "description": {
+        "ru": "Подъём гантелей в стороны для средней части дельт.",
+        "en": "Dumbbell lateral raise targeting the medial deltoids."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "single_arm_cable_lateral_raise",
+      "name": {
+        "ru": "Подъём одной руки в сторону на блоке",
+        "en": "Single-Arm Cable Lateral Raise"
+      },
+      "description": {
+        "ru": "Отведение одной руки в сторону на нижнем блоке.",
+        "en": "Single-arm lateral raise using a low cable."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "machine_lateral_raise",
+      "name": {
+        "ru": "Подъём рук в стороны в тренажёре",
+        "en": "Machine Lateral Raise"
+      },
+      "description": {
+        "ru": "Изолированное отведение рук в стороны в тренажёре.",
+        "en": "Machine lateral raise targeting the medial deltoids."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "dumbbell_front_raise",
+      "name": {
+        "ru": "Подъём гантелей перед собой",
+        "en": "Dumbbell Front Raise"
+      },
+      "description": {
+        "ru": "Подъём гантелей вперёд для передней части дельт.",
+        "en": "Dumbbell front raise targeting the anterior deltoids."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "plate_front_raise",
+      "name": {
+        "ru": "Подъём блина перед собой",
+        "en": "Plate Front Raise"
+      },
+      "description": {
+        "ru": "Подъём диска перед собой до уровня плеч.",
+        "en": "Front raise performed while holding a weight plate."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "abs"
+      ],
+      "equipment": "other",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "barbell_upright_row",
+      "name": {
+        "ru": "Тяга штанги к подбородку",
+        "en": "Barbell Upright Row"
+      },
+      "description": {
+        "ru": "Вертикальная тяга штанги вдоль тела к подбородку.",
+        "en": "Upright barbell row toward the chin."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "back",
+        "biceps"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "face_pull",
+      "name": {
+        "ru": "Тяга каната к лицу",
+        "en": "Face Pull"
+      },
+      "description": {
+        "ru": "Тяга каната к лицу с разведением локтей.",
+        "en": "Rope pull toward the face targeting the rear delts."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "back"
+      ],
+      "equipment": "cable",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "bent_over_dumbbell_reverse_fly",
+      "name": {
+        "ru": "Разведение гантелей в наклоне",
+        "en": "Bent-Over Dumbbell Reverse Fly"
+      },
+      "description": {
+        "ru": "Разведение гантелей в наклоне для задних дельт.",
+        "en": "Bent-over dumbbell fly targeting the rear deltoids."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "back"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "reverse_pec_deck_fly",
+      "name": {
+        "ru": "Обратная бабочка",
+        "en": "Reverse Pec Deck Fly"
+      },
+      "description": {
+        "ru": "Разведение рук назад в тренажёре для задних дельт.",
+        "en": "Reverse pec deck movement targeting the rear deltoids."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "back"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "cable_reverse_fly",
+      "name": {
+        "ru": "Разведение рук назад в кроссовере",
+        "en": "Cable Reverse Fly"
+      },
+      "description": {
+        "ru": "Перекрёстное разведение рук на блоках для задних дельт.",
+        "en": "Cable reverse fly targeting the rear deltoids."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "back"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "barbell_curl",
+      "name": {
+        "ru": "Подъём штанги на бицепс",
+        "en": "Barbell Curl"
+      },
+      "description": {
+        "ru": "Сгибание рук со штангой стоя.",
+        "en": "Standing barbell curl for the biceps."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "biceps",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "ez_bar_curl",
+      "name": {
+        "ru": "Подъём EZ-штанги на бицепс",
+        "en": "EZ-Bar Curl"
+      },
+      "description": {
+        "ru": "Сгибание рук с изогнутым грифом.",
+        "en": "Biceps curl performed with an EZ bar."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "biceps",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "other",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "standing_dumbbell_curl",
+      "name": {
+        "ru": "Подъём гантелей на бицепс стоя",
+        "en": "Standing Dumbbell Curl"
+      },
+      "description": {
+        "ru": "Попеременное или одновременное сгибание рук с гантелями.",
+        "en": "Standing dumbbell curl performed alternately or simultaneously."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "biceps",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "seated_dumbbell_curl",
+      "name": {
+        "ru": "Подъём гантелей на бицепс сидя",
+        "en": "Seated Dumbbell Curl"
+      },
+      "description": {
+        "ru": "Сгибание рук с гантелями из положения сидя.",
+        "en": "Seated dumbbell biceps curl."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "biceps",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "hammer_curl",
+      "name": {
+        "ru": "Молотковые сгибания",
+        "en": "Hammer Curl"
+      },
+      "description": {
+        "ru": "Сгибание рук с нейтральным положением кистей.",
+        "en": "Dumbbell curl performed with a neutral grip."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "biceps",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "incline_dumbbell_curl",
+      "name": {
+        "ru": "Сгибание рук на наклонной скамье",
+        "en": "Incline Dumbbell Curl"
+      },
+      "description": {
+        "ru": "Сгибание рук лёжа на наклонной скамье.",
+        "en": "Dumbbell curl performed on an incline bench."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "biceps",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "concentration_curl",
+      "name": {
+        "ru": "Концентрированный подъём на бицепс",
+        "en": "Concentration Curl"
+      },
+      "description": {
+        "ru": "Изолированное сгибание одной руки с опорой локтя.",
+        "en": "Single-arm isolated concentration curl."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "biceps",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "preacher_curl",
+      "name": {
+        "ru": "Сгибание рук на скамье Скотта",
+        "en": "Preacher Curl"
+      },
+      "description": {
+        "ru": "Изолированное сгибание рук с фиксацией плеч.",
+        "en": "Preacher curl with the upper arms supported."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "biceps",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "other",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "machine_biceps_curl",
+      "name": {
+        "ru": "Сгибание рук в тренажёре",
+        "en": "Machine Biceps Curl"
+      },
+      "description": {
+        "ru": "Сгибание рук на бицепс по фиксированной траектории.",
+        "en": "Machine biceps curl with a fixed path."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "biceps",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "cable_curl",
+      "name": {
+        "ru": "Сгибание рук на нижнем блоке",
+        "en": "Cable Curl"
+      },
+      "description": {
+        "ru": "Сгибание рук с рукоятью нижнего блока.",
+        "en": "Standing biceps curl using a low cable."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "biceps",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "cable",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "rope_hammer_curl",
+      "name": {
+        "ru": "Сгибание рук с канатом",
+        "en": "Rope Hammer Curl"
+      },
+      "description": {
+        "ru": "Молотковые сгибания рук с канатной рукоятью.",
+        "en": "Cable hammer curl using a rope attachment."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "biceps",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "cable",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "high_cable_curl",
+      "name": {
+        "ru": "Сгибание рук на верхних блоках",
+        "en": "High Cable Curl"
+      },
+      "description": {
+        "ru": "Сгибание рук в стороны на двух верхних блоках.",
+        "en": "Biceps curl performed between two high cables."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "biceps",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "spider_curl",
+      "name": {
+        "ru": "Паучьи сгибания",
+        "en": "Spider Curl"
+      },
+      "description": {
+        "ru": "Сгибание рук лёжа грудью на наклонной скамье.",
+        "en": "Curl performed chest-down on an incline bench."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "biceps",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "reverse_barbell_curl",
+      "name": {
+        "ru": "Обратные сгибания со штангой",
+        "en": "Reverse Barbell Curl"
+      },
+      "description": {
+        "ru": "Сгибание рук со штангой прямым хватом.",
+        "en": "Barbell curl performed with an overhand grip."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "forearms",
+      "secondaryMuscles": [
+        "biceps"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "close_grip_bench_press",
+      "name": {
+        "ru": "Жим штанги узким хватом",
+        "en": "Close-Grip Bench Press"
+      },
+      "description": {
+        "ru": "Жим штанги лёжа узким хватом с акцентом на трицепс.",
+        "en": "Close-grip bench press emphasizing the triceps."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "triceps",
+      "secondaryMuscles": [
+        "chest",
+        "shoulders"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "lying_triceps_extension",
+      "name": {
+        "ru": "Французский жим лёжа",
+        "en": "Lying Triceps Extension"
+      },
+      "description": {
+        "ru": "Разгибание рук со штангой лёжа на скамье.",
+        "en": "Lying triceps extension performed with an EZ bar."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "triceps",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "other",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "seated_overhead_triceps_extension",
+      "name": {
+        "ru": "Французский жим сидя",
+        "en": "Seated Overhead Triceps Extension"
+      },
+      "description": {
+        "ru": "Разгибание рук с гантелью из-за головы сидя.",
+        "en": "Seated overhead triceps extension with a dumbbell."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "triceps",
+      "secondaryMuscles": [
+        "shoulders"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "one_arm_dumbbell_triceps_extension",
+      "name": {
+        "ru": "Разгибание руки с гантелью из-за головы",
+        "en": "One-Arm Dumbbell Triceps Extension"
+      },
+      "description": {
+        "ru": "Одностороннее разгибание руки с гантелью над головой.",
+        "en": "Single-arm overhead dumbbell triceps extension."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "triceps",
+      "secondaryMuscles": [
+        "shoulders"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "cable_triceps_pushdown",
+      "name": {
+        "ru": "Разгибание рук на верхнем блоке",
+        "en": "Cable Triceps Pushdown"
+      },
+      "description": {
+        "ru": "Разгибание рук вниз с прямой рукоятью.",
+        "en": "Cable pushdown targeting the triceps."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "triceps",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "cable",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "rope_triceps_pushdown",
+      "name": {
+        "ru": "Разгибание рук с канатом",
+        "en": "Rope Triceps Pushdown"
+      },
+      "description": {
+        "ru": "Разгибание рук вниз с канатной рукоятью.",
+        "en": "Triceps pushdown using a rope attachment."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "triceps",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "cable",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "reverse_grip_triceps_pushdown",
+      "name": {
+        "ru": "Разгибание рук обратным хватом",
+        "en": "Reverse-Grip Triceps Pushdown"
+      },
+      "description": {
+        "ru": "Разгибание рук на блоке обратным хватом.",
+        "en": "Cable triceps pushdown using an underhand grip."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "triceps",
+      "secondaryMuscles": [
+        "forearms"
+      ],
+      "equipment": "cable",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "cable_overhead_triceps_extension",
+      "name": {
+        "ru": "Разгибание рук из-за головы на блоке",
+        "en": "Cable Overhead Triceps Extension"
+      },
+      "description": {
+        "ru": "Разгибание рук с канатом из-за головы.",
+        "en": "Overhead cable triceps extension using a rope."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "triceps",
+      "secondaryMuscles": [
+        "shoulders"
+      ],
+      "equipment": "cable",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "dumbbell_triceps_kickback",
+      "name": {
+        "ru": "Разгибание руки назад с гантелью",
+        "en": "Dumbbell Triceps Kickback"
+      },
+      "description": {
+        "ru": "Разгибание руки назад при зафиксированном плече.",
+        "en": "Dumbbell kickback with the upper arm fixed."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "triceps",
+      "secondaryMuscles": [
+        "shoulders"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "triceps_dip",
+      "name": {
+        "ru": "Отжимания на брусьях с акцентом на трицепс",
+        "en": "Triceps Dip"
+      },
+      "description": {
+        "ru": "Отжимания на брусьях с вертикальным положением корпуса.",
+        "en": "Parallel bar dips performed with an upright torso."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "triceps",
+      "secondaryMuscles": [
+        "chest",
+        "shoulders"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "bench_dip",
+      "name": {
+        "ru": "Обратные отжимания от скамьи",
+        "en": "Bench Dip"
+      },
+      "description": {
+        "ru": "Отжимания спиной к скамье с опорой на руки.",
+        "en": "Triceps dips performed using a bench."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "triceps",
+      "secondaryMuscles": [
+        "chest",
+        "shoulders"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "diamond_push_up",
+      "name": {
+        "ru": "Алмазные отжимания",
+        "en": "Diamond Push-Up"
+      },
+      "description": {
+        "ru": "Отжимания с узкой постановкой ладоней в форме ромба.",
+        "en": "Close-hand push-up emphasizing the triceps."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "triceps",
+      "secondaryMuscles": [
+        "chest",
+        "shoulders"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "barbell_wrist_curl",
+      "name": {
+        "ru": "Сгибание кистей со штангой",
+        "en": "Barbell Wrist Curl"
+      },
+      "description": {
+        "ru": "Сгибание кистей со штангой ладонями вверх.",
+        "en": "Barbell wrist curl with palms facing upward."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "forearms",
+      "secondaryMuscles": [],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "reverse_barbell_wrist_curl",
+      "name": {
+        "ru": "Разгибание кистей со штангой",
+        "en": "Reverse Barbell Wrist Curl"
+      },
+      "description": {
+        "ru": "Разгибание кистей со штангой ладонями вниз.",
+        "en": "Barbell wrist extension with palms facing downward."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "forearms",
+      "secondaryMuscles": [],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "dumbbell_wrist_curl",
+      "name": {
+        "ru": "Сгибание кистей с гантелями",
+        "en": "Dumbbell Wrist Curl"
+      },
+      "description": {
+        "ru": "Сгибание кистей с гантелями с опорой предплечий.",
+        "en": "Dumbbell wrist curl with supported forearms."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "forearms",
+      "secondaryMuscles": [],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "dumbbell_pronation_and_supination",
+      "name": {
+        "ru": "Вращение предплечий с гантелью",
+        "en": "Dumbbell Pronation and Supination"
+      },
+      "description": {
+        "ru": "Повороты предплечья внутрь и наружу с лёгкой гантелью.",
+        "en": "Forearm pronation and supination with a light dumbbell."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "forearms",
+      "secondaryMuscles": [],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "farmer_s_walk",
+      "name": {
+        "ru": "Прогулка фермера",
+        "en": "Farmer's Walk"
+      },
+      "description": {
+        "ru": "Ходьба с тяжёлыми гантелями в опущенных руках.",
+        "en": "Loaded carry performed with heavy dumbbells."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "time",
+      "primaryMuscle": "forearms",
+      "secondaryMuscles": [
+        "back",
+        "shoulders",
+        "abs",
+        "glutes"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "none"
+    },
+    {
+      "id": "barbell_static_hold",
+      "name": {
+        "ru": "Удержание штанги",
+        "en": "Barbell Static Hold"
+      },
+      "description": {
+        "ru": "Статическое удержание тяжёлой штанги в руках.",
+        "en": "Static hold of a heavy barbell."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "time",
+      "primaryMuscle": "forearms",
+      "secondaryMuscles": [
+        "back",
+        "shoulders"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "none"
+    },
+    {
+      "id": "plate_pinch_hold",
+      "name": {
+        "ru": "Удержание блинов пальцами",
+        "en": "Plate Pinch Hold"
+      },
+      "description": {
+        "ru": "Удержание дисков пальцевым хватом.",
+        "en": "Static pinch-grip hold using weight plates."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "time",
+      "primaryMuscle": "forearms",
+      "secondaryMuscles": [],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "dead_hang",
+      "name": {
+        "ru": "Вис на перекладине",
+        "en": "Dead Hang"
+      },
+      "description": {
+        "ru": "Свободный вис на перекладине для развития хвата.",
+        "en": "Passive hang from a pull-up bar to train grip."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "time",
+      "primaryMuscle": "forearms",
+      "secondaryMuscles": [
+        "back",
+        "shoulders"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "barbell_back_squat",
+      "name": {
+        "ru": "Приседания со штангой",
+        "en": "Barbell Back Squat"
+      },
+      "description": {
+        "ru": "Базовые приседания со штангой на спине.",
+        "en": "Compound back squat performed with a barbell."
       },
       "youtubeUrl": null,
       "image": null,
       "type": "strength",
       "primaryMuscle": "quads",
-      "secondaryMuscles": ["glutes", "hamstrings", "abs"],
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings",
+        "abs",
+        "back"
+      ],
       "equipment": "barbell",
       "effortMetric": "rpe"
     },
     {
-      "id": "hip_thrust",
-      "name": { "ru": "Ягодичный мост", "en": "Hip Thrust" },
+      "id": "front_squat",
+      "name": {
+        "ru": "Фронтальные приседания",
+        "en": "Front Squat"
+      },
       "description": {
-        "ru": "Упражнение с акцентом на ягодичные мышцы. Таз поднимается за счёт разгибания в тазобедренных суставах.",
-        "en": "A glute-focused exercise performed by raising the hips through hip extension."
+        "ru": "Приседания со штангой на передней части плеч.",
+        "en": "Barbell squat with the bar supported on the front shoulders."
       },
       "youtubeUrl": null,
       "image": null,
       "type": "strength",
-      "primaryMuscle": "glutes",
-      "secondaryMuscles": ["hamstrings", "quads"],
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "abs",
+        "back"
+      ],
       "equipment": "barbell",
       "effortMetric": "rpe"
     },
     {
-      "id": "machine_leg_curl",
-      "name": { "ru": "Сгибание ног в тренажёре", "en": "Machine Leg Curl" },
+      "id": "smith_machine_squat",
+      "name": {
+        "ru": "Приседания в машине Смита",
+        "en": "Smith Machine Squat"
+      },
       "description": {
-        "ru": "Изолирующее упражнение для задней поверхности бедра. Выполняется сгибанием ног в коленных суставах.",
-        "en": "An isolation exercise for the hamstrings, performed by bending the knees against machine resistance."
+        "ru": "Приседания со штангой по фиксированной траектории.",
+        "en": "Squat performed on a Smith machine."
       },
       "youtubeUrl": null,
       "image": null,
       "type": "strength",
-      "primaryMuscle": "hamstrings",
-      "secondaryMuscles": ["calves"],
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings"
+      ],
       "equipment": "machine",
       "effortMetric": "rpe"
     },
     {
-      "id": "machine_leg_extension",
+      "id": "goblet_squat",
       "name": {
-        "ru": "Разгибание ног в тренажёре",
-        "en": "Machine Leg Extension"
+        "ru": "Гоблет-приседания",
+        "en": "Goblet Squat"
       },
       "description": {
-        "ru": "Изолирующее упражнение для квадрицепсов. Выполняется разгибанием ног в коленных суставах сидя в тренажёре.",
-        "en": "An isolation exercise for the quadriceps, performed by extending the knees while seated in a machine."
+        "ru": "Приседания с гантелью перед грудью.",
+        "en": "Squat performed while holding a dumbbell at the chest."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "abs"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "dumbbell_squat",
+      "name": {
+        "ru": "Приседания с гантелями",
+        "en": "Dumbbell Squat"
+      },
+      "description": {
+        "ru": "Приседания с гантелями в опущенных руках.",
+        "en": "Squat performed while holding dumbbells."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "leg_press",
+      "name": {
+        "ru": "Жим ногами",
+        "en": "Leg Press"
+      },
+      "description": {
+        "ru": "Выжимание платформы ногами в тренажёре.",
+        "en": "Machine leg press performed against a weighted platform."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "hack_squat",
+      "name": {
+        "ru": "Гакк-приседания",
+        "en": "Hack Squat"
+      },
+      "description": {
+        "ru": "Приседания в тренажёре с поддержкой корпуса.",
+        "en": "Machine-supported hack squat."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "forward_lunge",
+      "name": {
+        "ru": "Выпады вперёд",
+        "en": "Forward Lunge"
+      },
+      "description": {
+        "ru": "Поочерёдные шаги вперёд с опусканием колена.",
+        "en": "Alternating forward lunges."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "reverse_lunge",
+      "name": {
+        "ru": "Выпады назад",
+        "en": "Reverse Lunge"
+      },
+      "description": {
+        "ru": "Поочерёдные шаги назад с опусканием колена.",
+        "en": "Alternating reverse lunges."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "dumbbell_lunge",
+      "name": {
+        "ru": "Выпады с гантелями",
+        "en": "Dumbbell Lunge"
+      },
+      "description": {
+        "ru": "Выпады с дополнительным весом в руках.",
+        "en": "Lunges performed while holding dumbbells."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "barbell_lunge",
+      "name": {
+        "ru": "Выпады со штангой",
+        "en": "Barbell Lunge"
+      },
+      "description": {
+        "ru": "Выпады со штангой на плечах.",
+        "en": "Lunges performed with a barbell on the back."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "bulgarian_split_squat",
+      "name": {
+        "ru": "Болгарские сплит-приседания",
+        "en": "Bulgarian Split Squat"
+      },
+      "description": {
+        "ru": "Односторонние приседания с задней ногой на скамье.",
+        "en": "Rear-foot-elevated split squat."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "walking_lunge",
+      "name": {
+        "ru": "Шагающие выпады",
+        "en": "Walking Lunge"
+      },
+      "description": {
+        "ru": "Последовательные выпады с продвижением вперёд.",
+        "en": "Alternating lunges performed while walking forward."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "step_up",
+      "name": {
+        "ru": "Зашагивания на платформу",
+        "en": "Step-Up"
+      },
+      "description": {
+        "ru": "Поочерёдный подъём на возвышение одной ногой.",
+        "en": "Alternating step-up onto an elevated platform."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "equipment": "other",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "leg_extension",
+      "name": {
+        "ru": "Разгибание ног в тренажёре",
+        "en": "Leg Extension"
+      },
+      "description": {
+        "ru": "Изолированное разгибание ног сидя.",
+        "en": "Seated machine leg extension."
       },
       "youtubeUrl": null,
       "image": null,
@@ -116,34 +2208,1934 @@
       "effortMetric": "rpe"
     },
     {
-      "id": "standing_barbell_overhead_press",
-      "name": { "ru": "Армейский жим", "en": "Standing Barbell Overhead Press" },
+      "id": "sissy_squat",
+      "name": {
+        "ru": "Сисси-приседания",
+        "en": "Sissy Squat"
+      },
       "description": {
-        "ru": "Базовое упражнение для плечевого пояса, выполняемое стоя. Штанга выжимается над головой без помощи ног.",
-        "en": "A compound shoulder exercise performed standing by pressing the barbell overhead without leg drive."
+        "ru": "Приседания с выведением коленей вперёд и отклонением корпуса назад.",
+        "en": "Bodyweight squat variation strongly targeting the quadriceps."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "abs"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "wall_sit",
+      "name": {
+        "ru": "Приседания у стены",
+        "en": "Wall Sit"
+      },
+      "description": {
+        "ru": "Статическое удержание положения приседа у стены.",
+        "en": "Isometric squat hold against a wall."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "time",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "barbell_romanian_deadlift",
+      "name": {
+        "ru": "Румынская тяга со штангой",
+        "en": "Barbell Romanian Deadlift"
+      },
+      "description": {
+        "ru": "Тяга с отведением таза назад и небольшим сгибанием коленей.",
+        "en": "Romanian deadlift emphasizing the hamstrings and glutes."
       },
       "youtubeUrl": null,
       "image": null,
       "type": "strength",
-      "primaryMuscle": "shoulders",
-      "secondaryMuscles": ["triceps", "abs"],
+      "primaryMuscle": "hamstrings",
+      "secondaryMuscles": [
+        "glutes",
+        "back",
+        "forearms"
+      ],
       "equipment": "barbell",
       "effortMetric": "rpe"
     },
     {
-      "id": "conventional_barbell_deadlift",
-      "name": { "ru": "Становая тяга", "en": "Conventional Barbell Deadlift" },
+      "id": "dumbbell_romanian_deadlift",
+      "name": {
+        "ru": "Румынская тяга с гантелями",
+        "en": "Dumbbell Romanian Deadlift"
+      },
       "description": {
-        "ru": "Базовое многосуставное упражнение для задней цепи и мышц всего тела. Штанга поднимается с пола за счёт разгибания ног и корпуса.",
-        "en": "A compound exercise for the posterior chain and the whole body, performed by lifting a barbell from the floor."
+        "ru": "Румынская тяга с двумя гантелями.",
+        "en": "Romanian deadlift performed with dumbbells."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "hamstrings",
+      "secondaryMuscles": [
+        "glutes",
+        "back"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "stiff_leg_deadlift",
+      "name": {
+        "ru": "Становая тяга на прямых ногах",
+        "en": "Stiff-Leg Deadlift"
+      },
+      "description": {
+        "ru": "Тяга с почти прямыми ногами и растяжением задней поверхности бедра.",
+        "en": "Stiff-leg deadlift emphasizing the hamstrings."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "hamstrings",
+      "secondaryMuscles": [
+        "glutes",
+        "back"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "barbell_glute_bridge",
+      "name": {
+        "ru": "Ягодичный мост со штангой",
+        "en": "Barbell Glute Bridge"
+      },
+      "description": {
+        "ru": "Подъём таза лёжа со штангой на тазу.",
+        "en": "Barbell glute bridge performed from the floor."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "glutes",
+      "secondaryMuscles": [
+        "hamstrings",
+        "abs"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "barbell_hip_thrust",
+      "name": {
+        "ru": "Хип-траст со штангой",
+        "en": "Barbell Hip Thrust"
+      },
+      "description": {
+        "ru": "Подъём таза с опорой верхней части спины на скамью.",
+        "en": "Barbell hip thrust with the upper back supported."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "glutes",
+      "secondaryMuscles": [
+        "hamstrings",
+        "quads"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "machine_hip_thrust",
+      "name": {
+        "ru": "Хип-траст в тренажёре",
+        "en": "Machine Hip Thrust"
+      },
+      "description": {
+        "ru": "Разгибание таза в специализированном тренажёре.",
+        "en": "Hip thrust performed on a dedicated machine."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "glutes",
+      "secondaryMuscles": [
+        "hamstrings",
+        "quads"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "single_leg_glute_bridge",
+      "name": {
+        "ru": "Ягодичный мост на одной ноге",
+        "en": "Single-Leg Glute Bridge"
+      },
+      "description": {
+        "ru": "Подъём таза с опорой на одну ногу.",
+        "en": "Single-leg bodyweight glute bridge."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "glutes",
+      "secondaryMuscles": [
+        "hamstrings",
+        "abs"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "lying_leg_curl",
+      "name": {
+        "ru": "Сгибание ног лёжа",
+        "en": "Lying Leg Curl"
+      },
+      "description": {
+        "ru": "Сгибание ног в коленях лёжа на тренажёре.",
+        "en": "Lying machine leg curl."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "hamstrings",
+      "secondaryMuscles": [
+        "calves"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "seated_leg_curl",
+      "name": {
+        "ru": "Сгибание ног сидя",
+        "en": "Seated Leg Curl"
+      },
+      "description": {
+        "ru": "Сгибание ног в коленях из положения сидя.",
+        "en": "Seated machine leg curl."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "hamstrings",
+      "secondaryMuscles": [
+        "calves"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "standing_single_leg_curl",
+      "name": {
+        "ru": "Сгибание одной ноги стоя",
+        "en": "Standing Single-Leg Curl"
+      },
+      "description": {
+        "ru": "Поочерёдное сгибание ноги в тренажёре стоя.",
+        "en": "Standing single-leg machine curl."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "hamstrings",
+      "secondaryMuscles": [
+        "calves"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "barbell_good_morning",
+      "name": {
+        "ru": "Гудморнинг",
+        "en": "Barbell Good Morning"
+      },
+      "description": {
+        "ru": "Наклон корпуса со штангой на плечах за счёт отведения таза.",
+        "en": "Barbell hip-hinge exercise performed with the bar on the back."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "hamstrings",
+      "secondaryMuscles": [
+        "glutes",
+        "back"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "cable_pull_through",
+      "name": {
+        "ru": "Тяга каната между ног",
+        "en": "Cable Pull-Through"
+      },
+      "description": {
+        "ru": "Разгибание таза с канатной рукоятью между ног.",
+        "en": "Cable hip hinge performed with a rope between the legs."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "glutes",
+      "secondaryMuscles": [
+        "hamstrings",
+        "back"
+      ],
+      "equipment": "cable",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "cable_glute_kickback",
+      "name": {
+        "ru": "Отведение ноги назад в кроссовере",
+        "en": "Cable Glute Kickback"
+      },
+      "description": {
+        "ru": "Отведение прямой или слегка согнутой ноги назад.",
+        "en": "Cable leg kickback targeting the glutes."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "glutes",
+      "secondaryMuscles": [
+        "hamstrings"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "machine_hip_abduction",
+      "name": {
+        "ru": "Отведение ног в тренажёре",
+        "en": "Machine Hip Abduction"
+      },
+      "description": {
+        "ru": "Разведение бёдер в стороны из положения сидя.",
+        "en": "Seated machine hip abduction."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "glutes",
+      "secondaryMuscles": [],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "machine_hip_adduction",
+      "name": {
+        "ru": "Приведение ног в тренажёре",
+        "en": "Machine Hip Adduction"
+      },
+      "description": {
+        "ru": "Сведение бёдер внутрь из положения сидя.",
+        "en": "Seated machine hip adduction."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "adductors",
+      "secondaryMuscles": [
+        "quads"
+      ],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "kettlebell_swing",
+      "name": {
+        "ru": "Махи гирей",
+        "en": "Kettlebell Swing"
+      },
+      "description": {
+        "ru": "Взрывное разгибание таза с махом гири вперёд.",
+        "en": "Explosive kettlebell swing driven by hip extension."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "glutes",
+      "secondaryMuscles": [
+        "hamstrings",
+        "back",
+        "shoulders",
+        "abs"
+      ],
+      "equipment": "kettlebell",
+      "effortMetric": "none"
+    },
+    {
+      "id": "standing_calf_raise",
+      "name": {
+        "ru": "Подъём на носки стоя",
+        "en": "Standing Calf Raise"
+      },
+      "description": {
+        "ru": "Подъём пяток стоя для икроножных мышц.",
+        "en": "Standing calf raise targeting the gastrocnemius."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "calves",
+      "secondaryMuscles": [],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "seated_calf_raise",
+      "name": {
+        "ru": "Подъём на носки сидя",
+        "en": "Seated Calf Raise"
+      },
+      "description": {
+        "ru": "Подъём пяток сидя с акцентом на камбаловидные мышцы.",
+        "en": "Seated calf raise targeting the soleus."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "calves",
+      "secondaryMuscles": [],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "smith_machine_calf_raise",
+      "name": {
+        "ru": "Подъём на носки в машине Смита",
+        "en": "Smith Machine Calf Raise"
+      },
+      "description": {
+        "ru": "Подъём на носки со штангой в машине Смита.",
+        "en": "Standing calf raise performed on a Smith machine."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "calves",
+      "secondaryMuscles": [],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "leg_press_calf_raise",
+      "name": {
+        "ru": "Подъём на носки в жиме ногами",
+        "en": "Leg Press Calf Raise"
+      },
+      "description": {
+        "ru": "Разгибание стоп на платформе тренажёра для жима ногами.",
+        "en": "Calf raise performed on a leg press machine."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "calves",
+      "secondaryMuscles": [],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "single_leg_calf_raise",
+      "name": {
+        "ru": "Подъём на носок одной ногой",
+        "en": "Single-Leg Calf Raise"
+      },
+      "description": {
+        "ru": "Односторонний подъём пятки с опорой на одну ногу.",
+        "en": "Single-leg bodyweight calf raise."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "calves",
+      "secondaryMuscles": [],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "donkey_calf_raise",
+      "name": {
+        "ru": "Ослиные подъёмы на носки",
+        "en": "Donkey Calf Raise"
+      },
+      "description": {
+        "ru": "Подъём на носки в наклоне с нагрузкой на таз.",
+        "en": "Bent-over calf raise with resistance applied at the hips."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "calves",
+      "secondaryMuscles": [],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "crunch",
+      "name": {
+        "ru": "Скручивания",
+        "en": "Crunch"
+      },
+      "description": {
+        "ru": "Подъём верхней части корпуса за счёт сокращения пресса.",
+        "en": "Basic abdominal crunch."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "decline_crunch",
+      "name": {
+        "ru": "Скручивания на наклонной скамье",
+        "en": "Decline Crunch"
+      },
+      "description": {
+        "ru": "Скручивания на скамье с отрицательным наклоном.",
+        "en": "Abdominal crunch performed on a decline bench."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "cable_crunch",
+      "name": {
+        "ru": "Скручивания на верхнем блоке",
+        "en": "Cable Crunch"
+      },
+      "description": {
+        "ru": "Скручивание корпуса с сопротивлением верхнего блока.",
+        "en": "Kneeling cable crunch using overhead resistance."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [],
+      "equipment": "cable",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "decline_sit_up",
+      "name": {
+        "ru": "Подъём корпуса на наклонной скамье",
+        "en": "Decline Sit-Up"
+      },
+      "description": {
+        "ru": "Полный подъём корпуса на наклонной скамье.",
+        "en": "Full sit-up performed on a decline bench."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "hip_flexors"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "hanging_leg_raise",
+      "name": {
+        "ru": "Подъём ног в висе",
+        "en": "Hanging Leg Raise"
+      },
+      "description": {
+        "ru": "Подъём прямых или согнутых ног в висе.",
+        "en": "Hanging leg raise targeting the abdominal muscles."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "hip_flexors",
+        "forearms"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "hanging_knee_raise",
+      "name": {
+        "ru": "Подъём коленей в висе",
+        "en": "Hanging Knee Raise"
+      },
+      "description": {
+        "ru": "Подъём согнутых коленей к груди в висе.",
+        "en": "Hanging knee raise toward the chest."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "hip_flexors",
+        "forearms"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "captain_s_chair_leg_raise",
+      "name": {
+        "ru": "Подъём ног в упоре",
+        "en": "Captain's Chair Leg Raise"
+      },
+      "description": {
+        "ru": "Подъём ног с опорой предплечьями на тренажёр.",
+        "en": "Leg raise performed on a captain's chair."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "hip_flexors"
+      ],
+      "equipment": "machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "lying_leg_raise",
+      "name": {
+        "ru": "Подъём ног лёжа",
+        "en": "Lying Leg Raise"
+      },
+      "description": {
+        "ru": "Подъём прямых ног из положения лёжа.",
+        "en": "Straight-leg raise performed lying on the floor."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "hip_flexors"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "reverse_crunch",
+      "name": {
+        "ru": "Обратные скручивания",
+        "en": "Reverse Crunch"
+      },
+      "description": {
+        "ru": "Подкручивание таза к грудной клетке лёжа.",
+        "en": "Reverse crunch lifting the pelvis toward the torso."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "hip_flexors"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "bicycle_crunch",
+      "name": {
+        "ru": "Велосипед",
+        "en": "Bicycle Crunch"
+      },
+      "description": {
+        "ru": "Попеременное сведение локтя и противоположного колена.",
+        "en": "Alternating bicycle crunch."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "obliques"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "russian_twist",
+      "name": {
+        "ru": "Русские скручивания",
+        "en": "Russian Twist"
+      },
+      "description": {
+        "ru": "Повороты корпуса из положения сидя.",
+        "en": "Seated torso rotations targeting the obliques."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "obliques"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "cable_wood_chop",
+      "name": {
+        "ru": "Повороты корпуса на блоке",
+        "en": "Cable Wood Chop"
+      },
+      "description": {
+        "ru": "Диагональный поворот корпуса с сопротивлением блока.",
+        "en": "Diagonal cable rotation targeting the core."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "obliques",
+        "shoulders"
+      ],
+      "equipment": "cable",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "pallof_press",
+      "name": {
+        "ru": "Паллоф-жим",
+        "en": "Pallof Press"
+      },
+      "description": {
+        "ru": "Антиротационное удержание рукояти перед собой.",
+        "en": "Anti-rotation cable press targeting core stability."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "time",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "obliques",
+        "shoulders"
+      ],
+      "equipment": "cable",
+      "effortMetric": "none"
+    },
+    {
+      "id": "plank",
+      "name": {
+        "ru": "Планка",
+        "en": "Plank"
+      },
+      "description": {
+        "ru": "Статическое удержание прямого положения корпуса на предплечьях.",
+        "en": "Static forearm plank."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "time",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "back",
+        "glutes",
+        "shoulders"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "side_plank",
+      "name": {
+        "ru": "Боковая планка",
+        "en": "Side Plank"
+      },
+      "description": {
+        "ru": "Статическое удержание корпуса на одном предплечье.",
+        "en": "Static side plank."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "time",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "obliques",
+        "glutes",
+        "shoulders"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "shoulder_tap_plank",
+      "name": {
+        "ru": "Планка с касанием плеч",
+        "en": "Shoulder Tap Plank"
+      },
+      "description": {
+        "ru": "Попеременные касания плеч из положения планки.",
+        "en": "Alternating shoulder taps from a plank position."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "shoulders",
+        "triceps"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "ab_wheel_rollout",
+      "name": {
+        "ru": "Колесо для пресса",
+        "en": "Ab Wheel Rollout"
+      },
+      "description": {
+        "ru": "Прокатывание ролика вперёд с удержанием корпуса.",
+        "en": "Ab wheel rollout targeting the entire core."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "back",
+        "shoulders",
+        "triceps"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "dead_bug",
+      "name": {
+        "ru": "Мёртвый жук",
+        "en": "Dead Bug"
+      },
+      "description": {
+        "ru": "Поочерёдное выпрямление противоположных руки и ноги лёжа.",
+        "en": "Alternating opposite arm and leg extension while lying down."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "hip_flexors"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "bird_dog",
+      "name": {
+        "ru": "Птица-собака",
+        "en": "Bird Dog"
+      },
+      "description": {
+        "ru": "Поочерёдное вытягивание противоположных руки и ноги на четвереньках.",
+        "en": "Opposite arm and leg extension from a quadruped position."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "back",
+        "glutes"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "mountain_climber",
+      "name": {
+        "ru": "Альпинист",
+        "en": "Mountain Climber"
+      },
+      "description": {
+        "ru": "Быстрое попеременное подтягивание коленей в положении планки.",
+        "en": "Alternating knee drives from a plank position."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "time",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "shoulders",
+        "quads"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "dumbbell_thruster",
+      "name": {
+        "ru": "Трастеры с гантелями",
+        "en": "Dumbbell Thruster"
+      },
+      "description": {
+        "ru": "Приседание с последующим жимом гантелей над головой.",
+        "en": "Dumbbell squat followed by an overhead press."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "shoulders",
+        "triceps",
+        "abs"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "none"
+    },
+    {
+      "id": "barbell_thruster",
+      "name": {
+        "ru": "Трастеры со штангой",
+        "en": "Barbell Thruster"
+      },
+      "description": {
+        "ru": "Фронтальное приседание с переходом в жим штанги.",
+        "en": "Front squat transitioning into an overhead press."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "shoulders",
+        "triceps",
+        "abs"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "barbell_clean",
+      "name": {
+        "ru": "Взятие штанги на грудь",
+        "en": "Barbell Clean"
+      },
+      "description": {
+        "ru": "Взрывной подъём штанги с пола на плечи. ⚠ Требуется техника.",
+        "en": "Explosive barbell lift from the floor to the front rack. ⚠ Technique-intensive lift — learn the form first."
       },
       "youtubeUrl": null,
       "image": null,
       "type": "strength",
       "primaryMuscle": "back",
-      "secondaryMuscles": ["glutes", "hamstrings", "quads", "forearms", "abs"],
+      "secondaryMuscles": [
+        "glutes",
+        "quads",
+        "shoulders",
+        "hamstrings"
+      ],
       "equipment": "barbell",
       "effortMetric": "rpe"
+    },
+    {
+      "id": "barbell_clean_and_jerk",
+      "name": {
+        "ru": "Толчок штанги",
+        "en": "Barbell Clean and Jerk"
+      },
+      "description": {
+        "ru": "Взятие штанги на грудь с последующим толчком над головой. ⚠ Требуется техника.",
+        "en": "Clean followed by an overhead jerk. ⚠ Technique-intensive lift — learn the form first."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "quads",
+        "glutes",
+        "back",
+        "triceps"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "barbell_snatch",
+      "name": {
+        "ru": "Рывок штанги",
+        "en": "Barbell Snatch"
+      },
+      "description": {
+        "ru": "Подъём штанги с пола над головой одним движением. ⚠ Требуется техника.",
+        "en": "Barbell lift from the floor to overhead in one movement. ⚠ Technique-intensive lift — learn the form first."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "shoulders",
+        "glutes",
+        "quads",
+        "abs"
+      ],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "one_arm_kettlebell_snatch",
+      "name": {
+        "ru": "Рывок гири одной рукой",
+        "en": "One-Arm Kettlebell Snatch"
+      },
+      "description": {
+        "ru": "Взрывной подъём гири одной рукой над головой.",
+        "en": "Single-arm kettlebell snatch to an overhead position."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "glutes",
+        "back",
+        "abs"
+      ],
+      "equipment": "kettlebell",
+      "effortMetric": "none"
+    },
+    {
+      "id": "kettlebell_clean",
+      "name": {
+        "ru": "Взятие гири на грудь",
+        "en": "Kettlebell Clean"
+      },
+      "description": {
+        "ru": "Взрывной подъём гири в положение у плеча.",
+        "en": "Kettlebell clean to the rack position."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "glutes",
+        "back",
+        "biceps"
+      ],
+      "equipment": "kettlebell",
+      "effortMetric": "none"
+    },
+    {
+      "id": "turkish_get_up",
+      "name": {
+        "ru": "Турецкий подъём",
+        "en": "Turkish Get-Up"
+      },
+      "description": {
+        "ru": "Подъём с пола в стойку с удержанием гири над головой.",
+        "en": "Full-body get-up while holding a kettlebell overhead."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "shoulders",
+        "glutes",
+        "quads"
+      ],
+      "equipment": "kettlebell",
+      "effortMetric": "none"
+    },
+    {
+      "id": "goblet_carry",
+      "name": {
+        "ru": "Перенос гири у груди",
+        "en": "Goblet Carry"
+      },
+      "description": {
+        "ru": "Ходьба с гирей, удерживаемой перед грудью.",
+        "en": "Loaded carry with a kettlebell held at the chest."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "time",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "forearms",
+        "shoulders",
+        "back"
+      ],
+      "equipment": "kettlebell",
+      "effortMetric": "none"
+    },
+    {
+      "id": "overhead_carry",
+      "name": {
+        "ru": "Перенос веса над головой",
+        "en": "Overhead Carry"
+      },
+      "description": {
+        "ru": "Ходьба с весом, зафиксированным над головой.",
+        "en": "Loaded carry with a weight held overhead."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "time",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "abs",
+        "triceps",
+        "forearms"
+      ],
+      "equipment": "dumbbell",
+      "effortMetric": "none"
+    },
+    {
+      "id": "sled_push",
+      "name": {
+        "ru": "Толкание саней",
+        "en": "Sled Push"
+      },
+      "description": {
+        "ru": "Толкание нагруженных саней вперёд.",
+        "en": "Forward push of a weighted sled."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "time",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "calves",
+        "shoulders"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "sled_pull",
+      "name": {
+        "ru": "Тяга саней",
+        "en": "Sled Pull"
+      },
+      "description": {
+        "ru": "Перемещение нагруженных саней за канат или рукояти.",
+        "en": "Pulling a weighted sled using straps or handles."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "time",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "quads",
+        "glutes",
+        "biceps"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "battle_ropes",
+      "name": {
+        "ru": "Удары канатами",
+        "en": "Battle Ropes"
+      },
+      "description": {
+        "ru": "Выполнение волн и ударов тяжёлыми канатами.",
+        "en": "Repeated waves and slams using battle ropes."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "time",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "abs",
+        "biceps",
+        "forearms"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "burpee",
+      "name": {
+        "ru": "Бёрпи",
+        "en": "Burpee"
+      },
+      "description": {
+        "ru": "Переход из стойки в упор лёжа с последующим прыжком.",
+        "en": "Full-body movement combining a squat, plank, and jump."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "chest",
+        "shoulders",
+        "triceps",
+        "abs"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "bear_crawl",
+      "name": {
+        "ru": "Медвежья ходьба",
+        "en": "Bear Crawl"
+      },
+      "description": {
+        "ru": "Передвижение на руках и ногах с коленями над полом.",
+        "en": "Quadrupedal crawl with the knees hovering above the floor."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "time",
+      "primaryMuscle": "abs",
+      "secondaryMuscles": [
+        "shoulders",
+        "quads",
+        "triceps"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "treadmill_walking",
+      "name": {
+        "ru": "Ходьба на беговой дорожке",
+        "en": "Treadmill Walking"
+      },
+      "description": {
+        "ru": "Ходьба на дорожке с выбранной скоростью и наклоном.",
+        "en": "Walking on a treadmill at a selected speed and incline."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "calves",
+        "quads",
+        "glutes"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "incline_treadmill_walking",
+      "name": {
+        "ru": "Ходьба на дорожке под наклоном",
+        "en": "Incline Treadmill Walking"
+      },
+      "description": {
+        "ru": "Ходьба с повышенным наклоном полотна.",
+        "en": "Treadmill walking at an elevated incline."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "glutes",
+        "calves",
+        "quads"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "treadmill_jogging",
+      "name": {
+        "ru": "Лёгкий бег на дорожке",
+        "en": "Treadmill Jogging"
+      },
+      "description": {
+        "ru": "Равномерный бег на дорожке в лёгком темпе.",
+        "en": "Steady light-paced jogging on a treadmill."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "quads",
+        "calves",
+        "glutes"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "treadmill_running",
+      "name": {
+        "ru": "Бег на дорожке",
+        "en": "Treadmill Running"
+      },
+      "description": {
+        "ru": "Равномерный бег на беговой дорожке.",
+        "en": "Steady running on a treadmill."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "quads",
+        "calves",
+        "glutes"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "treadmill_interval_running",
+      "name": {
+        "ru": "Интервальный бег на дорожке",
+        "en": "Treadmill Interval Running"
+      },
+      "description": {
+        "ru": "Чередование быстрых и восстановительных отрезков.",
+        "en": "Alternating high-speed and recovery intervals on a treadmill."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "quads",
+        "calves",
+        "glutes"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "treadmill_sprint",
+      "name": {
+        "ru": "Спринт на дорожке",
+        "en": "Treadmill Sprint"
+      },
+      "description": {
+        "ru": "Короткие высокоинтенсивные беговые отрезки.",
+        "en": "Short high-intensity sprint intervals on a treadmill."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "quads",
+        "glutes",
+        "calves"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "stationary_bike",
+      "name": {
+        "ru": "Велотренажёр",
+        "en": "Stationary Bike"
+      },
+      "description": {
+        "ru": "Равномерная езда на стационарном велосипеде.",
+        "en": "Steady cycling on a stationary bike."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "quads",
+        "glutes",
+        "calves"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "stationary_bike_intervals",
+      "name": {
+        "ru": "Интервалы на велотренажёре",
+        "en": "Stationary Bike Intervals"
+      },
+      "description": {
+        "ru": "Чередование интенсивной и восстановительной езды.",
+        "en": "Alternating high-intensity and recovery cycling intervals."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "quads",
+        "glutes",
+        "calves"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "indoor_cycling",
+      "name": {
+        "ru": "Спин-байк",
+        "en": "Indoor Cycling"
+      },
+      "description": {
+        "ru": "Интенсивная езда на спортивном стационарном велосипеде.",
+        "en": "Indoor cycling performed on a spin bike."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "quads",
+        "glutes",
+        "calves"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "air_bike",
+      "name": {
+        "ru": "Воздушный велосипед",
+        "en": "Air Bike"
+      },
+      "description": {
+        "ru": "Работа руками и ногами на велосипеде с воздушным сопротивлением.",
+        "en": "Full-body cycling on an air-resistance bike."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "quads",
+        "shoulders",
+        "back",
+        "glutes"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "air_bike_sprint",
+      "name": {
+        "ru": "Спринт на Air Bike",
+        "en": "Air Bike Sprint"
+      },
+      "description": {
+        "ru": "Максимально интенсивные короткие отрезки на воздушном велосипеде.",
+        "en": "Short maximal-effort intervals on an air bike."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "quads",
+        "shoulders",
+        "back",
+        "glutes"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "recumbent_bike",
+      "name": {
+        "ru": "Горизонтальный велотренажёр",
+        "en": "Recumbent Bike"
+      },
+      "description": {
+        "ru": "Езда на велотренажёре с опорой для спины.",
+        "en": "Cycling on a recumbent stationary bike."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "quads",
+        "glutes"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "elliptical_trainer",
+      "name": {
+        "ru": "Эллиптический тренажёр",
+        "en": "Elliptical Trainer"
+      },
+      "description": {
+        "ru": "Кардиотренировка с движением рук и ног по эллиптической траектории.",
+        "en": "Low-impact full-body cardio on an elliptical trainer."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "quads",
+        "glutes",
+        "calves",
+        "shoulders"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "elliptical_intervals",
+      "name": {
+        "ru": "Интервалы на эллипсе",
+        "en": "Elliptical Intervals"
+      },
+      "description": {
+        "ru": "Чередование высокой и низкой интенсивности на эллипсе.",
+        "en": "Alternating high- and low-intensity elliptical intervals."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "quads",
+        "glutes",
+        "calves",
+        "shoulders"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "stepper",
+      "name": {
+        "ru": "Степпер",
+        "en": "Stepper"
+      },
+      "description": {
+        "ru": "Имитация подъёма по ступеням на компактном тренажёре.",
+        "en": "Stair-climbing simulation on a stepper machine."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "glutes",
+        "quads",
+        "calves"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "stair_climber",
+      "name": {
+        "ru": "Лестничный тренажёр",
+        "en": "Stair Climber"
+      },
+      "description": {
+        "ru": "Непрерывный подъём по движущимся ступеням.",
+        "en": "Continuous stair climbing on a stair machine."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "glutes",
+        "quads",
+        "calves"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "stair_climber_intervals",
+      "name": {
+        "ru": "Интервалы на лестничном тренажёре",
+        "en": "Stair Climber Intervals"
+      },
+      "description": {
+        "ru": "Чередование быстрого и спокойного подъёма по ступеням.",
+        "en": "Alternating fast and recovery intervals on a stair climber."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "glutes",
+        "quads",
+        "calves"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "rowing_machine",
+      "name": {
+        "ru": "Гребной тренажёр",
+        "en": "Rowing Machine"
+      },
+      "description": {
+        "ru": "Равномерная гребля с участием ног, корпуса и рук.",
+        "en": "Steady full-body rowing on an ergometer."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "back",
+        "quads",
+        "glutes",
+        "biceps"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "rowing_intervals",
+      "name": {
+        "ru": "Интервалы на гребном тренажёре",
+        "en": "Rowing Intervals"
+      },
+      "description": {
+        "ru": "Чередование интенсивных и восстановительных отрезков гребли.",
+        "en": "Alternating high-intensity and recovery rowing intervals."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "back",
+        "quads",
+        "glutes",
+        "biceps"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "rowing_sprint",
+      "name": {
+        "ru": "Спринт на гребном тренажёре",
+        "en": "Rowing Sprint"
+      },
+      "description": {
+        "ru": "Короткие максимально интенсивные отрезки гребли.",
+        "en": "Short maximal-effort rowing intervals."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "back",
+        "quads",
+        "glutes",
+        "biceps"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "skierg",
+      "name": {
+        "ru": "Лыжный тренажёр",
+        "en": "SkiErg"
+      },
+      "description": {
+        "ru": "Имитация одновременного отталкивания лыжными палками.",
+        "en": "Ski-poling simulation on a SkiErg machine."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "back",
+        "triceps",
+        "abs",
+        "shoulders"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "skierg_intervals",
+      "name": {
+        "ru": "Интервалы на SkiErg",
+        "en": "SkiErg Intervals"
+      },
+      "description": {
+        "ru": "Чередование интенсивной и восстановительной работы на SkiErg.",
+        "en": "Alternating high-intensity and recovery intervals on a SkiErg."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "back",
+        "triceps",
+        "abs",
+        "shoulders"
+      ],
+      "equipment": "cardio_machine",
+      "effortMetric": "none"
+    },
+    {
+      "id": "jump_rope",
+      "name": {
+        "ru": "Прыжки на скакалке",
+        "en": "Jump Rope"
+      },
+      "description": {
+        "ru": "Равномерные прыжки через скакалку.",
+        "en": "Continuous jumping rope at a steady pace."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "calves",
+        "quads",
+        "shoulders"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "double_under",
+      "name": {
+        "ru": "Двойные прыжки на скакалке",
+        "en": "Double-Under"
+      },
+      "description": {
+        "ru": "Прыжки, при которых скакалка дважды проходит под ногами.",
+        "en": "Jump rope variation with two rope rotations per jump."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "calves",
+        "shoulders",
+        "abs"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "jumping_jack",
+      "name": {
+        "ru": "Джампинг-джек",
+        "en": "Jumping Jack"
+      },
+      "description": {
+        "ru": "Прыжки с одновременным разведением ног и подъёмом рук.",
+        "en": "Repeated jumps with simultaneous arm and leg abduction."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "calves",
+        "quads",
+        "shoulders"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "high_knees",
+      "name": {
+        "ru": "Высокий подъём коленей",
+        "en": "High Knees"
+      },
+      "description": {
+        "ru": "Бег на месте с высоким подъёмом коленей.",
+        "en": "Running in place with high knee lifts."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "quads",
+        "calves",
+        "abs"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "running_in_place",
+      "name": {
+        "ru": "Бег на месте",
+        "en": "Running in Place"
+      },
+      "description": {
+        "ru": "Непрерывный бег без продвижения вперёд.",
+        "en": "Continuous running without forward movement."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "quads",
+        "calves"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "skater_jump",
+      "name": {
+        "ru": "Конькобежец",
+        "en": "Skater Jump"
+      },
+      "description": {
+        "ru": "Боковые прыжки с переносом веса с ноги на ногу.",
+        "en": "Lateral skater jumps from side to side."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "glutes",
+        "quads",
+        "calves"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "box_jump",
+      "name": {
+        "ru": "Прыжки на тумбу",
+        "en": "Box Jump"
+      },
+      "description": {
+        "ru": "Взрывной прыжок двумя ногами на возвышение.",
+        "en": "Explosive two-foot jump onto a box."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "calves"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "alternating_box_step_jump",
+      "name": {
+        "ru": "Запрыгивания на платформу поочерёдно",
+        "en": "Alternating Box Step Jump"
+      },
+      "description": {
+        "ru": "Быстрые поочерёдные запрыгивания или зашагивания на платформу.",
+        "en": "Fast alternating step-ups or jumps onto a box."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "cardio",
+      "primaryMuscle": "cardio_system",
+      "secondaryMuscles": [
+        "quads",
+        "glutes",
+        "calves"
+      ],
+      "equipment": "other",
+      "effortMetric": "none"
+    },
+    {
+      "id": "jump_squat",
+      "name": {
+        "ru": "Прыжки из приседа",
+        "en": "Jump Squat"
+      },
+      "description": {
+        "ru": "Взрывной прыжок вверх из положения приседа.",
+        "en": "Explosive vertical jump from a squat position."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "calves"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
+    },
+    {
+      "id": "jumping_lunge",
+      "name": {
+        "ru": "Выпады с прыжком",
+        "en": "Jumping Lunge"
+      },
+      "description": {
+        "ru": "Смена ног в выпаде через прыжок.",
+        "en": "Alternating lunges with an airborne leg switch."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "reps",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "glutes",
+        "calves"
+      ],
+      "equipment": "bodyweight",
+      "effortMetric": "none"
     }
   ]
 }

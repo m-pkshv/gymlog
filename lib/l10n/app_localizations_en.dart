@@ -169,6 +169,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get muscleGroupShoulders => 'Shoulders';
 
   @override
+  String get muscleGroupRearDelts => 'Rear Delts';
+
+  @override
   String get muscleGroupBiceps => 'Biceps';
 
   @override
@@ -181,10 +184,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get muscleGroupAbs => 'Abs';
 
   @override
+  String get muscleGroupObliques => 'Obliques';
+
+  @override
+  String get muscleGroupHipFlexors => 'Hip Flexors';
+
+  @override
   String get muscleGroupGlutes => 'Glutes';
 
   @override
   String get muscleGroupQuads => 'Quads';
+
+  @override
+  String get muscleGroupAdductors => 'Adductors';
 
   @override
   String get muscleGroupHamstrings => 'Hamstrings';

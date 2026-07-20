@@ -10,6 +10,8 @@ String muscleGroupLabel(AppLocalizations l10n, String id) {
       return l10n.muscleGroupBack;
     case 'shoulders':
       return l10n.muscleGroupShoulders;
+    case 'rear_delts':
+      return l10n.muscleGroupRearDelts;
     case 'biceps':
       return l10n.muscleGroupBiceps;
     case 'triceps':
@@ -18,10 +20,16 @@ String muscleGroupLabel(AppLocalizations l10n, String id) {
       return l10n.muscleGroupForearms;
     case 'abs':
       return l10n.muscleGroupAbs;
+    case 'obliques':
+      return l10n.muscleGroupObliques;
+    case 'hip_flexors':
+      return l10n.muscleGroupHipFlexors;
     case 'glutes':
       return l10n.muscleGroupGlutes;
     case 'quads':
       return l10n.muscleGroupQuads;
+    case 'adductors':
+      return l10n.muscleGroupAdductors;
     case 'hamstrings':
       return l10n.muscleGroupHamstrings;
     case 'calves':

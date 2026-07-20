@@ -14,7 +14,11 @@ import 'reference_data_seed.dart';
 /// `insertReferenceDataSeed`/`insertExerciseSeed` upsert rather than plain
 /// `insertAll` starting here, so bumping this on an already-seeded install
 /// doesn't crash on a primary-key conflict.
-const int currentSeedVersion = 2;
+/// v3 (2026-07-20): the owner's full base exercise list (199 exercises,
+/// Q-1) — supersedes the v2 batch of 9 (several of those were renamed/
+/// refined in the full list; matched by the same generated id where the
+/// exercise carried over unchanged, e.g. `barbell_back_squat`).
+const int currentSeedVersion = 3;
 
 /// Loads built-in reference data and the placeholder exercise catalog
 /// (06_DATA_MODEL.md, section 12) on first run, tracked by

@@ -171,6 +171,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get muscleGroupShoulders => 'Плечи';
 
   @override
+  String get muscleGroupRearDelts => 'Задние дельты';
+
+  @override
   String get muscleGroupBiceps => 'Бицепс';
 
   @override
@@ -183,10 +186,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get muscleGroupAbs => 'Пресс';
 
   @override
+  String get muscleGroupObliques => 'Косые мышцы';
+
+  @override
+  String get muscleGroupHipFlexors => 'Сгибатели бедра';
+
+  @override
   String get muscleGroupGlutes => 'Ягодицы';
 
   @override
   String get muscleGroupQuads => 'Квадрицепсы';
+
+  @override
+  String get muscleGroupAdductors => 'Приводящие мышцы';
 
   @override
   String get muscleGroupHamstrings => 'Бицепс бедра';

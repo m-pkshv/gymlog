@@ -398,6 +398,12 @@ abstract class AppLocalizations {
   /// **'Shoulders'**
   String get muscleGroupShoulders;
 
+  /// No description provided for @muscleGroupRearDelts.
+  ///
+  /// In en, this message translates to:
+  /// **'Rear Delts'**
+  String get muscleGroupRearDelts;
+
   /// No description provided for @muscleGroupBiceps.
   ///
   /// In en, this message translates to:
@@ -422,6 +428,18 @@ abstract class AppLocalizations {
   /// **'Abs'**
   String get muscleGroupAbs;
 
+  /// No description provided for @muscleGroupObliques.
+  ///
+  /// In en, this message translates to:
+  /// **'Obliques'**
+  String get muscleGroupObliques;
+
+  /// No description provided for @muscleGroupHipFlexors.
+  ///
+  /// In en, this message translates to:
+  /// **'Hip Flexors'**
+  String get muscleGroupHipFlexors;
+
   /// No description provided for @muscleGroupGlutes.
   ///
   /// In en, this message translates to:
@@ -433,6 +451,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Quads'**
   String get muscleGroupQuads;
+
+  /// No description provided for @muscleGroupAdductors.
+  ///
+  /// In en, this message translates to:
+  /// **'Adductors'**
+  String get muscleGroupAdductors;
 
   /// No description provided for @muscleGroupHamstrings.
   ///
