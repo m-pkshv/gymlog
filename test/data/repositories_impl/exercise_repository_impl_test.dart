@@ -199,6 +199,208 @@ void main() {
     },
   );
 
+  group('watchAll search + filters (S-06)', () {
+    test('query matches the canonical name (case-insensitive)', () async {
+      await repository.create(name: 'Bench Press', exerciseType: ExerciseType.strength);
+      await repository.create(name: 'Squat', exerciseType: ExerciseType.strength);
+
+      final results = await repository
+          .watchAll(filter: (
+            query: 'bench',
+            type: null,
+            muscleGroupId: null,
+            equipmentId: null,
+            includeArchived: false,
+            onlyUserCreated: false,
+          ))
+          .first;
+
+      expect(results.map((e) => e.name), ['Bench Press']);
+    });
+
+    test('query also matches a localized name (DM 12)', () async {
+      final exercise = await repository.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      await db
+          .into(db.exerciseL10n)
+          .insert(
+            ExerciseL10nCompanion.insert(
+              exerciseId: exercise.id,
+              locale: 'ru',
+              name: 'Приседания',
+            ),
+          );
+
+      final results = await repository
+          .watchAll(filter: (
+            query: 'присед',
+            type: null,
+            muscleGroupId: null,
+            equipmentId: null,
+            includeArchived: false,
+            onlyUserCreated: false,
+          ))
+          .first;
+
+      expect(results.map((e) => e.id), [exercise.id]);
+    });
+
+    test('type filter narrows the list', () async {
+      await repository.create(name: 'Squat', exerciseType: ExerciseType.strength);
+      await repository.create(name: 'Run', exerciseType: ExerciseType.cardio);
+
+      final results = await repository
+          .watchAll(filter: (
+            query: '',
+            type: ExerciseType.cardio,
+            muscleGroupId: null,
+            equipmentId: null,
+            includeArchived: false,
+            onlyUserCreated: false,
+          ))
+          .first;
+
+      expect(results.map((e) => e.name), ['Run']);
+    });
+
+    test('muscle group filter matches primary or secondary', () async {
+      await db
+          .into(db.muscleGroups)
+          .insert(MuscleGroupsCompanion.insert(id: 'chest', sortOrder: 0));
+      await db
+          .into(db.muscleGroups)
+          .insert(MuscleGroupsCompanion.insert(id: 'triceps', sortOrder: 1));
+      await repository.create(
+        name: 'Bench Press',
+        exerciseType: ExerciseType.strength,
+        primaryMuscleGroupId: 'chest',
+        secondaryMuscleGroupIds: ['triceps'],
+      );
+      await repository.create(name: 'Squat', exerciseType: ExerciseType.strength);
+
+      final byPrimary = await repository
+          .watchAll(filter: (
+            query: '',
+            type: null,
+            muscleGroupId: 'chest',
+            equipmentId: null,
+            includeArchived: false,
+            onlyUserCreated: false,
+          ))
+          .first;
+      expect(byPrimary.map((e) => e.name), ['Bench Press']);
+
+      final bySecondary = await repository
+          .watchAll(filter: (
+            query: '',
+            type: null,
+            muscleGroupId: 'triceps',
+            equipmentId: null,
+            includeArchived: false,
+            onlyUserCreated: false,
+          ))
+          .first;
+      expect(bySecondary.map((e) => e.name), ['Bench Press']);
+    });
+
+    test('equipment filter narrows the list', () async {
+      await db
+          .into(db.equipments)
+          .insert(EquipmentsCompanion.insert(id: 'barbell', sortOrder: 0));
+      await repository.create(
+        name: 'Bench Press',
+        exerciseType: ExerciseType.strength,
+        equipmentId: 'barbell',
+      );
+      await repository.create(name: 'Push-Up', exerciseType: ExerciseType.reps);
+
+      final results = await repository
+          .watchAll(filter: (
+            query: '',
+            type: null,
+            muscleGroupId: null,
+            equipmentId: 'barbell',
+            includeArchived: false,
+            onlyUserCreated: false,
+          ))
+          .first;
+
+      expect(results.map((e) => e.name), ['Bench Press']);
+    });
+
+    test('includeArchived reveals archived exercises', () async {
+      final exercise = await repository.create(
+        name: 'Old Move',
+        exerciseType: ExerciseType.reps,
+      );
+      await repository.setArchived(exercise.id, archived: true);
+
+      final hidden = await repository.watchAll().first;
+      expect(hidden, isEmpty);
+
+      final shown = await repository
+          .watchAll(filter: (
+            query: '',
+            type: null,
+            muscleGroupId: null,
+            equipmentId: null,
+            includeArchived: true,
+            onlyUserCreated: false,
+          ))
+          .first;
+      expect(shown.map((e) => e.name), ['Old Move']);
+    });
+
+    test('onlyUserCreated excludes built-in exercises', () async {
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'squat',
+              name: 'Barbell Squat',
+              exerciseType: ExerciseType.strength.name,
+              isBuiltIn: const Value(true),
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      await repository.create(name: 'My Squat', exerciseType: ExerciseType.strength);
+
+      final results = await repository
+          .watchAll(filter: (
+            query: '',
+            type: null,
+            muscleGroupId: null,
+            equipmentId: null,
+            includeArchived: false,
+            onlyUserCreated: true,
+          ))
+          .first;
+
+      expect(results.map((e) => e.name), ['My Squat']);
+    });
+
+    test('filters combine (type + query)', () async {
+      await repository.create(name: 'Bench Press', exerciseType: ExerciseType.strength);
+      await repository.create(name: 'Bench Dip', exerciseType: ExerciseType.reps);
+
+      final results = await repository
+          .watchAll(filter: (
+            query: 'bench',
+            type: ExerciseType.strength,
+            muscleGroupId: null,
+            equipmentId: null,
+            includeArchived: false,
+            onlyUserCreated: false,
+          ))
+          .first;
+
+      expect(results.map((e) => e.name), ['Bench Press']);
+    });
+  });
+
   test('watchAll excludes archived exercises', () async {
     final exercise = await repository.create(
       name: 'Old Move',

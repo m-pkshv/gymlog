@@ -12,6 +12,7 @@ import '../data/database.dart' as drift;
 import '../data/repositories_impl/exercise_repository_impl.dart';
 import '../data/repositories_impl/workout_repository_impl.dart';
 import '../domain/models/exercise.dart';
+import '../domain/models/exercise_catalog_filter.dart';
 import '../domain/models/workout_details.dart';
 import '../domain/models/workout_history_entry.dart';
 import '../domain/repositories/exercise_repository.dart';
@@ -46,9 +47,14 @@ final exerciseServiceProvider = Provider<ExerciseService>((ref) {
   return ExerciseService(ref.watch(exerciseRepositoryProvider));
 });
 
-/// The exercise catalog list (S-06). Stage 1 has no search/filters yet.
-final exercisesListProvider = StreamProvider<List<Exercise>>((ref) {
-  return ref.watch(exerciseRepositoryProvider).watchAll();
+/// The exercise catalog list (S-06), keyed by the active search/filters
+/// (`emptyExerciseCatalogFilter` for "no filtering" — e.g. the add-exercise
+/// picker in the workout editor, which doesn't have its own filter UI yet).
+final exercisesListProvider = StreamProvider.family<
+  List<Exercise>,
+  ExerciseCatalogFilter
+>((ref, filter) {
+  return ref.watch(exerciseRepositoryProvider).watchAll(filter: filter);
 });
 
 /// The history list (S-02). Stage 1 has no filters/calendar view yet.

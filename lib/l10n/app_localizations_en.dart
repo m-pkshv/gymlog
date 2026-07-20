@@ -310,4 +310,43 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get exerciseTypeLockedHint =>
       'Can\'t be changed: this exercise already has logged sets';
+
+  @override
+  String get searchExercisesHint => 'Search by name';
+
+  @override
+  String get filterExercisesTooltip => 'Filters';
+
+  @override
+  String get filtersTitle => 'Filters';
+
+  @override
+  String get filterAnyType => 'Any type';
+
+  @override
+  String get filterMuscleGroupLabel => 'Muscle group';
+
+  @override
+  String get filterAnyMuscleGroup => 'Any muscle group';
+
+  @override
+  String get filterAnyEquipment => 'Any equipment';
+
+  @override
+  String get filterShowArchived => 'Show archived';
+
+  @override
+  String get filterOnlyUserCreated => 'User-created only';
+
+  @override
+  String get filterResetAction => 'Reset';
+
+  @override
+  String get filterApplyAction => 'Apply';
+
+  @override
+  String get exercisesSearchEmptyTitle => 'No matches found';
+
+  @override
+  String get resetFiltersAction => 'Reset filters';
 }

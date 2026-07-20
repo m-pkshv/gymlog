@@ -312,4 +312,43 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get exerciseTypeLockedHint =>
       'Нельзя изменить: уже есть выполненные подходы';
+
+  @override
+  String get searchExercisesHint => 'Поиск по названию';
+
+  @override
+  String get filterExercisesTooltip => 'Фильтры';
+
+  @override
+  String get filtersTitle => 'Фильтры';
+
+  @override
+  String get filterAnyType => 'Любой тип';
+
+  @override
+  String get filterMuscleGroupLabel => 'Группа мышц';
+
+  @override
+  String get filterAnyMuscleGroup => 'Любая группа мышц';
+
+  @override
+  String get filterAnyEquipment => 'Любое оборудование';
+
+  @override
+  String get filterShowArchived => 'Показывать архивные';
+
+  @override
+  String get filterOnlyUserCreated => 'Только пользовательские';
+
+  @override
+  String get filterResetAction => 'Сбросить';
+
+  @override
+  String get filterApplyAction => 'Применить';
+
+  @override
+  String get exercisesSearchEmptyTitle => 'Ничего не найдено';
+
+  @override
+  String get resetFiltersAction => 'Сбросить фильтры';
 }

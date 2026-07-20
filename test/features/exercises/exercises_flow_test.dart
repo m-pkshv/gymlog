@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -194,6 +195,192 @@ void main() {
       await _unmountAndFlush(tester);
     },
   );
+
+  testWidgets('search narrows the list to matching names (S-06)', (
+    tester,
+  ) async {
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'bench',
+            name: 'Bench Press',
+            exerciseType: ExerciseType.strength.name,
+            createdAt: '2026-07-19T00:00:00Z',
+            updatedAt: '2026-07-19T00:00:00Z',
+          ),
+        );
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'squat',
+            name: 'Squat',
+            exerciseType: ExerciseType.strength.name,
+            createdAt: '2026-07-19T00:00:00Z',
+            updatedAt: '2026-07-19T00:00:00Z',
+          ),
+        );
+
+    await tester.pumpWidget(_appUnderTest(db));
+    await tester.pumpAndSettle();
+    expect(find.text('Bench Press'), findsOneWidget);
+    expect(find.text('Squat'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'bench');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Bench Press'), findsOneWidget);
+    expect(find.text('Squat'), findsNothing);
+
+    await _unmountAndFlush(tester);
+  });
+
+  testWidgets(
+    'a search with no matches shows "No matches found" and a reset action',
+    (tester) async {
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'squat',
+              name: 'Squat',
+              exerciseType: ExerciseType.strength.name,
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'nonexistent');
+      await tester.pumpAndSettle();
+
+      expect(find.text('No matches found'), findsOneWidget);
+      expect(find.text('No exercises yet'), findsNothing);
+
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Reset filters'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Squat'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets('the archived filter reveals an archived exercise (S-06)', (
+    tester,
+  ) async {
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'squat',
+            name: 'Squat',
+            exerciseType: ExerciseType.strength.name,
+            isArchived: const Value(true),
+            createdAt: '2026-07-19T00:00:00Z',
+            updatedAt: '2026-07-19T00:00:00Z',
+          ),
+        );
+
+    await tester.pumpWidget(_appUnderTest(db));
+    await tester.pumpAndSettle();
+    expect(find.text('Squat'), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.tune));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(SwitchListTile, 'Show archived'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Apply'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Squat'), findsOneWidget);
+    expect(find.text('Archived'), findsOneWidget);
+
+    await _unmountAndFlush(tester);
+  });
+
+  testWidgets('the type filter narrows the list and combines with search', (
+    tester,
+  ) async {
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'squat',
+            name: 'Squat',
+            exerciseType: ExerciseType.strength.name,
+            createdAt: '2026-07-19T00:00:00Z',
+            updatedAt: '2026-07-19T00:00:00Z',
+          ),
+        );
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'run',
+            name: 'Run',
+            exerciseType: ExerciseType.cardio.name,
+            createdAt: '2026-07-19T00:00:00Z',
+            updatedAt: '2026-07-19T00:00:00Z',
+          ),
+        );
+
+    await tester.pumpWidget(_appUnderTest(db));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.tune));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Any type'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cardio').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Apply'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Run'), findsOneWidget);
+    expect(find.text('Squat'), findsNothing);
+
+    await _unmountAndFlush(tester);
+  });
+
+  testWidgets('"Reset" in the filter sheet clears the selected filters', (
+    tester,
+  ) async {
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'squat',
+            name: 'Squat',
+            exerciseType: ExerciseType.strength.name,
+            isArchived: const Value(true),
+            createdAt: '2026-07-19T00:00:00Z',
+            updatedAt: '2026-07-19T00:00:00Z',
+          ),
+        );
+
+    await tester.pumpWidget(_appUnderTest(db));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.tune));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(SwitchListTile, 'Show archived'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Apply'));
+    await tester.pumpAndSettle();
+    expect(find.text('Squat'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.tune));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Reset'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Apply'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Squat'), findsNothing);
+
+    await _unmountAndFlush(tester);
+  });
 
   testWidgets('selecting a secondary muscle group saves the link (DM 6.1)', (
     tester,

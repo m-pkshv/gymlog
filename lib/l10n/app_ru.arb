@@ -96,5 +96,18 @@
   "editExerciseAction": "Редактировать",
   "editExerciseError": "Не удалось сохранить упражнение",
   "actionSave": "Сохранить",
-  "exerciseTypeLockedHint": "Нельзя изменить: уже есть выполненные подходы"
+  "exerciseTypeLockedHint": "Нельзя изменить: уже есть выполненные подходы",
+  "searchExercisesHint": "Поиск по названию",
+  "filterExercisesTooltip": "Фильтры",
+  "filtersTitle": "Фильтры",
+  "filterAnyType": "Любой тип",
+  "filterMuscleGroupLabel": "Группа мышц",
+  "filterAnyMuscleGroup": "Любая группа мышц",
+  "filterAnyEquipment": "Любое оборудование",
+  "filterShowArchived": "Показывать архивные",
+  "filterOnlyUserCreated": "Только пользовательские",
+  "filterResetAction": "Сбросить",
+  "filterApplyAction": "Применить",
+  "exercisesSearchEmptyTitle": "Ничего не найдено",
+  "resetFiltersAction": "Сбросить фильтры"
 }

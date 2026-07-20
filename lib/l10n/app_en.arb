@@ -318,5 +318,57 @@
   "exerciseTypeLockedHint": "Can't be changed: this exercise already has logged sets",
   "@exerciseTypeLockedHint": {
     "description": "Helper text under the disabled type dropdown on the exercise form (S-08) in edit mode, once DM 6.1's exerciseType lock applies."
+  },
+  "searchExercisesHint": "Search by name",
+  "@searchExercisesHint": {
+    "description": "Placeholder text in the search field on the Exercises list (S-06)."
+  },
+  "filterExercisesTooltip": "Filters",
+  "@filterExercisesTooltip": {
+    "description": "Tooltip on the AppBar filter icon that opens the filter bottom sheet on the Exercises list (S-06)."
+  },
+  "filtersTitle": "Filters",
+  "@filtersTitle": {
+    "description": "Title of the filter bottom sheet on the Exercises list (S-06)."
+  },
+  "filterAnyType": "Any type",
+  "@filterAnyType": {
+    "description": "\"No filter\" option for the type dropdown in the filter sheet (S-06) — distinct from exerciseNotSpecified, which means the exercise itself has no type."
+  },
+  "filterMuscleGroupLabel": "Muscle group",
+  "@filterMuscleGroupLabel": {
+    "description": "Label for the muscle group filter in the filter sheet (S-06) — matches either the primary or a secondary muscle group, unlike the form's \"primary muscle\" field."
+  },
+  "filterAnyMuscleGroup": "Any muscle group",
+  "@filterAnyMuscleGroup": {
+    "description": "\"No filter\" option for the muscle group dropdown in the filter sheet (S-06)."
+  },
+  "filterAnyEquipment": "Any equipment",
+  "@filterAnyEquipment": {
+    "description": "\"No filter\" option for the equipment dropdown in the filter sheet (S-06)."
+  },
+  "filterShowArchived": "Show archived",
+  "@filterShowArchived": {
+    "description": "Switch label in the filter sheet (S-06); off by default (04_UI_UX_SPEC.md, section 5)."
+  },
+  "filterOnlyUserCreated": "User-created only",
+  "@filterOnlyUserCreated": {
+    "description": "Switch label in the filter sheet (S-06); off by default."
+  },
+  "filterResetAction": "Reset",
+  "@filterResetAction": {
+    "description": "Button in the filter sheet (S-06) that clears type/muscle/equipment/archived/user-created back to defaults."
+  },
+  "filterApplyAction": "Apply",
+  "@filterApplyAction": {
+    "description": "Button in the filter sheet (S-06) that applies the selected filters and closes the sheet."
+  },
+  "exercisesSearchEmptyTitle": "No matches found",
+  "@exercisesSearchEmptyTitle": {
+    "description": "Empty state title on the Exercises list (S-06) when a search/filter is active but matches nothing — distinct from exercisesEmptyTitle (a genuinely empty catalog)."
+  },
+  "resetFiltersAction": "Reset filters",
+  "@resetFiltersAction": {
+    "description": "Empty-state action on the Exercises list (S-06) when search/filters are active and return no matches."
   }
 }

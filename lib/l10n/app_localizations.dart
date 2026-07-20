@@ -679,6 +679,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Can\'t be changed: this exercise already has logged sets'**
   String get exerciseTypeLockedHint;
+
+  /// Placeholder text in the search field on the Exercises list (S-06).
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name'**
+  String get searchExercisesHint;
+
+  /// Tooltip on the AppBar filter icon that opens the filter bottom sheet on the Exercises list (S-06).
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filterExercisesTooltip;
+
+  /// Title of the filter bottom sheet on the Exercises list (S-06).
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filtersTitle;
+
+  /// "No filter" option for the type dropdown in the filter sheet (S-06) — distinct from exerciseNotSpecified, which means the exercise itself has no type.
+  ///
+  /// In en, this message translates to:
+  /// **'Any type'**
+  String get filterAnyType;
+
+  /// Label for the muscle group filter in the filter sheet (S-06) — matches either the primary or a secondary muscle group, unlike the form's "primary muscle" field.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle group'**
+  String get filterMuscleGroupLabel;
+
+  /// "No filter" option for the muscle group dropdown in the filter sheet (S-06).
+  ///
+  /// In en, this message translates to:
+  /// **'Any muscle group'**
+  String get filterAnyMuscleGroup;
+
+  /// "No filter" option for the equipment dropdown in the filter sheet (S-06).
+  ///
+  /// In en, this message translates to:
+  /// **'Any equipment'**
+  String get filterAnyEquipment;
+
+  /// Switch label in the filter sheet (S-06); off by default (04_UI_UX_SPEC.md, section 5).
+  ///
+  /// In en, this message translates to:
+  /// **'Show archived'**
+  String get filterShowArchived;
+
+  /// Switch label in the filter sheet (S-06); off by default.
+  ///
+  /// In en, this message translates to:
+  /// **'User-created only'**
+  String get filterOnlyUserCreated;
+
+  /// Button in the filter sheet (S-06) that clears type/muscle/equipment/archived/user-created back to defaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get filterResetAction;
+
+  /// Button in the filter sheet (S-06) that applies the selected filters and closes the sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get filterApplyAction;
+
+  /// Empty state title on the Exercises list (S-06) when a search/filter is active but matches nothing — distinct from exercisesEmptyTitle (a genuinely empty catalog).
+  ///
+  /// In en, this message translates to:
+  /// **'No matches found'**
+  String get exercisesSearchEmptyTitle;
+
+  /// Empty-state action on the Exercises list (S-06) when search/filters are active and return no matches.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset filters'**
+  String get resetFiltersAction;
 }
 
 class _AppLocalizationsDelegate

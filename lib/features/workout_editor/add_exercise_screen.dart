@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../domain/models/exercise.dart';
+import '../../domain/models/exercise_catalog_filter.dart';
 import '../../l10n/app_localizations.dart';
 import '../exercises/exercise_type_labels.dart';
 
@@ -20,7 +21,9 @@ class AddExerciseScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final exercisesAsync = ref.watch(exercisesListProvider);
+    final exercisesAsync = ref.watch(
+      exercisesListProvider(emptyExerciseCatalogFilter),
+    );
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.addExerciseAction)),

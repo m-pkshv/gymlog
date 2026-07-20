@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../domain/enums.dart';
 import '../../domain/models/exercise.dart';
+import '../../domain/models/exercise_catalog_filter.dart';
 import '../../domain/repositories/exercise_repository.dart';
 import '../database.dart' as drift;
 import '../mappers/exercise_mapper.dart';
@@ -14,23 +15,69 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
   final drift.AppDatabase _db;
 
   @override
-  Stream<List<Exercise>> watchAll() {
+  Stream<List<Exercise>> watchAll({
+    ExerciseCatalogFilter filter = emptyExerciseCatalogFilter,
+  }) {
     final query = _db.select(_db.exercises)
-      ..where((e) => e.isArchived.equals(false) & e.isDeleted.equals(false))
-      ..orderBy([(e) => OrderingTerm.desc(e.createdAt)]);
+      ..where((e) => e.isDeleted.equals(false));
+    if (!filter.includeArchived) {
+      query.where((e) => e.isArchived.equals(false));
+    }
+    if (filter.type != null) {
+      query.where((e) => e.exerciseType.equals(filter.type!.name));
+    }
+    if (filter.equipmentId != null) {
+      query.where((e) => e.equipmentId.equals(filter.equipmentId!));
+    }
+    if (filter.onlyUserCreated) {
+      query.where((e) => e.isBuiltIn.equals(false));
+    }
+    query.orderBy([(e) => OrderingTerm.desc(e.createdAt)]);
 
     return query.watch().asyncMap((rows) async {
       if (rows.isEmpty) return const <Exercise>[];
+      final ids = rows.map((row) => row.id).toList();
       final secondaryByExercise = await _secondaryMuscleGroupIdsByExercise(
-        rows.map((row) => row.id).toList(),
+        ids,
       );
-      return rows
+
+      var exercises = rows
           .map(
             (row) => row.toDomain(
               secondaryMuscleGroupIds: secondaryByExercise[row.id] ?? const [],
             ),
           )
           .toList();
+
+      final muscleGroupId = filter.muscleGroupId;
+      if (muscleGroupId != null) {
+        exercises = exercises
+            .where(
+              (exercise) =>
+                  exercise.primaryMuscleGroupId == muscleGroupId ||
+                  exercise.secondaryMuscleGroupIds.contains(muscleGroupId),
+            )
+            .toList();
+      }
+
+      final normalizedQuery = filter.query.trim().toLowerCase();
+      if (normalizedQuery.isNotEmpty) {
+        // Matched in Dart, not SQL: sqlite3's LIKE only case-folds ASCII,
+        // so a Cyrillic query wouldn't match a differently-cased localized
+        // name via SQL LIKE. The catalog is small enough that filtering
+        // the already-narrowed row set here is cheap and locale-correct.
+        final localizedNames = await _localizedNamesByExercise(ids);
+        exercises = exercises.where((exercise) {
+          if (exercise.name.toLowerCase().contains(normalizedQuery)) {
+            return true;
+          }
+          return (localizedNames[exercise.id] ?? const []).any(
+            (name) => name.toLowerCase().contains(normalizedQuery),
+          );
+        }).toList();
+      }
+
+      return exercises;
     });
   }
 
@@ -198,6 +245,19 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
     final result = <String, List<String>>{};
     for (final row in rows) {
       result.putIfAbsent(row.exerciseId, () => []).add(row.muscleGroupId);
+    }
+    return result;
+  }
+
+  Future<Map<String, List<String>>> _localizedNamesByExercise(
+    List<String> exerciseIds,
+  ) async {
+    final rows = await (_db.select(
+      _db.exerciseL10n,
+    )..where((l) => l.exerciseId.isIn(exerciseIds))).get();
+    final result = <String, List<String>>{};
+    for (final row in rows) {
+      result.putIfAbsent(row.exerciseId, () => []).add(row.name);
     }
     return result;
   }

@@ -1,13 +1,18 @@
 import '../enums.dart';
 import '../models/exercise.dart';
+import '../models/exercise_catalog_filter.dart';
 
 /// Storage contract for the exercise catalog (06_DATA_MODEL.md, section
 /// 6.1). Implemented in the Data layer (D-13); services/UI depend only on
 /// this interface, never on `AppDatabase` directly.
 abstract class ExerciseRepository {
-  /// Non-archived, non-deleted exercises. Stage 1's catalog list (S-06)
-  /// has no search/filters yet — those arrive in Stage 2.
-  Stream<List<Exercise>> watchAll();
+  /// The catalog list (S-06), with search + filters (all combinable,
+  /// 04_UI_UX_SPEC.md section 5). Non-archived and non-deleted by default;
+  /// [ExerciseCatalogFilter.includeArchived] widens that. [ExerciseCatalogFilter.query]
+  /// matches the canonical name or any localized name (DM 12).
+  Stream<List<Exercise>> watchAll({
+    ExerciseCatalogFilter filter = emptyExerciseCatalogFilter,
+  });
 
   Future<Exercise?> getById(String id);
 
