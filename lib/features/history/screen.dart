@@ -159,7 +159,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             action: SnackBarAction(
               label: l10n.undoAction,
               onPressed: () =>
-                  ref.read(workoutRepositoryProvider).restoreWorkout(workout.id),
+                  ref.read(workoutServiceProvider).restore(workout.id),
             ),
           ),
         );

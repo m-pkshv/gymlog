@@ -536,4 +536,32 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deleteWorkoutError => 'Не удалось удалить тренировку';
+
+  @override
+  String get progressionDecisionLabel => 'Прогрессия:';
+
+  @override
+  String get progressionDecisionNone => '—';
+
+  @override
+  String get progressionDecisionIncrease => '↑';
+
+  @override
+  String get progressionDecisionRepeat => '=';
+
+  @override
+  String get progressionDecisionDecrease => '↓';
+
+  @override
+  String stagnationHint(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count тренировок без роста',
+      many: '$count тренировок без роста',
+      few: '$count тренировки без роста',
+      one: '$count тренировка без роста',
+    );
+    return '$_temp0';
+  }
 }

@@ -1,12 +1,63 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymlog/core/app_error.dart';
 import 'package:gymlog/domain/enums.dart';
+import 'package:gymlog/domain/models/exercise.dart';
 import 'package:gymlog/domain/models/workout.dart';
+import 'package:gymlog/domain/models/workout_details.dart';
+import 'package:gymlog/domain/models/workout_exercise.dart';
 import 'package:gymlog/domain/repositories/workout_repository.dart';
+import 'package:gymlog/services/progression_service.dart';
 import 'package:gymlog/services/workout_service.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockWorkoutRepository extends Mock implements WorkoutRepository {}
+
+class MockProgressionService extends Mock implements ProgressionService {}
+
+/// A `WorkoutDetails` fixture with one entry per id in [exerciseIds], no
+/// sets -- enough for `WorkoutService`'s recompute-trigger wiring, which
+/// only reads the exercise ids involved.
+WorkoutDetails _detailsWith(String workoutId, List<String> exerciseIds) {
+  final now = DateTime.utc(2026, 7, 19, 12);
+  return WorkoutDetails(
+    workout: Workout(
+      id: workoutId,
+      date: DateTime(2026, 7, 19),
+      status: WorkoutStatus.completed,
+      createdAt: now,
+      updatedAt: now,
+      isDeleted: false,
+    ),
+    exercises: [
+      for (final exerciseId in exerciseIds)
+        WorkoutExerciseDetails(
+          workoutExercise: WorkoutExercise(
+            id: '${workoutId}_$exerciseId',
+            workoutId: workoutId,
+            exerciseId: exerciseId,
+            orderIndex: 0,
+            progressionDecision: ProgressionDecision.none,
+            createdAt: now,
+            updatedAt: now,
+            isDeleted: false,
+          ),
+          exercise: Exercise(
+            id: exerciseId,
+            name: exerciseId,
+            exerciseType: ExerciseType.strength,
+            effortMetric: EffortMetric.none,
+            isBuiltIn: false,
+            isArchived: false,
+            secondaryMuscleGroupIds: const [],
+            createdAt: now,
+            updatedAt: now,
+            isDeleted: false,
+          ),
+          sets: const [],
+        ),
+    ],
+  );
+}
 
 Workout _workout({
   String id = 'w1',
@@ -29,6 +80,7 @@ Workout _workout({
 
 void main() {
   late MockWorkoutRepository repository;
+  late MockProgressionService progressionService;
   late WorkoutService service;
 
   setUpAll(() {
@@ -37,8 +89,12 @@ void main() {
 
   setUp(() {
     repository = MockWorkoutRepository();
-    service = WorkoutService(repository);
+    progressionService = MockProgressionService();
+    service = WorkoutService(repository, progressionService);
     when(() => repository.updateWorkout(any())).thenAnswer((_) async {});
+    // No workout has exercises to recompute unless a test says otherwise.
+    when(() => repository.getDetails(any())).thenAnswer((_) async => null);
+    when(() => progressionService.recompute(any())).thenAnswer((_) async {});
   });
 
   group('isTransitionAllowed (DM 6.4.1, full matrix)', () {
@@ -217,5 +273,110 @@ void main() {
         verify(() => repository.deleteWorkout(workout.id)).called(1);
       });
     }
+  });
+
+  group('progression recompute triggers (D-7, DM 6.10/6.11, TS 9.4)', () {
+    test('completing a workout recomputes every exercise in it', () async {
+      when(
+        () => repository.getDetails('w1'),
+      ).thenAnswer((_) async => _detailsWith('w1', ['squat', 'bench']));
+      final workout = _workout(
+        id: 'w1',
+        status: WorkoutStatus.inProgress,
+        startedAt: DateTime.utc(2026, 7, 19, 11),
+      );
+
+      await service.changeStatus(
+        workout: workout,
+        newStatus: WorkoutStatus.completed,
+      );
+
+      verify(() => progressionService.recompute('squat')).called(1);
+      verify(() => progressionService.recompute('bench')).called(1);
+    });
+
+    test('resuming a completed workout also recomputes', () async {
+      when(
+        () => repository.getDetails('w1'),
+      ).thenAnswer((_) async => _detailsWith('w1', ['squat']));
+      when(
+        () => repository.getInProgressWorkout(),
+      ).thenAnswer((_) async => null);
+      final workout = _workout(
+        id: 'w1',
+        status: WorkoutStatus.completed,
+        finishedAt: DateTime.now().toUtc(),
+      );
+
+      await service.changeStatus(
+        workout: workout,
+        newStatus: WorkoutStatus.inProgress,
+      );
+
+      verify(() => progressionService.recompute('squat')).called(1);
+    });
+
+    test('a transition that is neither finishing nor resuming does not '
+        'recompute', () async {
+      final workout = _workout(status: WorkoutStatus.draft);
+
+      await service.changeStatus(
+        workout: workout,
+        newStatus: WorkoutStatus.planned,
+      );
+
+      verifyNever(() => progressionService.recompute(any()));
+      verifyNever(() => repository.getDetails(any()));
+    });
+
+    test('deleting a completed workout recomputes its exercises', () async {
+      when(
+        () => repository.getDetails('w1'),
+      ).thenAnswer((_) async => _detailsWith('w1', ['squat']));
+      when(() => repository.deleteWorkout(any())).thenAnswer((_) async {});
+      final workout = _workout(id: 'w1', status: WorkoutStatus.completed);
+
+      await service.delete(workout);
+
+      verify(() => progressionService.recompute('squat')).called(1);
+    });
+
+    test('deleting a non-completed workout does not recompute', () async {
+      when(() => repository.deleteWorkout(any())).thenAnswer((_) async {});
+      final workout = _workout(status: WorkoutStatus.draft);
+
+      await service.delete(workout);
+
+      verifyNever(() => progressionService.recompute(any()));
+      verifyNever(() => repository.getDetails(any()));
+    });
+
+    test('restoring a completed workout recomputes its exercises', () async {
+      when(
+        () => repository.restoreWorkout(any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => repository.getDetails('w1'),
+      ).thenAnswer((_) async => _detailsWith('w1', ['squat']));
+
+      await service.restore('w1');
+
+      verify(() => progressionService.recompute('squat')).called(1);
+    });
+
+    test('restoring a workout that is still a draft does not recompute', () async {
+      when(() => repository.restoreWorkout(any())).thenAnswer((_) async {});
+      final draftDetails = _detailsWith('w1', ['squat']);
+      when(() => repository.getDetails('w1')).thenAnswer(
+        (_) async => WorkoutDetails(
+          workout: draftDetails.workout.copyWith(status: WorkoutStatus.draft),
+          exercises: draftDetails.exercises,
+        ),
+      );
+
+      await service.restore('w1');
+
+      verifyNever(() => progressionService.recompute(any()));
+    });
   });
 }

@@ -339,6 +339,8 @@ class _EditorBody extends StatelessWidget {
                         );
                         controller.flushSet(setId);
                       },
+                      onProgressionDecisionChanged: (decision) => controller
+                          .setProgressionDecision(workoutExerciseId, decision),
                     );
                   },
                 ),

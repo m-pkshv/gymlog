@@ -169,5 +169,11 @@
   "deleteWorkoutAction": "Удалить",
   "workoutDeletedMessage": "Тренировка удалена",
   "undoAction": "Отменить",
-  "deleteWorkoutError": "Не удалось удалить тренировку"
+  "deleteWorkoutError": "Не удалось удалить тренировку",
+  "progressionDecisionLabel": "Прогрессия:",
+  "progressionDecisionNone": "—",
+  "progressionDecisionIncrease": "↑",
+  "progressionDecisionRepeat": "=",
+  "progressionDecisionDecrease": "↓",
+  "stagnationHint": "{count, plural, one{{count} тренировка без роста} few{{count} тренировки без роста} many{{count} тренировок без роста} other{{count} тренировок без роста}}"
 }

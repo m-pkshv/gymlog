@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/providers.dart';
 import '../../../core/constants.dart';
+import '../../../domain/enums.dart';
 import '../../../domain/models/workout_details.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/exercise_type_labels.dart';
@@ -16,9 +19,11 @@ enum _ExerciseCardAction { pastResults, copyLastPerformance, moveUp, moveDown }
 /// прошлого выполнения" (menu, TS 8 section 8) + reorder — a leading drag
 /// handle (04_UI_UX_SPEC.md, section 5: "ручка-иконка (drag)") plus
 /// "⋮ → Вверх/Вниз" as the gesture-free alternative (05_AI_INSTRUCTIONS.md,
-/// rule: every gesture needs one) + a comment field. The progression
-/// segment is Stage 3+ scope not yet included here.
-class ExerciseCard extends StatelessWidget {
+/// rule: every gesture needs one) + a comment field + the progression
+/// segment (—/↑/=/↓, DM 6.11 "ручная отметка") with the D-7 stagnation hint
+/// ("N без роста", read from `progressionStateProvider` — a cache the
+/// manual decision itself never influences).
+class ExerciseCard extends ConsumerWidget {
   const ExerciseCard({
     super.key,
     required this.details,
@@ -36,6 +41,7 @@ class ExerciseCard extends StatelessWidget {
     required this.onCommentChanged,
     required this.onCommentCommit,
     required this.onSetCommentSaved,
+    required this.onProgressionDecisionChanged,
   });
 
   final WorkoutExerciseDetails details;
@@ -63,11 +69,16 @@ class ExerciseCard extends StatelessWidget {
   final ValueChanged<String> onCommentChanged;
   final VoidCallback onCommentCommit;
   final void Function(String setId, String comment) onSetCommentSaved;
+  final ValueChanged<ProgressionDecision> onProgressionDecisionChanged;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final fields = setFieldsFor(details.exercise.exerciseType, l10n);
+    final stagnationCount = ref
+        .watch(progressionStateProvider(details.exercise.id))
+        .value
+        ?.stagnationCount;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -164,6 +175,48 @@ class ExerciseCard extends StatelessWidget {
               onChanged: onCommentChanged,
               onCommit: onCommentCommit,
             ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text(
+                  l10n.progressionDecisionLabel,
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+                const SizedBox(width: 8),
+                SegmentedButton<ProgressionDecision>(
+                  segments: [
+                    ButtonSegment(
+                      value: ProgressionDecision.none,
+                      label: Text(l10n.progressionDecisionNone),
+                    ),
+                    ButtonSegment(
+                      value: ProgressionDecision.increase,
+                      label: Text(l10n.progressionDecisionIncrease),
+                    ),
+                    ButtonSegment(
+                      value: ProgressionDecision.repeat,
+                      label: Text(l10n.progressionDecisionRepeat),
+                    ),
+                    ButtonSegment(
+                      value: ProgressionDecision.decrease,
+                      label: Text(l10n.progressionDecisionDecrease),
+                    ),
+                  ],
+                  selected: {details.workoutExercise.progressionDecision},
+                  showSelectedIcon: false,
+                  onSelectionChanged: (selected) =>
+                      onProgressionDecisionChanged(selected.first),
+                ),
+              ],
+            ),
+            if (stagnationCount != null && stagnationCount > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  l10n.stagnationHint(stagnationCount),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
           ],
         ),
       ),

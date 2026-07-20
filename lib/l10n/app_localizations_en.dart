@@ -531,4 +531,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteWorkoutError => 'Couldn\'t delete the workout';
+
+  @override
+  String get progressionDecisionLabel => 'Progression:';
+
+  @override
+  String get progressionDecisionNone => '—';
+
+  @override
+  String get progressionDecisionIncrease => '↑';
+
+  @override
+  String get progressionDecisionRepeat => '=';
+
+  @override
+  String get progressionDecisionDecrease => '↓';
+
+  @override
+  String stagnationHint(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count workouts without growth',
+      one: '$count workout without growth',
+    );
+    return '$_temp0';
+  }
 }

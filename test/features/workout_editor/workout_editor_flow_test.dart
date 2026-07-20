@@ -102,6 +102,16 @@ Future<void> _unmountAndFlush(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// The "⋮" menu icon on the exercise card titled [exerciseName] --
+/// identified by ancestry rather than list position, since
+/// `ReorderableListView` (Stage 3 reorder) makes position-based
+/// `find.byIcon(Icons.more_vert).first/.last` unreliable once cards grow
+/// tall enough to need scrolling.
+Finder _exerciseCardMenuButton(String exerciseName) => find.descendant(
+  of: find.ancestor(of: find.text(exerciseName), matching: find.byType(Card)),
+  matching: find.byIcon(Icons.more_vert),
+);
+
 /// The plan/fact `TextField`s of a set row, scoped past the workout- and
 /// exercise-level comment fields Stage 3 added elsewhere on this screen
 /// (otherwise a bare `find.byType(TextField)` is ambiguous).
@@ -878,6 +888,13 @@ void main() {
     testWidgets(
       '"Move up" in the exercise card menu swaps it with the previous card',
       (tester) async {
+        // Both cards (each taller now with the comment field + progression
+        // segment) must fit without scrolling, or ReorderableListView's
+        // internal Overlay makes off-screen taps land on the wrong target.
+        tester.view.physicalSize = const Size(1080, 5000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
         await _seedExercise(db, id: 'squat', name: 'Squat');
         await _seedExercise(db, id: 'bench', name: 'Bench Press');
         await tester.pumpWidget(_appUnderTest(db));
@@ -900,7 +917,9 @@ void main() {
         expect(order.map((we) => we.exerciseId), ['squat', 'bench']);
 
         // The second card (Bench Press, last -> no "Move down") moves up.
-        await tester.tap(find.byIcon(Icons.more_vert).last);
+        final benchMenu = _exerciseCardMenuButton('Bench Press');
+        await tester.ensureVisible(benchMenu);
+        await tester.tap(benchMenu);
         await tester.pumpAndSettle();
         expect(find.text('Move down'), findsNothing);
         await tester.tap(find.text('Move up'));
@@ -918,6 +937,10 @@ void main() {
     testWidgets(
       'the first card\'s menu has no "Move up" action',
       (tester) async {
+        tester.view.physicalSize = const Size(1080, 5000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
         await _seedExercise(db, id: 'squat', name: 'Squat');
         await _seedExercise(db, id: 'bench', name: 'Bench Press');
         await tester.pumpWidget(_appUnderTest(db));
@@ -933,7 +956,9 @@ void main() {
         await tester.tap(find.text('Bench Press'));
         await tester.pumpAndSettle();
 
-        await tester.tap(find.byIcon(Icons.more_vert).first);
+        final squatMenu = _exerciseCardMenuButton('Squat');
+        await tester.ensureVisible(squatMenu);
+        await tester.tap(squatMenu);
         await tester.pumpAndSettle();
 
         expect(find.text('Move up'), findsNothing);
@@ -1015,5 +1040,88 @@ void main() {
 
       await _unmountAndFlush(tester);
     });
+  });
+
+  group('progression decision + stagnation hint (Stage 3, D-7, TS 9.4)', () {
+    testWidgets(
+      'selecting a progression decision segment persists it immediately, '
+      'no debounce',
+      (tester) async {
+        await _seedExercise(db);
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('↑'));
+        await tester.pumpAndSettle();
+
+        final workoutExercises = await db.select(db.workoutExercises).get();
+        expect(workoutExercises.single.progressionDecision, 'increase');
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'the stagnation hint is hidden when there is no completed history yet',
+      (tester) async {
+        await _seedExercise(db);
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('without growth'), findsNothing);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'the stagnation hint appears after finishing a workout that did not '
+      'improve on the last completed occurrence',
+      (tester) async {
+        await _seedExercise(db);
+        await _seedPastCompletedOccurrence(db);
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Add set'));
+        await tester.pumpAndSettle();
+
+        // Same weight/reps as the past occurrence (60 kg x 8) -- no growth.
+        await tester.enterText(_setFieldTextFields().at(1), '60');
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pump();
+        await tester.enterText(_setFieldTextFields().at(3), '8');
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pump();
+
+        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Start workout'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Finish'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('1 workout without growth'), findsOneWidget);
+
+        await _unmountAndFlush(tester);
+      },
+    );
   });
 }

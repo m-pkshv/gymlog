@@ -4,10 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymlog/core/logger.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/repositories_impl/exercise_repository_impl.dart';
+import 'package:gymlog/data/repositories_impl/progression_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_tag_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/features/workout_editor/controller.dart';
+import 'package:gymlog/services/progression_service.dart';
 import 'package:gymlog/services/workout_service.dart';
 
 /// Controller-level tests for the autosave guarantee (03_TECHNICAL_SPEC.md,
@@ -20,6 +22,7 @@ void main() {
   late AppDatabase db;
   late WorkoutRepositoryImpl workouts;
   late ExerciseRepositoryImpl exercises;
+  late ProgressionService progressionService;
   late WorkoutService service;
   late AppLogger logger;
 
@@ -27,7 +30,12 @@ void main() {
     db = AppDatabase(NativeDatabase.memory());
     workouts = WorkoutRepositoryImpl(db);
     exercises = ExerciseRepositoryImpl(db);
-    service = WorkoutService(workouts);
+    progressionService = ProgressionService(
+      workouts,
+      exercises,
+      ProgressionRepositoryImpl(db),
+    );
+    service = WorkoutService(workouts, progressionService);
     logger = AppLogger();
   });
 
@@ -57,6 +65,7 @@ void main() {
         workout.id,
         workouts,
         service,
+        progressionService,
         logger,
       );
       addTearDown(controller.dispose);
@@ -102,6 +111,7 @@ void main() {
       workout.id,
       workouts,
       service,
+      progressionService,
       logger,
     );
     await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -135,6 +145,7 @@ void main() {
         workout.id,
         workouts,
         service,
+        progressionService,
         logger,
       );
       addTearDown(controller.dispose);
@@ -200,6 +211,7 @@ void main() {
           workout.id,
           workouts,
           service,
+          progressionService,
           logger,
         );
         addTearDown(controller.dispose);
@@ -280,6 +292,7 @@ void main() {
           workout.id,
           workouts,
           service,
+          progressionService,
           logger,
         );
         addTearDown(controller.dispose);
@@ -310,6 +323,7 @@ void main() {
         workout.id,
         workouts,
         service,
+        progressionService,
         logger,
       );
       addTearDown(controller.dispose);
@@ -331,6 +345,7 @@ void main() {
         workout.id,
         workouts,
         service,
+        progressionService,
         logger,
       );
       addTearDown(controller.dispose);
@@ -352,6 +367,7 @@ void main() {
         workout.id,
         workouts,
         service,
+        progressionService,
         logger,
       );
       addTearDown(controller.dispose);
@@ -382,6 +398,7 @@ void main() {
           workout.id,
           workouts,
           service,
+          progressionService,
           logger,
         );
         addTearDown(controller.dispose);
@@ -403,6 +420,7 @@ void main() {
         workout.id,
         workouts,
         service,
+        progressionService,
         logger,
       );
       addTearDown(controller.dispose);
@@ -442,6 +460,7 @@ void main() {
           workout.id,
           workouts,
           service,
+          progressionService,
           logger,
         );
         await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -533,6 +552,7 @@ void main() {
           workout.id,
           workouts,
           service,
+          progressionService,
           logger,
         );
         addTearDown(controller.dispose);
@@ -568,6 +588,7 @@ void main() {
           workout.id,
           workouts,
           service,
+          progressionService,
           logger,
         );
         addTearDown(controller.dispose);
@@ -605,6 +626,7 @@ void main() {
         workout.id,
         workouts,
         service,
+        progressionService,
         logger,
       );
       addTearDown(controller.dispose);
@@ -637,6 +659,7 @@ void main() {
           workout.id,
           workouts,
           service,
+          progressionService,
           logger,
         );
         await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -654,5 +677,153 @@ void main() {
         );
       },
     );
+  });
+
+  group('setProgressionDecision (S-03, DM 6.11)', () {
+    test('persists the decision immediately, no debounce', () async {
+      final exercise = await exercises.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 20));
+      final workoutExercise = await workouts.addExercise(
+        workoutId: workout.id,
+        exerciseId: exercise.id,
+      );
+      final controller = WorkoutEditorController(
+        workout.id,
+        workouts,
+        service,
+        progressionService,
+        logger,
+      );
+      addTearDown(controller.dispose);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      await controller.setProgressionDecision(
+        workoutExercise.id,
+        ProgressionDecision.increase,
+      );
+
+      expect(
+        controller.state.value!.exercises.single.workoutExercise
+            .progressionDecision,
+        ProgressionDecision.increase,
+      );
+      final stored = await workouts.getDetails(workout.id);
+      expect(
+        stored!.exercises.single.workoutExercise.progressionDecision,
+        ProgressionDecision.increase,
+      );
+    });
+  });
+
+  group('_recomputeIfCompleted (D-7, DM 6.10/6.11)', () {
+    test(
+      'flushing a set edit on an already-completed workout recomputes '
+      'the stagnation counter',
+      () async {
+        final exercise = await exercises.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+        final older = await workouts.createDraft(date: DateTime(2026, 7, 1));
+        final olderWe = await workouts.addExercise(
+          workoutId: older.id,
+          exerciseId: exercise.id,
+        );
+        final olderSet = await workouts.addSet(
+          workoutExerciseId: olderWe.id,
+          isWarmup: false,
+        );
+        await workouts.updateSet(
+          olderSet.copyWith(
+            isCompleted: true,
+            actualWeightKg: 60,
+            actualReps: 8,
+          ),
+        );
+        await workouts.updateWorkout(
+          older.copyWith(status: WorkoutStatus.completed),
+        );
+
+        final workout = await workouts.createDraft(
+          date: DateTime(2026, 7, 8),
+        );
+        final we = await workouts.addExercise(
+          workoutId: workout.id,
+          exerciseId: exercise.id,
+        );
+        final set = await workouts.addSet(
+          workoutExerciseId: we.id,
+          isWarmup: false,
+        );
+        await workouts.updateSet(
+          set.copyWith(isCompleted: true, actualWeightKg: 60, actualReps: 8),
+        );
+        await workouts.updateWorkout(
+          workout.copyWith(status: WorkoutStatus.completed),
+        );
+        // Both occurrences identical so far -> stagnationCount would be 1
+        // once computed; but nothing has triggered a compute yet.
+
+        final controller = WorkoutEditorController(
+          workout.id,
+          workouts,
+          service,
+          progressionService,
+          logger,
+        );
+        addTearDown(controller.dispose);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        // Editing this completed workout's set (a heavier weight) is a
+        // DM 6.10/6.11 trigger -- flushSet should recompute afterward.
+        controller.editSet(
+          set.id,
+          (s) => s.copyWith(actualWeightKg: 65),
+        );
+        await controller.flushSet(set.id);
+
+        final state = await ProgressionRepositoryImpl(
+          db,
+        ).watchState(exercise.id).first;
+        expect(state, isNotNull, reason: 'recompute should have run');
+        expect(state!.stagnationCount, 0, reason: '65kg > 60kg is growth');
+      },
+    );
+
+    test('editing a set on a draft workout does not recompute', () async {
+      final exercise = await exercises.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 20));
+      final we = await workouts.addExercise(
+        workoutId: workout.id,
+        exerciseId: exercise.id,
+      );
+      final set = await workouts.addSet(
+        workoutExerciseId: we.id,
+        isWarmup: false,
+      );
+      final controller = WorkoutEditorController(
+        workout.id,
+        workouts,
+        service,
+        progressionService,
+        logger,
+      );
+      addTearDown(controller.dispose);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      controller.editSet(set.id, (s) => s.copyWith(actualWeightKg: 60));
+      await controller.flushSet(set.id);
+
+      final state = await ProgressionRepositoryImpl(
+        db,
+      ).watchState(exercise.id).first;
+      expect(state, isNull, reason: 'draft workouts are not completed yet');
+    });
   });
 }

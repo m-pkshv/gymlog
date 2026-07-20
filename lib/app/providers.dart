@@ -11,21 +11,25 @@ import '../core/logger.dart';
 import '../data/database.dart' as drift;
 import '../data/repositories_impl/app_settings_repository_impl.dart';
 import '../data/repositories_impl/exercise_repository_impl.dart';
+import '../data/repositories_impl/progression_repository_impl.dart';
 import '../data/repositories_impl/workout_repository_impl.dart';
 import '../data/repositories_impl/workout_tag_repository_impl.dart';
 import '../domain/models/app_settings.dart';
 import '../domain/models/exercise.dart';
 import '../domain/models/exercise_catalog_filter.dart';
+import '../domain/models/exercise_progression_state.dart';
 import '../domain/models/workout_details.dart';
 import '../domain/models/workout_history_entry.dart';
 import '../domain/models/workout_history_filter.dart';
 import '../domain/models/workout_tag.dart';
 import '../domain/repositories/app_settings_repository.dart';
 import '../domain/repositories/exercise_repository.dart';
+import '../domain/repositories/progression_repository.dart';
 import '../domain/repositories/workout_repository.dart';
 import '../domain/repositories/workout_tag_repository.dart';
 import '../features/workout_editor/controller.dart';
 import '../services/exercise_service.dart';
+import '../services/progression_service.dart';
 import '../services/workout_service.dart';
 import '../services/workout_tag_service.dart';
 
@@ -45,8 +49,24 @@ final workoutRepositoryProvider = Provider<WorkoutRepository>((ref) {
   return WorkoutRepositoryImpl(ref.watch(appDatabaseProvider));
 });
 
+final progressionRepositoryProvider = Provider<ProgressionRepository>((ref) {
+  return ProgressionRepositoryImpl(ref.watch(appDatabaseProvider));
+});
+
+/// The D-7 stagnation-counter algorithm (03_TECHNICAL_SPEC.md, section 9.4).
+final progressionServiceProvider = Provider<ProgressionService>((ref) {
+  return ProgressionService(
+    ref.watch(workoutRepositoryProvider),
+    ref.watch(exerciseRepositoryProvider),
+    ref.watch(progressionRepositoryProvider),
+  );
+});
+
 final workoutServiceProvider = Provider<WorkoutService>((ref) {
-  return WorkoutService(ref.watch(workoutRepositoryProvider));
+  return WorkoutService(
+    ref.watch(workoutRepositoryProvider),
+    ref.watch(progressionServiceProvider),
+  );
 });
 
 final workoutTagRepositoryProvider = Provider<WorkoutTagRepository>((ref) {
@@ -100,6 +120,15 @@ final appSettingsProvider = StreamProvider<AppSettings>((ref) {
   return ref.watch(appSettingsRepositoryProvider).watchSettings();
 });
 
+/// The D-7 stagnation counter for one exercise (S-03 "N без роста" hint) —
+/// `null` if it has no completed occurrences yet.
+final progressionStateProvider = StreamProvider.family<
+  ExerciseProgressionState?,
+  String
+>((ref, exerciseId) {
+  return ref.watch(progressionRepositoryProvider).watchState(exerciseId);
+});
+
 /// The workout editor (S-03) controller, one instance per workout. Owns the
 /// autosave debounce (TS 5) and the in-progress/completed transitions
 /// (`workout_service`); disposed when the editor screen is popped.
@@ -112,6 +141,7 @@ final workoutEditorControllerProvider = StateNotifierProvider.autoDispose
         workoutId,
         ref.read(workoutRepositoryProvider),
         ref.read(workoutServiceProvider),
+        ref.read(progressionServiceProvider),
         ref.read(loggerProvider),
       );
     });

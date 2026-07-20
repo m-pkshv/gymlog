@@ -1117,6 +1117,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t delete the workout'**
   String get deleteWorkoutError;
+
+  /// Label next to the progression-decision segmented button on an exercise card (S-03, DM 6.11).
+  ///
+  /// In en, this message translates to:
+  /// **'Progression:'**
+  String get progressionDecisionLabel;
+
+  /// ProgressionDecision.none segment label (S-03) — no decision made yet.
+  ///
+  /// In en, this message translates to:
+  /// **'—'**
+  String get progressionDecisionNone;
+
+  /// ProgressionDecision.increase segment label (S-03) — increase next time.
+  ///
+  /// In en, this message translates to:
+  /// **'↑'**
+  String get progressionDecisionIncrease;
+
+  /// ProgressionDecision.repeat segment label (S-03) — repeat next time.
+  ///
+  /// In en, this message translates to:
+  /// **'='**
+  String get progressionDecisionRepeat;
+
+  /// ProgressionDecision.decrease segment label (S-03) — decrease next time.
+  ///
+  /// In en, this message translates to:
+  /// **'↓'**
+  String get progressionDecisionDecrease;
+
+  /// D-7 stagnation-counter hint under the progression segment (S-03, TS 9.4) — only shown when count > 0.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} workout without growth} other{{count} workouts without growth}}'**
+  String stagnationHint(num count);
 }
 
 class _AppLocalizationsDelegate

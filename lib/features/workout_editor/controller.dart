@@ -13,6 +13,7 @@ import '../../domain/models/workout.dart';
 import '../../domain/models/workout_details.dart';
 import '../../domain/models/workout_exercise.dart';
 import '../../domain/repositories/workout_repository.dart';
+import '../../services/progression_service.dart';
 import '../../services/workout_service.dart';
 import 'set_field_config.dart';
 
@@ -30,6 +31,7 @@ class WorkoutEditorController
     this._workoutId,
     this._workoutRepository,
     this._workoutService,
+    this._progressionService,
     this._logger,
   ) : super(const AsyncValue<WorkoutDetails>.loading()) {
     unawaited(_load());
@@ -38,6 +40,7 @@ class WorkoutEditorController
   final String _workoutId;
   final WorkoutRepository _workoutRepository;
   final WorkoutService _workoutService;
+  final ProgressionService _progressionService;
   final AppLogger _logger;
   final Map<String, Timer> _debounceTimers = {};
   Timer? _workoutCommentDebounceTimer;
@@ -76,6 +79,26 @@ class WorkoutEditorController
       }
     }
     return null;
+  }
+
+  String? _findExerciseIdForSet(String setId) {
+    for (final workoutExercise
+        in _details?.exercises ?? const <WorkoutExerciseDetails>[]) {
+      if (workoutExercise.sets.any((set) => set.id == setId)) {
+        return workoutExercise.exercise.id;
+      }
+    }
+    return null;
+  }
+
+  /// DM 6.10/6.11 trigger: editing a set of an *already-completed* workout
+  /// changes that exercise's completed-occurrence history, so the D-7
+  /// stagnation counter needs a recompute. A no-op otherwise (the workout
+  /// isn't part of anyone's completed history yet).
+  Future<void> _recomputeIfCompleted(String? exerciseId) async {
+    if (exerciseId == null) return;
+    if (_details?.workout.status != WorkoutStatus.completed) return;
+    await _progressionService.recompute(exerciseId);
   }
 
   WorkoutExercise? _findWorkoutExercise(String workoutExerciseId) {
@@ -155,6 +178,7 @@ class WorkoutEditorController
     if (set == null) return;
     try {
       await _workoutRepository.updateSet(set);
+      await _recomputeIfCompleted(_findExerciseIdForSet(setId));
     } catch (error, stackTrace) {
       _logger.error(
         'Failed to save set $setId',
@@ -193,6 +217,7 @@ class WorkoutEditorController
     _replaceSet(updated);
     try {
       await _workoutRepository.updateSet(updated);
+      await _recomputeIfCompleted(_findExerciseIdForSet(setId));
     } catch (error, stackTrace) {
       _logger.error(
         'Failed to save set $setId',
@@ -213,6 +238,7 @@ class WorkoutEditorController
     _replaceSet(updated);
     try {
       await _workoutRepository.updateSet(updated);
+      await _recomputeIfCompleted(_findExerciseIdForSet(setId));
     } catch (error, stackTrace) {
       _logger.error(
         'Failed to save set $setId',
@@ -456,6 +482,33 @@ class WorkoutEditorController
     } catch (error, stackTrace) {
       _logger.error(
         'Failed to save comment for exercise $workoutExerciseId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  /// Sets an exercise's manual progression decision (S-03 segment
+  /// —/↑/=/↓). Purely a user annotation (DM 6.11: "на счётчик не влияет")
+  /// — never touches the D-7 stagnation counter, so no recompute here.
+  /// Immediate write, like [setWarmup]/[setCompleted] — a discrete choice,
+  /// not continuous typing.
+  Future<void> setProgressionDecision(
+    String workoutExerciseId,
+    ProgressionDecision decision,
+  ) async {
+    final current = _findWorkoutExercise(workoutExerciseId);
+    if (current == null) return;
+    final updated = current.copyWith(
+      progressionDecision: decision,
+      updatedAt: DateTime.now().toUtc(),
+    );
+    _replaceWorkoutExercise(updated);
+    try {
+      await _workoutRepository.updateWorkoutExercise(updated);
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to save progression decision for $workoutExerciseId',
         error: error,
         stackTrace: stackTrace,
       );

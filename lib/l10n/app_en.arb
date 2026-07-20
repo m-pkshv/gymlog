@@ -598,5 +598,32 @@
   "deleteWorkoutError": "Couldn't delete the workout",
   "@deleteWorkoutError": {
     "description": "Snackbar shown on History (S-02) when deleting a workout is rejected (e.g. it's inProgress, DM 10) or fails."
+  },
+  "progressionDecisionLabel": "Progression:",
+  "@progressionDecisionLabel": {
+    "description": "Label next to the progression-decision segmented button on an exercise card (S-03, DM 6.11)."
+  },
+  "progressionDecisionNone": "—",
+  "@progressionDecisionNone": {
+    "description": "ProgressionDecision.none segment label (S-03) — no decision made yet."
+  },
+  "progressionDecisionIncrease": "↑",
+  "@progressionDecisionIncrease": {
+    "description": "ProgressionDecision.increase segment label (S-03) — increase next time."
+  },
+  "progressionDecisionRepeat": "=",
+  "@progressionDecisionRepeat": {
+    "description": "ProgressionDecision.repeat segment label (S-03) — repeat next time."
+  },
+  "progressionDecisionDecrease": "↓",
+  "@progressionDecisionDecrease": {
+    "description": "ProgressionDecision.decrease segment label (S-03) — decrease next time."
+  },
+  "stagnationHint": "{count, plural, one{{count} workout without growth} other{{count} workouts without growth}}",
+  "@stagnationHint": {
+    "description": "D-7 stagnation-counter hint under the progression segment (S-03, TS 9.4) — only shown when count > 0.",
+    "placeholders": {
+      "count": {}
+    }
   }
 }
