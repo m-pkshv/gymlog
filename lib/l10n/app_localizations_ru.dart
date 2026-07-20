@@ -70,4 +70,67 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get actionCancel => 'Отмена';
+
+  @override
+  String get newWorkoutAction => 'Новая тренировка';
+
+  @override
+  String get workoutEditorTitle => 'Тренировка';
+
+  @override
+  String get workoutLoadError => 'Не удалось загрузить тренировку';
+
+  @override
+  String get workoutStatusChangeError => 'Не удалось обновить тренировку';
+
+  @override
+  String get statusDraft => 'Черновик';
+
+  @override
+  String get statusInProgress => 'Выполняется';
+
+  @override
+  String get statusCompleted => 'Завершена';
+
+  @override
+  String get startWorkoutAction => 'Начать тренировку';
+
+  @override
+  String get finishWorkoutAction => 'Завершить';
+
+  @override
+  String get addExerciseAction => 'Добавить упражнение';
+
+  @override
+  String get addSetAction => 'Добавить подход';
+
+  @override
+  String get workoutExercisesEmpty => 'Пока нет упражнений';
+
+  @override
+  String get setColumnNumber => '№';
+
+  @override
+  String get setColumnWarmup => 'Разминка';
+
+  @override
+  String get setColumnPlan => 'План';
+
+  @override
+  String get setColumnFact => 'Факт';
+
+  @override
+  String get setColumnDone => 'Выполнено';
+
+  @override
+  String get setFieldWeightKg => 'Вес, кг';
+
+  @override
+  String get setFieldReps => 'Повторения';
+
+  @override
+  String get setFieldDistanceKm => 'Дистанция, км';
+
+  @override
+  String get setFieldDurationSec => 'Время, с';
 }

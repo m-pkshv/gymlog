@@ -7,12 +7,15 @@ import '../features/history/screen.dart';
 import '../features/more/screen.dart';
 import '../features/stats/screen.dart';
 import '../features/today/screen.dart';
+import '../features/workout_editor/add_exercise_screen.dart';
+import '../features/workout_editor/screen.dart';
 import '../l10n/app_localizations.dart';
 
-/// App routes (04_UI_UX_SPEC.md, section 4). Stage 0 only wires the 5 tab
-/// roots; nested routes (`/history/workout/:id`, `/exercises/:id`, the
-/// full-screen `/active` route, etc.) are added alongside the features
-/// that need them.
+/// App routes (04_UI_UX_SPEC.md, section 4). Stage 0 wired the 5 tab roots;
+/// `/history/workout/:workoutId` (S-03, Stage 1) and its nested
+/// "add exercise"/"create exercise" modals were added alongside the workout
+/// editor. Remaining nested routes (`/exercises/:id`, the full-screen
+/// `/active` route, etc.) arrive with the features that need them.
 final GoRouter appRouter = GoRouter(
   initialLocation: '/today',
   routes: [
@@ -28,7 +31,42 @@ final GoRouter appRouter = GoRouter(
         ),
         StatefulShellBranch(
           routes: [
-            GoRoute(path: '/history', builder: (_, _) => const HistoryScreen()),
+            GoRoute(
+              path: '/history',
+              builder: (_, _) => const HistoryScreen(),
+              routes: [
+                GoRoute(
+                  path: 'workout/:workoutId',
+                  builder: (_, state) => WorkoutEditorScreen(
+                    workoutId: state.pathParameters['workoutId']!,
+                  ),
+                  routes: [
+                    GoRoute(
+                      path: 'add-exercise',
+                      // Exercise pickers/creation forms are full-screen
+                      // modals (04_UI_UX_SPEC.md, section 6).
+                      pageBuilder: (_, state) => MaterialPage(
+                        key: state.pageKey,
+                        fullscreenDialog: true,
+                        child: AddExerciseScreen(
+                          workoutId: state.pathParameters['workoutId']!,
+                        ),
+                      ),
+                      routes: [
+                        GoRoute(
+                          path: 'new',
+                          pageBuilder: (_, state) => MaterialPage(
+                            key: state.pageKey,
+                            fullscreenDialog: true,
+                            child: const CreateExerciseScreen(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ],
         ),
         StatefulShellBranch(

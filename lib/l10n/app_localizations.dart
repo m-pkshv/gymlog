@@ -223,6 +223,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get actionCancel;
+
+  /// FAB on the History list (S-02) that creates a draft workout and opens the editor (S-03).
+  ///
+  /// In en, this message translates to:
+  /// **'New workout'**
+  String get newWorkoutAction;
+
+  /// AppBar title of the workout editor (S-03).
+  ///
+  /// In en, this message translates to:
+  /// **'Workout'**
+  String get workoutEditorTitle;
+
+  /// Error state on the workout editor (S-03) when loading fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the workout'**
+  String get workoutLoadError;
+
+  /// Snackbar shown when Start/Finish fails on the workout editor (S-03).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update the workout'**
+  String get workoutStatusChangeError;
+
+  /// WorkoutStatus.draft display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft'**
+  String get statusDraft;
+
+  /// WorkoutStatus.inProgress display name.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get statusInProgress;
+
+  /// WorkoutStatus.completed display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get statusCompleted;
+
+  /// Button on the workout editor (S-03) that transitions draft -> inProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Start workout'**
+  String get startWorkoutAction;
+
+  /// Button on the workout editor (S-03) that transitions inProgress -> completed.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get finishWorkoutAction;
+
+  /// Button on the workout editor (S-03) and title of the exercise picker it opens.
+  ///
+  /// In en, this message translates to:
+  /// **'Add exercise'**
+  String get addExerciseAction;
+
+  /// Button on an exercise card in the workout editor (S-03) that adds a working set.
+  ///
+  /// In en, this message translates to:
+  /// **'Add set'**
+  String get addSetAction;
+
+  /// Empty state on the workout editor (S-03) before any exercise is added.
+  ///
+  /// In en, this message translates to:
+  /// **'No exercises added yet'**
+  String get workoutExercisesEmpty;
+
+  /// Set-number column header in the sets table (S-03).
+  ///
+  /// In en, this message translates to:
+  /// **'#'**
+  String get setColumnNumber;
+
+  /// Warm-up checkbox column header in the sets table (S-03).
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up'**
+  String get setColumnWarmup;
+
+  /// Planned-values column header in the sets table (S-03).
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get setColumnPlan;
+
+  /// Actual-values column header in the sets table (S-03).
+  ///
+  /// In en, this message translates to:
+  /// **'Fact'**
+  String get setColumnFact;
+
+  /// Completion checkbox column header/semantic label in the sets table (S-03, DM 6.7).
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get setColumnDone;
+
+  /// Weight field label in the sets table (S-03, strength exercises).
+  ///
+  /// In en, this message translates to:
+  /// **'Weight, kg'**
+  String get setFieldWeightKg;
+
+  /// Reps field label in the sets table (S-03, strength/reps exercises).
+  ///
+  /// In en, this message translates to:
+  /// **'Reps'**
+  String get setFieldReps;
+
+  /// Distance field label in the sets table (S-03, cardio exercises).
+  ///
+  /// In en, this message translates to:
+  /// **'Distance, km'**
+  String get setFieldDistanceKm;
+
+  /// Duration field label in the sets table (S-03, cardio/time/stretch exercises).
+  ///
+  /// In en, this message translates to:
+  /// **'Duration, s'**
+  String get setFieldDurationSec;
 }
 
 class _AppLocalizationsDelegate

@@ -67,24 +67,31 @@ class ExerciseSet {
     );
   }
 
+  /// Sentinel default for the nullable numeric/comment params of [copyWith]:
+  /// distinguishes "not passed, keep the current value" from "explicitly
+  /// passed `null`, clear the field" — the editor (S-03) needs to be able to
+  /// clear a field the user backspaced to empty, which a plain `?? this.x`
+  /// pattern can never express.
+  static const Object _unset = Object();
+
   ExerciseSet copyWith({
     bool? isWarmup,
     bool? isCompleted,
-    double? plannedWeightKg,
-    int? plannedReps,
-    double? actualWeightKg,
-    int? actualReps,
-    double? rpe,
-    int? rir,
-    int? plannedDurationSec,
-    int? actualDurationSec,
-    double? plannedDistanceM,
-    double? actualDistanceM,
-    double? resistance,
-    double? inclinePercent,
-    int? avgHeartRate,
+    Object? plannedWeightKg = _unset,
+    Object? plannedReps = _unset,
+    Object? actualWeightKg = _unset,
+    Object? actualReps = _unset,
+    Object? rpe = _unset,
+    Object? rir = _unset,
+    Object? plannedDurationSec = _unset,
+    Object? actualDurationSec = _unset,
+    Object? plannedDistanceM = _unset,
+    Object? actualDistanceM = _unset,
+    Object? resistance = _unset,
+    Object? inclinePercent = _unset,
+    Object? avgHeartRate = _unset,
     BodySide? side,
-    String? comment,
+    Object? comment = _unset,
     DateTime? updatedAt,
     bool? isDeleted,
   }) {
@@ -94,24 +101,51 @@ class ExerciseSet {
       setNumber: setNumber,
       isWarmup: isWarmup ?? this.isWarmup,
       isCompleted: isCompleted ?? this.isCompleted,
-      plannedWeightKg: plannedWeightKg ?? this.plannedWeightKg,
-      plannedReps: plannedReps ?? this.plannedReps,
-      actualWeightKg: actualWeightKg ?? this.actualWeightKg,
-      actualReps: actualReps ?? this.actualReps,
-      rpe: rpe ?? this.rpe,
-      rir: rir ?? this.rir,
-      plannedDurationSec: plannedDurationSec ?? this.plannedDurationSec,
-      actualDurationSec: actualDurationSec ?? this.actualDurationSec,
-      plannedDistanceM: plannedDistanceM ?? this.plannedDistanceM,
-      actualDistanceM: actualDistanceM ?? this.actualDistanceM,
-      resistance: resistance ?? this.resistance,
-      inclinePercent: inclinePercent ?? this.inclinePercent,
-      avgHeartRate: avgHeartRate ?? this.avgHeartRate,
+      plannedWeightKg: identical(plannedWeightKg, _unset)
+          ? this.plannedWeightKg
+          : _asDouble(plannedWeightKg),
+      plannedReps: identical(plannedReps, _unset)
+          ? this.plannedReps
+          : plannedReps as int?,
+      actualWeightKg: identical(actualWeightKg, _unset)
+          ? this.actualWeightKg
+          : _asDouble(actualWeightKg),
+      actualReps: identical(actualReps, _unset)
+          ? this.actualReps
+          : actualReps as int?,
+      rpe: identical(rpe, _unset) ? this.rpe : _asDouble(rpe),
+      rir: identical(rir, _unset) ? this.rir : rir as int?,
+      plannedDurationSec: identical(plannedDurationSec, _unset)
+          ? this.plannedDurationSec
+          : plannedDurationSec as int?,
+      actualDurationSec: identical(actualDurationSec, _unset)
+          ? this.actualDurationSec
+          : actualDurationSec as int?,
+      plannedDistanceM: identical(plannedDistanceM, _unset)
+          ? this.plannedDistanceM
+          : _asDouble(plannedDistanceM),
+      actualDistanceM: identical(actualDistanceM, _unset)
+          ? this.actualDistanceM
+          : _asDouble(actualDistanceM),
+      resistance: identical(resistance, _unset)
+          ? this.resistance
+          : _asDouble(resistance),
+      inclinePercent: identical(inclinePercent, _unset)
+          ? this.inclinePercent
+          : _asDouble(inclinePercent),
+      avgHeartRate: identical(avgHeartRate, _unset)
+          ? this.avgHeartRate
+          : avgHeartRate as int?,
       side: side ?? this.side,
-      comment: comment ?? this.comment,
+      comment: identical(comment, _unset) ? this.comment : comment as String?,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,
     );
   }
+
+  /// `100` (an `int` literal) no longer auto-widens to `double` once the
+  /// `copyWith` param type is `Object?` instead of `double?` — callers can
+  /// still pass either, so this normalizes at the cast site.
+  static double? _asDouble(Object? value) => (value as num?)?.toDouble();
 }

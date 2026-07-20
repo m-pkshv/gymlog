@@ -43,10 +43,10 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
 
     setState(() => _isSubmitting = true);
     try {
-      await ref
+      final created = await ref
           .read(exerciseRepositoryProvider)
           .create(name: name, exerciseType: _selectedType);
-      if (mounted) context.pop();
+      if (mounted) context.pop(created);
     } catch (error, stackTrace) {
       ref
           .read(loggerProvider)

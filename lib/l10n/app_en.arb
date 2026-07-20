@@ -83,5 +83,89 @@
   "actionCancel": "Cancel",
   "@actionCancel": {
     "description": "Cancel button label on creation forms and confirmation dialogs."
+  },
+  "newWorkoutAction": "New workout",
+  "@newWorkoutAction": {
+    "description": "FAB on the History list (S-02) that creates a draft workout and opens the editor (S-03)."
+  },
+  "workoutEditorTitle": "Workout",
+  "@workoutEditorTitle": {
+    "description": "AppBar title of the workout editor (S-03)."
+  },
+  "workoutLoadError": "Couldn't load the workout",
+  "@workoutLoadError": {
+    "description": "Error state on the workout editor (S-03) when loading fails."
+  },
+  "workoutStatusChangeError": "Couldn't update the workout",
+  "@workoutStatusChangeError": {
+    "description": "Snackbar shown when Start/Finish fails on the workout editor (S-03)."
+  },
+  "statusDraft": "Draft",
+  "@statusDraft": {
+    "description": "WorkoutStatus.draft display name."
+  },
+  "statusInProgress": "In progress",
+  "@statusInProgress": {
+    "description": "WorkoutStatus.inProgress display name."
+  },
+  "statusCompleted": "Completed",
+  "@statusCompleted": {
+    "description": "WorkoutStatus.completed display name."
+  },
+  "startWorkoutAction": "Start workout",
+  "@startWorkoutAction": {
+    "description": "Button on the workout editor (S-03) that transitions draft -> inProgress."
+  },
+  "finishWorkoutAction": "Finish",
+  "@finishWorkoutAction": {
+    "description": "Button on the workout editor (S-03) that transitions inProgress -> completed."
+  },
+  "addExerciseAction": "Add exercise",
+  "@addExerciseAction": {
+    "description": "Button on the workout editor (S-03) and title of the exercise picker it opens."
+  },
+  "addSetAction": "Add set",
+  "@addSetAction": {
+    "description": "Button on an exercise card in the workout editor (S-03) that adds a working set."
+  },
+  "workoutExercisesEmpty": "No exercises added yet",
+  "@workoutExercisesEmpty": {
+    "description": "Empty state on the workout editor (S-03) before any exercise is added."
+  },
+  "setColumnNumber": "#",
+  "@setColumnNumber": {
+    "description": "Set-number column header in the sets table (S-03)."
+  },
+  "setColumnWarmup": "Warm-up",
+  "@setColumnWarmup": {
+    "description": "Warm-up checkbox column header in the sets table (S-03)."
+  },
+  "setColumnPlan": "Plan",
+  "@setColumnPlan": {
+    "description": "Planned-values column header in the sets table (S-03)."
+  },
+  "setColumnFact": "Fact",
+  "@setColumnFact": {
+    "description": "Actual-values column header in the sets table (S-03)."
+  },
+  "setColumnDone": "Done",
+  "@setColumnDone": {
+    "description": "Completion checkbox column header/semantic label in the sets table (S-03, DM 6.7)."
+  },
+  "setFieldWeightKg": "Weight, kg",
+  "@setFieldWeightKg": {
+    "description": "Weight field label in the sets table (S-03, strength exercises)."
+  },
+  "setFieldReps": "Reps",
+  "@setFieldReps": {
+    "description": "Reps field label in the sets table (S-03, strength/reps exercises)."
+  },
+  "setFieldDistanceKm": "Distance, km",
+  "@setFieldDistanceKm": {
+    "description": "Distance field label in the sets table (S-03, cardio exercises)."
+  },
+  "setFieldDurationSec": "Duration, s",
+  "@setFieldDurationSec": {
+    "description": "Duration field label in the sets table (S-03, cardio/time/stretch exercises)."
   }
 }
