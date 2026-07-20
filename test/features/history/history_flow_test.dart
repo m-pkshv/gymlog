@@ -106,6 +106,33 @@ Future<String> _insertCompletedWorkout(
   return id;
 }
 
+Future<void> _seedTag(
+  AppDatabase db, {
+  required String id,
+  required String name,
+  String colorHex = '#4C7BD9',
+}) {
+  return db
+      .into(db.workoutTags)
+      .insert(
+        WorkoutTagsCompanion.insert(
+          id: id,
+          name: name,
+          colorHex: Value(colorHex),
+          createdAt: '2026-07-19T00:00:00Z',
+          updatedAt: '2026-07-19T00:00:00Z',
+        ),
+      );
+}
+
+Future<void> _linkTag(AppDatabase db, {required String workoutId, required String tagId}) {
+  return db
+      .into(db.workoutTagLinks)
+      .insert(
+        WorkoutTagLinksCompanion.insert(workoutId: workoutId, tagId: tagId),
+      );
+}
+
 void main() {
   late AppDatabase db;
 
@@ -419,4 +446,189 @@ void main() {
       );
     },
   );
+
+  group('filters (Stage 3, S-02)', () {
+    testWidgets('search narrows the list by name', (tester) async {
+      await _insertCompletedWorkout(db, id: 'w1', date: '2026-07-01', name: 'Legs');
+      await _insertCompletedWorkout(db, id: 'w2', date: '2026-07-02', name: 'Push');
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'leg');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Legs'), findsOneWidget);
+      expect(find.text('Push'), findsNothing);
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets(
+      'a draft workout is hidden by default but shown once "Draft" is '
+      'selected in the status filter',
+      (tester) async {
+        await db
+            .into(db.workouts)
+            .insert(
+              WorkoutsCompanion.insert(
+                id: 'draft1',
+                date: '2026-07-20',
+                name: const Value('Unfinished'),
+                createdAt: '2026-07-19T00:00:00Z',
+                updatedAt: '2026-07-19T00:00:00Z',
+              ),
+            );
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Unfinished'), findsNothing);
+
+        await tester.tap(find.byIcon(Icons.tune));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Draft'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Apply'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Unfinished'), findsOneWidget);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets('date range narrows the list', (tester) async {
+      await _insertCompletedWorkout(db, id: 'w1', date: '2026-06-01', name: 'Too early');
+      await _insertCompletedWorkout(db, id: 'w2', date: '2026-07-10', name: 'In range');
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.tune));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('From'));
+      await tester.pumpAndSettle();
+      // Switch the date picker from calendar to text-input mode so the
+      // exact date can be typed instead of navigating the calendar grid.
+      // Material 3 uses `edit_outlined` (not `edit`) for this toggle.
+      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(DatePickerDialog),
+          matching: find.byType(TextField),
+        ),
+        '07/01/2026',
+      );
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Apply'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('In range'), findsOneWidget);
+      expect(find.text('Too early'), findsNothing);
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets(
+      'tag filter (OR mode) narrows the list and cards show tag chips',
+      (tester) async {
+        await _seedTag(db, id: 'legs', name: 'Legs');
+        await _seedTag(db, id: 'push', name: 'Push');
+        await _insertCompletedWorkout(db, id: 'w1', date: '2026-07-01', name: 'Leg day');
+        await _linkTag(db, workoutId: 'w1', tagId: 'legs');
+        await _insertCompletedWorkout(db, id: 'w2', date: '2026-07-02', name: 'Rest day');
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+
+        expect(find.widgetWithText(Chip, 'Legs'), findsOneWidget);
+
+        await tester.tap(find.byIcon(Icons.tune));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilterChip, 'Legs'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Apply'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Leg day'), findsOneWidget);
+        expect(find.text('Rest day'), findsNothing);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets('"Reset" in the filter sheet clears every criterion', (
+      tester,
+    ) async {
+      await db
+          .into(db.workouts)
+          .insert(
+            WorkoutsCompanion.insert(
+              id: 'draft1',
+              date: '2026-07-20',
+              name: const Value('Unfinished'),
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.tune));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Draft'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Apply'));
+      await tester.pumpAndSettle();
+      expect(find.text('Unfinished'), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.tune));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Reset'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Apply'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Unfinished'), findsNothing);
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets(
+      'tag chips and the filter\'s tags section are hidden when showTags '
+      'is off (S-17)',
+      (tester) async {
+        await db
+            .into(db.appSettingsTable)
+            .insert(
+              AppSettingsTableCompanion.insert(
+                id: 'singleton',
+                showTags: const Value(false),
+                updatedAt: '2026-07-19T00:00:00Z',
+              ),
+            );
+        await _seedTag(db, id: 'legs', name: 'Legs');
+        await _insertCompletedWorkout(db, id: 'w1', date: '2026-07-01', name: 'Leg day');
+        await _linkTag(db, workoutId: 'w1', tagId: 'legs');
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+
+        expect(find.widgetWithText(Chip, 'Legs'), findsNothing);
+
+        await tester.tap(find.byIcon(Icons.tune));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Tags'), findsNothing);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+  });
 }

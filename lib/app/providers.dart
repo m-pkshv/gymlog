@@ -18,6 +18,7 @@ import '../domain/models/exercise.dart';
 import '../domain/models/exercise_catalog_filter.dart';
 import '../domain/models/workout_details.dart';
 import '../domain/models/workout_history_entry.dart';
+import '../domain/models/workout_history_filter.dart';
 import '../domain/models/workout_tag.dart';
 import '../domain/repositories/app_settings_repository.dart';
 import '../domain/repositories/exercise_repository.dart';
@@ -76,9 +77,15 @@ final exercisesListProvider = StreamProvider.family<
   return ref.watch(exerciseRepositoryProvider).watchAll(filter: filter);
 });
 
-/// The history list (S-02). Stage 1 has no filters/calendar view yet.
-final historyListProvider = StreamProvider<List<WorkoutHistoryEntry>>((ref) {
-  return ref.watch(workoutRepositoryProvider).watchHistory();
+/// The history list (S-02), keyed by the active filters
+/// (`emptyWorkoutHistoryFilter` for "the Stage 1 default" — completed only,
+/// no other criteria — e.g. the copy-source picker, which always wants
+/// exactly that regardless of History's own filter state).
+final historyListProvider = StreamProvider.family<
+  List<WorkoutHistoryEntry>,
+  WorkoutHistoryFilter
+>((ref, filter) {
+  return ref.watch(workoutRepositoryProvider).watchHistory(filter: filter);
 });
 
 /// All non-deleted workout tags (S-03 tag picker).

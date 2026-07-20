@@ -4,6 +4,7 @@ import '../models/workout.dart';
 import '../models/workout_details.dart';
 import '../models/workout_exercise.dart';
 import '../models/workout_history_entry.dart';
+import '../models/workout_history_filter.dart';
 
 /// Storage contract for the workout aggregate — `Workout` +
 /// `WorkoutExercise` + `ExerciseSet` (06_DATA_MODEL.md, sections 6.4, 6.6,
@@ -17,10 +18,15 @@ abstract class WorkoutRepository {
 
   Future<WorkoutDetails?> getDetails(String workoutId);
 
-  /// Completed, non-deleted workouts with their exercise count, most
-  /// recent date first (S-02, Stage 1 scope — no filters/pagination yet,
-  /// those arrive in Stage 3).
-  Stream<List<WorkoutHistoryEntry>> watchHistory();
+  /// Non-deleted workouts matching [filter], with their exercise count and
+  /// tags, most recent date first (S-02). [WorkoutHistoryFilter.statuses]
+  /// empty defaults to `completed` only (Stage 1 behavior, owner-confirmed
+  /// 2026-07-21 when Stage 3 added the status multi-select); an explicit
+  /// selection replaces that default rather than adding to it. Tags filter
+  /// in OR mode (02_DEVELOPMENT_PLAN.md Stage 3 acceptance criteria).
+  Stream<List<WorkoutHistoryEntry>> watchHistory({
+    WorkoutHistoryFilter filter = emptyWorkoutHistoryFilter,
+  });
 
   Future<Workout> createDraft({required DateTime date});
 

@@ -522,5 +522,37 @@
   "copySourcePickerEmpty": "No completed workouts to copy from yet",
   "@copySourcePickerEmpty": {
     "description": "Empty state on the copy-source picker screen (Stage 3) when there are no completed workouts."
+  },
+  "filterWorkoutsTooltip": "Filters",
+  "@filterWorkoutsTooltip": {
+    "description": "AppBar action tooltip on History (S-02, Stage 3) that opens the filter bottom sheet."
+  },
+  "searchHistoryHint": "Search by name",
+  "@searchHistoryHint": {
+    "description": "Hint text of History's persistent search field (S-02, Stage 3)."
+  },
+  "filterDateFromLabel": "From",
+  "@filterDateFromLabel": {
+    "description": "Label for the range-start date picker in History's filter sheet (S-02, Stage 3)."
+  },
+  "filterDateToLabel": "To",
+  "@filterDateToLabel": {
+    "description": "Label for the range-end date picker in History's filter sheet (S-02, Stage 3)."
+  },
+  "filterAnyDate": "Any date",
+  "@filterAnyDate": {
+    "description": "Shown instead of a date when a History filter date-range bound isn't set."
+  },
+  "filterStatusesLabel": "Statuses",
+  "@filterStatusesLabel": {
+    "description": "Section label above the status multi-select chips in History's filter sheet (S-02, Stage 3)."
+  },
+  "filterTagsLabel": "Tags",
+  "@filterTagsLabel": {
+    "description": "Section label above the tag multi-select chips in History's filter sheet (S-02, Stage 3); the whole section is hidden when AppSettings.showTags is off."
+  },
+  "historySearchEmptyTitle": "No matches found",
+  "@historySearchEmptyTitle": {
+    "description": "Empty state title on History (S-02, Stage 3) when a search/filter is active but matches nothing — distinct from historyEmptyTitle (genuinely no workouts yet)."
   }
 }

@@ -474,4 +474,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get copySourcePickerEmpty => 'No completed workouts to copy from yet';
+
+  @override
+  String get filterWorkoutsTooltip => 'Filters';
+
+  @override
+  String get searchHistoryHint => 'Search by name';
+
+  @override
+  String get filterDateFromLabel => 'From';
+
+  @override
+  String get filterDateToLabel => 'To';
+
+  @override
+  String get filterAnyDate => 'Any date';
+
+  @override
+  String get filterStatusesLabel => 'Statuses';
+
+  @override
+  String get filterTagsLabel => 'Tags';
+
+  @override
+  String get historySearchEmptyTitle => 'No matches found';
 }

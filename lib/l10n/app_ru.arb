@@ -150,5 +150,13 @@
   "newWorkoutFromTemplateAction": "Из шаблона",
   "comingSoonLabel": "Скоро",
   "copySourcePickerTitle": "Копировать из…",
-  "copySourcePickerEmpty": "Пока нет завершённых тренировок для копирования"
+  "copySourcePickerEmpty": "Пока нет завершённых тренировок для копирования",
+  "filterWorkoutsTooltip": "Фильтры",
+  "searchHistoryHint": "Поиск по названию",
+  "filterDateFromLabel": "С",
+  "filterDateToLabel": "По",
+  "filterAnyDate": "Любая дата",
+  "filterStatusesLabel": "Статусы",
+  "filterTagsLabel": "Теги",
+  "historySearchEmptyTitle": "Ничего не найдено"
 }

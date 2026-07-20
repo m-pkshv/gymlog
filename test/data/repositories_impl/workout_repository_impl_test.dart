@@ -348,4 +348,171 @@ void main() {
       );
     });
   });
+
+  group('watchHistory filters (Stage 3, S-02)', () {
+    test(
+      'an empty statuses filter defaults to completed only (owner-confirmed '
+      '2026-07-21)',
+      () async {
+        final draft = await workouts.createDraft(date: DateTime(2026, 7, 1));
+        final completed = await workouts.createDraft(
+          date: DateTime(2026, 7, 2),
+        );
+        await workouts.updateWorkout(
+          completed.copyWith(status: WorkoutStatus.completed),
+        );
+
+        final history = await workouts.watchHistory().first;
+
+        expect(history.map((e) => e.workout.id), [completed.id]);
+        expect(history.any((e) => e.workout.id == draft.id), isFalse);
+      },
+    );
+
+    test(
+      'an explicit statuses selection replaces the default, not widens it',
+      () async {
+        final draft = await workouts.createDraft(date: DateTime(2026, 7, 1));
+        final completed = await workouts.createDraft(
+          date: DateTime(2026, 7, 2),
+        );
+        await workouts.updateWorkout(
+          completed.copyWith(status: WorkoutStatus.completed),
+        );
+
+        final history = await workouts
+            .watchHistory(
+              filter: (
+                query: '',
+                dateFrom: null,
+                dateTo: null,
+                statuses: {WorkoutStatus.draft},
+                tagIds: <String>{},
+              ),
+            )
+            .first;
+
+        expect(history.map((e) => e.workout.id), [draft.id]);
+        expect(history.any((e) => e.workout.id == completed.id), isFalse);
+      },
+    );
+
+    test('date range narrows to workouts within [dateFrom, dateTo]', () async {
+      final before = await workouts.createDraft(date: DateTime(2026, 6, 30));
+      final inRange = await workouts.createDraft(date: DateTime(2026, 7, 10));
+      final after = await workouts.createDraft(date: DateTime(2026, 7, 25));
+      for (final workout in [before, inRange, after]) {
+        await workouts.updateWorkout(
+          workout.copyWith(status: WorkoutStatus.completed),
+        );
+      }
+
+      final history = await workouts
+          .watchHistory(
+            filter: (
+              query: '',
+              dateFrom: DateTime(2026, 7, 1),
+              dateTo: DateTime(2026, 7, 20),
+              statuses: <WorkoutStatus>{},
+              tagIds: <String>{},
+            ),
+          )
+          .first;
+
+      expect(history.map((e) => e.workout.id), [inRange.id]);
+    });
+
+    test(
+      'name search matches case-insensitively, including Cyrillic '
+      '(ASSUMPTION(dart-side-text-search))',
+      () async {
+        final legDay = await workouts.createDraft(date: DateTime(2026, 7, 1));
+        await workouts.updateWorkout(
+          legDay.copyWith(name: 'Ножки', status: WorkoutStatus.completed),
+        );
+        final pushDay = await workouts.createDraft(date: DateTime(2026, 7, 2));
+        await workouts.updateWorkout(
+          pushDay.copyWith(name: 'Грудь', status: WorkoutStatus.completed),
+        );
+
+        final history = await workouts
+            .watchHistory(
+              filter: (
+                query: 'нож',
+                dateFrom: null,
+                dateTo: null,
+                statuses: <WorkoutStatus>{},
+                tagIds: <String>{},
+              ),
+            )
+            .first;
+
+        expect(history.map((e) => e.workout.id), [legDay.id]);
+      },
+    );
+
+    test('tag filter matches in OR mode across 2+ tags', () async {
+      final legs = await tags.create(name: 'Legs', colorHex: '#4C7BD9');
+      final push = await tags.create(name: 'Push', colorHex: '#2E9E6B');
+      final pull = await tags.create(name: 'Pull', colorHex: '#D9774C');
+
+      final legWorkout = await workouts.createDraft(date: DateTime(2026, 7, 1));
+      await workouts.setWorkoutTags(workoutId: legWorkout.id, tagIds: [legs.id]);
+      await workouts.updateWorkout(
+        legWorkout.copyWith(status: WorkoutStatus.completed),
+      );
+
+      final pushWorkout = await workouts.createDraft(
+        date: DateTime(2026, 7, 2),
+      );
+      await workouts.setWorkoutTags(
+        workoutId: pushWorkout.id,
+        tagIds: [push.id],
+      );
+      await workouts.updateWorkout(
+        pushWorkout.copyWith(status: WorkoutStatus.completed),
+      );
+
+      final pullWorkout = await workouts.createDraft(
+        date: DateTime(2026, 7, 3),
+      );
+      await workouts.setWorkoutTags(
+        workoutId: pullWorkout.id,
+        tagIds: [pull.id],
+      );
+      await workouts.updateWorkout(
+        pullWorkout.copyWith(status: WorkoutStatus.completed),
+      );
+
+      final history = await workouts
+          .watchHistory(
+            filter: (
+              query: '',
+              dateFrom: null,
+              dateTo: null,
+              statuses: <WorkoutStatus>{},
+              tagIds: {legs.id, push.id},
+            ),
+          )
+          .first;
+
+      expect(
+        history.map((e) => e.workout.id).toSet(),
+        {legWorkout.id, pushWorkout.id},
+      );
+    });
+
+    test('entries carry their assigned tags for the card chips', () async {
+      final legs = await tags.create(name: 'Legs', colorHex: '#4C7BD9');
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 1));
+      await workouts.setWorkoutTags(workoutId: workout.id, tagIds: [legs.id]);
+      await workouts.updateWorkout(
+        workout.copyWith(status: WorkoutStatus.completed),
+      );
+
+      final history = await workouts.watchHistory().first;
+
+      expect(history.single.tags.map((t) => t.id), [legs.id]);
+    });
+  });
 }

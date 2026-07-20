@@ -1003,6 +1003,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No completed workouts to copy from yet'**
   String get copySourcePickerEmpty;
+
+  /// AppBar action tooltip on History (S-02, Stage 3) that opens the filter bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filterWorkoutsTooltip;
+
+  /// Hint text of History's persistent search field (S-02, Stage 3).
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name'**
+  String get searchHistoryHint;
+
+  /// Label for the range-start date picker in History's filter sheet (S-02, Stage 3).
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get filterDateFromLabel;
+
+  /// Label for the range-end date picker in History's filter sheet (S-02, Stage 3).
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get filterDateToLabel;
+
+  /// Shown instead of a date when a History filter date-range bound isn't set.
+  ///
+  /// In en, this message translates to:
+  /// **'Any date'**
+  String get filterAnyDate;
+
+  /// Section label above the status multi-select chips in History's filter sheet (S-02, Stage 3).
+  ///
+  /// In en, this message translates to:
+  /// **'Statuses'**
+  String get filterStatusesLabel;
+
+  /// Section label above the tag multi-select chips in History's filter sheet (S-02, Stage 3); the whole section is hidden when AppSettings.showTags is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get filterTagsLabel;
+
+  /// Empty state title on History (S-02, Stage 3) when a search/filter is active but matches nothing — distinct from historyEmptyTitle (genuinely no workouts yet).
+  ///
+  /// In en, this message translates to:
+  /// **'No matches found'**
+  String get historySearchEmptyTitle;
 }
 
 class _AppLocalizationsDelegate

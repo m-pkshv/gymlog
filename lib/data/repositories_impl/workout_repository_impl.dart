@@ -8,6 +8,7 @@ import '../../domain/models/workout.dart';
 import '../../domain/models/workout_details.dart';
 import '../../domain/models/workout_exercise.dart';
 import '../../domain/models/workout_history_entry.dart';
+import '../../domain/models/workout_history_filter.dart';
 import '../../domain/models/workout_tag.dart';
 import '../../domain/repositories/workout_repository.dart';
 import '../database.dart' as drift;
@@ -105,24 +106,48 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
   }
 
   Future<List<WorkoutTag>> _tagsForWorkout(String workoutId) async {
-    final query = _db.select(_db.workoutTags).join([
+    final byWorkout = await _tagsByWorkouts([workoutId]);
+    return byWorkout[workoutId] ?? const [];
+  }
+
+  /// Batched version of [_tagsForWorkout] — one query for [watchHistory]'s
+  /// whole result page instead of one query per row.
+  Future<Map<String, List<WorkoutTag>>> _tagsByWorkouts(
+    List<String> workoutIds,
+  ) async {
+    if (workoutIds.isEmpty) return const {};
+    final query = _db.select(_db.workoutTagLinks).join([
       innerJoin(
-        _db.workoutTagLinks,
-        _db.workoutTagLinks.tagId.equalsExp(_db.workoutTags.id),
+        _db.workoutTags,
+        _db.workoutTags.id.equalsExp(_db.workoutTagLinks.tagId),
       ),
     ])..where(
-      _db.workoutTagLinks.workoutId.equals(workoutId) &
+      _db.workoutTagLinks.workoutId.isIn(workoutIds) &
           _db.workoutTags.isDeleted.equals(false),
     );
     final rows = await query.get();
-    return rows.map((row) => row.readTable(_db.workoutTags).toDomain()).toList();
+    final result = <String, List<WorkoutTag>>{};
+    for (final row in rows) {
+      final workoutId = row.readTable(_db.workoutTagLinks).workoutId;
+      final tag = row.readTable(_db.workoutTags).toDomain();
+      result.putIfAbsent(workoutId, () => []).add(tag);
+    }
+    return result;
   }
 
   @override
-  Stream<List<WorkoutHistoryEntry>> watchHistory() {
+  Stream<List<WorkoutHistoryEntry>> watchHistory({
+    WorkoutHistoryFilter filter = emptyWorkoutHistoryFilter,
+  }) {
     // `exerciseCount` per workout is a SQL aggregate (TS 11.6: aggregate in
     // the query, not by fetching every WorkoutExercise into Dart).
     final exerciseCount = _db.workoutExercises.id.count();
+    // Empty statuses defaults to "completed only" (Stage 1 behavior,
+    // owner-confirmed 2026-07-21) rather than "any status".
+    final statuses = filter.statuses.isEmpty
+        ? const {WorkoutStatus.completed}
+        : filter.statuses;
+
     final query =
         _db.select(_db.workouts).join([
             leftOuterJoin(
@@ -133,21 +158,80 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
           ])
           ..addColumns([exerciseCount])
           ..where(
-            _db.workouts.status.equals(WorkoutStatus.completed.name) &
+            _db.workouts.status.isIn(statuses.map((s) => s.name)) &
                 _db.workouts.isDeleted.equals(false),
           )
           ..groupBy([_db.workouts.id])
           ..orderBy([OrderingTerm.desc(_db.workouts.date)]);
+    if (filter.dateFrom != null) {
+      query.where(
+        _db.workouts.date.isBiggerOrEqualValue(
+          dateOnlyString(filter.dateFrom!),
+        ),
+      );
+    }
+    if (filter.dateTo != null) {
+      query.where(
+        _db.workouts.date.isSmallerOrEqualValue(
+          dateOnlyString(filter.dateTo!),
+        ),
+      );
+    }
 
-    return query.watch().map(
-      (rows) => rows.map((row) {
-        final workout = row.readTable(_db.workouts);
-        return WorkoutHistoryEntry(
-          workout: workout.toDomain(),
-          exerciseCount: row.read(exerciseCount) ?? 0,
-        );
-      }).toList(),
-    );
+    return query.watch().asyncMap((rows) async {
+      if (rows.isEmpty) return const <WorkoutHistoryEntry>[];
+
+      var workouts = rows
+          .map((row) => row.readTable(_db.workouts).toDomain())
+          .toList();
+      final exerciseCountByWorkout = {
+        for (final row in rows)
+          row.readTable(_db.workouts).id: row.read(exerciseCount) ?? 0,
+      };
+
+      final tagsByWorkout = await _tagsByWorkouts(
+        workouts.map((w) => w.id).toList(),
+      );
+
+      // Multi-tag filter, OR mode (02_DEVELOPMENT_PLAN.md Stage 3
+      // acceptance criteria) — done in Dart against the already
+      // status/date-narrowed set rather than a 3-way SQL join, which would
+      // otherwise multiply/duplicate the exerciseCount aggregate rows.
+      if (filter.tagIds.isNotEmpty) {
+        workouts = workouts
+            .where(
+              (w) => (tagsByWorkout[w.id] ?? const []).any(
+                (tag) => filter.tagIds.contains(tag.id),
+              ),
+            )
+            .toList();
+      }
+
+      // Name search: Dart-side, same reasoning as the exercise catalog's
+      // search (ASSUMPTION(dart-side-text-search), Stage 2) — sqlite3's
+      // `LIKE` only case-folds ASCII, so a Cyrillic query wouldn't match
+      // correctly via SQL.
+      final normalizedQuery = filter.query.trim().toLowerCase();
+      if (normalizedQuery.isNotEmpty) {
+        workouts = workouts
+            .where(
+              (w) =>
+                  w.name != null &&
+                  w.name!.toLowerCase().contains(normalizedQuery),
+            )
+            .toList();
+      }
+
+      return workouts
+          .map(
+            (w) => WorkoutHistoryEntry(
+              workout: w,
+              exerciseCount: exerciseCountByWorkout[w.id] ?? 0,
+              tags: tagsByWorkout[w.id] ?? const [],
+            ),
+          )
+          .toList();
+    });
   }
 
   @override

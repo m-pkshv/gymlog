@@ -4,29 +4,103 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../core/date_format.dart';
+import '../../domain/enums.dart';
 import '../../domain/models/workout.dart';
 import '../../domain/models/workout_history_entry.dart';
+import '../../domain/models/workout_history_filter.dart';
+import '../../domain/models/workout_tag.dart';
 import '../../l10n/app_localizations.dart';
 import '../workout_editor/status_labels.dart';
+import '../workout_editor/widgets/workout_tag_chip.dart';
 import 'copy_workout_flow.dart';
 
 enum _HistoryCardAction { copy }
 
 enum _NewWorkoutChoice { scratch, copy }
 
-/// S-02 "История", simplified for Stage 1: a plain list of completed
-/// workouts, no filters/calendar/pagination yet (02_DEVELOPMENT_PLAN.md —
-/// those arrive later in Stage 3). Tapping a card opens the editor (S-03).
-/// Stage 3 added the per-card "⋮" menu's "Копировать" action (TS 8 section
-/// 8) — "перенести"/"удалить" from the same S-02 menu are separate,
+/// S-02 "История": search by name + date range/statuses/tags filters (all
+/// combinable, 04_UI_UX_SPEC.md section 5; Stage 3). Tapping a card opens
+/// the editor (S-03); the per-card "⋮" menu's "Копировать" action (TS 8
+/// section 8) — "перенести"/"удалить" from the same S-02 menu are separate,
 /// not-yet-done Stage 3 items (move already exists inside the editor;
-/// delete needs the still-pending Undo-delete work) — and turned the FAB
-/// into the "с нуля/из шаблона/копией" creation menu (02_DEVELOPMENT_PLAN.md,
-/// Stage 3 функциональность).
-class HistoryScreen extends ConsumerWidget {
+/// delete needs the still-pending Undo-delete work); the FAB opens the
+/// "с нуля/из шаблона/копией" creation menu.
+class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
 
-  Future<void> _openNewWorkoutMenu(BuildContext context, WidgetRef ref) async {
+  @override
+  ConsumerState<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends ConsumerState<HistoryScreen> {
+  final _searchController = TextEditingController();
+  DateTime? _dateFrom;
+  DateTime? _dateTo;
+  Set<WorkoutStatus> _statuses = {};
+  Set<String> _tagIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  WorkoutHistoryFilter get _filter => (
+    query: _searchController.text.trim(),
+    dateFrom: _dateFrom,
+    dateTo: _dateTo,
+    statuses: _statuses,
+    tagIds: _tagIds,
+  );
+
+  bool get _hasActiveFilters =>
+      _dateFrom != null ||
+      _dateTo != null ||
+      _statuses.isNotEmpty ||
+      _tagIds.isNotEmpty;
+
+  bool get _hasActiveSearchOrFilters =>
+      _hasActiveFilters || _searchController.text.trim().isNotEmpty;
+
+  Future<void> _openFilters() async {
+    final result = await showModalBottomSheet<_HistoryFiltersResult>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) => _HistoryFilterSheet(
+        dateFrom: _dateFrom,
+        dateTo: _dateTo,
+        statuses: _statuses,
+        tagIds: _tagIds,
+      ),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _dateFrom = result.dateFrom;
+        _dateTo = result.dateTo;
+        _statuses = result.statuses;
+        _tagIds = result.tagIds;
+      });
+    }
+  }
+
+  void _resetAll() {
+    setState(() {
+      _searchController.clear();
+      _dateFrom = null;
+      _dateTo = null;
+      _statuses = {};
+      _tagIds = {};
+    });
+  }
+
+  Future<void> _openNewWorkoutMenu() async {
     final l10n = AppLocalizations.of(context)!;
     final choice = await showModalBottomSheet<_NewWorkoutChoice>(
       context: context,
@@ -45,7 +119,8 @@ class HistoryScreen extends ConsumerWidget {
             ListTile(
               leading: const Icon(Icons.copy_outlined),
               title: Text(l10n.newWorkoutFromCopyAction),
-              onTap: () => Navigator.of(sheetContext).pop(_NewWorkoutChoice.copy),
+              onTap: () =>
+                  Navigator.of(sheetContext).pop(_NewWorkoutChoice.copy),
             ),
             ListTile(
               enabled: false,
@@ -57,47 +132,80 @@ class HistoryScreen extends ConsumerWidget {
         ),
       ),
     );
-    if (choice == null || !context.mounted) return;
+    if (choice == null || !mounted) return;
 
     switch (choice) {
       case _NewWorkoutChoice.scratch:
         final workout = await ref
             .read(workoutRepositoryProvider)
             .createDraft(date: DateTime.now());
-        if (context.mounted) {
-          context.push('/history/workout/${workout.id}');
-        }
+        if (mounted) context.push('/history/workout/${workout.id}');
       case _NewWorkoutChoice.copy:
         context.push('/history/copy-source');
     }
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final historyAsync = ref.watch(historyListProvider);
+    final historyAsync = ref.watch(historyListProvider(_filter));
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.tabHistory)),
-      body: historyAsync.when(
-        data: (entries) {
-          if (entries.isEmpty) {
-            return _EmptyState(l10n: l10n);
-          }
-          return ListView.builder(
-            itemCount: entries.length,
-            itemBuilder: (context, index) => _WorkoutHistoryTile(
-              entry: entries[index],
-              onCopy: (source) => copyWorkoutFlow(context, ref, source),
+      appBar: AppBar(
+        title: Text(l10n.tabHistory),
+        actions: [
+          IconButton(
+            tooltip: l10n.filterWorkoutsTooltip,
+            onPressed: _openFilters,
+            icon: _hasActiveFilters
+                ? const Badge(child: Icon(Icons.tune))
+                : const Icon(Icons.tune),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: l10n.searchHistoryHint,
+                prefixIcon: const Icon(Icons.search),
+                isDense: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) =>
-            Center(child: Text(l10n.historyLoadError)),
+          ),
+          Expanded(
+            child: historyAsync.when(
+              data: (entries) {
+                if (entries.isEmpty) {
+                  return _EmptyState(
+                    l10n: l10n,
+                    isFiltered: _hasActiveSearchOrFilters,
+                    onReset: _resetAll,
+                  );
+                }
+                return ListView.builder(
+                  itemCount: entries.length,
+                  itemBuilder: (context, index) => _WorkoutHistoryTile(
+                    entry: entries[index],
+                    onCopy: (source) => copyWorkoutFlow(context, ref, source),
+                  ),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stackTrace) =>
+                  Center(child: Text(l10n.historyLoadError)),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _openNewWorkoutMenu(context, ref),
+        onPressed: _openNewWorkoutMenu,
         tooltip: l10n.newWorkoutAction,
         child: const Icon(Icons.add),
       ),
@@ -105,25 +213,42 @@ class HistoryScreen extends ConsumerWidget {
   }
 }
 
-class _WorkoutHistoryTile extends StatelessWidget {
+class _WorkoutHistoryTile extends ConsumerWidget {
   const _WorkoutHistoryTile({required this.entry, required this.onCopy});
 
   final WorkoutHistoryEntry entry;
   final void Function(Workout source) onCopy;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final workout = entry.workout;
     final name = workout.name ?? '${l10n.workoutDefaultNamePrefix} ${formatShortDate(workout.date)}';
     final durationSec = workout.actualDurationSec;
+    final showTags = ref.watch(appSettingsProvider).value?.showTags ?? true;
 
     return ListTile(
       title: Text(name),
-      subtitle: Text(
-        '${formatShortDate(workout.date)} · '
-        '${l10n.workoutExerciseCount(entry.exerciseCount)}'
-        '${durationSec != null ? ' · ${l10n.workoutDurationMinutes(durationSec ~/ 60)}' : ''}',
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${formatShortDate(workout.date)} · '
+            '${l10n.workoutExerciseCount(entry.exerciseCount)}'
+            '${durationSec != null ? ' · ${l10n.workoutDurationMinutes(durationSec ~/ 60)}' : ''}',
+          ),
+          if (showTags && entry.tags.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Wrap(
+                spacing: 4,
+                runSpacing: 4,
+                children: [
+                  for (final tag in entry.tags) WorkoutTagChip(tag: tag),
+                ],
+              ),
+            ),
+        ],
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -151,9 +276,15 @@ class _WorkoutHistoryTile extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.l10n});
+  const _EmptyState({
+    required this.l10n,
+    required this.isFiltered,
+    required this.onReset,
+  });
 
   final AppLocalizations l10n;
+  final bool isFiltered;
+  final VoidCallback onReset;
 
   @override
   Widget build(BuildContext context) {
@@ -170,11 +301,257 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              l10n.historyEmptyTitle,
+              isFiltered ? l10n.historySearchEmptyTitle : l10n.historyEmptyTitle,
               style: Theme.of(context).textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
+            if (isFiltered) ...[
+              const SizedBox(height: 16),
+              OutlinedButton(
+                onPressed: onReset,
+                child: Text(l10n.resetFiltersAction),
+              ),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HistoryFiltersResult {
+  const _HistoryFiltersResult({
+    required this.dateFrom,
+    required this.dateTo,
+    required this.statuses,
+    required this.tagIds,
+  });
+
+  final DateTime? dateFrom;
+  final DateTime? dateTo;
+  final Set<WorkoutStatus> statuses;
+  final Set<String> tagIds;
+}
+
+/// History's filter bottom sheet (04_UI_UX_SPEC.md, section 5). Edits a
+/// local copy and only reports back via `Navigator.pop` on
+/// "Сбросить"/"Применить" — same "apply, not live" pattern as the exercise
+/// catalog's filter sheet (Stage 2, `ASSUMPTION(sheet-apply-not-live)`).
+/// The tags section is hidden entirely when `AppSettings.showTags` is off
+/// (S-17: "выключение скрывает чипы и фильтр тегов").
+class _HistoryFilterSheet extends ConsumerStatefulWidget {
+  const _HistoryFilterSheet({
+    required this.dateFrom,
+    required this.dateTo,
+    required this.statuses,
+    required this.tagIds,
+  });
+
+  final DateTime? dateFrom;
+  final DateTime? dateTo;
+  final Set<WorkoutStatus> statuses;
+  final Set<String> tagIds;
+
+  @override
+  ConsumerState<_HistoryFilterSheet> createState() =>
+      _HistoryFilterSheetState();
+}
+
+class _HistoryFilterSheetState extends ConsumerState<_HistoryFilterSheet> {
+  DateTime? _dateFrom;
+  DateTime? _dateTo;
+  late Set<WorkoutStatus> _statuses;
+  late Set<String> _tagIds;
+
+  @override
+  void initState() {
+    super.initState();
+    _dateFrom = widget.dateFrom;
+    _dateTo = widget.dateTo;
+    _statuses = Set.of(widget.statuses);
+    _tagIds = Set.of(widget.tagIds);
+  }
+
+  void _apply() {
+    Navigator.of(context).pop(
+      _HistoryFiltersResult(
+        dateFrom: _dateFrom,
+        dateTo: _dateTo,
+        statuses: _statuses,
+        tagIds: _tagIds,
+      ),
+    );
+  }
+
+  void _reset() {
+    setState(() {
+      _dateFrom = null;
+      _dateTo = null;
+      _statuses = {};
+      _tagIds = {};
+    });
+  }
+
+  Future<void> _pickDateFrom() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dateFrom ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) setState(() => _dateFrom = picked);
+  }
+
+  Future<void> _pickDateTo() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dateTo ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) setState(() => _dateTo = picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final showTags = ref.watch(appSettingsProvider).value?.showTags ?? true;
+    final tagsAsync = ref.watch(workoutTagsListProvider);
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.filtersTitle,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.filterDateFromLabel),
+                      subtitle: Text(
+                        _dateFrom != null
+                            ? formatShortDate(_dateFrom!)
+                            : l10n.filterAnyDate,
+                      ),
+                      onTap: _pickDateFrom,
+                      trailing: _dateFrom != null
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () =>
+                                  setState(() => _dateFrom = null),
+                            )
+                          : null,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.filterDateToLabel),
+                      subtitle: Text(
+                        _dateTo != null
+                            ? formatShortDate(_dateTo!)
+                            : l10n.filterAnyDate,
+                      ),
+                      onTap: _pickDateTo,
+                      trailing: _dateTo != null
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () => setState(() => _dateTo = null),
+                            )
+                          : null,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.filterStatusesLabel,
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final status in WorkoutStatus.values)
+                    FilterChip(
+                      label: Text(workoutStatusLabel(l10n, status)),
+                      selected: _statuses.contains(status),
+                      onSelected: (selected) => setState(() {
+                        if (selected) {
+                          _statuses.add(status);
+                        } else {
+                          _statuses.remove(status);
+                        }
+                      }),
+                    ),
+                ],
+              ),
+              if (showTags) ...[
+                const SizedBox(height: 16),
+                Text(
+                  l10n.filterTagsLabel,
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+                const SizedBox(height: 8),
+                tagsAsync.when(
+                  data: (tags) => tags.isEmpty
+                      ? Text(l10n.workoutTagsEmpty)
+                      : Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final WorkoutTag tag in tags)
+                              FilterChip(
+                                label: Text(tag.name),
+                                selected: _tagIds.contains(tag.id),
+                                onSelected: (selected) => setState(() {
+                                  if (selected) {
+                                    _tagIds.add(tag.id);
+                                  } else {
+                                    _tagIds.remove(tag.id);
+                                  }
+                                }),
+                              ),
+                          ],
+                        ),
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (error, stackTrace) => Text(l10n.workoutTagsLoadError),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _reset,
+                      child: Text(l10n.filterResetAction),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: _apply,
+                      child: Text(l10n.filterApplyAction),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../core/date_format.dart';
+import '../../domain/models/workout_history_filter.dart';
 import '../../l10n/app_localizations.dart';
 import 'copy_workout_flow.dart';
 
@@ -16,7 +17,12 @@ class CopySourcePickerScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final historyAsync = ref.watch(historyListProvider);
+    // Always "completed only", regardless of History's own filter state --
+    // copying a workout that hasn't actually been performed doesn't make
+    // sense (TS 8 section 8).
+    final historyAsync = ref.watch(
+      historyListProvider(emptyWorkoutHistoryFilter),
+    );
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.copySourcePickerTitle)),

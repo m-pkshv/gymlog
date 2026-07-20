@@ -479,4 +479,28 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get copySourcePickerEmpty =>
       'Пока нет завершённых тренировок для копирования';
+
+  @override
+  String get filterWorkoutsTooltip => 'Фильтры';
+
+  @override
+  String get searchHistoryHint => 'Поиск по названию';
+
+  @override
+  String get filterDateFromLabel => 'С';
+
+  @override
+  String get filterDateToLabel => 'По';
+
+  @override
+  String get filterAnyDate => 'Любая дата';
+
+  @override
+  String get filterStatusesLabel => 'Статусы';
+
+  @override
+  String get filterTagsLabel => 'Теги';
+
+  @override
+  String get historySearchEmptyTitle => 'Ничего не найдено';
 }
