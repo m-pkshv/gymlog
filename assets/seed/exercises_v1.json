@@ -1,80 +1,149 @@
 {
-  "seedVersion": 1,
+  "seedVersion": 2,
   "exercises": [
     {
-      "id": "squat",
-      "name": { "ru": "Приседания со штангой", "en": "Barbell Squat" },
+      "id": "barbell_bench_press",
+      "name": { "ru": "Жим штанги лёжа", "en": "Barbell Bench Press" },
       "description": {
-        "ru": "Базовое упражнение для мышц ног со штангой на спине.",
-        "en": "Compound lower-body exercise with a barbell on the back."
+        "ru": "Базовое многосуставное упражнение для развития грудных мышц. Выполняется лёжа на горизонтальной скамье.",
+        "en": "A compound exercise for developing the chest muscles, performed lying on a flat bench."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": ["triceps", "shoulders"],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "incline_barbell_bench_press",
+      "name": {
+        "ru": "Жим штанги лёжа на наклонной скамье",
+        "en": "Incline Barbell Bench Press"
+      },
+      "description": {
+        "ru": "Вариант жима штанги с акцентом на верхнюю часть грудных мышц. Выполняется на скамье с положительным наклоном.",
+        "en": "A barbell press variation that emphasizes the upper chest, performed on an incline bench."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": ["shoulders", "triceps"],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "incline_dumbbell_bench_press",
+      "name": {
+        "ru": "Жим гантелей лёжа на наклонной скамье",
+        "en": "Incline Dumbbell Bench Press"
+      },
+      "description": {
+        "ru": "Упражнение для верхней части груди с увеличенной амплитудой движения. Каждая рука работает независимо.",
+        "en": "An upper-chest exercise with an increased range of motion, allowing each arm to work independently."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": ["shoulders", "triceps"],
+      "equipment": "dumbbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "barbell_back_squat",
+      "name": { "ru": "Присед со штангой", "en": "Barbell Back Squat" },
+      "description": {
+        "ru": "Базовое многосуставное упражнение для развития мышц ног и ягодиц. Штанга располагается на верхней части спины.",
+        "en": "A compound exercise for developing the legs and glutes, with the barbell positioned on the upper back."
       },
       "youtubeUrl": null,
       "image": null,
       "type": "strength",
       "primaryMuscle": "quads",
-      "secondaryMuscles": ["glutes", "hamstrings"],
+      "secondaryMuscles": ["glutes", "hamstrings", "abs"],
       "equipment": "barbell",
       "effortMetric": "rpe"
     },
     {
-      "id": "running",
-      "name": { "ru": "Бег", "en": "Running" },
+      "id": "hip_thrust",
+      "name": { "ru": "Ягодичный мост", "en": "Hip Thrust" },
       "description": {
-        "ru": "Кардио-нагрузка на беговой дорожке или на улице.",
-        "en": "Cardio activity on a treadmill or outdoors."
+        "ru": "Упражнение с акцентом на ягодичные мышцы. Таз поднимается за счёт разгибания в тазобедренных суставах.",
+        "en": "A glute-focused exercise performed by raising the hips through hip extension."
       },
       "youtubeUrl": null,
       "image": null,
-      "type": "cardio",
-      "primaryMuscle": "cardio_system",
-      "secondaryMuscles": [],
-      "equipment": "cardio_machine",
-      "effortMetric": "none"
+      "type": "strength",
+      "primaryMuscle": "glutes",
+      "secondaryMuscles": ["hamstrings", "quads"],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
     },
     {
-      "id": "push_up",
-      "name": { "ru": "Отжимания от пола", "en": "Push-Up" },
+      "id": "machine_leg_curl",
+      "name": { "ru": "Сгибание ног в тренажёре", "en": "Machine Leg Curl" },
       "description": {
-        "ru": "Отжимания с собственным весом для груди и трицепса.",
-        "en": "Bodyweight exercise for chest and triceps."
+        "ru": "Изолирующее упражнение для задней поверхности бедра. Выполняется сгибанием ног в коленных суставах.",
+        "en": "An isolation exercise for the hamstrings, performed by bending the knees against machine resistance."
       },
       "youtubeUrl": null,
       "image": null,
-      "type": "reps",
-      "primaryMuscle": "chest",
-      "secondaryMuscles": ["triceps", "shoulders"],
-      "equipment": "bodyweight",
-      "effortMetric": "none"
-    },
-    {
-      "id": "plank",
-      "name": { "ru": "Планка", "en": "Plank" },
-      "description": {
-        "ru": "Статическое удержание корпуса на предплечьях и носках.",
-        "en": "Static core hold on forearms and toes."
-      },
-      "youtubeUrl": null,
-      "image": null,
-      "type": "time",
-      "primaryMuscle": "abs",
-      "secondaryMuscles": [],
-      "equipment": "bodyweight",
-      "effortMetric": "none"
-    },
-    {
-      "id": "hamstring_stretch",
-      "name": { "ru": "Растяжка задней поверхности бедра", "en": "Hamstring Stretch" },
-      "description": {
-        "ru": "Растяжка задней поверхности бедра сидя или стоя.",
-        "en": "Stretch for the back of the thigh, seated or standing."
-      },
-      "youtubeUrl": null,
-      "image": null,
-      "type": "stretch",
+      "type": "strength",
       "primaryMuscle": "hamstrings",
+      "secondaryMuscles": ["calves"],
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "machine_leg_extension",
+      "name": {
+        "ru": "Разгибание ног в тренажёре",
+        "en": "Machine Leg Extension"
+      },
+      "description": {
+        "ru": "Изолирующее упражнение для квадрицепсов. Выполняется разгибанием ног в коленных суставах сидя в тренажёре.",
+        "en": "An isolation exercise for the quadriceps, performed by extending the knees while seated in a machine."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "quads",
       "secondaryMuscles": [],
-      "equipment": "bodyweight",
-      "effortMetric": "none"
+      "equipment": "machine",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "standing_barbell_overhead_press",
+      "name": { "ru": "Армейский жим", "en": "Standing Barbell Overhead Press" },
+      "description": {
+        "ru": "Базовое упражнение для плечевого пояса, выполняемое стоя. Штанга выжимается над головой без помощи ног.",
+        "en": "A compound shoulder exercise performed standing by pressing the barbell overhead without leg drive."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": ["triceps", "abs"],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
+    },
+    {
+      "id": "conventional_barbell_deadlift",
+      "name": { "ru": "Становая тяга", "en": "Conventional Barbell Deadlift" },
+      "description": {
+        "ru": "Базовое многосуставное упражнение для задней цепи и мышц всего тела. Штанга поднимается с пола за счёт разгибания ног и корпуса.",
+        "en": "A compound exercise for the posterior chain and the whole body, performed by lifting a barbell from the floor."
+      },
+      "youtubeUrl": null,
+      "image": null,
+      "type": "strength",
+      "primaryMuscle": "back",
+      "secondaryMuscles": ["glutes", "hamstrings", "quads", "forearms", "abs"],
+      "equipment": "barbell",
+      "effortMetric": "rpe"
     }
   ]
 }

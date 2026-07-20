@@ -111,12 +111,15 @@ final List<MeasurementTypesCompanion> measurementTypeSeed = [
   ),
 ];
 
-/// Inserts the built-in reference data. Called once by `SeedRunner`, inside
-/// its transaction, so this doesn't guard against being run twice itself.
+/// Inserts the built-in reference data. Called by `SeedRunner` whenever
+/// [currentSeedVersion] advances, which can be on an already-seeded
+/// install — upserts (not plain `insertAll`) so re-running never hits a
+/// primary-key conflict; this data has no owner-mutable state, so
+/// overwriting on conflict is always safe.
 Future<void> insertReferenceDataSeed(AppDatabase db) async {
   await db.batch((batch) {
-    batch.insertAll(db.muscleGroups, muscleGroupSeed);
-    batch.insertAll(db.equipments, equipmentSeed);
-    batch.insertAll(db.measurementTypes, measurementTypeSeed);
+    batch.insertAllOnConflictUpdate(db.muscleGroups, muscleGroupSeed);
+    batch.insertAllOnConflictUpdate(db.equipments, equipmentSeed);
+    batch.insertAllOnConflictUpdate(db.measurementTypes, measurementTypeSeed);
   });
 }

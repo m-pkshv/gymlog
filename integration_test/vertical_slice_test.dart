@@ -64,9 +64,9 @@ void main() {
     // Add an existing catalog exercise (seeded by SeedRunner, DM 12).
     await tester.tap(find.text('Add exercise'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Barbell Squat'));
+    await tester.tap(find.text('Barbell Back Squat'));
     await tester.pumpAndSettle();
-    expect(find.text('Barbell Squat'), findsOneWidget);
+    expect(find.text('Barbell Back Squat'), findsOneWidget);
 
     // Create a new exercise from inside the editor and confirm it's added
     // immediately (Stage 1 manual check ★, 02_DEVELOPMENT_PLAN.md).
@@ -80,7 +80,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Overhead Press'), findsOneWidget);
 
-    // Add a set to Barbell Squat, fill plan, mark done -> facts copied
+    // Add a set to Barbell Back Squat, fill plan, mark done -> facts copied
     // (DM 6.7). Fields are located by their semantic label rather than
     // TextField index -- with two plan/fact pairs per set, an index is one
     // typo away from silently writing into the wrong field.
@@ -115,7 +115,7 @@ void main() {
     // (S-03/DM 6.4.1 "close and reopen" scenario).
     await tester.tap(find.textContaining('2 exercises'));
     await tester.pumpAndSettle();
-    expect(find.text('Barbell Squat'), findsOneWidget);
+    expect(find.text('Barbell Back Squat'), findsOneWidget);
     // Plan and fact both show 80.0 kg / 5 reps -- "done" copied plan into
     // the empty fact fields (DM 6.7), and that survived the close+reopen.
     expect(find.text('80.0'), findsNWidgets(2));

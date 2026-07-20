@@ -7,7 +7,14 @@ import 'reference_data_seed.dart';
 /// Current seed content version (06_DATA_MODEL.md, section 12). Bump this
 /// when the seed data itself changes; `SeedRunner` re-applies the seed for
 /// rows the app hasn't already stored a matching version for.
-const int currentSeedVersion = 1;
+///
+/// v2 (2026-07-20): replaced the 5 one-per-type placeholder exercises
+/// (`ASSUMPTION(placeholder-exercise-content)`, Stage 0) with the first 9
+/// real exercises supplied by the owner (Q-1, partial — more to come).
+/// `insertReferenceDataSeed`/`insertExerciseSeed` upsert rather than plain
+/// `insertAll` starting here, so bumping this on an already-seeded install
+/// doesn't crash on a primary-key conflict.
+const int currentSeedVersion = 2;
 
 /// Loads built-in reference data and the placeholder exercise catalog
 /// (06_DATA_MODEL.md, section 12) on first run, tracked by
