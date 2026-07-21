@@ -45,7 +45,9 @@ import '../domain/repositories/workout_template_repository.dart';
 import '../features/template_editor/controller.dart';
 import '../features/workout_editor/controller.dart';
 import '../services/active_workout_timer_service.dart';
+import '../services/body_measurement_service.dart';
 import '../services/exercise_service.dart';
+import '../services/measurement_type_service.dart';
 import '../services/notification_service.dart';
 import '../services/progression_service.dart';
 import '../services/workout_service.dart';
@@ -275,4 +277,23 @@ final bodyMeasurementsByTypeProvider = StreamProvider.family<
   return ref
       .watch(bodyMeasurementRepositoryProvider)
       .watchByType(measurementTypeId);
+});
+
+/// The single point of truth for custom measurement type name validation
+/// and DM 10 archive/delete rules.
+final measurementTypeServiceProvider = Provider<MeasurementTypeService>((
+  ref,
+) {
+  return MeasurementTypeService(ref.watch(measurementTypeRepositoryProvider));
+});
+
+/// The single point of truth for measurement value range validation (DM
+/// 6.9, by `unitKind`).
+final bodyMeasurementServiceProvider = Provider<BodyMeasurementService>((
+  ref,
+) {
+  return BodyMeasurementService(
+    ref.watch(bodyMeasurementRepositoryProvider),
+    ref.watch(measurementTypeRepositoryProvider),
+  );
 });

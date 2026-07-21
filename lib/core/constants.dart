@@ -53,6 +53,7 @@ class CommentLengthLimits {
   static const int workoutExercise = 1000;
   static const int exerciseSet = 500;
   static const int workoutTemplate = 2000;
+  static const int bodyMeasurement = 500;
 }
 
 /// Soft-delete Undo window (06_DATA_MODEL.md, section 10, D-19): how long
@@ -66,4 +67,26 @@ class WorkoutTemplateRules {
 
   static const int minNameLength = 1;
   static const int maxNameLength = 80;
+}
+
+/// `MeasurementType.nameCustom` bounds (06_DATA_MODEL.md, section 5.3),
+/// validated in `MeasurementTypeService.create`.
+class MeasurementTypeRules {
+  const MeasurementTypeRules._();
+
+  static const int minNameLength = 1;
+  static const int maxNameLength = 60;
+}
+
+/// `BodyMeasurement.valueMetric` ranges by `MeasurementType.unitKind`
+/// (06_DATA_MODEL.md, section 6.9), validated in `BodyMeasurementService`.
+class MeasurementValueRange {
+  const MeasurementValueRange._();
+
+  static const double minMassKg = 20;
+  static const double maxMassKg = 400;
+  static const double minPercent = 1;
+  static const double maxPercent = 75;
+  static const double minLengthCm = 1;
+  static const double maxLengthCm = 300;
 }
