@@ -17,6 +17,7 @@ import '../../domain/repositories/app_settings_repository.dart';
 import '../../domain/repositories/workout_repository.dart';
 import '../../services/active_workout_timer_service.dart';
 import '../../services/progression_service.dart';
+import '../../services/records_service.dart';
 import '../../services/workout_service.dart';
 import 'set_field_config.dart';
 
@@ -35,6 +36,7 @@ class WorkoutEditorController
     this._workoutRepository,
     this._workoutService,
     this._progressionService,
+    this._recordsService,
     this._activeWorkoutTimerService,
     AppSettingsRepository appSettingsRepository,
     this._logger,
@@ -64,6 +66,7 @@ class WorkoutEditorController
   final WorkoutRepository _workoutRepository;
   final WorkoutService _workoutService;
   final ProgressionService _progressionService;
+  final RecordsService _recordsService;
   final ActiveWorkoutTimerService _activeWorkoutTimerService;
   final AppLogger _logger;
   late final StreamSubscription<AppSettings> _settingsSubscription;
@@ -119,12 +122,14 @@ class WorkoutEditorController
 
   /// DM 6.10/6.11 trigger: editing a set of an *already-completed* workout
   /// changes that exercise's completed-occurrence history, so the D-7
-  /// stagnation counter needs a recompute. A no-op otherwise (the workout
-  /// isn't part of anyone's completed history yet).
+  /// stagnation counter and D-8 personal-record cache both need a
+  /// recompute. A no-op otherwise (the workout isn't part of anyone's
+  /// completed history yet).
   Future<void> _recomputeIfCompleted(String? exerciseId) async {
     if (exerciseId == null) return;
     if (_details?.workout.status != WorkoutStatus.completed) return;
     await _progressionService.recompute(exerciseId);
+    await _recordsService.recompute(exerciseId);
   }
 
   WorkoutExercise? _findWorkoutExercise(String workoutExerciseId) {

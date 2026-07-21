@@ -8,12 +8,15 @@ import 'package:gymlog/domain/models/workout_exercise.dart';
 import 'package:gymlog/domain/repositories/workout_repository.dart';
 import 'package:gymlog/services/active_workout_timer_service.dart';
 import 'package:gymlog/services/progression_service.dart';
+import 'package:gymlog/services/records_service.dart';
 import 'package:gymlog/services/workout_service.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockWorkoutRepository extends Mock implements WorkoutRepository {}
 
 class MockProgressionService extends Mock implements ProgressionService {}
+
+class MockRecordsService extends Mock implements RecordsService {}
 
 class MockActiveWorkoutTimerService extends Mock
     implements ActiveWorkoutTimerService {}
@@ -87,6 +90,7 @@ Workout _workout({
 void main() {
   late MockWorkoutRepository repository;
   late MockProgressionService progressionService;
+  late MockRecordsService recordsService;
   late MockActiveWorkoutTimerService activeWorkoutTimerService;
   late WorkoutService service;
 
@@ -97,12 +101,19 @@ void main() {
   setUp(() {
     repository = MockWorkoutRepository();
     progressionService = MockProgressionService();
+    recordsService = MockRecordsService();
     activeWorkoutTimerService = MockActiveWorkoutTimerService();
-    service = WorkoutService(repository, progressionService, activeWorkoutTimerService);
+    service = WorkoutService(
+      repository,
+      progressionService,
+      recordsService,
+      activeWorkoutTimerService,
+    );
     when(() => repository.updateWorkout(any())).thenAnswer((_) async {});
     // No workout has exercises to recompute unless a test says otherwise.
     when(() => repository.getDetails(any())).thenAnswer((_) async => null);
     when(() => progressionService.recompute(any())).thenAnswer((_) async {});
+    when(() => recordsService.recompute(any())).thenAnswer((_) async {});
     when(() => activeWorkoutTimerService.start(any())).thenAnswer((_) async {});
     when(
       () => activeWorkoutTimerService.resumeCompleted(
@@ -348,7 +359,7 @@ void main() {
     }
   });
 
-  group('progression recompute triggers (D-7, DM 6.10/6.11, TS 9.4)', () {
+  group('progression/records recompute triggers (D-7/D-8, DM 6.10/6.11, TS 9.4/9)', () {
     test('completing a workout recomputes every exercise in it', () async {
       when(
         () => repository.getDetails('w1'),
@@ -366,6 +377,8 @@ void main() {
 
       verify(() => progressionService.recompute('squat')).called(1);
       verify(() => progressionService.recompute('bench')).called(1);
+      verify(() => recordsService.recompute('squat')).called(1);
+      verify(() => recordsService.recompute('bench')).called(1);
     });
 
     test('resuming a completed workout also recomputes', () async {
@@ -387,6 +400,7 @@ void main() {
       );
 
       verify(() => progressionService.recompute('squat')).called(1);
+      verify(() => recordsService.recompute('squat')).called(1);
     });
 
     test('a transition that is neither finishing nor resuming does not '
@@ -399,6 +413,7 @@ void main() {
       );
 
       verifyNever(() => progressionService.recompute(any()));
+      verifyNever(() => recordsService.recompute(any()));
       verifyNever(() => repository.getDetails(any()));
     });
 
@@ -412,6 +427,7 @@ void main() {
       await service.delete(workout);
 
       verify(() => progressionService.recompute('squat')).called(1);
+      verify(() => recordsService.recompute('squat')).called(1);
     });
 
     test('deleting a non-completed workout does not recompute', () async {
@@ -421,6 +437,7 @@ void main() {
       await service.delete(workout);
 
       verifyNever(() => progressionService.recompute(any()));
+      verifyNever(() => recordsService.recompute(any()));
       verifyNever(() => repository.getDetails(any()));
     });
 
@@ -435,6 +452,7 @@ void main() {
       await service.restore('w1');
 
       verify(() => progressionService.recompute('squat')).called(1);
+      verify(() => recordsService.recompute('squat')).called(1);
     });
 
     test('restoring a workout that is still a draft does not recompute', () async {
@@ -450,6 +468,7 @@ void main() {
       await service.restore('w1');
 
       verifyNever(() => progressionService.recompute(any()));
+      verifyNever(() => recordsService.recompute(any()));
     });
   });
 }

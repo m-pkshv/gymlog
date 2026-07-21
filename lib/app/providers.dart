@@ -53,6 +53,7 @@ import '../services/exercise_service.dart';
 import '../services/measurement_type_service.dart';
 import '../services/notification_service.dart';
 import '../services/progression_service.dart';
+import '../services/records_service.dart';
 import '../services/workout_service.dart';
 import '../services/workout_tag_service.dart';
 import '../services/workout_template_service.dart';
@@ -127,6 +128,15 @@ final progressionServiceProvider = Provider<ProgressionService>((ref) {
   );
 });
 
+/// The D-8 personal-record cache algorithm (03_TECHNICAL_SPEC.md, section 9).
+final recordsServiceProvider = Provider<RecordsService>((ref) {
+  return RecordsService(
+    ref.watch(workoutRepositoryProvider),
+    ref.watch(exerciseRepositoryProvider),
+    ref.watch(personalRecordRepositoryProvider),
+  );
+});
+
 final activeWorkoutRepositoryProvider = Provider<ActiveWorkoutRepository>((ref) {
   return ActiveWorkoutRepositoryImpl(ref.watch(appDatabaseProvider));
 });
@@ -140,6 +150,7 @@ final workoutServiceProvider = Provider<WorkoutService>((ref) {
   return WorkoutService(
     ref.watch(workoutRepositoryProvider),
     ref.watch(progressionServiceProvider),
+    ref.watch(recordsServiceProvider),
     ref.watch(activeWorkoutTimerServiceProvider),
   );
 });
@@ -226,6 +237,7 @@ final workoutEditorControllerProvider = StateNotifierProvider.autoDispose
         ref.read(workoutRepositoryProvider),
         ref.read(workoutServiceProvider),
         ref.read(progressionServiceProvider),
+        ref.read(recordsServiceProvider),
         ref.read(activeWorkoutTimerServiceProvider),
         ref.read(appSettingsRepositoryProvider),
         ref.read(loggerProvider),

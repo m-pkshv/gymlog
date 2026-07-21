@@ -6,22 +6,27 @@ import '../domain/models/workout_details.dart';
 import '../domain/repositories/workout_repository.dart';
 import 'active_workout_timer_service.dart';
 import 'progression_service.dart';
+import 'records_service.dart';
 
 /// The single point of truth for workout status changes
 /// (03_TECHNICAL_SPEC.md, section 8; 06_DATA_MODEL.md, section 6.4.1). No
 /// other layer writes `Workout.status` directly. Also owns soft
 /// delete/restore (DM 10) and, as a side effect of any of those, recomputes
-/// the D-7 stagnation counter for every exercise the workout touches when a
-/// DM 6.10/6.11 trigger fires (completed/resumed/deleted/restored).
+/// the D-7 stagnation counter and D-8 personal-record cache for every
+/// exercise the workout touches when a DM 6.10/6.11 trigger fires
+/// (completed/resumed/deleted/restored) — both caches share the same
+/// trigger set, so they're always recomputed together.
 class WorkoutService {
   WorkoutService(
     this._workoutRepository,
     this._progressionService,
+    this._recordsService,
     this._activeWorkoutTimerService,
   );
 
   final WorkoutRepository _workoutRepository;
   final ProgressionService _progressionService;
+  final RecordsService _recordsService;
   final ActiveWorkoutTimerService _activeWorkoutTimerService;
 
   /// Allowed status transitions (DM 6.4.1). Anything not listed here is
@@ -150,7 +155,7 @@ class WorkoutService {
     await _workoutRepository.deleteWorkout(workout.id);
 
     for (final exerciseId in exerciseIds) {
-      await _progressionService.recompute(exerciseId);
+      await _recomputeCaches(exerciseId);
     }
     return Ok(workout);
   }
@@ -165,14 +170,19 @@ class WorkoutService {
       return;
     }
     for (final exerciseId in _distinctExerciseIds(details)) {
-      await _progressionService.recompute(exerciseId);
+      await _recomputeCaches(exerciseId);
     }
   }
 
   Future<void> _recomputeWorkoutExercises(String workoutId) async {
     for (final exerciseId in await _workoutExerciseIds(workoutId)) {
-      await _progressionService.recompute(exerciseId);
+      await _recomputeCaches(exerciseId);
     }
+  }
+
+  Future<void> _recomputeCaches(String exerciseId) async {
+    await _progressionService.recompute(exerciseId);
+    await _recordsService.recompute(exerciseId);
   }
 
   Future<List<String>> _workoutExerciseIds(String workoutId) async {

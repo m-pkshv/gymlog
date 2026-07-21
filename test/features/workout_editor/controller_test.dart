@@ -6,6 +6,7 @@ import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/repositories_impl/active_workout_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/exercise_repository_impl.dart';
+import 'package:gymlog/data/repositories_impl/personal_record_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/progression_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_tag_repository_impl.dart';
@@ -14,6 +15,7 @@ import 'package:gymlog/domain/repositories/app_settings_repository.dart';
 import 'package:gymlog/features/workout_editor/controller.dart';
 import 'package:gymlog/services/active_workout_timer_service.dart';
 import 'package:gymlog/services/progression_service.dart';
+import 'package:gymlog/services/records_service.dart';
 import 'package:gymlog/services/workout_service.dart';
 
 /// Controller-level tests for the autosave guarantee (03_TECHNICAL_SPEC.md,
@@ -27,6 +29,7 @@ void main() {
   late WorkoutRepositoryImpl workouts;
   late ExerciseRepositoryImpl exercises;
   late ProgressionService progressionService;
+  late RecordsService recordsService;
   late ActiveWorkoutTimerService activeWorkoutTimerService;
   late AppSettingsRepository appSettingsRepository;
   late WorkoutService service;
@@ -41,12 +44,22 @@ void main() {
       exercises,
       ProgressionRepositoryImpl(db),
     );
+    recordsService = RecordsService(
+      workouts,
+      exercises,
+      PersonalRecordRepositoryImpl(db),
+    );
     activeWorkoutTimerService = ActiveWorkoutTimerService(
       ActiveWorkoutRepositoryImpl(db),
     );
     appSettingsRepository = AppSettingsRepositoryImpl(db);
     await appSettingsRepository.ensureInitialized();
-    service = WorkoutService(workouts, progressionService, activeWorkoutTimerService);
+    service = WorkoutService(
+      workouts,
+      progressionService,
+      recordsService,
+      activeWorkoutTimerService,
+    );
     logger = AppLogger();
   });
 
@@ -77,6 +90,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        recordsService,
         activeWorkoutTimerService,
         appSettingsRepository,
         logger,
@@ -125,6 +139,7 @@ void main() {
       workouts,
       service,
       progressionService,
+      recordsService,
       activeWorkoutTimerService,
       appSettingsRepository,
       logger,
@@ -161,6 +176,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        recordsService,
         activeWorkoutTimerService,
         appSettingsRepository,
         logger,
@@ -229,6 +245,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          recordsService,
           activeWorkoutTimerService,
           appSettingsRepository,
           logger,
@@ -312,6 +329,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          recordsService,
           activeWorkoutTimerService,
           appSettingsRepository,
           logger,
@@ -345,6 +363,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        recordsService,
         activeWorkoutTimerService,
         appSettingsRepository,
         logger,
@@ -369,6 +388,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        recordsService,
         activeWorkoutTimerService,
         appSettingsRepository,
         logger,
@@ -393,6 +413,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        recordsService,
         activeWorkoutTimerService,
         appSettingsRepository,
         logger,
@@ -426,6 +447,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          recordsService,
           activeWorkoutTimerService,
           appSettingsRepository,
           logger,
@@ -450,6 +472,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        recordsService,
         activeWorkoutTimerService,
         appSettingsRepository,
         logger,
@@ -492,6 +515,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          recordsService,
           activeWorkoutTimerService,
           appSettingsRepository,
           logger,
@@ -586,6 +610,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          recordsService,
           activeWorkoutTimerService,
           appSettingsRepository,
           logger,
@@ -624,6 +649,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          recordsService,
           activeWorkoutTimerService,
           appSettingsRepository,
           logger,
@@ -664,6 +690,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        recordsService,
         activeWorkoutTimerService,
         appSettingsRepository,
         logger,
@@ -699,6 +726,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          recordsService,
           activeWorkoutTimerService,
           appSettingsRepository,
           logger,
@@ -736,6 +764,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        recordsService,
         activeWorkoutTimerService,
         appSettingsRepository,
         logger,
@@ -815,6 +844,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          recordsService,
           activeWorkoutTimerService,
           appSettingsRepository,
           logger,
@@ -857,6 +887,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        recordsService,
         activeWorkoutTimerService,
         appSettingsRepository,
         logger,
@@ -901,6 +932,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          recordsService,
           activeWorkoutTimerService,
           appSettingsRepository,
           logger,
@@ -942,6 +974,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        recordsService,
         activeWorkoutTimerService,
         appSettingsRepository,
         logger,
@@ -988,6 +1021,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          recordsService,
           activeWorkoutTimerService,
           appSettingsRepository,
           logger,
@@ -1030,6 +1064,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          recordsService,
           activeWorkoutTimerService,
           appSettingsRepository,
           logger,
