@@ -147,6 +147,80 @@ void main() {
     },
   );
 
+  testWidgets(
+    'picking a Custom date range via the range-picker\'s input mode filters '
+    'to just that range (02_DEVELOPMENT_PLAN.md Stage 7 acceptance '
+    'criterion: "пользовательский диапазон фильтрует корректно")',
+    (tester) async {
+      // Far in the past relative to "now" -- excluded by every preset
+      // (including "All" would include it, but "Month" excludes it, which
+      // is enough to prove the Custom range -- not some other preset --
+      // is what made the entry visible).
+      await BodyMeasurementRepositoryImpl(db).create(
+        measurementTypeId: 'body_weight',
+        date: DateTime(2020, 1, 18),
+        valueMetric: 80,
+      );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      final weightCard = find.ancestor(
+        of: find.text('Body weight'),
+        matching: find.byType(Card),
+      );
+      expect(
+        find.descendant(
+          of: weightCard,
+          matching: find.text('No entries in this period'),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(
+        find.descendant(
+          of: weightCard,
+          matching: find.widgetWithText(ChoiceChip, 'Custom'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // The range picker opens in calendar mode by default; switch to
+      // input mode (the M3 entry-mode toggle) to type exact dates instead
+      // of navigating a calendar grid to the year 2020.
+      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField).at(0), '01/15/2020');
+      await tester.enterText(find.byType(TextField).at(1), '01/20/2020');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      final customChip = tester.widget<ChoiceChip>(
+        find.descendant(
+          of: weightCard,
+          matching: find.widgetWithText(ChoiceChip, 'Custom'),
+        ),
+      );
+      expect(customChip.selected, isTrue);
+      expect(
+        find.descendant(
+          of: weightCard,
+          matching: find.text('No entries in this period'),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(of: weightCard, matching: find.byType(MeasurementChart)),
+        findsOneWidget,
+      );
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
   testWidgets('the Measurements card lets you pick among girth types', (
     tester,
   ) async {

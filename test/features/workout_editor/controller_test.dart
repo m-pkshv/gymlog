@@ -865,6 +865,20 @@ void main() {
         ).watchState(exercise.id).first;
         expect(state, isNotNull, reason: 'recompute should have run');
         expect(state!.stagnationCount, 0, reason: '65kg > 60kg is growth');
+
+        // Same trigger, the D-8 side (02_DEVELOPMENT_PLAN.md Stage 7 manual
+        // check ★ "изменить вес в старом подходе → рекорд обновился"):
+        // editing a completed workout's set through the controller -- the
+        // way a user actually does it, not just a service-layer status
+        // transition -- must also refresh the PersonalRecord cache.
+        final records = await PersonalRecordRepositoryImpl(
+          db,
+        ).watchForExercise(exercise.id).first;
+        final maxWeight = records.singleWhere(
+          (r) => r.recordType == RecordType.maxWeight,
+        );
+        expect(maxWeight.value, 65);
+        expect(maxWeight.workoutId, workout.id);
       },
     );
 
