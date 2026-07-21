@@ -959,4 +959,70 @@ class AppLocalizationsRu extends AppLocalizations {
   String statsWorkoutsFrequencyValue(String value) {
     return '$value / нед.';
   }
+
+  @override
+  String get statsExerciseProgressCardTitle => 'Прогресс по упражнению';
+
+  @override
+  String get statsExerciseProgressSearchAction => 'Выбрать упражнение';
+
+  @override
+  String get exerciseProgressPickerTitle => 'Выбор упражнения';
+
+  @override
+  String get exerciseProgressLoadError => 'Не удалось загрузить упражнение';
+
+  @override
+  String get recordTypeMaxWeight => 'Макс. вес';
+
+  @override
+  String get recordTypeMax1RM => 'Расчётный 1ПМ';
+
+  @override
+  String get recordTypeMaxVolumeWorkout => 'Тоннаж тренировки';
+
+  @override
+  String get recordTypeMaxDistance => 'Макс. дистанция';
+
+  @override
+  String get recordTypeBestPace => 'Лучший темп';
+
+  @override
+  String get recordTypeLongestDuration => 'Наибольшая длительность';
+
+  @override
+  String get statsEstimatedBadge => 'расчётный';
+
+  @override
+  String get statsRecordsSectionTitle => 'Рекорды';
+
+  @override
+  String get statsRecordsEmptyState => 'Пока нет рекордов';
+
+  @override
+  String get statsRepsAtWeightTableTitle => 'Повторения при весе';
+
+  @override
+  String get statsRepsAtWeightWeightColumn => 'Вес';
+
+  @override
+  String get statsRepsAtWeightRepsColumn => 'Повторения';
+
+  @override
+  String get statsRepsAtWeightDateColumn => 'Дата';
+
+  @override
+  String statsKgValue(String value) {
+    return '$value кг';
+  }
+
+  @override
+  String statsKmValue(String value) {
+    return '$value км';
+  }
+
+  @override
+  String statsPaceValue(String value) {
+    return '$value / км';
+  }
 }

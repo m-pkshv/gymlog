@@ -1897,6 +1897,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{value} / wk'**
   String statsWorkoutsFrequencyValue(String value);
+
+  /// S-09 entry point card title for S-10's per-exercise progress screen (Stage 7).
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise progress'**
+  String get statsExerciseProgressCardTitle;
+
+  /// Button on the S-09 entry card that opens the exercise search picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose exercise'**
+  String get statsExerciseProgressSearchAction;
+
+  /// AppBar title of the search picker that leads into S-10.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose exercise'**
+  String get exerciseProgressPickerTitle;
+
+  /// Error state on S-10 when the exercise itself can't be loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load exercise'**
+  String get exerciseProgressLoadError;
+
+  /// S-10 records list row label for RecordType.maxWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Max weight'**
+  String get recordTypeMaxWeight;
+
+  /// S-10 records list row label for RecordType.max1RM (Epley formula, D-6).
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated 1RM'**
+  String get recordTypeMax1RM;
+
+  /// S-10 records list row label for RecordType.maxVolumeWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout tonnage'**
+  String get recordTypeMaxVolumeWorkout;
+
+  /// S-10 records list row label for RecordType.maxDistance (cardio).
+  ///
+  /// In en, this message translates to:
+  /// **'Max distance'**
+  String get recordTypeMaxDistance;
+
+  /// S-10 records list row label for RecordType.bestPace (cardio).
+  ///
+  /// In en, this message translates to:
+  /// **'Best pace'**
+  String get recordTypeBestPace;
+
+  /// S-10 records list row label for RecordType.longestDuration (cardio).
+  ///
+  /// In en, this message translates to:
+  /// **'Longest duration'**
+  String get recordTypeLongestDuration;
+
+  /// Small caption next to the 1RM record value (04_UI_UX_SPEC.md S-10: "пометка «расчётный»").
+  ///
+  /// In en, this message translates to:
+  /// **'estimated'**
+  String get statsEstimatedBadge;
+
+  /// S-10 section title for the general records list (excludes the reps-at-weight table, shown separately).
+  ///
+  /// In en, this message translates to:
+  /// **'Records'**
+  String get statsRecordsSectionTitle;
+
+  /// Empty state for S-10's records section.
+  ///
+  /// In en, this message translates to:
+  /// **'No records yet'**
+  String get statsRecordsEmptyState;
+
+  /// S-10 table title for RecordType.maxRepsAtWeight rows (one per distinct weight ever used).
+  ///
+  /// In en, this message translates to:
+  /// **'Reps at weight'**
+  String get statsRepsAtWeightTableTitle;
+
+  /// Column header of the S-10 reps-at-weight table.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get statsRepsAtWeightWeightColumn;
+
+  /// Column header of the S-10 reps-at-weight table.
+  ///
+  /// In en, this message translates to:
+  /// **'Reps'**
+  String get statsRepsAtWeightRepsColumn;
+
+  /// Column header of the S-10 reps-at-weight table.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get statsRepsAtWeightDateColumn;
+
+  /// Generic kg-valued figure on S-10 (max weight, 1RM, tonnage) -- always metric (ASSUMPTION(fixed-metric-unit), Stage 1).
+  ///
+  /// In en, this message translates to:
+  /// **'{value} kg'**
+  String statsKgValue(String value);
+
+  /// Generic km-valued figure on S-10 (max distance) -- always metric.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} km'**
+  String statsKmValue(String value);
+
+  /// Best-pace record value on S-10: an m:ss/km string from UnitConverter.formatPace plus a unit suffix.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} / km'**
+  String statsPaceValue(String value);
 }
 
 class _AppLocalizationsDelegate

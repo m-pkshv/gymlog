@@ -13,6 +13,8 @@ import '../features/measurements/custom_measurement_type_screen.dart';
 import '../features/measurements/measurement_form_screen.dart';
 import '../features/measurements/screen.dart';
 import '../features/more/screen.dart';
+import '../features/stats/exercise_progress_picker_screen.dart';
+import '../features/stats/exercise_progress_screen.dart';
 import '../features/stats/screen.dart';
 import '../features/template_editor/screen.dart';
 import '../features/templates/screen.dart';
@@ -157,7 +159,28 @@ final GoRouter appRouter = GoRouter(
         ),
         StatefulShellBranch(
           routes: [
-            GoRoute(path: '/stats', builder: (_, _) => const StatsScreen()),
+            GoRoute(
+              path: '/stats',
+              builder: (_, _) => const StatsScreen(),
+              routes: [
+                GoRoute(
+                  path: 'exercise-search',
+                  // S-10's exercise picker -- a full-screen modal, like the
+                  // other pickers (04_UI_UX_SPEC.md, section 6).
+                  pageBuilder: (_, state) => MaterialPage(
+                    key: state.pageKey,
+                    fullscreenDialog: true,
+                    child: const ExerciseProgressPickerScreen(),
+                  ),
+                ),
+                GoRoute(
+                  path: 'exercise/:exerciseId',
+                  builder: (_, state) => ExerciseProgressScreen(
+                    exerciseId: state.pathParameters['exerciseId']!,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
         StatefulShellBranch(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../domain/enums.dart';
@@ -11,8 +12,8 @@ import 'widgets/workout_stats_card.dart';
 
 /// S-09 "Статистика" (04_UI_UX_SPEC.md, section 5): "Секции-карточки: Вес
 /// тела, % жира, Замеры (выбор типа), Тренировки (число/частота/тоннаж),
-/// «Прогресс по упражнению»." This step adds the fourth (workout count/
-/// frequency/tonnage); the exercise-progress search is a later step.
+/// «Прогресс по упражнению»." This step adds the fifth and last (the
+/// exercise-progress search entry point, leading into S-10).
 class StatsScreen extends ConsumerWidget {
   const StatsScreen({super.key});
 
@@ -52,6 +53,8 @@ class StatsScreen extends ConsumerWidget {
               const MeasurementTypeDynamicsCard(),
               const SizedBox(height: 16),
               const WorkoutStatsCard(),
+              const SizedBox(height: 16),
+              const _ExerciseProgressEntryCard(),
             ],
           );
         },
@@ -80,6 +83,39 @@ class _DynamicsCard extends StatelessWidget {
             Text(title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// S-09's entry point into S-10 (04_UI_UX_SPEC.md, section 5: "«Прогресс по
+/// упражнению» (поиск упражнения → S-10)") -- just a search button; the
+/// actual picker and progress screen are their own full-screen routes, not
+/// inline on this card.
+class _ExerciseProgressEntryCard extends StatelessWidget {
+  const _ExerciseProgressEntryCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.statsExerciseProgressCardTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => context.push('/stats/exercise-search'),
+              icon: const Icon(Icons.search),
+              label: Text(l10n.statsExerciseProgressSearchAction),
+            ),
           ],
         ),
       ),

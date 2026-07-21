@@ -952,4 +952,70 @@ class AppLocalizationsEn extends AppLocalizations {
   String statsWorkoutsFrequencyValue(String value) {
     return '$value / wk';
   }
+
+  @override
+  String get statsExerciseProgressCardTitle => 'Exercise progress';
+
+  @override
+  String get statsExerciseProgressSearchAction => 'Choose exercise';
+
+  @override
+  String get exerciseProgressPickerTitle => 'Choose exercise';
+
+  @override
+  String get exerciseProgressLoadError => 'Failed to load exercise';
+
+  @override
+  String get recordTypeMaxWeight => 'Max weight';
+
+  @override
+  String get recordTypeMax1RM => 'Estimated 1RM';
+
+  @override
+  String get recordTypeMaxVolumeWorkout => 'Workout tonnage';
+
+  @override
+  String get recordTypeMaxDistance => 'Max distance';
+
+  @override
+  String get recordTypeBestPace => 'Best pace';
+
+  @override
+  String get recordTypeLongestDuration => 'Longest duration';
+
+  @override
+  String get statsEstimatedBadge => 'estimated';
+
+  @override
+  String get statsRecordsSectionTitle => 'Records';
+
+  @override
+  String get statsRecordsEmptyState => 'No records yet';
+
+  @override
+  String get statsRepsAtWeightTableTitle => 'Reps at weight';
+
+  @override
+  String get statsRepsAtWeightWeightColumn => 'Weight';
+
+  @override
+  String get statsRepsAtWeightRepsColumn => 'Reps';
+
+  @override
+  String get statsRepsAtWeightDateColumn => 'Date';
+
+  @override
+  String statsKgValue(String value) {
+    return '$value kg';
+  }
+
+  @override
+  String statsKmValue(String value) {
+    return '$value km';
+  }
+
+  @override
+  String statsPaceValue(String value) {
+    return '$value / km';
+  }
 }

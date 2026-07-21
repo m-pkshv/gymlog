@@ -1137,5 +1137,94 @@
     "placeholders": {
       "value": {"type": "String"}
     }
+  },
+  "statsExerciseProgressCardTitle": "Exercise progress",
+  "@statsExerciseProgressCardTitle": {
+    "description": "S-09 entry point card title for S-10's per-exercise progress screen (Stage 7)."
+  },
+  "statsExerciseProgressSearchAction": "Choose exercise",
+  "@statsExerciseProgressSearchAction": {
+    "description": "Button on the S-09 entry card that opens the exercise search picker."
+  },
+  "exerciseProgressPickerTitle": "Choose exercise",
+  "@exerciseProgressPickerTitle": {
+    "description": "AppBar title of the search picker that leads into S-10."
+  },
+  "exerciseProgressLoadError": "Failed to load exercise",
+  "@exerciseProgressLoadError": {
+    "description": "Error state on S-10 when the exercise itself can't be loaded."
+  },
+  "recordTypeMaxWeight": "Max weight",
+  "@recordTypeMaxWeight": {
+    "description": "S-10 records list row label for RecordType.maxWeight."
+  },
+  "recordTypeMax1RM": "Estimated 1RM",
+  "@recordTypeMax1RM": {
+    "description": "S-10 records list row label for RecordType.max1RM (Epley formula, D-6)."
+  },
+  "recordTypeMaxVolumeWorkout": "Workout tonnage",
+  "@recordTypeMaxVolumeWorkout": {
+    "description": "S-10 records list row label for RecordType.maxVolumeWorkout."
+  },
+  "recordTypeMaxDistance": "Max distance",
+  "@recordTypeMaxDistance": {
+    "description": "S-10 records list row label for RecordType.maxDistance (cardio)."
+  },
+  "recordTypeBestPace": "Best pace",
+  "@recordTypeBestPace": {
+    "description": "S-10 records list row label for RecordType.bestPace (cardio)."
+  },
+  "recordTypeLongestDuration": "Longest duration",
+  "@recordTypeLongestDuration": {
+    "description": "S-10 records list row label for RecordType.longestDuration (cardio)."
+  },
+  "statsEstimatedBadge": "estimated",
+  "@statsEstimatedBadge": {
+    "description": "Small caption next to the 1RM record value (04_UI_UX_SPEC.md S-10: \"пометка «расчётный»\")."
+  },
+  "statsRecordsSectionTitle": "Records",
+  "@statsRecordsSectionTitle": {
+    "description": "S-10 section title for the general records list (excludes the reps-at-weight table, shown separately)."
+  },
+  "statsRecordsEmptyState": "No records yet",
+  "@statsRecordsEmptyState": {
+    "description": "Empty state for S-10's records section."
+  },
+  "statsRepsAtWeightTableTitle": "Reps at weight",
+  "@statsRepsAtWeightTableTitle": {
+    "description": "S-10 table title for RecordType.maxRepsAtWeight rows (one per distinct weight ever used)."
+  },
+  "statsRepsAtWeightWeightColumn": "Weight",
+  "@statsRepsAtWeightWeightColumn": {
+    "description": "Column header of the S-10 reps-at-weight table."
+  },
+  "statsRepsAtWeightRepsColumn": "Reps",
+  "@statsRepsAtWeightRepsColumn": {
+    "description": "Column header of the S-10 reps-at-weight table."
+  },
+  "statsRepsAtWeightDateColumn": "Date",
+  "@statsRepsAtWeightDateColumn": {
+    "description": "Column header of the S-10 reps-at-weight table."
+  },
+  "statsKgValue": "{value} kg",
+  "@statsKgValue": {
+    "description": "Generic kg-valued figure on S-10 (max weight, 1RM, tonnage) -- always metric (ASSUMPTION(fixed-metric-unit), Stage 1).",
+    "placeholders": {
+      "value": {"type": "String"}
+    }
+  },
+  "statsKmValue": "{value} km",
+  "@statsKmValue": {
+    "description": "Generic km-valued figure on S-10 (max distance) -- always metric.",
+    "placeholders": {
+      "value": {"type": "String"}
+    }
+  },
+  "statsPaceValue": "{value} / km",
+  "@statsPaceValue": {
+    "description": "Best-pace record value on S-10: an m:ss/km string from UnitConverter.formatPace plus a unit suffix.",
+    "placeholders": {
+      "value": {"type": "String"}
+    }
   }
 }
