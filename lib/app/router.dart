@@ -9,6 +9,9 @@ import '../features/exercises/screen.dart';
 import '../features/history/copy_source_picker_screen.dart';
 import '../features/history/screen.dart';
 import '../features/history/template_picker_screen.dart';
+import '../features/measurements/custom_measurement_type_screen.dart';
+import '../features/measurements/measurement_form_screen.dart';
+import '../features/measurements/screen.dart';
 import '../features/more/screen.dart';
 import '../features/stats/screen.dart';
 import '../features/template_editor/screen.dart';
@@ -200,6 +203,30 @@ final GoRouter appRouter = GoRouter(
                     ),
                   ],
                 ),
+                GoRoute(
+                  path: 'measurements',
+                  builder: (_, _) => const MeasurementsScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'new',
+                      // S-15 form — a full-screen modal like the other
+                      // creation forms (04_UI_UX_SPEC.md, section 6).
+                      pageBuilder: (_, state) => MaterialPage(
+                        key: state.pageKey,
+                        fullscreenDialog: true,
+                        child: MeasurementFormScreen(
+                          initialTypeId: state.extra as String?,
+                        ),
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'custom/:typeId',
+                      builder: (_, state) => CustomMeasurementTypeScreen(
+                        typeId: state.pathParameters['typeId']!,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ],
@@ -284,7 +311,10 @@ class _ResumeWorkoutBanner extends ConsumerWidget {
     final activeState = activeStateAsync.value;
     final minutes = activeState == null
         ? 0
-        : ref.read(activeWorkoutTimerServiceProvider).elapsedSeconds(activeState) ~/ 60;
+        : ref
+                  .read(activeWorkoutTimerServiceProvider)
+                  .elapsedSeconds(activeState) ~/
+              60;
 
     return MaterialBanner(
       content: Text(l10n.workoutContinuingBannerMessage(minutes)),

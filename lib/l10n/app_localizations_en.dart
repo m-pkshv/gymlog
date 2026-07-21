@@ -725,4 +725,178 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get duplicateTemplateTitle => 'Duplicate template';
+
+  @override
+  String get measurementsTitle => 'Measurements';
+
+  @override
+  String get measurementTypeBodyWeight => 'Body weight';
+
+  @override
+  String get measurementTypeBodyFat => 'Body fat %';
+
+  @override
+  String get measurementTypeNeck => 'Neck';
+
+  @override
+  String get measurementTypeShouldersGirth => 'Shoulders';
+
+  @override
+  String get measurementTypeChestGirth => 'Chest';
+
+  @override
+  String get measurementTypeWaist => 'Waist';
+
+  @override
+  String get measurementTypeHips => 'Hips';
+
+  @override
+  String get measurementTypeBicepsLeft => 'Biceps (left)';
+
+  @override
+  String get measurementTypeBicepsRight => 'Biceps (right)';
+
+  @override
+  String get measurementTypeForearmLeft => 'Forearm (left)';
+
+  @override
+  String get measurementTypeForearmRight => 'Forearm (right)';
+
+  @override
+  String get measurementTypeThighLeft => 'Thigh (left)';
+
+  @override
+  String get measurementTypeThighRight => 'Thigh (right)';
+
+  @override
+  String get measurementTypeCalfLeft => 'Calf (left)';
+
+  @override
+  String get measurementTypeCalfRight => 'Calf (right)';
+
+  @override
+  String get measurementUnitKindMass => 'Weight (kg/lb)';
+
+  @override
+  String get measurementUnitKindPercent => 'Percent (%)';
+
+  @override
+  String get measurementUnitKindLength => 'Length (cm/in)';
+
+  @override
+  String get unitKg => 'kg';
+
+  @override
+  String get unitLb => 'lb';
+
+  @override
+  String get unitCm => 'cm';
+
+  @override
+  String get unitIn => 'in';
+
+  @override
+  String get measurementsTabWeight => 'Weight';
+
+  @override
+  String get measurementsTabBodyFat => 'Body fat';
+
+  @override
+  String get measurementsTabMeasurements => 'Measurements';
+
+  @override
+  String get measurementsTabCustom => 'Custom';
+
+  @override
+  String get measurementsEmptyState => 'No entries yet';
+
+  @override
+  String get measurementsLoadError => 'Couldn\'t load measurements';
+
+  @override
+  String get measurementGirthSelectorLabel => 'Measurement';
+
+  @override
+  String get addCustomMeasurementTypeAction => 'Add custom measurement…';
+
+  @override
+  String get measurementsCustomEmptyState => 'No custom measurement types yet';
+
+  @override
+  String get createMeasurementTypeTitle => 'New measurement type';
+
+  @override
+  String get measurementTypeNameLabel => 'Name';
+
+  @override
+  String get measurementTypeUnitKindLabel => 'Unit';
+
+  @override
+  String get createMeasurementTypeError =>
+      'Couldn\'t create the measurement type';
+
+  @override
+  String get archiveMeasurementTypeAction => 'Archive';
+
+  @override
+  String get unarchiveMeasurementTypeAction => 'Unarchive';
+
+  @override
+  String get archiveMeasurementTypeError =>
+      'Couldn\'t update the measurement type';
+
+  @override
+  String get deleteMeasurementTypeAction => 'Delete';
+
+  @override
+  String get deleteMeasurementTypeError =>
+      'Couldn\'t delete the measurement type';
+
+  @override
+  String get deleteMeasurementTypeConfirmTitle => 'Delete measurement type?';
+
+  @override
+  String get deleteMeasurementTypeConfirmMessage =>
+      'This will permanently delete this measurement type. This can\'t be undone.';
+
+  @override
+  String get measurementEntryDeletedMessage => 'Measurement deleted';
+
+  @override
+  String get deleteMeasurementEntryAction => 'Delete';
+
+  @override
+  String get measurementFormTitle => 'Log measurement';
+
+  @override
+  String get measurementTypeFieldLabel => 'Type';
+
+  @override
+  String get measurementDateFieldLabel => 'Date';
+
+  @override
+  String get measurementValueFieldLabel => 'Value';
+
+  @override
+  String get measurementCommentFieldLabel => 'Comment';
+
+  @override
+  String get measurementValueRequiredError => 'Enter a value';
+
+  @override
+  String get saveMeasurementError => 'Couldn\'t save the measurement';
+
+  @override
+  String get replaceMeasurementConfirmTitle => 'Replace existing value?';
+
+  @override
+  String replaceMeasurementConfirmMessage(String value, String unit) {
+    return 'There\'s already an entry for this day: $value $unit. Replace it with the new value?';
+  }
+
+  @override
+  String get replaceMeasurementConfirmAction => 'Replace';
+
+  @override
+  String get addMeasurementEntryAction => 'Log measurement';
 }

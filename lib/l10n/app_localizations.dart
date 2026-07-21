@@ -1459,6 +1459,342 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Duplicate template'**
   String get duplicateTemplateTitle;
+
+  /// AppBar title of the S-14 measurements screen, and its entry on the 'More' menu (S-11, Stage 6).
+  ///
+  /// In en, this message translates to:
+  /// **'Measurements'**
+  String get measurementsTitle;
+
+  /// Display label for the built-in 'body_weight' MeasurementType (06_DATA_MODEL.md, section 5.3).
+  ///
+  /// In en, this message translates to:
+  /// **'Body weight'**
+  String get measurementTypeBodyWeight;
+
+  /// Display label for the built-in 'body_fat' MeasurementType.
+  ///
+  /// In en, this message translates to:
+  /// **'Body fat %'**
+  String get measurementTypeBodyFat;
+
+  /// Display label for the built-in 'neck' MeasurementType.
+  ///
+  /// In en, this message translates to:
+  /// **'Neck'**
+  String get measurementTypeNeck;
+
+  /// Display label for the built-in 'shoulders_girth' MeasurementType.
+  ///
+  /// In en, this message translates to:
+  /// **'Shoulders'**
+  String get measurementTypeShouldersGirth;
+
+  /// Display label for the built-in 'chest_girth' MeasurementType.
+  ///
+  /// In en, this message translates to:
+  /// **'Chest'**
+  String get measurementTypeChestGirth;
+
+  /// Display label for the built-in 'waist' MeasurementType.
+  ///
+  /// In en, this message translates to:
+  /// **'Waist'**
+  String get measurementTypeWaist;
+
+  /// Display label for the built-in 'hips' MeasurementType.
+  ///
+  /// In en, this message translates to:
+  /// **'Hips'**
+  String get measurementTypeHips;
+
+  /// Display label for the built-in 'biceps_left' MeasurementType.
+  ///
+  /// In en, this message translates to:
+  /// **'Biceps (left)'**
+  String get measurementTypeBicepsLeft;
+
+  /// Display label for the built-in 'biceps_right' MeasurementType.
+  ///
+  /// In en, this message translates to:
+  /// **'Biceps (right)'**
+  String get measurementTypeBicepsRight;
+
+  /// Display label for the built-in 'forearm_left' MeasurementType.
+  ///
+  /// In en, this message translates to:
+  /// **'Forearm (left)'**
+  String get measurementTypeForearmLeft;
+
+  /// Display label for the built-in 'forearm_right' MeasurementType.
+  ///
+  /// In en, this message translates to:
+  /// **'Forearm (right)'**
+  String get measurementTypeForearmRight;
+
+  /// Display label for the built-in 'thigh_left' MeasurementType.
+  ///
+  /// In en, this message translates to:
+  /// **'Thigh (left)'**
+  String get measurementTypeThighLeft;
+
+  /// Display label for the built-in 'thigh_right' MeasurementType.
+  ///
+  /// In en, this message translates to:
+  /// **'Thigh (right)'**
+  String get measurementTypeThighRight;
+
+  /// Display label for the built-in 'calf_left' MeasurementType.
+  ///
+  /// In en, this message translates to:
+  /// **'Calf (left)'**
+  String get measurementTypeCalfLeft;
+
+  /// Display label for the built-in 'calf_right' MeasurementType.
+  ///
+  /// In en, this message translates to:
+  /// **'Calf (right)'**
+  String get measurementTypeCalfRight;
+
+  /// Display label for MeasurementUnitKind.mass, shown in the create-custom-type dialog (S-14).
+  ///
+  /// In en, this message translates to:
+  /// **'Weight (kg/lb)'**
+  String get measurementUnitKindMass;
+
+  /// Display label for MeasurementUnitKind.percent.
+  ///
+  /// In en, this message translates to:
+  /// **'Percent (%)'**
+  String get measurementUnitKindPercent;
+
+  /// Display label for MeasurementUnitKind.length.
+  ///
+  /// In en, this message translates to:
+  /// **'Length (cm/in)'**
+  String get measurementUnitKindLength;
+
+  /// Mass unit suffix, metric (D-5).
+  ///
+  /// In en, this message translates to:
+  /// **'kg'**
+  String get unitKg;
+
+  /// Mass unit suffix, imperial (D-5).
+  ///
+  /// In en, this message translates to:
+  /// **'lb'**
+  String get unitLb;
+
+  /// Length unit suffix, metric (D-5).
+  ///
+  /// In en, this message translates to:
+  /// **'cm'**
+  String get unitCm;
+
+  /// Length unit suffix, imperial (D-5).
+  ///
+  /// In en, this message translates to:
+  /// **'in'**
+  String get unitIn;
+
+  /// S-14 tab label for the body_weight type.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get measurementsTabWeight;
+
+  /// S-14 tab label for the body_fat type.
+  ///
+  /// In en, this message translates to:
+  /// **'Body fat'**
+  String get measurementsTabBodyFat;
+
+  /// S-14 tab label for the 13 built-in girth types, picked via a sub-selector.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurements'**
+  String get measurementsTabMeasurements;
+
+  /// S-14 tab label for user-created measurement types.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get measurementsTabCustom;
+
+  /// Empty state in MeasurementTypeDetail when a type has no logged entries.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries yet'**
+  String get measurementsEmptyState;
+
+  /// Shown when the measurements stream/type list fails to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load measurements'**
+  String get measurementsLoadError;
+
+  /// Label for the girth-type dropdown on S-14's 'Measurements' tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurement'**
+  String get measurementGirthSelectorLabel;
+
+  /// S-14 'Свои' tab list item that opens the create-custom-type dialog (DM 5.3).
+  ///
+  /// In en, this message translates to:
+  /// **'Add custom measurement…'**
+  String get addCustomMeasurementTypeAction;
+
+  /// Empty state on S-14's 'Свои' tab when there are no custom types.
+  ///
+  /// In en, this message translates to:
+  /// **'No custom measurement types yet'**
+  String get measurementsCustomEmptyState;
+
+  /// Title of the create-custom-type dialog (S-14, DM 5.3).
+  ///
+  /// In en, this message translates to:
+  /// **'New measurement type'**
+  String get createMeasurementTypeTitle;
+
+  /// Label for the custom measurement type's name field.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get measurementTypeNameLabel;
+
+  /// Label for the custom measurement type's unit-kind dropdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get measurementTypeUnitKindLabel;
+
+  /// Shown in the create-custom-type dialog when MeasurementTypeService.create fails (e.g. duplicate name).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create the measurement type'**
+  String get createMeasurementTypeError;
+
+  /// Menu item that archives a custom measurement type (DM 10).
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get archiveMeasurementTypeAction;
+
+  /// Menu item that unarchives a custom measurement type.
+  ///
+  /// In en, this message translates to:
+  /// **'Unarchive'**
+  String get unarchiveMeasurementTypeAction;
+
+  /// Shown when archiving/unarchiving a custom measurement type fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update the measurement type'**
+  String get archiveMeasurementTypeError;
+
+  /// Menu item that permanently deletes an unused custom measurement type (DM 10). Only shown when MeasurementTypeService.canDelete is true.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteMeasurementTypeAction;
+
+  /// Shown when deleting a custom measurement type fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the measurement type'**
+  String get deleteMeasurementTypeError;
+
+  /// Title of the confirm dialog before permanently deleting a custom measurement type (DM 10, no Undo).
+  ///
+  /// In en, this message translates to:
+  /// **'Delete measurement type?'**
+  String get deleteMeasurementTypeConfirmTitle;
+
+  /// Body of the delete-measurement-type confirm dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete this measurement type. This can\'t be undone.'**
+  String get deleteMeasurementTypeConfirmMessage;
+
+  /// Snackbar shown after deleting a BodyMeasurement entry, with the Undo action (DM 10, 5s window).
+  ///
+  /// In en, this message translates to:
+  /// **'Measurement deleted'**
+  String get measurementEntryDeletedMessage;
+
+  /// Tooltip on the trailing delete icon of a measurement entry row (S-14).
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteMeasurementEntryAction;
+
+  /// AppBar title of the S-15 measurement entry form.
+  ///
+  /// In en, this message translates to:
+  /// **'Log measurement'**
+  String get measurementFormTitle;
+
+  /// Label for the type dropdown on the S-15 form.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get measurementTypeFieldLabel;
+
+  /// Label for the date field on the S-15 form.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get measurementDateFieldLabel;
+
+  /// Label for the value field on the S-15 form.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get measurementValueFieldLabel;
+
+  /// Label for the optional comment field on the S-15 form (DM 6.9, 500 chars).
+  ///
+  /// In en, this message translates to:
+  /// **'Comment'**
+  String get measurementCommentFieldLabel;
+
+  /// Shown on the S-15 form when the value field is empty or unparseable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a value'**
+  String get measurementValueRequiredError;
+
+  /// Shown on the S-15 form when BodyMeasurementService.create/update fails (e.g. out of range, DM 6.9).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the measurement'**
+  String get saveMeasurementError;
+
+  /// Title of the same-day-duplicate confirm dialog (DM 6.9).
+  ///
+  /// In en, this message translates to:
+  /// **'Replace existing value?'**
+  String get replaceMeasurementConfirmTitle;
+
+  /// Body of the same-day-duplicate confirm dialog, showing the existing entry's value in the display unit.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s already an entry for this day: {value} {unit}. Replace it with the new value?'**
+  String replaceMeasurementConfirmMessage(String value, String unit);
+
+  /// Confirm button of the same-day-duplicate dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get replaceMeasurementConfirmAction;
+
+  /// Tooltip on the S-14 '+' FAB that opens the S-15 entry form.
+  ///
+  /// In en, this message translates to:
+  /// **'Log measurement'**
+  String get addMeasurementEntryAction;
 }
 
 class _AppLocalizationsDelegate

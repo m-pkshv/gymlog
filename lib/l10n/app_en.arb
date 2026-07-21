@@ -838,5 +838,233 @@
   "duplicateTemplateTitle": "Duplicate template",
   "@duplicateTemplateTitle": {
     "description": "Title of the name-prompt dialog opened by the S-12 'Дублировать' menu item -- reuses CreateTemplateDialog with this title override."
+  },
+  "measurementsTitle": "Measurements",
+  "@measurementsTitle": {
+    "description": "AppBar title of the S-14 measurements screen, and its entry on the 'More' menu (S-11, Stage 6)."
+  },
+  "measurementTypeBodyWeight": "Body weight",
+  "@measurementTypeBodyWeight": {
+    "description": "Display label for the built-in 'body_weight' MeasurementType (06_DATA_MODEL.md, section 5.3)."
+  },
+  "measurementTypeBodyFat": "Body fat %",
+  "@measurementTypeBodyFat": {
+    "description": "Display label for the built-in 'body_fat' MeasurementType."
+  },
+  "measurementTypeNeck": "Neck",
+  "@measurementTypeNeck": {
+    "description": "Display label for the built-in 'neck' MeasurementType."
+  },
+  "measurementTypeShouldersGirth": "Shoulders",
+  "@measurementTypeShouldersGirth": {
+    "description": "Display label for the built-in 'shoulders_girth' MeasurementType."
+  },
+  "measurementTypeChestGirth": "Chest",
+  "@measurementTypeChestGirth": {
+    "description": "Display label for the built-in 'chest_girth' MeasurementType."
+  },
+  "measurementTypeWaist": "Waist",
+  "@measurementTypeWaist": {
+    "description": "Display label for the built-in 'waist' MeasurementType."
+  },
+  "measurementTypeHips": "Hips",
+  "@measurementTypeHips": {
+    "description": "Display label for the built-in 'hips' MeasurementType."
+  },
+  "measurementTypeBicepsLeft": "Biceps (left)",
+  "@measurementTypeBicepsLeft": {
+    "description": "Display label for the built-in 'biceps_left' MeasurementType."
+  },
+  "measurementTypeBicepsRight": "Biceps (right)",
+  "@measurementTypeBicepsRight": {
+    "description": "Display label for the built-in 'biceps_right' MeasurementType."
+  },
+  "measurementTypeForearmLeft": "Forearm (left)",
+  "@measurementTypeForearmLeft": {
+    "description": "Display label for the built-in 'forearm_left' MeasurementType."
+  },
+  "measurementTypeForearmRight": "Forearm (right)",
+  "@measurementTypeForearmRight": {
+    "description": "Display label for the built-in 'forearm_right' MeasurementType."
+  },
+  "measurementTypeThighLeft": "Thigh (left)",
+  "@measurementTypeThighLeft": {
+    "description": "Display label for the built-in 'thigh_left' MeasurementType."
+  },
+  "measurementTypeThighRight": "Thigh (right)",
+  "@measurementTypeThighRight": {
+    "description": "Display label for the built-in 'thigh_right' MeasurementType."
+  },
+  "measurementTypeCalfLeft": "Calf (left)",
+  "@measurementTypeCalfLeft": {
+    "description": "Display label for the built-in 'calf_left' MeasurementType."
+  },
+  "measurementTypeCalfRight": "Calf (right)",
+  "@measurementTypeCalfRight": {
+    "description": "Display label for the built-in 'calf_right' MeasurementType."
+  },
+  "measurementUnitKindMass": "Weight (kg/lb)",
+  "@measurementUnitKindMass": {
+    "description": "Display label for MeasurementUnitKind.mass, shown in the create-custom-type dialog (S-14)."
+  },
+  "measurementUnitKindPercent": "Percent (%)",
+  "@measurementUnitKindPercent": {
+    "description": "Display label for MeasurementUnitKind.percent."
+  },
+  "measurementUnitKindLength": "Length (cm/in)",
+  "@measurementUnitKindLength": {
+    "description": "Display label for MeasurementUnitKind.length."
+  },
+  "unitKg": "kg",
+  "@unitKg": {
+    "description": "Mass unit suffix, metric (D-5)."
+  },
+  "unitLb": "lb",
+  "@unitLb": {
+    "description": "Mass unit suffix, imperial (D-5)."
+  },
+  "unitCm": "cm",
+  "@unitCm": {
+    "description": "Length unit suffix, metric (D-5)."
+  },
+  "unitIn": "in",
+  "@unitIn": {
+    "description": "Length unit suffix, imperial (D-5)."
+  },
+  "measurementsTabWeight": "Weight",
+  "@measurementsTabWeight": {
+    "description": "S-14 tab label for the body_weight type."
+  },
+  "measurementsTabBodyFat": "Body fat",
+  "@measurementsTabBodyFat": {
+    "description": "S-14 tab label for the body_fat type."
+  },
+  "measurementsTabMeasurements": "Measurements",
+  "@measurementsTabMeasurements": {
+    "description": "S-14 tab label for the 13 built-in girth types, picked via a sub-selector."
+  },
+  "measurementsTabCustom": "Custom",
+  "@measurementsTabCustom": {
+    "description": "S-14 tab label for user-created measurement types."
+  },
+  "measurementsEmptyState": "No entries yet",
+  "@measurementsEmptyState": {
+    "description": "Empty state in MeasurementTypeDetail when a type has no logged entries."
+  },
+  "measurementsLoadError": "Couldn't load measurements",
+  "@measurementsLoadError": {
+    "description": "Shown when the measurements stream/type list fails to load."
+  },
+  "measurementGirthSelectorLabel": "Measurement",
+  "@measurementGirthSelectorLabel": {
+    "description": "Label for the girth-type dropdown on S-14's 'Measurements' tab."
+  },
+  "addCustomMeasurementTypeAction": "Add custom measurement…",
+  "@addCustomMeasurementTypeAction": {
+    "description": "S-14 'Свои' tab list item that opens the create-custom-type dialog (DM 5.3)."
+  },
+  "measurementsCustomEmptyState": "No custom measurement types yet",
+  "@measurementsCustomEmptyState": {
+    "description": "Empty state on S-14's 'Свои' tab when there are no custom types."
+  },
+  "createMeasurementTypeTitle": "New measurement type",
+  "@createMeasurementTypeTitle": {
+    "description": "Title of the create-custom-type dialog (S-14, DM 5.3)."
+  },
+  "measurementTypeNameLabel": "Name",
+  "@measurementTypeNameLabel": {
+    "description": "Label for the custom measurement type's name field."
+  },
+  "measurementTypeUnitKindLabel": "Unit",
+  "@measurementTypeUnitKindLabel": {
+    "description": "Label for the custom measurement type's unit-kind dropdown."
+  },
+  "createMeasurementTypeError": "Couldn't create the measurement type",
+  "@createMeasurementTypeError": {
+    "description": "Shown in the create-custom-type dialog when MeasurementTypeService.create fails (e.g. duplicate name)."
+  },
+  "archiveMeasurementTypeAction": "Archive",
+  "@archiveMeasurementTypeAction": {
+    "description": "Menu item that archives a custom measurement type (DM 10)."
+  },
+  "unarchiveMeasurementTypeAction": "Unarchive",
+  "@unarchiveMeasurementTypeAction": {
+    "description": "Menu item that unarchives a custom measurement type."
+  },
+  "archiveMeasurementTypeError": "Couldn't update the measurement type",
+  "@archiveMeasurementTypeError": {
+    "description": "Shown when archiving/unarchiving a custom measurement type fails."
+  },
+  "deleteMeasurementTypeAction": "Delete",
+  "@deleteMeasurementTypeAction": {
+    "description": "Menu item that permanently deletes an unused custom measurement type (DM 10). Only shown when MeasurementTypeService.canDelete is true."
+  },
+  "deleteMeasurementTypeError": "Couldn't delete the measurement type",
+  "@deleteMeasurementTypeError": {
+    "description": "Shown when deleting a custom measurement type fails."
+  },
+  "deleteMeasurementTypeConfirmTitle": "Delete measurement type?",
+  "@deleteMeasurementTypeConfirmTitle": {
+    "description": "Title of the confirm dialog before permanently deleting a custom measurement type (DM 10, no Undo)."
+  },
+  "deleteMeasurementTypeConfirmMessage": "This will permanently delete this measurement type. This can't be undone.",
+  "@deleteMeasurementTypeConfirmMessage": {
+    "description": "Body of the delete-measurement-type confirm dialog."
+  },
+  "measurementEntryDeletedMessage": "Measurement deleted",
+  "@measurementEntryDeletedMessage": {
+    "description": "Snackbar shown after deleting a BodyMeasurement entry, with the Undo action (DM 10, 5s window)."
+  },
+  "deleteMeasurementEntryAction": "Delete",
+  "@deleteMeasurementEntryAction": {
+    "description": "Tooltip on the trailing delete icon of a measurement entry row (S-14)."
+  },
+  "measurementFormTitle": "Log measurement",
+  "@measurementFormTitle": {
+    "description": "AppBar title of the S-15 measurement entry form."
+  },
+  "measurementTypeFieldLabel": "Type",
+  "@measurementTypeFieldLabel": {
+    "description": "Label for the type dropdown on the S-15 form."
+  },
+  "measurementDateFieldLabel": "Date",
+  "@measurementDateFieldLabel": {
+    "description": "Label for the date field on the S-15 form."
+  },
+  "measurementValueFieldLabel": "Value",
+  "@measurementValueFieldLabel": {
+    "description": "Label for the value field on the S-15 form."
+  },
+  "measurementCommentFieldLabel": "Comment",
+  "@measurementCommentFieldLabel": {
+    "description": "Label for the optional comment field on the S-15 form (DM 6.9, 500 chars)."
+  },
+  "measurementValueRequiredError": "Enter a value",
+  "@measurementValueRequiredError": {
+    "description": "Shown on the S-15 form when the value field is empty or unparseable."
+  },
+  "saveMeasurementError": "Couldn't save the measurement",
+  "@saveMeasurementError": {
+    "description": "Shown on the S-15 form when BodyMeasurementService.create/update fails (e.g. out of range, DM 6.9)."
+  },
+  "replaceMeasurementConfirmTitle": "Replace existing value?",
+  "@replaceMeasurementConfirmTitle": {
+    "description": "Title of the same-day-duplicate confirm dialog (DM 6.9)."
+  },
+  "replaceMeasurementConfirmMessage": "There's already an entry for this day: {value} {unit}. Replace it with the new value?",
+  "@replaceMeasurementConfirmMessage": {
+    "description": "Body of the same-day-duplicate confirm dialog, showing the existing entry's value in the display unit.",
+    "placeholders": {
+      "value": {"type": "String"},
+      "unit": {"type": "String"}
+    }
+  },
+  "replaceMeasurementConfirmAction": "Replace",
+  "@replaceMeasurementConfirmAction": {
+    "description": "Confirm button of the same-day-duplicate dialog."
+  },
+  "addMeasurementEntryAction": "Log measurement",
+  "@addMeasurementEntryAction": {
+    "description": "Tooltip on the S-14 '+' FAB that opens the S-15 entry form."
   }
 }

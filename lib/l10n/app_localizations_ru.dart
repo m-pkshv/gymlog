@@ -734,4 +734,176 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get duplicateTemplateTitle => 'Дублировать шаблон';
+
+  @override
+  String get measurementsTitle => 'Измерения';
+
+  @override
+  String get measurementTypeBodyWeight => 'Вес тела';
+
+  @override
+  String get measurementTypeBodyFat => '% жира';
+
+  @override
+  String get measurementTypeNeck => 'Шея';
+
+  @override
+  String get measurementTypeShouldersGirth => 'Плечи';
+
+  @override
+  String get measurementTypeChestGirth => 'Грудь';
+
+  @override
+  String get measurementTypeWaist => 'Талия';
+
+  @override
+  String get measurementTypeHips => 'Бёдра';
+
+  @override
+  String get measurementTypeBicepsLeft => 'Бицепс (левый)';
+
+  @override
+  String get measurementTypeBicepsRight => 'Бицепс (правый)';
+
+  @override
+  String get measurementTypeForearmLeft => 'Предплечье (левое)';
+
+  @override
+  String get measurementTypeForearmRight => 'Предплечье (правое)';
+
+  @override
+  String get measurementTypeThighLeft => 'Бедро (левое)';
+
+  @override
+  String get measurementTypeThighRight => 'Бедро (правое)';
+
+  @override
+  String get measurementTypeCalfLeft => 'Голень (левая)';
+
+  @override
+  String get measurementTypeCalfRight => 'Голень (правая)';
+
+  @override
+  String get measurementUnitKindMass => 'Вес (кг/фунты)';
+
+  @override
+  String get measurementUnitKindPercent => 'Процент (%)';
+
+  @override
+  String get measurementUnitKindLength => 'Длина (см/дюймы)';
+
+  @override
+  String get unitKg => 'кг';
+
+  @override
+  String get unitLb => 'фунт';
+
+  @override
+  String get unitCm => 'см';
+
+  @override
+  String get unitIn => 'дюйм';
+
+  @override
+  String get measurementsTabWeight => 'Вес';
+
+  @override
+  String get measurementsTabBodyFat => '% жира';
+
+  @override
+  String get measurementsTabMeasurements => 'Замеры';
+
+  @override
+  String get measurementsTabCustom => 'Свои';
+
+  @override
+  String get measurementsEmptyState => 'Пока нет записей';
+
+  @override
+  String get measurementsLoadError => 'Не удалось загрузить измерения';
+
+  @override
+  String get measurementGirthSelectorLabel => 'Замер';
+
+  @override
+  String get addCustomMeasurementTypeAction => 'Добавить замер…';
+
+  @override
+  String get measurementsCustomEmptyState => 'Пока нет своих типов измерений';
+
+  @override
+  String get createMeasurementTypeTitle => 'Новый тип измерения';
+
+  @override
+  String get measurementTypeNameLabel => 'Название';
+
+  @override
+  String get measurementTypeUnitKindLabel => 'Единица';
+
+  @override
+  String get createMeasurementTypeError => 'Не удалось создать тип измерения';
+
+  @override
+  String get archiveMeasurementTypeAction => 'Архивировать';
+
+  @override
+  String get unarchiveMeasurementTypeAction => 'Разархивировать';
+
+  @override
+  String get archiveMeasurementTypeError => 'Не удалось обновить тип измерения';
+
+  @override
+  String get deleteMeasurementTypeAction => 'Удалить';
+
+  @override
+  String get deleteMeasurementTypeError => 'Не удалось удалить тип измерения';
+
+  @override
+  String get deleteMeasurementTypeConfirmTitle => 'Удалить тип измерения?';
+
+  @override
+  String get deleteMeasurementTypeConfirmMessage =>
+      'Тип измерения будет удалён без возможности восстановления.';
+
+  @override
+  String get measurementEntryDeletedMessage => 'Запись удалена';
+
+  @override
+  String get deleteMeasurementEntryAction => 'Удалить';
+
+  @override
+  String get measurementFormTitle => 'Новое измерение';
+
+  @override
+  String get measurementTypeFieldLabel => 'Тип';
+
+  @override
+  String get measurementDateFieldLabel => 'Дата';
+
+  @override
+  String get measurementValueFieldLabel => 'Значение';
+
+  @override
+  String get measurementCommentFieldLabel => 'Комментарий';
+
+  @override
+  String get measurementValueRequiredError => 'Введите значение';
+
+  @override
+  String get saveMeasurementError => 'Не удалось сохранить измерение';
+
+  @override
+  String get replaceMeasurementConfirmTitle =>
+      'Заменить существующее значение?';
+
+  @override
+  String replaceMeasurementConfirmMessage(String value, String unit) {
+    return 'За этот день уже есть запись: $value $unit. Заменить её новым значением?';
+  }
+
+  @override
+  String get replaceMeasurementConfirmAction => 'Заменить';
+
+  @override
+  String get addMeasurementEntryAction => 'Добавить измерение';
 }
