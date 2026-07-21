@@ -175,5 +175,8 @@
   "progressionDecisionIncrease": "↑",
   "progressionDecisionRepeat": "=",
   "progressionDecisionDecrease": "↓",
-  "stagnationHint": "{count, plural, one{{count} тренировка без роста} few{{count} тренировки без роста} many{{count} тренировок без роста} other{{count} тренировок без роста}}"
+  "stagnationHint": "{count, plural, one{{count} тренировка без роста} few{{count} тренировки без роста} many{{count} тренировок без роста} other{{count} тренировок без роста}}",
+  "historyViewCalendarTooltip": "Вид календаря",
+  "historyViewListTooltip": "Вид списком",
+  "historyCalendarDayEmpty": "В этот день нет тренировок"
 }

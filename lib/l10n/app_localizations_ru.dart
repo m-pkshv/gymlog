@@ -564,4 +564,13 @@ class AppLocalizationsRu extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get historyViewCalendarTooltip => 'Вид календаря';
+
+  @override
+  String get historyViewListTooltip => 'Вид списком';
+
+  @override
+  String get historyCalendarDayEmpty => 'В этот день нет тренировок';
 }

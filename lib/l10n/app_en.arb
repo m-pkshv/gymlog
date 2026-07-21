@@ -625,5 +625,17 @@
     "placeholders": {
       "count": {}
     }
+  },
+  "historyViewCalendarTooltip": "Calendar view",
+  "@historyViewCalendarTooltip": {
+    "description": "AppBar toggle tooltip on History (S-02, Stage 3) shown while in list mode, switches to the calendar view."
+  },
+  "historyViewListTooltip": "List view",
+  "@historyViewListTooltip": {
+    "description": "AppBar toggle tooltip on History (S-02, Stage 3) shown while in calendar mode, switches back to the list."
+  },
+  "historyCalendarDayEmpty": "No workouts this day",
+  "@historyCalendarDayEmpty": {
+    "description": "Shown below the calendar grid (S-02, Stage 3) when the selected day has no workouts matching the active search/status/tag filters."
   }
 }

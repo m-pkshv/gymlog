@@ -7,17 +7,17 @@ import '../../core/constants.dart';
 import '../../core/date_format.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/workout.dart';
-import '../../domain/models/workout_history_entry.dart';
 import '../../domain/models/workout_history_filter.dart';
 import '../../domain/models/workout_tag.dart';
 import '../../l10n/app_localizations.dart';
 import '../workout_editor/status_labels.dart';
-import '../workout_editor/widgets/workout_tag_chip.dart';
+import 'calendar/history_calendar_view.dart';
 import 'copy_workout_flow.dart';
-
-enum _HistoryCardAction { copy, delete }
+import 'widgets/workout_history_tile.dart';
 
 enum _NewWorkoutChoice { scratch, copy }
+
+enum _HistoryViewMode { list, calendar }
 
 /// S-02 "История": search by name + date range/statuses/tags filters (all
 /// combinable, 04_UI_UX_SPEC.md section 5; Stage 3). Tapping a card opens
@@ -39,6 +39,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   DateTime? _dateTo;
   Set<WorkoutStatus> _statuses = {};
   Set<String> _tagIds = {};
+  _HistoryViewMode _viewMode = _HistoryViewMode.list;
 
   @override
   void initState() {
@@ -60,9 +61,12 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     tagIds: _tagIds,
   );
 
+  // In calendar mode, month navigation is the date axis (see
+  // HistoryCalendarView); the date-range fields are hidden in the filter
+  // sheet and excluded here so the toggle icon doesn't show a stale badge.
   bool get _hasActiveFilters =>
-      _dateFrom != null ||
-      _dateTo != null ||
+      (_viewMode == _HistoryViewMode.list &&
+          (_dateFrom != null || _dateTo != null)) ||
       _statuses.isNotEmpty ||
       _tagIds.isNotEmpty;
 
@@ -75,6 +79,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       showDragHandle: true,
       isScrollControlled: true,
       builder: (context) => _HistoryFilterSheet(
+        showDateRange: _viewMode == _HistoryViewMode.list,
         dateFrom: _dateFrom,
         dateTo: _dateTo,
         statuses: _statuses,
@@ -89,6 +94,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         _tagIds = result.tagIds;
       });
     }
+  }
+
+  void _setViewMode(_HistoryViewMode mode) {
+    setState(() => _viewMode = mode);
   }
 
   void _resetAll() {
@@ -173,12 +182,26 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final historyAsync = ref.watch(historyListProvider(_filter));
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.tabHistory),
         actions: [
+          IconButton(
+            tooltip: _viewMode == _HistoryViewMode.list
+                ? l10n.historyViewCalendarTooltip
+                : l10n.historyViewListTooltip,
+            onPressed: () => _setViewMode(
+              _viewMode == _HistoryViewMode.list
+                  ? _HistoryViewMode.calendar
+                  : _HistoryViewMode.list,
+            ),
+            icon: Icon(
+              _viewMode == _HistoryViewMode.list
+                  ? Icons.calendar_month_outlined
+                  : Icons.view_list_outlined,
+            ),
+          ),
           IconButton(
             tooltip: l10n.filterWorkoutsTooltip,
             onPressed: _openFilters,
@@ -205,28 +228,21 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             ),
           ),
           Expanded(
-            child: historyAsync.when(
-              data: (entries) {
-                if (entries.isEmpty) {
-                  return _EmptyState(
-                    l10n: l10n,
+            child: _viewMode == _HistoryViewMode.list
+                ? _HistoryList(
+                    filter: _filter,
                     isFiltered: _hasActiveSearchOrFilters,
                     onReset: _resetAll,
-                  );
-                }
-                return ListView.builder(
-                  itemCount: entries.length,
-                  itemBuilder: (context, index) => _WorkoutHistoryTile(
-                    entry: entries[index],
+                    onCopy: (source) => copyWorkoutFlow(context, ref, source),
+                    onDelete: _deleteWorkout,
+                  )
+                : HistoryCalendarView(
+                    query: _searchController.text.trim(),
+                    statuses: _statuses,
+                    tagIds: _tagIds,
                     onCopy: (source) => copyWorkoutFlow(context, ref, source),
                     onDelete: _deleteWorkout,
                   ),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stackTrace) =>
-                  Center(child: Text(l10n.historyLoadError)),
-            ),
           ),
         ],
       ),
@@ -239,75 +255,42 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   }
 }
 
-class _WorkoutHistoryTile extends ConsumerWidget {
-  const _WorkoutHistoryTile({
-    required this.entry,
+class _HistoryList extends ConsumerWidget {
+  const _HistoryList({
+    required this.filter,
+    required this.isFiltered,
+    required this.onReset,
     required this.onCopy,
     required this.onDelete,
   });
 
-  final WorkoutHistoryEntry entry;
+  final WorkoutHistoryFilter filter;
+  final bool isFiltered;
+  final VoidCallback onReset;
   final void Function(Workout source) onCopy;
   final void Function(Workout workout) onDelete;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final workout = entry.workout;
-    final name = workout.name ?? '${l10n.workoutDefaultNamePrefix} ${formatShortDate(workout.date)}';
-    final durationSec = workout.actualDurationSec;
-    final showTags = ref.watch(appSettingsProvider).value?.showTags ?? true;
+    final historyAsync = ref.watch(historyListProvider(filter));
 
-    return ListTile(
-      title: Text(name),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '${formatShortDate(workout.date)} · '
-            '${l10n.workoutExerciseCount(entry.exerciseCount)}'
-            '${durationSec != null ? ' · ${l10n.workoutDurationMinutes(durationSec ~/ 60)}' : ''}',
+    return historyAsync.when(
+      data: (entries) {
+        if (entries.isEmpty) {
+          return _EmptyState(l10n: l10n, isFiltered: isFiltered, onReset: onReset);
+        }
+        return ListView.builder(
+          itemCount: entries.length,
+          itemBuilder: (context, index) => WorkoutHistoryTile(
+            entry: entries[index],
+            onCopy: onCopy,
+            onDelete: onDelete,
           ),
-          if (showTags && entry.tags.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Wrap(
-                spacing: 4,
-                runSpacing: 4,
-                children: [
-                  for (final tag in entry.tags) WorkoutTagChip(tag: tag),
-                ],
-              ),
-            ),
-        ],
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Chip(label: Text(workoutStatusLabel(l10n, workout.status))),
-          PopupMenuButton<_HistoryCardAction>(
-            onSelected: (action) {
-              switch (action) {
-                case _HistoryCardAction.copy:
-                  onCopy(workout);
-                case _HistoryCardAction.delete:
-                  onDelete(workout);
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: _HistoryCardAction.copy,
-                child: Text(l10n.copyWorkoutAction),
-              ),
-              PopupMenuItem(
-                value: _HistoryCardAction.delete,
-                child: Text(l10n.deleteWorkoutAction),
-              ),
-            ],
-          ),
-        ],
-      ),
-      onTap: () => context.push('/history/workout/${workout.id}'),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stackTrace) => Center(child: Text(l10n.historyLoadError)),
     );
   }
 }
@@ -378,12 +361,16 @@ class _HistoryFiltersResult {
 /// (S-17: "выключение скрывает чипы и фильтр тегов").
 class _HistoryFilterSheet extends ConsumerStatefulWidget {
   const _HistoryFilterSheet({
+    required this.showDateRange,
     required this.dateFrom,
     required this.dateTo,
     required this.statuses,
     required this.tagIds,
   });
 
+  // Hidden in calendar view mode (Stage 3): month navigation is the date
+  // axis there instead of an explicit range.
+  final bool showDateRange;
   final DateTime? dateFrom;
   final DateTime? dateTo;
   final Set<WorkoutStatus> statuses;
@@ -468,51 +455,53 @@ class _HistoryFilterSheetState extends ConsumerState<_HistoryFilterSheet> {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.filterDateFromLabel),
-                      subtitle: Text(
-                        _dateFrom != null
-                            ? formatShortDate(_dateFrom!)
-                            : l10n.filterAnyDate,
+              if (widget.showDateRange) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l10n.filterDateFromLabel),
+                        subtitle: Text(
+                          _dateFrom != null
+                              ? formatShortDate(_dateFrom!)
+                              : l10n.filterAnyDate,
+                        ),
+                        onTap: _pickDateFrom,
+                        trailing: _dateFrom != null
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () =>
+                                    setState(() => _dateFrom = null),
+                              )
+                            : null,
                       ),
-                      onTap: _pickDateFrom,
-                      trailing: _dateFrom != null
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () =>
-                                  setState(() => _dateFrom = null),
-                            )
-                          : null,
                     ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.filterDateToLabel),
-                      subtitle: Text(
-                        _dateTo != null
-                            ? formatShortDate(_dateTo!)
-                            : l10n.filterAnyDate,
+                  ],
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l10n.filterDateToLabel),
+                        subtitle: Text(
+                          _dateTo != null
+                              ? formatShortDate(_dateTo!)
+                              : l10n.filterAnyDate,
+                        ),
+                        onTap: _pickDateTo,
+                        trailing: _dateTo != null
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () => setState(() => _dateTo = null),
+                              )
+                            : null,
                       ),
-                      onTap: _pickDateTo,
-                      trailing: _dateTo != null
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () => setState(() => _dateTo = null),
-                            )
-                          : null,
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 8),
               Text(
                 l10n.filterStatusesLabel,

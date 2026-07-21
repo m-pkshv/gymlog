@@ -1153,6 +1153,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, one{{count} workout without growth} other{{count} workouts without growth}}'**
   String stagnationHint(num count);
+
+  /// AppBar toggle tooltip on History (S-02, Stage 3) shown while in list mode, switches to the calendar view.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar view'**
+  String get historyViewCalendarTooltip;
+
+  /// AppBar toggle tooltip on History (S-02, Stage 3) shown while in calendar mode, switches back to the list.
+  ///
+  /// In en, this message translates to:
+  /// **'List view'**
+  String get historyViewListTooltip;
+
+  /// Shown below the calendar grid (S-02, Stage 3) when the selected day has no workouts matching the active search/status/tag filters.
+  ///
+  /// In en, this message translates to:
+  /// **'No workouts this day'**
+  String get historyCalendarDayEmpty;
 }
 
 class _AppLocalizationsDelegate

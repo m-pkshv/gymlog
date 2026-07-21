@@ -557,4 +557,13 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get historyViewCalendarTooltip => 'Calendar view';
+
+  @override
+  String get historyViewListTooltip => 'List view';
+
+  @override
+  String get historyCalendarDayEmpty => 'No workouts this day';
 }

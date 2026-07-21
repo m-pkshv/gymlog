@@ -632,6 +632,129 @@ void main() {
     );
   });
 
+  group('calendar view (Stage 3, S-02)', () {
+    String isoDate(DateTime d) =>
+        '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+    testWidgets('toggling to calendar view shows the month grid, toggling back hides it', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('historyCalendarGrid')), findsNothing);
+
+      await tester.tap(find.byIcon(Icons.calendar_month_outlined));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('historyCalendarGrid')), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.view_list_outlined));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('historyCalendarGrid')), findsNothing);
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets('a workout on the selected day (today, by default) is listed below the grid', (
+      tester,
+    ) async {
+      final today = DateTime.now();
+      await _insertCompletedWorkout(
+        db,
+        id: 'w1',
+        date: isoDate(today),
+        name: 'Leg day',
+      );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.calendar_month_outlined));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Leg day'), findsOneWidget);
+      expect(find.text('No workouts this day'), findsNothing);
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets('tapping a day with no workouts shows the day-empty message', (
+      tester,
+    ) async {
+      final today = DateTime.now();
+      await _insertCompletedWorkout(
+        db,
+        id: 'w1',
+        date: isoDate(today),
+        name: 'Leg day',
+      );
+      final otherDay = today.day == 10 ? 11 : 10;
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.calendar_month_outlined));
+      await tester.pumpAndSettle();
+      expect(find.text('Leg day'), findsOneWidget);
+
+      await tester.tap(find.text('$otherDay'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Leg day'), findsNothing);
+      expect(find.text('No workouts this day'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets('month navigation changes which day-of-month is queried', (
+      tester,
+    ) async {
+      final today = DateTime.now();
+      await _insertCompletedWorkout(
+        db,
+        id: 'w1',
+        date: isoDate(today),
+        name: 'Leg day',
+      );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.calendar_month_outlined));
+      await tester.pumpAndSettle();
+      expect(find.text('Leg day'), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.chevron_right));
+      await tester.pumpAndSettle();
+      expect(find.text('Leg day'), findsNothing);
+
+      await tester.tap(find.byIcon(Icons.chevron_left));
+      await tester.pumpAndSettle();
+      expect(find.text('Leg day'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets('the date-range fields are hidden in the filter sheet while in calendar mode', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.calendar_month_outlined));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.tune));
+      await tester.pumpAndSettle();
+
+      expect(find.text('From'), findsNothing);
+      expect(find.text('To'), findsNothing);
+      expect(find.text('Statuses'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    });
+  });
+
   group('"Delete" + Undo (Stage 3, S-02, DM 10)', () {
     testWidgets(
       'deleting a workout hides it immediately and shows an Undo snackbar',
