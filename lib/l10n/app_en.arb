@@ -680,5 +680,33 @@
   "finishWithIncompleteSetsMessage": "Mark the remaining sets as not completed and finish?",
   "@finishWithIncompleteSetsMessage": {
     "description": "Body of the confirmation dialog (Stage 4, TS 7.2 step 6). Only working sets count -- warmups left unchecked don't trigger this (owner-confirmed 2026-07-21)."
+  },
+  "notificationPermissionRationaleTitle": "Enable notifications?",
+  "@notificationPermissionRationaleTitle": {
+    "description": "Title of the app's own explanatory dialog (Stage 4, TS 7.3) shown once, before the system permission prompt, the first time a rest timer would start."
+  },
+  "notificationPermissionRationaleMessage": "Get notified when your rest between sets is over, even if the app is in the background.",
+  "@notificationPermissionRationaleMessage": {
+    "description": "Body of the notification-permission rationale dialog (Stage 4, TS 7.3)."
+  },
+  "notificationPermissionNotNowAction": "Not now",
+  "@notificationPermissionNotNowAction": {
+    "description": "Declines the rationale dialog (Stage 4, TS 7.3) -- the system permission prompt is not shown in this case."
+  },
+  "notificationPermissionAllowAction": "Allow",
+  "@notificationPermissionAllowAction": {
+    "description": "Accepts the rationale dialog (Stage 4, TS 7.3) and triggers the actual OS permission prompt."
+  },
+  "restTimerNotificationTitle": "Rest timer",
+  "@restTimerNotificationTitle": {
+    "description": "Title of the scheduled local notification fired when the rest timer ends (Stage 4, TS 7.2 step 3)."
+  },
+  "restTimerNotificationBody": "Rest is over — next set",
+  "@restTimerNotificationBody": {
+    "description": "Body of the scheduled local notification fired when the rest timer ends (Stage 4, TS 7.2 step 3)."
+  },
+  "notificationsOffHint": "Notifications are off",
+  "@notificationsOffHint": {
+    "description": "Unobtrusive note on the rest-timer bar (Stage 4, TS 7.3) shown when notifications are currently disabled -- no settings deep-link (would need an additional package)."
   }
 }

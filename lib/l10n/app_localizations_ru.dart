@@ -606,4 +606,26 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get finishWithIncompleteSetsMessage =>
       'Отметить оставшиеся подходы невыполненными и завершить?';
+
+  @override
+  String get notificationPermissionRationaleTitle => 'Включить уведомления?';
+
+  @override
+  String get notificationPermissionRationaleMessage =>
+      'Получайте уведомление, когда время отдыха между подходами закончится, даже если приложение свёрнуто.';
+
+  @override
+  String get notificationPermissionNotNowAction => 'Не сейчас';
+
+  @override
+  String get notificationPermissionAllowAction => 'Разрешить';
+
+  @override
+  String get restTimerNotificationTitle => 'Таймер отдыха';
+
+  @override
+  String get restTimerNotificationBody => 'Отдых окончен — следующий подход';
+
+  @override
+  String get notificationsOffHint => 'Уведомления выключены';
 }

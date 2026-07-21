@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/providers.dart';
@@ -11,6 +12,7 @@ import 'data/database.dart';
 import 'data/repositories_impl/app_settings_repository_impl.dart';
 import 'data/seed/seed_runner.dart';
 import 'l10n/app_localizations.dart';
+import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,9 +47,20 @@ Future<void> main() async {
   // watches it, same reasoning as the seed above.
   await AppSettingsRepositoryImpl(db).ensureInitialized();
 
+  // Rest-timer notifications (Stage 4, TS 7.3, D-11): plugin/channel setup
+  // happens once here; the actual permission *request* stays contextual
+  // (first rest-timer start), not at app startup.
+  final notificationService = NotificationService(
+    FlutterLocalNotificationsPlugin(),
+  );
+  await notificationService.initialize();
+
   runApp(
     ProviderScope(
-      overrides: [appDatabaseProvider.overrideWithValue(db)],
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        notificationServiceProvider.overrideWithValue(notificationService),
+      ],
       child: const GymLogApp(),
     ),
   );

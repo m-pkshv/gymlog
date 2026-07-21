@@ -188,5 +188,12 @@
   "workoutContinuingBannerMessage": "Тренировка продолжается, {minutes} мин",
   "continueWorkoutAction": "Продолжить",
   "finishWithIncompleteSetsTitle": "Завершить тренировку?",
-  "finishWithIncompleteSetsMessage": "Отметить оставшиеся подходы невыполненными и завершить?"
+  "finishWithIncompleteSetsMessage": "Отметить оставшиеся подходы невыполненными и завершить?",
+  "notificationPermissionRationaleTitle": "Включить уведомления?",
+  "notificationPermissionRationaleMessage": "Получайте уведомление, когда время отдыха между подходами закончится, даже если приложение свёрнуто.",
+  "notificationPermissionNotNowAction": "Не сейчас",
+  "notificationPermissionAllowAction": "Разрешить",
+  "restTimerNotificationTitle": "Таймер отдыха",
+  "restTimerNotificationBody": "Отдых окончен — следующий подход",
+  "notificationsOffHint": "Уведомления выключены"
 }

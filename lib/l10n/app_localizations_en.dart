@@ -599,4 +599,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get finishWithIncompleteSetsMessage =>
       'Mark the remaining sets as not completed and finish?';
+
+  @override
+  String get notificationPermissionRationaleTitle => 'Enable notifications?';
+
+  @override
+  String get notificationPermissionRationaleMessage =>
+      'Get notified when your rest between sets is over, even if the app is in the background.';
+
+  @override
+  String get notificationPermissionNotNowAction => 'Not now';
+
+  @override
+  String get notificationPermissionAllowAction => 'Allow';
+
+  @override
+  String get restTimerNotificationTitle => 'Rest timer';
+
+  @override
+  String get restTimerNotificationBody => 'Rest is over — next set';
+
+  @override
+  String get notificationsOffHint => 'Notifications are off';
 }

@@ -23,6 +23,35 @@ import 'widgets/workout_tag_chip.dart';
 
 enum _ActiveWorkoutConflictResolution { finishOther, cancelOther }
 
+/// Shared by the checkbox handler (`_WorkoutEditorScreenState`) and the
+/// rest-timer bar's ±15s buttons (`_RestTimerBar`) — wrapped in its own
+/// try/catch (Stage 4, TS 7.3): a notification failure must never surface
+/// as an error to the owner or interrupt the underlying timer, which
+/// already works from anchors regardless.
+Future<void> _scheduleRestTimerNotification(
+  WidgetRef ref,
+  AppLocalizations l10n,
+  DateTime endsAtUtc,
+) async {
+  try {
+    await ref
+        .read(notificationServiceProvider)
+        .scheduleRestTimerEndNotification(
+          title: l10n.restTimerNotificationTitle,
+          body: l10n.restTimerNotificationBody,
+          endsAtUtc: endsAtUtc,
+        );
+  } catch (error, stackTrace) {
+    ref
+        .read(loggerProvider)
+        .error(
+          'Failed to schedule rest timer notification',
+          error: error,
+          stackTrace: stackTrace,
+        );
+  }
+}
+
 /// S-03 workout editor: add exercises, add sets, edit plan/fact with
 /// autosave, "✓" (DM 6.7), "прошлые результаты"/"копировать показатели
 /// прошлого выполнения" (TS 8), the full DM 6.4.1 status menu (Stage 3),
@@ -131,11 +160,100 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
         .read(workoutEditorControllerProvider(widget.workoutId).notifier)
         .changeStatus(newStatus);
     if (!mounted) return;
-    result.fold((_) {}, (error) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.workoutStatusChangeError)));
-    });
+    result.fold(
+      (_) {
+        // TS 7.2 step 6: leaving inProgress cancels any pending rest-timer
+        // notification along with deleting ActiveWorkoutState.
+        if (newStatus == WorkoutStatus.completed ||
+            newStatus == WorkoutStatus.cancelled) {
+          unawaited(_cancelRestTimerNotification());
+        }
+      },
+      (error) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.workoutStatusChangeError)));
+      },
+    );
+  }
+
+  /// TS 7.2 step 2: called after a set is marked done — if that started a
+  /// rest timer (`AppSettings.restTimerAutoStart`), requests the
+  /// notification permission (contextual, first time only, TS 7.3) and
+  /// schedules the "Отдых окончен" notification for it.
+  Future<void> _onSetCompletedChanged(String setId, bool value) async {
+    await ref
+        .read(workoutEditorControllerProvider(widget.workoutId).notifier)
+        .setCompleted(setId, value: value);
+    if (!value || !mounted) return;
+
+    // A direct repository read, not the cached `activeWorkoutStateProvider`
+    // stream value -- right after the write above, that stream may not
+    // have propagated the new row yet.
+    final endsAt = (await ref
+            .read(activeWorkoutRepositoryProvider)
+            .getByWorkoutId(widget.workoutId))
+        ?.restTimerEndsAtUtc;
+    if (endsAt == null || !mounted) return; // autostart off, warmup set, etc.
+
+    await _ensureNotificationPermissionRequested();
+    if (!mounted) return;
+    await _scheduleRestTimerNotification(ref, AppLocalizations.of(context)!, endsAt);
+  }
+
+  /// TS 7.3: shows the app's own explanatory dialog before the system
+  /// permission prompt, only the first time ever (tracked by
+  /// `NotificationService`, never re-shown automatically afterward).
+  Future<void> _ensureNotificationPermissionRequested() async {
+    final notificationService = ref.read(notificationServiceProvider);
+    try {
+      if (await notificationService.hasRequestedPermission()) return;
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(l10n.notificationPermissionRationaleTitle),
+          content: Text(l10n.notificationPermissionRationaleMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.notificationPermissionNotNowAction),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.notificationPermissionAllowAction),
+            ),
+          ],
+        ),
+      );
+      await notificationService.markPermissionRequested();
+      if (proceed ?? false) {
+        await notificationService.requestPermission();
+      }
+    } catch (error, stackTrace) {
+      ref
+          .read(loggerProvider)
+          .error(
+            'Failed to request notification permission',
+            error: error,
+            stackTrace: stackTrace,
+          );
+    }
+  }
+
+  Future<void> _cancelRestTimerNotification() async {
+    try {
+      await ref.read(notificationServiceProvider).cancelRestTimerEndNotification();
+    } catch (error, stackTrace) {
+      ref
+          .read(loggerProvider)
+          .error(
+            'Failed to cancel rest timer notification',
+            error: error,
+            stackTrace: stackTrace,
+          );
+    }
   }
 
   /// TS 7.2 step 6: "Отметить оставшиеся невыполненными и завершить?" --
@@ -247,6 +365,7 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
           onChangeStatus: _changeStatus,
           onCopyLastPerformance: _copyLastPerformance,
           onMoveDate: _moveDate,
+          onSetCompletedChanged: _onSetCompletedChanged,
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) =>
@@ -264,6 +383,7 @@ class _EditorBody extends StatelessWidget {
     required this.onChangeStatus,
     required this.onCopyLastPerformance,
     required this.onMoveDate,
+    required this.onSetCompletedChanged,
   });
 
   final WorkoutDetails details;
@@ -272,6 +392,7 @@ class _EditorBody extends StatelessWidget {
   final void Function(WorkoutStatus newStatus) onChangeStatus;
   final void Function(String workoutExerciseId) onCopyLastPerformance;
   final void Function(DateTime currentDate) onMoveDate;
+  final void Function(String setId, bool value) onSetCompletedChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -361,9 +482,7 @@ class _EditorBody extends StatelessWidget {
                       onWarmupChanged: (setId, value) {
                         controller.setWarmup(setId, value: value);
                       },
-                      onCompletedChanged: (setId, value) {
-                        controller.setCompleted(setId, value: value);
-                      },
+                      onCompletedChanged: onSetCompletedChanged,
                       onAddSet: () => controller.addSet(workoutExerciseId),
                       onCopyLastPerformance: () =>
                           onCopyLastPerformance(workoutExerciseId),
@@ -542,16 +661,48 @@ class _WorkoutTimerRow extends ConsumerWidget {
 /// timer is running (`ActiveWorkoutState.restTimerEndsAtUtc != null`),
 /// started automatically when a set is marked done (if
 /// `AppSettings.restTimerAutoStart` — see
-/// `WorkoutEditorController._maybeAutoStartRestTimer`). "±15 с" adjusts the
-/// running countdown; "Пропустить" cancels it early. No local notification
-/// yet (TS 7.3 is a separate, later Stage 4 step) — once the remaining time
-/// goes negative this just shows `00:00` until skipped or a new set starts
-/// a fresh timer.
+/// `_WorkoutEditorScreenState._onSetCompletedChanged`). "±15 с"
+/// adjusts the running countdown and reschedules its notification
+/// (TS 7.2 step 3: "отмена/перезапуск таймера — отмена/перепланирование
+/// уведомления"); "Пропустить" cancels both the timer and the
+/// notification. Once the remaining time goes negative this just shows
+/// `00:00` until skipped or a new set starts a fresh timer.
 class _RestTimerBar extends ConsumerWidget {
   const _RestTimerBar({required this.workoutId, required this.controller});
 
   final String workoutId;
   final WorkoutEditorController controller;
+
+  Future<void> _adjust(BuildContext context, WidgetRef ref, int deltaSec) async {
+    final l10n = AppLocalizations.of(context)!;
+    await controller.adjustRestTimer(deltaSec);
+    // A direct repository read, not the cached `activeWorkoutStateProvider`
+    // stream value -- right after the write above, that stream may not
+    // have propagated the new row yet.
+    final endsAt = (await ref
+            .read(activeWorkoutRepositoryProvider)
+            .getByWorkoutId(workoutId))
+        ?.restTimerEndsAtUtc;
+    if (endsAt == null) return;
+    await _scheduleRestTimerNotification(ref, l10n, endsAt);
+  }
+
+  Future<void> _skip(WidgetRef ref) async {
+    await controller.skipRestTimer();
+    try {
+      await ref
+          .read(notificationServiceProvider)
+          .cancelRestTimerEndNotification();
+    } catch (error, stackTrace) {
+      ref
+          .read(loggerProvider)
+          .error(
+            'Failed to cancel rest timer notification',
+            error: error,
+            stackTrace: stackTrace,
+          );
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -565,37 +716,58 @@ class _RestTimerBar extends ConsumerWidget {
         }
         final timerService = ref.read(activeWorkoutTimerServiceProvider);
         final remaining = timerService.remainingRestSeconds(state) ?? 0;
+        final notificationsEnabled = ref
+            .watch(notificationsEnabledProvider)
+            .maybeWhen(data: (enabled) => enabled, orElse: () => true);
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                Icons.timer_outlined,
-                size: 18,
-                color: Theme.of(context).colorScheme.primary,
+              Row(
+                children: [
+                  Icon(
+                    Icons.timer_outlined,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(l10n.restTimerLabel),
+                  const Spacer(),
+                  IconButton(
+                    tooltip: l10n.restTimerMinus15Tooltip,
+                    icon: const Icon(Icons.remove_circle_outline),
+                    onPressed: () => _adjust(context, ref, -15),
+                  ),
+                  Text(
+                    formatElapsedTime(remaining),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  IconButton(
+                    tooltip: l10n.restTimerPlus15Tooltip,
+                    icon: const Icon(Icons.add_circle_outline),
+                    onPressed: () => _adjust(context, ref, 15),
+                  ),
+                  TextButton(
+                    onPressed: () => _skip(ref),
+                    child: Text(l10n.restTimerSkipAction),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(l10n.restTimerLabel),
-              const Spacer(),
-              IconButton(
-                tooltip: l10n.restTimerMinus15Tooltip,
-                icon: const Icon(Icons.remove_circle_outline),
-                onPressed: () => controller.adjustRestTimer(-15),
-              ),
-              Text(
-                formatElapsedTime(remaining),
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              IconButton(
-                tooltip: l10n.restTimerPlus15Tooltip,
-                icon: const Icon(Icons.add_circle_outline),
-                onPressed: () => controller.adjustRestTimer(15),
-              ),
-              TextButton(
-                onPressed: controller.skipRestTimer,
-                child: Text(l10n.restTimerSkipAction),
-              ),
+              // TS 7.3: "ненавязчивая пометка «Уведомления выключены»" --
+              // no settings deep-link (would need a new package beyond the
+              // ones approved for this step), just an informational note.
+              if (!notificationsEnabled)
+                Padding(
+                  padding: const EdgeInsets.only(left: 26),
+                  child: Text(
+                    l10n.notificationsOffHint,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  ),
+                ),
             ],
           ),
         );

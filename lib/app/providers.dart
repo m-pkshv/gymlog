@@ -4,6 +4,7 @@
 /// below, wired here.
 library;
 
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -34,11 +35,31 @@ import '../domain/repositories/workout_tag_repository.dart';
 import '../features/workout_editor/controller.dart';
 import '../services/active_workout_timer_service.dart';
 import '../services/exercise_service.dart';
+import '../services/notification_service.dart';
 import '../services/progression_service.dart';
 import '../services/workout_service.dart';
 import '../services/workout_tag_service.dart';
 
 final loggerProvider = Provider<AppLogger>((ref) => AppLogger());
+
+/// Rest-timer local notifications (Stage 4, TS 7.3, D-11). `main.dart`
+/// overrides this with an already-`initialize()`d instance before `runApp`;
+/// the default here (never `initialize()`d) is only a safe fallback so
+/// widget tests that don't care about notifications — the vast majority —
+/// don't need to override it themselves. Every call site wraps this in its
+/// own try/catch, so an un-initialized plugin failing in a test is harmless.
+final notificationServiceProvider = Provider<NotificationService>((ref) {
+  return NotificationService(FlutterLocalNotificationsPlugin());
+});
+
+/// Drives the "Уведомления выключены" hint on the rest-timer bar (TS 7.3).
+final notificationsEnabledProvider = FutureProvider<bool>((ref) async {
+  try {
+    return await ref.watch(notificationServiceProvider).areNotificationsEnabled();
+  } catch (_) {
+    return true;
+  }
+});
 
 final appDatabaseProvider = Provider<drift.AppDatabase>((ref) {
   final db = drift.AppDatabase();

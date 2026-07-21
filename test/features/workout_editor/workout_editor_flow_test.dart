@@ -16,10 +16,16 @@ import 'package:gymlog/features/workout_editor/screen.dart';
 import 'package:gymlog/features/workout_editor/widgets/comment_field.dart';
 import 'package:gymlog/features/workout_editor/widgets/set_row.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
+import 'package:gymlog/services/notification_service.dart';
+import 'package:mocktail/mocktail.dart';
 
 /// Mirrors the subset of `app/router.dart` the workout editor needs (S-03,
 /// Stage 1) — a self-contained harness rather than pulling in all 5 tabs.
-Widget _appUnderTest(AppDatabase db) {
+/// [notificationService], if supplied, overrides `notificationServiceProvider`
+/// (Stage 4, TS 7.3) — only the tests that specifically verify notification
+/// orchestration need to pass one; every other test relies on the
+/// provider's own safe, try/catch-guarded default.
+Widget _appUnderTest(AppDatabase db, {NotificationService? notificationService}) {
   final router = GoRouter(
     initialLocation: '/history',
     routes: [
@@ -48,7 +54,11 @@ Widget _appUnderTest(AppDatabase db) {
   );
 
   return ProviderScope(
-    overrides: [appDatabaseProvider.overrideWithValue(db)],
+    overrides: [
+      appDatabaseProvider.overrideWithValue(db),
+      if (notificationService != null)
+        notificationServiceProvider.overrideWithValue(notificationService),
+    ],
     child: MaterialApp.router(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -100,6 +110,35 @@ Future<void> _seedTag(
 Future<void> _unmountAndFlush(WidgetTester tester) async {
   await tester.pumpWidget(const SizedBox.shrink());
   await tester.pumpAndSettle();
+}
+
+/// Mocked at the `NotificationService` level, not the plugin level (Stage
+/// 4, TS 7.3) -- the interesting logic under test is the screen's
+/// orchestration (when to show the rationale dialog, when to
+/// schedule/cancel), not `flutter_local_notifications`' own platform
+/// channel dispatch, which needs a real device to verify meaningfully.
+class MockNotificationService extends Mock implements NotificationService {}
+
+void _stubNotificationServiceDefaults(
+  MockNotificationService service, {
+  bool hasRequestedPermission = true,
+}) {
+  when(
+    () => service.hasRequestedPermission(),
+  ).thenAnswer((_) async => hasRequestedPermission);
+  when(() => service.markPermissionRequested()).thenAnswer((_) async {});
+  when(() => service.requestPermission()).thenAnswer((_) async {});
+  when(() => service.areNotificationsEnabled()).thenAnswer((_) async => true);
+  when(
+    () => service.scheduleRestTimerEndNotification(
+      title: any(named: 'title'),
+      body: any(named: 'body'),
+      endsAtUtc: any(named: 'endsAtUtc'),
+    ),
+  ).thenAnswer((_) async {});
+  when(
+    () => service.cancelRestTimerEndNotification(),
+  ).thenAnswer((_) async {});
 }
 
 /// The "⋮" menu icon on the exercise card titled [exerciseName] --
@@ -659,6 +698,180 @@ void main() {
       await _unmountAndFlush(tester);
     },
   );
+
+  group('notifications (Stage 4, TS 7.3)', () {
+    late MockNotificationService notificationService;
+
+    setUp(() {
+      notificationService = MockNotificationService();
+      _stubNotificationServiceDefaults(notificationService);
+    });
+
+    Future<void> startWorkoutWithOneSet(WidgetTester tester) async {
+      await db
+          .into(db.appSettingsTable)
+          .insert(
+            AppSettingsTableCompanion.insert(
+              id: 'singleton',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      await _seedExercise(db);
+      await tester.pumpWidget(
+        _appUnderTest(db, notificationService: notificationService),
+      );
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add set'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Start workout'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+      'marking a set done schedules the rest-end notification (permission '
+      'already requested, no rationale dialog)',
+      (tester) async {
+        await startWorkoutWithOneSet(tester);
+
+        await tester.tap(find.byType(Checkbox).last);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(AlertDialog), findsNothing);
+        verify(
+          () => notificationService.scheduleRestTimerEndNotification(
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            endsAtUtc: any(named: 'endsAtUtc'),
+          ),
+        ).called(1);
+        verifyNever(() => notificationService.requestPermission());
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'shows the rationale dialog on first use; "Allow" requests the OS '
+      'permission and still schedules the notification',
+      (tester) async {
+        notificationService = MockNotificationService();
+        _stubNotificationServiceDefaults(
+          notificationService,
+          hasRequestedPermission: false,
+        );
+        await startWorkoutWithOneSet(tester);
+
+        await tester.tap(find.byType(Checkbox).last);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Enable notifications?'), findsOneWidget);
+        await tester.tap(find.text('Allow'));
+        await tester.pumpAndSettle();
+
+        verify(() => notificationService.markPermissionRequested()).called(1);
+        verify(() => notificationService.requestPermission()).called(1);
+        verify(
+          () => notificationService.scheduleRestTimerEndNotification(
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            endsAtUtc: any(named: 'endsAtUtc'),
+          ),
+        ).called(1);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      '"Not now" on the rationale dialog skips the OS permission prompt but '
+      'still schedules the notification',
+      (tester) async {
+        notificationService = MockNotificationService();
+        _stubNotificationServiceDefaults(
+          notificationService,
+          hasRequestedPermission: false,
+        );
+        await startWorkoutWithOneSet(tester);
+
+        await tester.tap(find.byType(Checkbox).last);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Not now'));
+        await tester.pumpAndSettle();
+
+        verify(() => notificationService.markPermissionRequested()).called(1);
+        verifyNever(() => notificationService.requestPermission());
+        verify(
+          () => notificationService.scheduleRestTimerEndNotification(
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            endsAtUtc: any(named: 'endsAtUtc'),
+          ),
+        ).called(1);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets('"+15 s" reschedules the notification', (tester) async {
+      await startWorkoutWithOneSet(tester);
+      await tester.tap(find.byType(Checkbox).last);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('+15 s'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => notificationService.scheduleRestTimerEndNotification(
+          title: any(named: 'title'),
+          body: any(named: 'body'),
+          endsAtUtc: any(named: 'endsAtUtc'),
+        ),
+      ).called(2); // once on autostart, once on adjust
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets('"Skip" cancels the notification', (tester) async {
+      await startWorkoutWithOneSet(tester);
+      await tester.tap(find.byType(Checkbox).last);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Skip'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => notificationService.cancelRestTimerEndNotification(),
+      ).called(1);
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets('finishing the workout cancels any pending notification', (
+      tester,
+    ) async {
+      await startWorkoutWithOneSet(tester);
+      await tester.tap(find.byType(Checkbox).last);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Finish'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => notificationService.cancelRestTimerEndNotification(),
+      ).called(1);
+
+      await _unmountAndFlush(tester);
+    });
+  });
 
   testWidgets('reopening the editor shows previously saved data', (
     tester,

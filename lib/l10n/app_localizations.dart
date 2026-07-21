@@ -1231,6 +1231,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mark the remaining sets as not completed and finish?'**
   String get finishWithIncompleteSetsMessage;
+
+  /// Title of the app's own explanatory dialog (Stage 4, TS 7.3) shown once, before the system permission prompt, the first time a rest timer would start.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable notifications?'**
+  String get notificationPermissionRationaleTitle;
+
+  /// Body of the notification-permission rationale dialog (Stage 4, TS 7.3).
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified when your rest between sets is over, even if the app is in the background.'**
+  String get notificationPermissionRationaleMessage;
+
+  /// Declines the rationale dialog (Stage 4, TS 7.3) -- the system permission prompt is not shown in this case.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notificationPermissionNotNowAction;
+
+  /// Accepts the rationale dialog (Stage 4, TS 7.3) and triggers the actual OS permission prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get notificationPermissionAllowAction;
+
+  /// Title of the scheduled local notification fired when the rest timer ends (Stage 4, TS 7.2 step 3).
+  ///
+  /// In en, this message translates to:
+  /// **'Rest timer'**
+  String get restTimerNotificationTitle;
+
+  /// Body of the scheduled local notification fired when the rest timer ends (Stage 4, TS 7.2 step 3).
+  ///
+  /// In en, this message translates to:
+  /// **'Rest is over — next set'**
+  String get restTimerNotificationBody;
+
+  /// Unobtrusive note on the rest-timer bar (Stage 4, TS 7.3) shown when notifications are currently disabled -- no settings deep-link (would need an additional package).
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are off'**
+  String get notificationsOffHint;
 }
 
 class _AppLocalizationsDelegate

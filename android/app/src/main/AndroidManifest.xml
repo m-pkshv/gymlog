@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Rest-timer local notifications (Stage 4, TS 7.3, D-11). Runtime
+         permission requested contextually, not at app startup; see
+         NotificationService (D-10: Android 8+ minimum, this permission is
+         only actually enforced starting Android 13, a no-op below that). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="gymlog"
         android:name="${applicationName}"

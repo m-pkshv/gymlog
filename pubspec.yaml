@@ -47,6 +47,13 @@ dependencies:
   fl_chart: ^1.2.0
   # Rest timer notifications (D-11).
   flutter_local_notifications: ^22.1.0
+  # Required to schedule notifications via zonedSchedule (already a
+  # transitive dependency of flutter_local_notifications; promoted to
+  # direct so it can be imported -- Stage 4, owner-approved 2026-07-21).
+  timezone: ^0.11.0
+  # Non-critical UI flag only (D-18): "has the notification-permission
+  # rationale already been shown" (TS 7.3) -- owner-approved 2026-07-21.
+  shared_preferences: ^2.5.3
   # CSV export sharing (TS 3).
   share_plus: ^13.2.1
   path_provider: ^2.1.6
