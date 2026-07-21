@@ -6,17 +6,20 @@ import '../../app/providers.dart';
 import '../../core/date_format.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/exercise.dart';
+import '../../domain/models/exercise_history_entry.dart';
 import '../../domain/models/personal_record.dart';
 import '../../l10n/app_localizations.dart';
+import 'exercise_progress_series.dart';
 import 'record_type_labels.dart';
 import 'record_value_format.dart';
+import 'widgets/exercise_progress_chart.dart';
 
-/// S-10 "Прогресс по упражнению" (04_UI_UX_SPEC.md, section 5). This step
-/// covers the records list and the reps-at-weight table, both backed by the
-/// already-cached `PersonalRecordRepository` (Stage 7 Steps 1-2) -- no new
-/// history computation needed for either. The period-filtered progress
-/// charts (max weight/1RM/tonnage or distance/pace/duration over time) are
-/// a later step.
+/// S-10 "Прогресс по упражнению" (04_UI_UX_SPEC.md, section 5): period-
+/// filtered progress charts (max weight/1RM/tonnage for strength/reps, or
+/// distance/pace/duration for cardio), the reps-at-weight table, and the
+/// records list -- the table and records list are backed by the already-
+/// cached `PersonalRecordRepository` (Stage 7 Steps 1-2); the charts are
+/// computed fresh from `getExerciseHistory` (this step).
 class ExerciseProgressScreen extends ConsumerStatefulWidget {
   const ExerciseProgressScreen({super.key, required this.exerciseId});
 
@@ -30,6 +33,7 @@ class ExerciseProgressScreen extends ConsumerStatefulWidget {
 class _ExerciseProgressScreenState
     extends ConsumerState<ExerciseProgressScreen> {
   Exercise? _exercise;
+  List<ExerciseHistoryEntry> _history = const [];
   bool _isLoading = true;
   bool _loadError = false;
 
@@ -44,9 +48,15 @@ class _ExerciseProgressScreenState
       final exercise = await ref
           .read(exerciseRepositoryProvider)
           .getById(widget.exerciseId);
+      final history = exercise == null
+          ? const <ExerciseHistoryEntry>[]
+          : await ref
+                .read(workoutRepositoryProvider)
+                .getExerciseHistory(widget.exerciseId);
       if (!mounted) return;
       setState(() {
         _exercise = exercise;
+        _history = history;
         _isLoading = false;
         _loadError = exercise == null;
       });
@@ -77,15 +87,16 @@ class _ExerciseProgressScreenState
           ? const Center(child: CircularProgressIndicator())
           : _loadError || exercise == null
           ? Center(child: Text(l10n.exerciseProgressLoadError))
-          : _ProgressBody(exercise: exercise),
+          : _ProgressBody(exercise: exercise, history: _history),
     );
   }
 }
 
 class _ProgressBody extends ConsumerWidget {
-  const _ProgressBody({required this.exercise});
+  const _ProgressBody({required this.exercise, required this.history});
 
   final Exercise exercise;
+  final List<ExerciseHistoryEntry> history;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -108,6 +119,21 @@ class _ProgressBody extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            ..._chartsFor(l10n, exercise.exerciseType, history),
+            if (repsAtWeight.isNotEmpty) ...[
+              Text(
+                l10n.statsRepsAtWeightTableTitle,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Card(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: _RepsAtWeightTable(l10n: l10n, records: repsAtWeight),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
             Text(
               l10n.statsRecordsSectionTitle,
               style: Theme.of(context).textTheme.titleMedium,
@@ -127,26 +153,73 @@ class _ProgressBody extends ConsumerWidget {
                   ],
                 ),
               ),
-            if (repsAtWeight.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              Text(
-                l10n.statsRepsAtWeightTableTitle,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-              Card(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: _RepsAtWeightTable(l10n: l10n, records: repsAtWeight),
-                ),
-              ),
-            ],
           ],
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stackTrace) => Center(child: Text(l10n.exerciseProgressLoadError)),
     );
+  }
+
+  /// Type-dependent chart set (04_UI_UX_SPEC.md S-10): strength/reps get
+  /// max weight/1RM/tonnage; cardio gets distance/pace/duration; time/
+  /// stretch get none, mirroring `RecordsService`'s coverage exactly. Chart
+  /// titles reuse the same `recordType*` labels as the records list below --
+  /// each chart is that same figure's history, not a different metric.
+  List<Widget> _chartsFor(
+    AppLocalizations l10n,
+    ExerciseType type,
+    List<ExerciseHistoryEntry> history,
+  ) {
+    switch (type) {
+      case ExerciseType.strength:
+      case ExerciseType.reps:
+        return [
+          ExerciseProgressChart(
+            title: l10n.recordTypeMaxWeight,
+            history: history,
+            seriesBuilder: maxWeightSeries,
+          ),
+          const SizedBox(height: 16),
+          ExerciseProgressChart(
+            title: l10n.recordTypeMax1RM,
+            history: history,
+            seriesBuilder: oneRepMaxSeries,
+            isEstimated: true,
+          ),
+          const SizedBox(height: 16),
+          ExerciseProgressChart(
+            title: l10n.recordTypeMaxVolumeWorkout,
+            history: history,
+            seriesBuilder: tonnageSeries,
+          ),
+          const SizedBox(height: 24),
+        ];
+      case ExerciseType.cardio:
+        return [
+          ExerciseProgressChart(
+            title: l10n.recordTypeMaxDistance,
+            history: history,
+            seriesBuilder: maxDistanceSeries,
+          ),
+          const SizedBox(height: 16),
+          ExerciseProgressChart(
+            title: l10n.recordTypeBestPace,
+            history: history,
+            seriesBuilder: bestPaceSeries,
+          ),
+          const SizedBox(height: 16),
+          ExerciseProgressChart(
+            title: l10n.recordTypeLongestDuration,
+            history: history,
+            seriesBuilder: longestDurationSeries,
+          ),
+          const SizedBox(height: 24),
+        ];
+      case ExerciseType.time:
+      case ExerciseType.stretch:
+        return const [];
+    }
   }
 }
 

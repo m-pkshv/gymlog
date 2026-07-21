@@ -139,6 +139,14 @@ void main() {
     'shows the general records list (with the estimated badge on 1RM) and '
     'the reps-at-weight table, both linking to their workout',
     (tester) async {
+      // Three chart cards now render above the records list/table --
+      // enough content that the default test viewport would cull it
+      // (Stage 2 finding: a plain `ListView(children: ...)` only builds
+      // widgets within the viewport).
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
       final exercises = ExerciseRepositoryImpl(db);
       final workouts = WorkoutRepositoryImpl(db);
       final records = PersonalRecordRepositoryImpl(db);
@@ -193,21 +201,150 @@ void main() {
       GoRouter.of(context).push('/stats/exercise/${exercise.id}');
       await tester.pumpAndSettle();
 
-      expect(find.text('Max weight'), findsOneWidget);
+      // "Max weight"/"Estimated 1RM" each appear twice now: once as a chart
+      // title (the workouts above are drafts, never completed, so the
+      // charts themselves render empty) and once as the records-list row.
+      expect(find.text('Max weight'), findsNWidgets(2));
       expect(find.text('100.0 kg'), findsOneWidget);
-      expect(find.text('Estimated 1RM'), findsOneWidget);
+      expect(find.text('Estimated 1RM'), findsNWidgets(2));
       expect(find.text('116.7 kg'), findsOneWidget);
-      expect(find.text('estimated'), findsOneWidget);
-      // Only the two general records -- no "estimated" leaks onto maxWeight.
+      expect(find.text('estimated'), findsNWidgets(2));
       expect(find.text('Reps at weight'), findsOneWidget);
       expect(find.text('80.0 kg'), findsOneWidget);
       expect(find.text('12'), findsOneWidget);
 
-      await tester.tap(find.text('Max weight'));
+      await tester.tap(find.widgetWithText(ListTile, 'Max weight'));
       await tester.pumpAndSettle();
       expect(find.text('workout-${weightWorkout.id}'), findsOneWidget);
 
       await _unmountAndFlush(tester);
     },
   );
+
+  group('progress charts (Stage 7 Step 6, TS 9)', () {
+    Future<void> addCompletedWorkout(
+      AppDatabase db, {
+      required String exerciseId,
+      required DateTime date,
+      required double weight,
+      required int reps,
+    }) async {
+      final workouts = WorkoutRepositoryImpl(db);
+      final workout = await workouts.createDraft(date: date);
+      final workoutExercise = await workouts.addExercise(
+        workoutId: workout.id,
+        exerciseId: exerciseId,
+      );
+      final set = await workouts.addSet(
+        workoutExerciseId: workoutExercise.id,
+        isWarmup: false,
+      );
+      await workouts.updateSet(
+        set.copyWith(isCompleted: true, actualWeightKg: weight, actualReps: reps),
+      );
+      await workouts.updateWorkout(
+        workout.copyWith(status: WorkoutStatus.completed),
+      );
+    }
+
+    testWidgets(
+      'a strength exercise with no history shows all 3 charts empty',
+      (tester) async {
+        final exercise = await ExerciseRepositoryImpl(
+          db,
+        ).create(name: 'Squat', exerciseType: ExerciseType.strength);
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        final context = tester.element(find.byType(StatsScreen));
+        GoRouter.of(context).push('/stats/exercise/${exercise.id}');
+        await tester.pumpAndSettle();
+
+        expect(find.text('Max weight'), findsOneWidget);
+        expect(find.text('Estimated 1RM'), findsOneWidget);
+        expect(find.text('Workout tonnage'), findsOneWidget);
+        expect(find.text('No entries in this period'), findsNWidgets(3));
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'a completed workout in the default Month period shows up on the '
+      'max weight chart; switching to All reveals an older one',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 3000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
+        final exercise = await ExerciseRepositoryImpl(
+          db,
+        ).create(name: 'Squat', exerciseType: ExerciseType.strength);
+        await addCompletedWorkout(
+          db,
+          exerciseId: exercise.id,
+          date: DateTime.now().subtract(const Duration(days: 200)),
+          weight: 80,
+          reps: 5,
+        );
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        final context = tester.element(find.byType(StatsScreen));
+        GoRouter.of(context).push('/stats/exercise/${exercise.id}');
+        await tester.pumpAndSettle();
+
+        final maxWeightCard = find.ancestor(
+          of: find.text('Max weight'),
+          matching: find.byType(Card),
+        );
+        expect(
+          find.descendant(
+            of: maxWeightCard,
+            matching: find.text('No entries in this period'),
+          ),
+          findsOneWidget,
+        );
+
+        await tester.tap(
+          find.descendant(
+            of: maxWeightCard,
+            matching: find.widgetWithText(ChoiceChip, 'All'),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.descendant(
+            of: maxWeightCard,
+            matching: find.text('No entries in this period'),
+          ),
+          findsNothing,
+        );
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets('a cardio exercise shows the 3 cardio charts, not the strength ones', (
+      tester,
+    ) async {
+      final exercise = await ExerciseRepositoryImpl(
+        db,
+      ).create(name: 'Run', exerciseType: ExerciseType.cardio);
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      final context = tester.element(find.byType(StatsScreen));
+      GoRouter.of(context).push('/stats/exercise/${exercise.id}');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Max distance'), findsOneWidget);
+      expect(find.text('Best pace'), findsOneWidget);
+      expect(find.text('Longest duration'), findsOneWidget);
+      expect(find.text('Max weight'), findsNothing);
+
+      await _unmountAndFlush(tester);
+    });
+  });
 }
