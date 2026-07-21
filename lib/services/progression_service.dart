@@ -12,27 +12,27 @@ import '../domain/repositories/workout_repository.dart';
 /// description of the algorithm), not updated incrementally, so a missed
 /// trigger just means a stale cache rather than a corrupt one.
 ///
-/// ASSUMPTION(progression-best-set-selection): TS 9.4 only spells out the
-/// "лучший рабочий подход" selection rule for `strength` (max Epley 1RM,
-/// tie -> higher weight). For `reps`/`cardio`/`time`/`stretch` this picks
-/// the working set that maximizes the type's first listed comparison
-/// metric (reps count / distance / duration) — the same "one discriminator
-/// picks the representative set" shape TS 9.4 already uses for strength.
-/// The owner was asked to confirm this and hasn't yet; recomputation is
-/// idempotent, so this can be corrected later without any migration.
+/// Best-set selection for `reps`/`cardio`/`time`/`stretch` (TS 9.4 only
+/// spells out the rule for `strength` explicitly — max Epley 1RM, tie ->
+/// higher weight): picks the working set that maximizes the type's first
+/// listed comparison metric (reps count / distance / duration), the same
+/// "one discriminator picks the representative set" shape TS 9.4 uses for
+/// strength. Confirmed by the owner 2026-07-21.
 ///
-/// ASSUMPTION(progression-1rm-out-of-range): if every working set in an
-/// occurrence falls outside D-6's 1RM domain (reps 1-12, weight > 0), that
-/// occurrence is treated as having no measurable strength result (a
-/// null/null vector) — the same treatment as an occurrence with no
-/// completed working sets at all, rather than silently ignoring D-6's
-/// stated domain.
+/// If every working set in an occurrence falls outside D-6's 1RM domain
+/// (reps 1-12, weight > 0), that occurrence is treated as having no
+/// measurable strength result (a null/null vector) — the same treatment as
+/// an occurrence with no completed working sets at all. Confirmed by the
+/// owner 2026-07-21; flagged by the owner to revisit before final release
+/// (Stage 10 stabilization) in case a strength occurrence with only
+/// out-of-domain reps should instead be excluded from the sequence rather
+/// than counted as a null vector.
 ///
-/// ASSUMPTION(progression-null-transition): TS 9.4 defines "null stayed
-/// null" as unchanged and "value became null" as a decrease, but doesn't
-/// say what "null became value" is. Treated as an increase (the natural
-/// complement — going from no measurable result to a measurable one is
-/// exactly the sort of thing D-7's "результат вырос" is meant to capture).
+/// A `null` -> value transition (occurrence had no measurable result, next
+/// one does) counts as an increase (resets the stagnation counter) — TS
+/// 9.4 defines "null stayed null" as unchanged and "value became null" as
+/// a decrease, but doesn't spell out this direction; treated as the
+/// natural complement. Confirmed by the owner 2026-07-21.
 class ProgressionService {
   ProgressionService(this._workoutRepository, this._exerciseRepository, this._progressionRepository);
 
@@ -147,7 +147,7 @@ class ProgressionService {
       if (p == null && c == null) continue;
       if (p != null && c == null) return false; // value -> null: decrease
       if (p == null && c != null) {
-        anyIncrease = true; // null -> value: ASSUMPTION(progression-null-transition)
+        anyIncrease = true; // null -> value counts as an increase
         continue;
       }
       if (c! > p!) {
