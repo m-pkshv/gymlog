@@ -487,6 +487,18 @@
   "@settingsShowTagsLabel": {
     "description": "Temporary switch on the \"More\" placeholder (ASSUMPTION(temp-show-tags-toggle)) that toggles AppSettings.showTags; moves to the real S-17 settings screen at Stage 9."
   },
+  "settingsUnitSystemLabel": "Imperial units",
+  "@settingsUnitSystemLabel": {
+    "description": "Temporary switch on the \"More\" placeholder (ASSUMPTION(temp-unit-system-toggle), Stage 6) that toggles AppSettings.unitSystem between metric/imperial; moves to the real S-17 settings screen at Stage 9."
+  },
+  "settingsUnitSystemMetric": "Metric (kg, cm)",
+  "@settingsUnitSystemMetric": {
+    "description": "Subtitle shown under settingsUnitSystemLabel when unitSystem is metric."
+  },
+  "settingsUnitSystemImperial": "Imperial (lb, in)",
+  "@settingsUnitSystemImperial": {
+    "description": "Subtitle shown under settingsUnitSystemLabel when unitSystem is imperial."
+  },
   "settingsLoadError": "Couldn't load settings",
   "@settingsLoadError": {
     "description": "Error state on the \"More\" placeholder (and anywhere else appSettingsProvider is watched) when the settings row fails to load."

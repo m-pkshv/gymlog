@@ -453,6 +453,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsShowTagsLabel => 'Показывать теги';
 
   @override
+  String get settingsUnitSystemLabel => 'Имперские единицы';
+
+  @override
+  String get settingsUnitSystemMetric => 'Метрические (кг, см)';
+
+  @override
+  String get settingsUnitSystemImperial => 'Имперские (фунты, дюймы)';
+
+  @override
   String get settingsLoadError => 'Не удалось загрузить настройки';
 
   @override

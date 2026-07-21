@@ -950,6 +950,24 @@ abstract class AppLocalizations {
   /// **'Show tags'**
   String get settingsShowTagsLabel;
 
+  /// Temporary switch on the "More" placeholder (ASSUMPTION(temp-unit-system-toggle), Stage 6) that toggles AppSettings.unitSystem between metric/imperial; moves to the real S-17 settings screen at Stage 9.
+  ///
+  /// In en, this message translates to:
+  /// **'Imperial units'**
+  String get settingsUnitSystemLabel;
+
+  /// Subtitle shown under settingsUnitSystemLabel when unitSystem is metric.
+  ///
+  /// In en, this message translates to:
+  /// **'Metric (kg, cm)'**
+  String get settingsUnitSystemMetric;
+
+  /// Subtitle shown under settingsUnitSystemLabel when unitSystem is imperial.
+  ///
+  /// In en, this message translates to:
+  /// **'Imperial (lb, in)'**
+  String get settingsUnitSystemImperial;
+
   /// Error state on the "More" placeholder (and anywhere else appSettingsProvider is watched) when the settings row fails to load.
   ///
   /// In en, this message translates to:

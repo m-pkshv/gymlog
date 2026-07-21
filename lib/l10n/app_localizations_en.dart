@@ -449,6 +449,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsShowTagsLabel => 'Show tags';
 
   @override
+  String get settingsUnitSystemLabel => 'Imperial units';
+
+  @override
+  String get settingsUnitSystemMetric => 'Metric (kg, cm)';
+
+  @override
+  String get settingsUnitSystemImperial => 'Imperial (lb, in)';
+
+  @override
   String get settingsLoadError => 'Couldn\'t load settings';
 
   @override

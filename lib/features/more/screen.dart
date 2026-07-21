@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
+import '../../core/units/unit_converter.dart';
 import '../../l10n/app_localizations.dart';
 
 /// S-11 "Ещё" placeholder (04_UI_UX_SPEC.md, section 5) — menu to
@@ -16,6 +17,10 @@ import '../../l10n/app_localizations.dart';
 /// the temporary "New workout" FAB on the History placeholder in Stage 1
 /// (`ASSUMPTION(temp-new-workout-entry)`, since replaced). This switch moves
 /// into the real settings screen at Stage 9.
+///
+/// ASSUMPTION(temp-unit-system-toggle): same reasoning, added at Stage 6 so
+/// the D-5 ★ verification ("switching units changes display without
+/// changing stored values") can actually be exercised before Stage 9.
 class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
 
@@ -44,6 +49,20 @@ class MoreScreen extends ConsumerWidget {
               value: settings.showTags,
               onChanged: (value) =>
                   ref.read(appSettingsRepositoryProvider).setShowTags(value),
+            ),
+            SwitchListTile(
+              title: Text(l10n.settingsUnitSystemLabel),
+              subtitle: Text(
+                settings.unitSystem == UnitSystem.imperial
+                    ? l10n.settingsUnitSystemImperial
+                    : l10n.settingsUnitSystemMetric,
+              ),
+              value: settings.unitSystem == UnitSystem.imperial,
+              onChanged: (imperial) => ref
+                  .read(appSettingsRepositoryProvider)
+                  .setUnitSystem(
+                    imperial ? UnitSystem.imperial : UnitSystem.metric,
+                  ),
             ),
           ],
         ),

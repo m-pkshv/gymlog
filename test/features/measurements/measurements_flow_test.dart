@@ -9,8 +9,10 @@ import 'package:gymlog/core/units/unit_converter.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/body_measurement_repository_impl.dart';
+import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/features/measurements/custom_measurement_type_screen.dart';
 import 'package:gymlog/features/measurements/measurement_form_screen.dart';
+import 'package:gymlog/features/measurements/measurement_value_format.dart';
 import 'package:gymlog/features/measurements/screen.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
@@ -280,6 +282,50 @@ void main() {
       expect(stored!.valueMetric, closeTo(150 * UnitConverter.kgPerLb, 1e-6));
       // The list re-displays it back in lb, not the raw stored kg.
       expect(find.textContaining('150.0 lb'), findsOneWidget);
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'switching the unit system (★ verification, D-5) changes display only '
+    '-- the stored valueMetric never changes',
+    (tester) async {
+      final measurements = BodyMeasurementRepositoryImpl(db);
+      final created = await measurements.create(
+        measurementTypeId: 'body_weight',
+        date: DateTime.now(),
+        valueMetric: 80,
+      );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('80.0 kg'), findsOneWidget);
+
+      // Same toggle as `more_screen_test.dart`'s "Imperial units" switch —
+      // simulated here directly against AppSettingsRepository since this
+      // harness doesn't mount MoreScreen too.
+      await AppSettingsRepositoryImpl(db).setUnitSystem(UnitSystem.imperial);
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('kg'), findsNothing);
+      expect(
+        find.textContaining(
+          measurementValueToDisplay(
+            80,
+            MeasurementUnitKind.mass,
+            UnitSystem.imperial,
+          ).toStringAsFixed(1),
+        ),
+        findsOneWidget,
+      );
+
+      final stillStored = await measurements.getByTypeAndDate(
+        measurementTypeId: 'body_weight',
+        date: DateTime.now(),
+      );
+      expect(stillStored!.valueMetric, created.valueMetric);
+      expect(stillStored.valueMetric, 80);
+
       await _unmountAndFlush(tester);
     },
   );

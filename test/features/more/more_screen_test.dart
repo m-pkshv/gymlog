@@ -26,6 +26,8 @@ Future<void> _unmountAndFlush(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+Finder _switchTile(String title) => find.widgetWithText(SwitchListTile, title);
+
 void main() {
   late AppDatabase db;
 
@@ -44,7 +46,7 @@ void main() {
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
 
-      final tile = tester.widget<SwitchListTile>(find.byType(SwitchListTile));
+      final tile = tester.widget<SwitchListTile>(_switchTile('Show tags'));
       expect(tile.value, isTrue);
 
       await _unmountAndFlush(tester);
@@ -58,16 +60,53 @@ void main() {
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(SwitchListTile));
+      await tester.tap(_switchTile('Show tags'));
       await tester.pumpAndSettle();
 
-      final tile = tester.widget<SwitchListTile>(find.byType(SwitchListTile));
+      final tile = tester.widget<SwitchListTile>(_switchTile('Show tags'));
       expect(tile.value, isFalse);
 
       final row = await (db.select(
         db.appSettingsTable,
       )..where((t) => t.id.equals('singleton'))).getSingle();
       expect(row.showTags, isFalse);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'shows the unit system switch off (metric) by default (D-5, Stage 6)',
+    (tester) async {
+      await AppSettingsRepositoryImpl(db).ensureInitialized();
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      final tile = tester.widget<SwitchListTile>(
+        _switchTile('Imperial units'),
+      );
+      expect(tile.value, isFalse);
+      expect(find.text('Metric (kg, cm)'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'toggling the unit system switch persists unitSystem = imperial',
+    (tester) async {
+      await AppSettingsRepositoryImpl(db).ensureInitialized();
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.tap(_switchTile('Imperial units'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Imperial (lb, in)'), findsOneWidget);
+      final row = await (db.select(
+        db.appSettingsTable,
+      )..where((t) => t.id.equals('singleton'))).getSingle();
+      expect(row.unitSystem, 'imperial');
 
       await _unmountAndFlush(tester);
     },
