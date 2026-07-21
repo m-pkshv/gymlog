@@ -7,8 +7,14 @@ import '../models/body_measurement.dart';
 /// not this contract's.
 abstract class BodyMeasurementRepository {
   /// Non-deleted entries for one measurement type, newest date first (S-14
-  /// list + graph).
-  Stream<List<BodyMeasurement>> watchByType(String measurementTypeId);
+  /// list + graph). [from]/[to] narrow to an inclusive local-date range
+  /// (S-09's period filter, TS 9: "период — включительно, по локальным
+  /// датам"); omitted means unbounded on that side.
+  Stream<List<BodyMeasurement>> watchByType(
+    String measurementTypeId, {
+    DateTime? from,
+    DateTime? to,
+  });
 
   /// The one non-deleted entry for [measurementTypeId] on [date], if any —
   /// used to detect the DM 6.9 same-day duplicate before creating a new

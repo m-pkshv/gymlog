@@ -915,4 +915,34 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get addMeasurementEntryAction => 'Добавить измерение';
+
+  @override
+  String get statsWeightCardTitle => 'Вес тела';
+
+  @override
+  String get statsBodyFatCardTitle => '% жира';
+
+  @override
+  String get statsMeasurementsCardTitle => 'Замеры';
+
+  @override
+  String get statsPeriodWeek => 'Нед';
+
+  @override
+  String get statsPeriodMonth => 'Мес';
+
+  @override
+  String get statsPeriodThreeMonths => '3М';
+
+  @override
+  String get statsPeriodYear => 'Год';
+
+  @override
+  String get statsPeriodAllTime => 'Всё';
+
+  @override
+  String get statsPeriodCustom => 'Свой';
+
+  @override
+  String get statsEmptyPeriod => 'Нет записей за этот период';
 }

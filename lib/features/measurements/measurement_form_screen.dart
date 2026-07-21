@@ -12,6 +12,7 @@ import '../../domain/models/body_measurement.dart';
 import '../../domain/models/measurement_type.dart';
 import '../../l10n/app_localizations.dart';
 import 'measurement_type_labels.dart';
+import 'measurement_type_lookup.dart';
 import 'measurement_value_format.dart';
 
 const _unitConverter = UnitConverter();
@@ -62,10 +63,7 @@ class _MeasurementFormScreenState extends ConsumerState<MeasurementFormScreen> {
 
   MeasurementType? _findType(List<MeasurementType> types, String? id) {
     if (id == null) return null;
-    for (final type in types) {
-      if (type.id == id) return type;
-    }
-    return null;
+    return firstMeasurementTypeWhere(types, (type) => type.id == id);
   }
 
   List<MeasurementType> _sorted(List<MeasurementType> types) {

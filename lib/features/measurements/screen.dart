@@ -4,21 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../domain/enums.dart';
-import '../../domain/models/measurement_type.dart';
 import '../../l10n/app_localizations.dart';
 import 'measurement_type_labels.dart';
+import 'measurement_type_lookup.dart';
 import 'widgets/create_measurement_type_dialog.dart';
 import 'widgets/measurement_type_detail.dart';
-
-MeasurementType? _firstWhere(
-  List<MeasurementType> types,
-  bool Function(MeasurementType) test,
-) {
-  for (final type in types) {
-    if (test(type)) return type;
-  }
-  return null;
-}
 
 /// S-14: tabs for Weight / Body fat % / Measurements (girths) / Custom
 /// (04_UI_UX_SPEC.md, section 5). The girths tab needs a sub-selector among
@@ -94,11 +84,11 @@ class _MeasurementsScreenState extends ConsumerState<MeasurementsScreen>
       ),
       body: typesAsync.when(
         data: (types) {
-          final weight = _firstWhere(
+          final weight = firstMeasurementTypeWhere(
             types,
             (t) => t.isBuiltIn && t.unitKind == MeasurementUnitKind.mass,
           );
-          final bodyFat = _firstWhere(
+          final bodyFat = firstMeasurementTypeWhere(
             types,
             (t) => t.isBuiltIn && t.unitKind == MeasurementUnitKind.percent,
           );
@@ -114,7 +104,7 @@ class _MeasurementsScreenState extends ConsumerState<MeasurementsScreen>
                 ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
           final customTypes = types.where((t) => !t.isBuiltIn).toList();
           final selectedGirth =
-              _firstWhere(girths, (t) => t.id == _selectedGirthId) ??
+              firstMeasurementTypeWhere(girths, (t) => t.id == _selectedGirthId) ??
               (girths.isNotEmpty ? girths.first : null);
 
           return TabBarView(

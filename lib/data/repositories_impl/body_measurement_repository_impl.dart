@@ -15,7 +15,11 @@ class BodyMeasurementRepositoryImpl implements BodyMeasurementRepository {
   final drift.AppDatabase _db;
 
   @override
-  Stream<List<BodyMeasurement>> watchByType(String measurementTypeId) {
+  Stream<List<BodyMeasurement>> watchByType(
+    String measurementTypeId, {
+    DateTime? from,
+    DateTime? to,
+  }) {
     final query = _db.select(_db.bodyMeasurements)
       ..where(
         (m) =>
@@ -23,6 +27,12 @@ class BodyMeasurementRepositoryImpl implements BodyMeasurementRepository {
             m.isDeleted.equals(false),
       )
       ..orderBy([(m) => OrderingTerm.desc(m.date)]);
+    if (from != null) {
+      query.where((m) => m.date.isBiggerOrEqualValue(dateOnlyString(from)));
+    }
+    if (to != null) {
+      query.where((m) => m.date.isSmallerOrEqualValue(dateOnlyString(to)));
+    }
     return query.watch().map(
       (rows) => rows.map((row) => row.toDomain()).toList(),
     );

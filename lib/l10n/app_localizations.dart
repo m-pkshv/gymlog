@@ -1813,6 +1813,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Log measurement'**
   String get addMeasurementEntryAction;
+
+  /// S-09 card title for the body_weight dynamics chart (Stage 7).
+  ///
+  /// In en, this message translates to:
+  /// **'Body weight'**
+  String get statsWeightCardTitle;
+
+  /// S-09 card title for the body_fat dynamics chart.
+  ///
+  /// In en, this message translates to:
+  /// **'Body fat %'**
+  String get statsBodyFatCardTitle;
+
+  /// S-09 card title for the girth/custom measurement dynamics chart with its own type dropdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurements'**
+  String get statsMeasurementsCardTitle;
+
+  /// S-09 period selector label for the 7-day preset (03_TECHNICAL_SPEC.md section 9).
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get statsPeriodWeek;
+
+  /// S-09 period selector label for the 30-day preset.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get statsPeriodMonth;
+
+  /// S-09 period selector label for the 90-day preset.
+  ///
+  /// In en, this message translates to:
+  /// **'3M'**
+  String get statsPeriodThreeMonths;
+
+  /// S-09 period selector label for the 365-day preset.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get statsPeriodYear;
+
+  /// S-09 period selector label for the unbounded 'all time' preset.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get statsPeriodAllTime;
+
+  /// S-09 period selector label that opens a date-range picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get statsPeriodCustom;
+
+  /// Empty state shown on an S-09 chart when the selected period has no data.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries in this period'**
+  String get statsEmptyPeriod;
 }
 
 class _AppLocalizationsDelegate

@@ -908,4 +908,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addMeasurementEntryAction => 'Log measurement';
+
+  @override
+  String get statsWeightCardTitle => 'Body weight';
+
+  @override
+  String get statsBodyFatCardTitle => 'Body fat %';
+
+  @override
+  String get statsMeasurementsCardTitle => 'Measurements';
+
+  @override
+  String get statsPeriodWeek => 'Week';
+
+  @override
+  String get statsPeriodMonth => 'Month';
+
+  @override
+  String get statsPeriodThreeMonths => '3M';
+
+  @override
+  String get statsPeriodYear => 'Year';
+
+  @override
+  String get statsPeriodAllTime => 'All';
+
+  @override
+  String get statsPeriodCustom => 'Custom';
+
+  @override
+  String get statsEmptyPeriod => 'No entries in this period';
 }

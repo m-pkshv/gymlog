@@ -310,6 +310,23 @@ final bodyMeasurementsByTypeProvider = StreamProvider.family<
       .watchByType(measurementTypeId);
 });
 
+/// One measurement type's entries within a period (S-09's per-chart period
+/// filter, TS 9). The record key relies on Dart records' structural
+/// equality to work as a Riverpod family parameter. `autoDispose`: unlike
+/// [bodyMeasurementsByTypeProvider], every period a user picks would
+/// otherwise mint a permanently-cached subscription that's never released
+/// (S-09 has several independently period-switchable charts on screen at
+/// once) — this drops a period's drift `.watch()` subscription as soon as
+/// nothing is displaying it anymore.
+final bodyMeasurementsInRangeProvider = StreamProvider.autoDispose.family<
+  List<BodyMeasurement>,
+  ({String measurementTypeId, DateTime? from, DateTime? to})
+>((ref, params) {
+  return ref
+      .watch(bodyMeasurementRepositoryProvider)
+      .watchByType(params.measurementTypeId, from: params.from, to: params.to);
+});
+
 /// The single point of truth for custom measurement type name validation
 /// and DM 10 archive/delete rules.
 final measurementTypeServiceProvider = Provider<MeasurementTypeService>((

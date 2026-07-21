@@ -285,5 +285,15 @@
   "replaceMeasurementConfirmTitle": "Заменить существующее значение?",
   "replaceMeasurementConfirmMessage": "За этот день уже есть запись: {value} {unit}. Заменить её новым значением?",
   "replaceMeasurementConfirmAction": "Заменить",
-  "addMeasurementEntryAction": "Добавить измерение"
+  "addMeasurementEntryAction": "Добавить измерение",
+  "statsWeightCardTitle": "Вес тела",
+  "statsBodyFatCardTitle": "% жира",
+  "statsMeasurementsCardTitle": "Замеры",
+  "statsPeriodWeek": "Нед",
+  "statsPeriodMonth": "Мес",
+  "statsPeriodThreeMonths": "3М",
+  "statsPeriodYear": "Год",
+  "statsPeriodAllTime": "Всё",
+  "statsPeriodCustom": "Свой",
+  "statsEmptyPeriod": "Нет записей за этот период"
 }
