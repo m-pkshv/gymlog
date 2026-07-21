@@ -4,6 +4,7 @@ import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/repositories_impl/exercise_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_tag_repository_impl.dart';
+import 'package:gymlog/data/repositories_impl/workout_template_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
 
 void main() {
@@ -11,12 +12,14 @@ void main() {
   late WorkoutRepositoryImpl workouts;
   late ExerciseRepositoryImpl exercises;
   late WorkoutTagRepositoryImpl tags;
+  late WorkoutTemplateRepositoryImpl templates;
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
     workouts = WorkoutRepositoryImpl(db);
     exercises = ExerciseRepositoryImpl(db);
     tags = WorkoutTagRepositoryImpl(db);
+    templates = WorkoutTemplateRepositoryImpl(db);
   });
 
   tearDown(() async {
@@ -370,6 +373,78 @@ void main() {
       expect(
         () => workouts.copyWorkout(
           sourceWorkoutId: 'does-not-exist',
+          date: DateTime(2026, 7, 20),
+        ),
+        throwsArgumentError,
+      );
+    });
+  });
+
+  group('createFromTemplate (Stage 5, TS 8 section 8, DM-1)', () {
+    test(
+      'copies exercises, order, comment and planned values (including '
+      'warmup) into a new draft named after the template',
+      () async {
+        final exercise = await exercises.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+        final template = await templates.create(name: 'Leg day');
+        var templateExercise = await templates.addExercise(
+          templateId: template.id,
+          exerciseId: exercise.id,
+        );
+        templateExercise = templateExercise.copyWith(comment: 'Go heavy');
+        await templates.updateTemplateExercise(templateExercise);
+
+        final warmup = await templates.addSet(
+          templateExerciseId: templateExercise.id,
+          isWarmup: true,
+        );
+        await templates.updateTemplateSet(
+          warmup.copyWith(plannedWeightKg: 40, plannedReps: 10),
+        );
+        final working = await templates.addSet(
+          templateExerciseId: templateExercise.id,
+          isWarmup: false,
+        );
+        await templates.updateTemplateSet(
+          working.copyWith(plannedWeightKg: 100, plannedReps: 5),
+        );
+
+        final workout = await workouts.createFromTemplate(
+          templateId: template.id,
+          date: DateTime(2026, 7, 20),
+        );
+
+        expect(workout.date, DateTime(2026, 7, 20));
+        expect(workout.status, WorkoutStatus.draft);
+        expect(workout.name, 'Leg day');
+
+        final details = await workouts.getDetails(workout.id);
+        expect(details!.exercises, hasLength(1));
+        final exerciseDetails = details.exercises.single;
+        expect(exerciseDetails.exercise.id, exercise.id);
+        expect(exerciseDetails.workoutExercise.comment, 'Go heavy');
+        expect(
+          exerciseDetails.workoutExercise.progressionDecision,
+          ProgressionDecision.none,
+        );
+        expect(exerciseDetails.sets, hasLength(2));
+        expect(exerciseDetails.sets[0].isWarmup, isTrue);
+        expect(exerciseDetails.sets[0].plannedWeightKg, 40);
+        expect(exerciseDetails.sets[1].isWarmup, isFalse);
+        expect(exerciseDetails.sets[1].plannedWeightKg, 100);
+        expect(exerciseDetails.sets[1].plannedReps, 5);
+        expect(exerciseDetails.sets[1].isCompleted, isFalse);
+        expect(exerciseDetails.sets[1].actualWeightKg, isNull);
+      },
+    );
+
+    test('throws for an unknown source template', () {
+      expect(
+        () => workouts.createFromTemplate(
+          templateId: 'does-not-exist',
           date: DateTime(2026, 7, 20),
         ),
         throwsArgumentError,

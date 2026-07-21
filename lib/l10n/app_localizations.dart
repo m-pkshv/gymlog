@@ -980,17 +980,11 @@ abstract class AppLocalizations {
   /// **'From a copy'**
   String get newWorkoutFromCopyAction;
 
-  /// Disabled stub option in the History FAB's creation menu (Stage 3) — templates are Stage 5 scope.
+  /// Option in the History FAB's creation menu that opens the template-source picker (Stage 5).
   ///
   /// In en, this message translates to:
   /// **'From a template'**
   String get newWorkoutFromTemplateAction;
-
-  /// Subtitle under the disabled "From a template" creation menu option.
-  ///
-  /// In en, this message translates to:
-  /// **'Coming soon'**
-  String get comingSoonLabel;
 
   /// AppBar title of the copy-source picker screen (Stage 3, "Копией").
   ///
@@ -1273,6 +1267,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notifications are off'**
   String get notificationsOffHint;
+
+  /// AppBar title of the S-05 workout summary screen, shown right after finishing a workout.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout summary'**
+  String get workoutSummaryTitle;
+
+  /// Caption under the duration figure on S-05.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get workoutSummaryDurationLabel;
+
+  /// Caption under the exercise-count figure on S-05.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercises'**
+  String get workoutSummaryExercisesLabel;
+
+  /// Caption under the set-count figure on S-05.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets'**
+  String get workoutSummarySetsLabel;
+
+  /// Caption under the tonnage figure on S-05 (03_TECHNICAL_SPEC.md, section 9: Σ actualWeightKg × actualReps).
+  ///
+  /// In en, this message translates to:
+  /// **'Tonnage'**
+  String get workoutSummaryTonnageLabel;
+
+  /// Formatted tonnage figure on S-05 -- always metric (ASSUMPTION(fixed-metric-unit)).
+  ///
+  /// In en, this message translates to:
+  /// **'{value} kg'**
+  String workoutSummaryTonnageValue(String value);
+
+  /// Button on S-05 that returns to History.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get workoutSummaryDoneAction;
+
+  /// AppBar title of the S-12 template list, and its entry on the 'More' menu (S-11).
+  ///
+  /// In en, this message translates to:
+  /// **'Templates'**
+  String get templatesTitle;
+
+  /// Empty state on S-12 when there are no templates at all.
+  ///
+  /// In en, this message translates to:
+  /// **'No templates yet'**
+  String get templatesEmptyTitle;
+
+  /// Error state on S-12.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load templates'**
+  String get templatesLoadError;
+
+  /// Exercise count on a template list card (S-12).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} exercise} other{{count} exercises}}'**
+  String templateExerciseCount(int count);
+
+  /// FAB tooltip and empty-state button on S-12 (create from scratch).
+  ///
+  /// In en, this message translates to:
+  /// **'Create template'**
+  String get createTemplateAction;
+
+  /// Title of the create-template dialog opened from S-12's FAB.
+  ///
+  /// In en, this message translates to:
+  /// **'New template'**
+  String get createTemplateTitle;
+
+  /// Shown in the create-template dialog when WorkoutTemplateService.create fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create the template'**
+  String get createTemplateError;
+
+  /// Label for the template name field, both in the create dialog and the S-13 editor header.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get templateNameLabel;
+
+  /// AppBar title of the S-13 template editor.
+  ///
+  /// In en, this message translates to:
+  /// **'Template'**
+  String get templateEditorTitle;
+
+  /// Label for the template-level comment field on S-13 (06_DATA_MODEL.md, section 6.8).
+  ///
+  /// In en, this message translates to:
+  /// **'Comment'**
+  String get templateCommentLabel;
+
+  /// Error state on S-13.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the template'**
+  String get templateLoadError;
+
+  /// Empty state on S-13 before any exercise has been added.
+  ///
+  /// In en, this message translates to:
+  /// **'No exercises yet'**
+  String get templateExercisesEmpty;
+
+  /// S-12 card menu item that archives a template.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get archiveTemplateAction;
+
+  /// S-12 card menu item that unarchives a template.
+  ///
+  /// In en, this message translates to:
+  /// **'Unarchive'**
+  String get unarchiveTemplateAction;
+
+  /// Shown when archiving/unarchiving a template fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update the template'**
+  String get archiveTemplateError;
+
+  /// S-12 card menu item that soft-deletes a template (D-19).
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteTemplateAction;
+
+  /// Snackbar shown after deleting a template, with the Undo action (D-19, 5s window).
+  ///
+  /// In en, this message translates to:
+  /// **'Template deleted'**
+  String get templateDeletedMessage;
+
+  /// Shown when deleting a template fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the template'**
+  String get deleteTemplateError;
+
+  /// S-02 workout card '⋮' menu item that creates a template from that workout's structure and planned values (TS 8 section 8).
+  ///
+  /// In en, this message translates to:
+  /// **'Create template'**
+  String get createTemplateFromWorkoutAction;
+
+  /// S-12 template card '⋮' menu item that creates a workout from that template's structure and planned values (TS 8 section 8, reverse of createTemplateFromWorkoutAction).
+  ///
+  /// In en, this message translates to:
+  /// **'Create workout'**
+  String get createWorkoutFromTemplateAction;
+
+  /// Shown when WorkoutRepository.createFromTemplate fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create the workout'**
+  String get createWorkoutFromTemplateError;
+
+  /// AppBar title of the template-source picker screen (Stage 5, "Из шаблона").
+  ///
+  /// In en, this message translates to:
+  /// **'Create from template...'**
+  String get templateSourcePickerTitle;
+
+  /// Empty state on the template-source picker screen (Stage 5) when there are no templates.
+  ///
+  /// In en, this message translates to:
+  /// **'No templates to create a workout from yet'**
+  String get templateSourcePickerEmpty;
+
+  /// S-12 card menu item that clones a template (04_UI_UX_SPEC.md section 5).
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get duplicateTemplateAction;
+
+  /// Title of the name-prompt dialog opened by the S-12 'Дублировать' menu item -- reuses CreateTemplateDialog with this title override.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate template'**
+  String get duplicateTemplateTitle;
 }
 
 class _AppLocalizationsDelegate

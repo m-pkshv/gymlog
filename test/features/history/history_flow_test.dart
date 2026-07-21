@@ -10,12 +10,17 @@ import 'package:gymlog/data/database.dart';
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/features/history/copy_source_picker_screen.dart';
 import 'package:gymlog/features/history/screen.dart';
+import 'package:gymlog/features/history/template_picker_screen.dart';
+import 'package:gymlog/features/template_editor/screen.dart';
 import 'package:gymlog/features/workout_editor/screen.dart';
+import 'package:gymlog/features/workout_summary/screen.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
 /// Mirrors the `/history` + `/history/workout/:workoutId` +
-/// `/history/copy-source` slice of the real router (S-02; the "Копией"
-/// creation menu option and its picker are Stage 3).
+/// `/history/copy-source` + `/history/template-source` +
+/// `/more/templates/:templateId` slice of the real router (S-02; the
+/// "Копией" creation menu option and its picker are Stage 3; the template
+/// picker/editor destinations are Stage 5's "Создать шаблон"/"Из шаблона").
 Widget _appUnderTest(AppDatabase db) {
   final router = GoRouter(
     initialLocation: '/history',
@@ -28,12 +33,30 @@ Widget _appUnderTest(AppDatabase db) {
             path: 'copy-source',
             builder: (_, _) => const CopySourcePickerScreen(),
           ),
+          GoRoute(
+            path: 'template-source',
+            builder: (_, _) => const TemplatePickerScreen(),
+          ),
         ],
       ),
       GoRoute(
         path: '/history/workout/:workoutId',
         builder: (_, state) => WorkoutEditorScreen(
           workoutId: state.pathParameters['workoutId']!,
+        ),
+        routes: [
+          GoRoute(
+            path: 'summary',
+            builder: (_, state) => WorkoutSummaryScreen(
+              workoutId: state.pathParameters['workoutId']!,
+            ),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/more/templates/:templateId',
+        builder: (_, state) => TemplateEditorScreen(
+          templateId: state.pathParameters['templateId']!,
         ),
       ),
     ],
@@ -104,6 +127,60 @@ Future<String> _insertCompletedWorkout(
           );
     }
   }
+  return id;
+}
+
+Future<String> _insertTemplate(
+  AppDatabase db, {
+  required String id,
+  required String name,
+}) async {
+  await db
+      .into(db.workoutTemplates)
+      .insert(
+        WorkoutTemplatesCompanion.insert(
+          id: id,
+          name: name,
+          createdAt: '2026-07-19T00:00:00Z',
+          updatedAt: '2026-07-19T00:00:00Z',
+        ),
+      );
+  await db
+      .into(db.exercises)
+      .insert(
+        ExercisesCompanion.insert(
+          id: '${id}_ex',
+          name: 'Squat',
+          exerciseType: ExerciseType.strength.name,
+          createdAt: '2026-07-19T00:00:00Z',
+          updatedAt: '2026-07-19T00:00:00Z',
+        ),
+      );
+  await db
+      .into(db.templateExercises)
+      .insert(
+        TemplateExercisesCompanion.insert(
+          id: '${id}_te0',
+          templateId: id,
+          exerciseId: '${id}_ex',
+          orderIndex: 0,
+          createdAt: '2026-07-19T00:00:00Z',
+          updatedAt: '2026-07-19T00:00:00Z',
+        ),
+      );
+  await db
+      .into(db.templateSets)
+      .insert(
+        TemplateSetsCompanion.insert(
+          id: '${id}_ts0',
+          templateExerciseId: '${id}_te0',
+          setNumber: 1,
+          plannedWeightKg: const Value(60),
+          plannedReps: const Value(8),
+          createdAt: '2026-07-19T00:00:00Z',
+          updatedAt: '2026-07-19T00:00:00Z',
+        ),
+      );
   return id;
 }
 
@@ -344,11 +421,80 @@ void main() {
     });
   });
 
+  group('"Create template" (Stage 5, S-02, TS 8 section 8)', () {
+    testWidgets(
+      'copies exercises/order/planned values into a new template, opens it '
+      'for review, and leaves the source workout untouched',
+      (tester) async {
+        await _insertCompletedWorkout(
+          db,
+          id: 'w1',
+          date: '2026-07-01',
+          name: 'Leg day',
+          exerciseCount: 1,
+        );
+        await db
+            .into(db.exerciseSets)
+            .insert(
+              ExerciseSetsCompanion.insert(
+                id: 's1',
+                workoutExerciseId: 'w1_we0',
+                setNumber: 1,
+                isCompleted: const Value(true),
+                plannedWeightKg: const Value(60),
+                plannedReps: const Value(8),
+                actualWeightKg: const Value(60),
+                actualReps: const Value(8),
+                createdAt: '2026-07-01T00:00:00Z',
+                updatedAt: '2026-07-01T00:00:00Z',
+              ),
+            );
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byIcon(Icons.more_vert));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Create template'));
+        await tester.pumpAndSettle();
+
+        // The dialog defaults to the workout's own name.
+        expect(find.text('Leg day'), findsWidgets);
+        await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(TemplateEditorScreen), findsOneWidget);
+
+        final templates = await db.select(db.workoutTemplates).get();
+        expect(templates.single.name, 'Leg day');
+
+        final templateExercises = await (db.select(
+          db.templateExercises,
+        )..where((te) => te.templateId.equals(templates.single.id))).get();
+        expect(templateExercises, hasLength(1));
+
+        final templateSets = await (db.select(
+          db.templateSets,
+        )..where(
+          (s) => s.templateExerciseId.equals(templateExercises.single.id),
+        )).get();
+        expect(templateSets.single.plannedWeightKg, 60.0);
+        expect(templateSets.single.plannedReps, 8);
+
+        // The source workout is untouched.
+        final sourceSets = await db.select(db.exerciseSets).get();
+        expect(sourceSets.single.actualWeightKg, 60.0);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+  });
+
   group(
     'creation menu (Stage 3, 02_DEVELOPMENT_PLAN.md: "с нуля/из шаблона/копией")',
     () {
       testWidgets(
-        'the FAB offers all three creation options, template disabled',
+        'the FAB offers all three creation options',
         (tester) async {
           await tester.pumpWidget(_appUnderTest(db));
           await tester.pumpAndSettle();
@@ -359,12 +505,6 @@ void main() {
           expect(find.text('From scratch'), findsOneWidget);
           expect(find.text('From a copy'), findsOneWidget);
           expect(find.text('From a template'), findsOneWidget);
-          expect(find.text('Coming soon'), findsOneWidget);
-
-          final templateTile = tester.widget<ListTile>(
-            find.widgetWithText(ListTile, 'From a template'),
-          );
-          expect(templateTile.enabled, isFalse);
 
           await _unmountAndFlush(tester);
         },
@@ -439,6 +579,66 @@ void main() {
 
           expect(
             find.text('No completed workouts to copy from yet'),
+            findsOneWidget,
+          );
+
+          await _unmountAndFlush(tester);
+        },
+      );
+
+      testWidgets(
+        '"From a template" opens the template picker; picking a template '
+        'creates a workout from it and opens it (Stage 5, DM-1: no '
+        'sourceTemplateId back-reference)',
+        (tester) async {
+          await _insertTemplate(db, id: 't1', name: 'Leg day');
+
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
+
+          await tester.tap(find.byType(FloatingActionButton));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('From a template'));
+          await tester.pumpAndSettle();
+
+          expect(find.byType(TemplatePickerScreen), findsOneWidget);
+          expect(find.text('Leg day'), findsOneWidget);
+
+          await tester.tap(find.text('Leg day'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('OK'));
+          await tester.pumpAndSettle();
+
+          expect(find.byType(WorkoutEditorScreen), findsOneWidget);
+          expect(find.text('Draft'), findsOneWidget);
+          expect(find.text('Squat'), findsOneWidget);
+
+          final workouts = await db.select(db.workouts).get();
+          expect(workouts, hasLength(1));
+          expect(workouts.single.name, 'Leg day');
+
+          final sets = await db.select(db.exerciseSets).get();
+          expect(sets.single.plannedWeightKg, 60.0);
+          expect(sets.single.plannedReps, 8);
+          expect(sets.single.actualWeightKg, isNull);
+
+          await _unmountAndFlush(tester);
+        },
+      );
+
+      testWidgets(
+        'the template picker shows an empty state with no templates',
+        (tester) async {
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
+
+          await tester.tap(find.byType(FloatingActionButton));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('From a template'));
+          await tester.pumpAndSettle();
+
+          expect(
+            find.text('No templates to create a workout from yet'),
             findsOneWidget,
           );
 
@@ -880,7 +1080,10 @@ void main() {
           await tester.pumpAndSettle();
           await tester.tap(find.text('Finish'));
           await tester.pumpAndSettle();
-          expect(find.text('Completed'), findsOneWidget);
+          // TS 7.2 step 6: finishing replaces the editor with the S-05
+          // summary; system back from there returns to History, same as
+          // it did from the editor.
+          expect(find.byType(WorkoutSummaryScreen), findsOneWidget);
 
           await tester.pageBack();
           await tester.pumpAndSettle();
@@ -895,6 +1098,103 @@ void main() {
           final copy = workouts.firstWhere((w) => w.id != 'w1');
           expect(copy.status, 'completed');
           expect(copy.date, '2026-08-15');
+
+          await _unmountAndFlush(tester);
+        },
+      );
+    },
+  );
+
+  group(
+    '★ regression (Stage 5, 02_DEVELOPMENT_PLAN.md: "тренировка → шаблон → '
+    'новая тренировка")',
+    () {
+      testWidgets(
+        'creating a template from a completed workout, then a new workout '
+        'from that template, preserves order and planned values on the new '
+        'draft while leaving the source workout and the template untouched',
+        (tester) async {
+          await _insertCompletedWorkout(
+            db,
+            id: 'w1',
+            date: '2026-07-01',
+            name: 'Leg day',
+            exerciseCount: 1,
+          );
+          await db
+              .into(db.exerciseSets)
+              .insert(
+                ExerciseSetsCompanion.insert(
+                  id: 's1',
+                  workoutExerciseId: 'w1_we0',
+                  setNumber: 1,
+                  isCompleted: const Value(true),
+                  plannedWeightKg: const Value(60),
+                  plannedReps: const Value(8),
+                  actualWeightKg: const Value(62),
+                  actualReps: const Value(7),
+                  createdAt: '2026-07-01T00:00:00Z',
+                  updatedAt: '2026-07-01T00:00:00Z',
+                ),
+              );
+
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
+
+          // "Создать шаблон" from the workout card.
+          await tester.tap(find.byIcon(Icons.more_vert));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Create template'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+          await tester.pumpAndSettle();
+
+          expect(find.byType(TemplateEditorScreen), findsOneWidget);
+          final templates = await db.select(db.workoutTemplates).get();
+          expect(templates.single.name, 'Leg day');
+
+          await tester.pageBack();
+          await tester.pumpAndSettle();
+
+          // "Из шаблона" -> pick the template just created -> new draft.
+          await tester.tap(find.byType(FloatingActionButton));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('From a template'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Leg day'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('OK')); // accepts today as the new date
+          await tester.pumpAndSettle();
+
+          expect(find.byType(WorkoutEditorScreen), findsOneWidget);
+          expect(find.text('Draft'), findsOneWidget);
+          expect(find.text('Squat'), findsOneWidget);
+
+          final workouts = await db.select(db.workouts).get();
+          expect(workouts, hasLength(2));
+          final newWorkout = workouts.firstWhere((w) => w.id != 'w1');
+          expect(newWorkout.name, 'Leg day');
+          expect(newWorkout.status, 'draft');
+          expect(newWorkout.date, isNot('2026-07-01'));
+
+          final newWorkoutExercise = await (db.select(
+            db.workoutExercises,
+          )..where((we) => we.workoutId.equals(newWorkout.id))).getSingle();
+          final newSets = await (db.select(db.exerciseSets)..where(
+            (s) => s.workoutExerciseId.equals(newWorkoutExercise.id),
+          )).get();
+          expect(newSets.single.plannedWeightKg, 60.0);
+          expect(newSets.single.plannedReps, 8);
+          expect(newSets.single.actualWeightKg, isNull);
+          expect(newSets.single.isCompleted, isFalse);
+
+          // The source workout and the template are both untouched.
+          final source = workouts.firstWhere((w) => w.id == 'w1');
+          expect(source.status, 'completed');
+          final sourceSets = await (db.select(
+            db.exerciseSets,
+          )..where((s) => s.workoutExerciseId.equals('w1_we0'))).get();
+          expect(sourceSets.single.actualWeightKg, 62.0);
 
           await _unmountAndFlush(tester);
         },

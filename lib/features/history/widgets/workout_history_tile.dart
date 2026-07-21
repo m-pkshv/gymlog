@@ -10,22 +10,29 @@ import '../../../l10n/app_localizations.dart';
 import '../../workout_editor/status_labels.dart';
 import '../../workout_editor/widgets/workout_tag_chip.dart';
 
-enum _HistoryCardAction { copy, delete }
+enum _HistoryCardAction { copy, createTemplate, delete }
 
 /// A single workout row (S-02): date/name/exercise count/duration/status/
-/// tags, "⋮" menu with "Копировать"/"Удалить". Shared by History's list
-/// view (`screen.dart`) and calendar view (`calendar/history_calendar_view.dart`,
-/// Stage 3) so both render workouts identically.
+/// tags, "⋮" menu with "Копировать"/"Создать шаблон"/"Удалить". Shared by
+/// History's list view (`screen.dart`) and calendar view
+/// (`calendar/history_calendar_view.dart`, Stage 3) so both render workouts
+/// identically.
 class WorkoutHistoryTile extends ConsumerWidget {
   const WorkoutHistoryTile({
     super.key,
     required this.entry,
     required this.onCopy,
+    required this.onCreateTemplate,
     required this.onDelete,
   });
 
   final WorkoutHistoryEntry entry;
   final void Function(Workout source) onCopy;
+
+  /// "Создать шаблон" (TS 8 section 8, Stage 5) — the forward workout ->
+  /// template copy direction; the reverse ("создать тренировку из
+  /// шаблона") isn't wired up here yet, it needs DM-1 resolved first.
+  final void Function(Workout source) onCreateTemplate;
   final void Function(Workout workout) onDelete;
 
   @override
@@ -68,6 +75,8 @@ class WorkoutHistoryTile extends ConsumerWidget {
               switch (action) {
                 case _HistoryCardAction.copy:
                   onCopy(workout);
+                case _HistoryCardAction.createTemplate:
+                  onCreateTemplate(workout);
                 case _HistoryCardAction.delete:
                   onDelete(workout);
               }
@@ -76,6 +85,10 @@ class WorkoutHistoryTile extends ConsumerWidget {
               PopupMenuItem(
                 value: _HistoryCardAction.copy,
                 child: Text(l10n.copyWorkoutAction),
+              ),
+              PopupMenuItem(
+                value: _HistoryCardAction.createTemplate,
+                child: Text(l10n.createTemplateFromWorkoutAction),
               ),
               PopupMenuItem(
                 value: _HistoryCardAction.delete,

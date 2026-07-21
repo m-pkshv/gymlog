@@ -15,6 +15,8 @@ class CommentField extends StatefulWidget {
     required this.maxLength,
     required this.onChanged,
     required this.onCommit,
+    this.maxLines = 3,
+    this.minLines = 1,
   });
 
   final String? value;
@@ -22,6 +24,13 @@ class CommentField extends StatefulWidget {
   final int maxLength;
   final ValueChanged<String> onChanged;
   final VoidCallback onCommit;
+
+  /// Defaults preserve the multi-line comment box every existing caller
+  /// uses; a single-line caller (e.g. the template name field, S-13) can
+  /// pass `maxLines: 1, minLines: 1` -- same debounce-friendly mechanics
+  /// either way.
+  final int maxLines;
+  final int minLines;
 
   @override
   State<CommentField> createState() => _CommentFieldState();
@@ -64,8 +73,8 @@ class _CommentFieldState extends State<CommentField> {
     return TextField(
       controller: _controller,
       focusNode: _focusNode,
-      maxLines: 3,
-      minLines: 1,
+      maxLines: widget.maxLines,
+      minLines: widget.minLines,
       maxLength: widget.maxLength,
       decoration: InputDecoration(
         labelText: widget.label,

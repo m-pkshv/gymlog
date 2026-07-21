@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../l10n/app_localizations.dart';
@@ -27,6 +28,12 @@ class MoreScreen extends ConsumerWidget {
       body: settingsAsync.when(
         data: (settings) => ListView(
           children: [
+            ListTile(
+              leading: const Icon(Icons.copy_all_outlined),
+              title: Text(l10n.templatesTitle),
+              onTap: () => context.push('/more/templates'),
+            ),
+            const Divider(height: 1),
             SwitchListTile(
               title: Text(l10n.settingsShowTagsLabel),
               value: settings.showTags,

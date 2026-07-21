@@ -8,11 +8,15 @@ import '../features/exercises/exercise_detail_screen.dart';
 import '../features/exercises/screen.dart';
 import '../features/history/copy_source_picker_screen.dart';
 import '../features/history/screen.dart';
+import '../features/history/template_picker_screen.dart';
 import '../features/more/screen.dart';
 import '../features/stats/screen.dart';
+import '../features/template_editor/screen.dart';
+import '../features/templates/screen.dart';
 import '../features/today/screen.dart';
 import '../features/workout_editor/add_exercise_screen.dart';
 import '../features/workout_editor/screen.dart';
+import '../features/workout_summary/screen.dart';
 import '../l10n/app_localizations.dart';
 import 'providers.dart';
 
@@ -52,11 +56,31 @@ final GoRouter appRouter = GoRouter(
                   ),
                 ),
                 GoRoute(
+                  path: 'template-source',
+                  // "Из шаблона" in the creation menu — same full-screen
+                  // modal picker pattern as "Копией" above (Stage 5).
+                  pageBuilder: (_, state) => MaterialPage(
+                    key: state.pageKey,
+                    fullscreenDialog: true,
+                    child: const TemplatePickerScreen(),
+                  ),
+                ),
+                GoRoute(
                   path: 'workout/:workoutId',
                   builder: (_, state) => WorkoutEditorScreen(
                     workoutId: state.pathParameters['workoutId']!,
                   ),
                   routes: [
+                    GoRoute(
+                      path: 'summary',
+                      // S-05, Stage 4: replaces the editor in the stack
+                      // right after "Завершить" (WorkoutEditorScreen calls
+                      // pushReplacement), so system back from here goes to
+                      // History, same as it did from the editor.
+                      builder: (_, state) => WorkoutSummaryScreen(
+                        workoutId: state.pathParameters['workoutId']!,
+                      ),
+                    ),
                     GoRoute(
                       path: 'add-exercise',
                       // Exercise pickers/creation forms are full-screen
@@ -65,7 +89,8 @@ final GoRouter appRouter = GoRouter(
                         key: state.pageKey,
                         fullscreenDialog: true,
                         child: AddExerciseScreen(
-                          workoutId: state.pathParameters['workoutId']!,
+                          addExerciseRoute:
+                              '/history/workout/${state.pathParameters['workoutId']}/add-exercise',
                         ),
                       ),
                       routes: [
@@ -134,7 +159,49 @@ final GoRouter appRouter = GoRouter(
         ),
         StatefulShellBranch(
           routes: [
-            GoRoute(path: '/more', builder: (_, _) => const MoreScreen()),
+            GoRoute(
+              path: '/more',
+              builder: (_, _) => const MoreScreen(),
+              routes: [
+                GoRoute(
+                  path: 'templates',
+                  builder: (_, _) => const TemplateListScreen(),
+                  routes: [
+                    GoRoute(
+                      path: ':templateId',
+                      builder: (_, state) => TemplateEditorScreen(
+                        templateId: state.pathParameters['templateId']!,
+                      ),
+                      routes: [
+                        GoRoute(
+                          path: 'add-exercise',
+                          // Exercise pickers/creation forms are full-screen
+                          // modals (04_UI_UX_SPEC.md, section 6).
+                          pageBuilder: (_, state) => MaterialPage(
+                            key: state.pageKey,
+                            fullscreenDialog: true,
+                            child: AddExerciseScreen(
+                              addExerciseRoute:
+                                  '/more/templates/${state.pathParameters['templateId']}/add-exercise',
+                            ),
+                          ),
+                          routes: [
+                            GoRoute(
+                              path: 'new',
+                              pageBuilder: (_, state) => MaterialPage(
+                                key: state.pageKey,
+                                fullscreenDialog: true,
+                                child: const CreateExerciseScreen(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ],
         ),
       ],

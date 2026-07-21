@@ -467,9 +467,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newWorkoutFromTemplateAction => 'From a template';
 
   @override
-  String get comingSoonLabel => 'Coming soon';
-
-  @override
   String get copySourcePickerTitle => 'Copy from...';
 
   @override
@@ -621,4 +618,111 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationsOffHint => 'Notifications are off';
+
+  @override
+  String get workoutSummaryTitle => 'Workout summary';
+
+  @override
+  String get workoutSummaryDurationLabel => 'Duration';
+
+  @override
+  String get workoutSummaryExercisesLabel => 'Exercises';
+
+  @override
+  String get workoutSummarySetsLabel => 'Sets';
+
+  @override
+  String get workoutSummaryTonnageLabel => 'Tonnage';
+
+  @override
+  String workoutSummaryTonnageValue(String value) {
+    return '$value kg';
+  }
+
+  @override
+  String get workoutSummaryDoneAction => 'Done';
+
+  @override
+  String get templatesTitle => 'Templates';
+
+  @override
+  String get templatesEmptyTitle => 'No templates yet';
+
+  @override
+  String get templatesLoadError => 'Couldn\'t load templates';
+
+  @override
+  String templateExerciseCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count exercises',
+      one: '$count exercise',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get createTemplateAction => 'Create template';
+
+  @override
+  String get createTemplateTitle => 'New template';
+
+  @override
+  String get createTemplateError => 'Couldn\'t create the template';
+
+  @override
+  String get templateNameLabel => 'Name';
+
+  @override
+  String get templateEditorTitle => 'Template';
+
+  @override
+  String get templateCommentLabel => 'Comment';
+
+  @override
+  String get templateLoadError => 'Couldn\'t load the template';
+
+  @override
+  String get templateExercisesEmpty => 'No exercises yet';
+
+  @override
+  String get archiveTemplateAction => 'Archive';
+
+  @override
+  String get unarchiveTemplateAction => 'Unarchive';
+
+  @override
+  String get archiveTemplateError => 'Couldn\'t update the template';
+
+  @override
+  String get deleteTemplateAction => 'Delete';
+
+  @override
+  String get templateDeletedMessage => 'Template deleted';
+
+  @override
+  String get deleteTemplateError => 'Couldn\'t delete the template';
+
+  @override
+  String get createTemplateFromWorkoutAction => 'Create template';
+
+  @override
+  String get createWorkoutFromTemplateAction => 'Create workout';
+
+  @override
+  String get createWorkoutFromTemplateError => 'Couldn\'t create the workout';
+
+  @override
+  String get templateSourcePickerTitle => 'Create from template...';
+
+  @override
+  String get templateSourcePickerEmpty =>
+      'No templates to create a workout from yet';
+
+  @override
+  String get duplicateTemplateAction => 'Duplicate';
+
+  @override
+  String get duplicateTemplateTitle => 'Duplicate template';
 }

@@ -16,11 +16,14 @@ import '../data/repositories_impl/exercise_repository_impl.dart';
 import '../data/repositories_impl/progression_repository_impl.dart';
 import '../data/repositories_impl/workout_repository_impl.dart';
 import '../data/repositories_impl/workout_tag_repository_impl.dart';
+import '../data/repositories_impl/workout_template_repository_impl.dart';
 import '../domain/models/active_workout_state.dart';
 import '../domain/models/app_settings.dart';
 import '../domain/models/exercise.dart';
 import '../domain/models/exercise_catalog_filter.dart';
 import '../domain/models/exercise_progression_state.dart';
+import '../domain/models/template_details.dart';
+import '../domain/models/template_list_entry.dart';
 import '../domain/models/workout.dart';
 import '../domain/models/workout_details.dart';
 import '../domain/models/workout_history_entry.dart';
@@ -32,6 +35,8 @@ import '../domain/repositories/exercise_repository.dart';
 import '../domain/repositories/progression_repository.dart';
 import '../domain/repositories/workout_repository.dart';
 import '../domain/repositories/workout_tag_repository.dart';
+import '../domain/repositories/workout_template_repository.dart';
+import '../features/template_editor/controller.dart';
 import '../features/workout_editor/controller.dart';
 import '../services/active_workout_timer_service.dart';
 import '../services/exercise_service.dart';
@@ -39,6 +44,7 @@ import '../services/notification_service.dart';
 import '../services/progression_service.dart';
 import '../services/workout_service.dart';
 import '../services/workout_tag_service.dart';
+import '../services/workout_template_service.dart';
 
 final loggerProvider = Provider<AppLogger>((ref) => AppLogger());
 
@@ -117,6 +123,15 @@ final workoutTagRepositoryProvider = Provider<WorkoutTagRepository>((ref) {
 
 final workoutTagServiceProvider = Provider<WorkoutTagService>((ref) {
   return WorkoutTagService(ref.watch(workoutTagRepositoryProvider));
+});
+
+final workoutTemplateRepositoryProvider = Provider<WorkoutTemplateRepository>((ref) {
+  return WorkoutTemplateRepositoryImpl(ref.watch(appDatabaseProvider));
+});
+
+/// The single point of truth for template name validation (DM 6.8).
+final workoutTemplateServiceProvider = Provider<WorkoutTemplateService>((ref) {
+  return WorkoutTemplateService(ref.watch(workoutTemplateRepositoryProvider));
 });
 
 final appSettingsRepositoryProvider = Provider<AppSettingsRepository>((ref) {
@@ -198,3 +213,27 @@ final activeWorkoutStateProvider = StreamProvider.family<ActiveWorkoutState?, St
 ) {
   return ref.watch(activeWorkoutRepositoryProvider).watch(workoutId);
 });
+
+/// The template list (S-12), archived hidden by default
+/// (`ASSUMPTION(templates-hide-archived-by-default)`, Stage 5).
+final templateListProvider = StreamProvider.family<List<TemplateListEntry>, bool>((
+  ref,
+  includeArchived,
+) {
+  return ref
+      .watch(workoutTemplateRepositoryProvider)
+      .watchAllWithExerciseCount(includeArchived: includeArchived);
+});
+
+/// The template editor (S-13) controller, one instance per template.
+final templateEditorControllerProvider = StateNotifierProvider.autoDispose
+    .family<TemplateEditorController, AsyncValue<TemplateDetails>, String>((
+      ref,
+      templateId,
+    ) {
+      return TemplateEditorController(
+        templateId,
+        ref.read(workoutTemplateRepositoryProvider),
+        ref.read(loggerProvider),
+      );
+    });

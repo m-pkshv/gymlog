@@ -488,6 +488,90 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
   }
 
   @override
+  Future<Workout> createFromTemplate({
+    required String templateId,
+    required DateTime date,
+  }) async {
+    final templateRow = await (_db.select(_db.workoutTemplates)..where(
+      (t) => t.id.equals(templateId) & t.isDeleted.equals(false),
+    )).getSingleOrNull();
+    if (templateRow == null) {
+      throw ArgumentError('Template $templateId not found');
+    }
+
+    final templateExerciseRows =
+        await (_db.select(_db.templateExercises)
+              ..where(
+                (te) =>
+                    te.templateId.equals(templateId) &
+                    te.isDeleted.equals(false),
+              )
+              ..orderBy([(te) => OrderingTerm.asc(te.orderIndex)]))
+            .get();
+
+    final now = DateTime.now().toUtc();
+    final workout = Workout(
+      id: const Uuid().v4(),
+      date: date,
+      name: templateRow.name,
+      status: WorkoutStatus.draft,
+      createdAt: now,
+      updatedAt: now,
+      isDeleted: false,
+    );
+
+    await _db.transaction(() async {
+      await _db.into(_db.workouts).insert(workout.toInsertCompanion());
+      for (final teRow in templateExerciseRows) {
+        final workoutExercise = WorkoutExercise(
+          id: const Uuid().v4(),
+          workoutId: workout.id,
+          exerciseId: teRow.exerciseId,
+          orderIndex: teRow.orderIndex,
+          comment: teRow.comment,
+          progressionDecision: ProgressionDecision.none,
+          createdAt: now,
+          updatedAt: now,
+          isDeleted: false,
+        );
+        await _db
+            .into(_db.workoutExercises)
+            .insert(workoutExercise.toInsertCompanion());
+
+        final setRows =
+            await (_db.select(_db.templateSets)
+                  ..where(
+                    (s) =>
+                        s.templateExerciseId.equals(teRow.id) &
+                        s.isDeleted.equals(false),
+                  )
+                  ..orderBy([(s) => OrderingTerm.asc(s.setNumber)]))
+                .get();
+        for (final setRow in setRows) {
+          final exerciseSet = ExerciseSet(
+            id: const Uuid().v4(),
+            workoutExerciseId: workoutExercise.id,
+            setNumber: setRow.setNumber,
+            isWarmup: setRow.isWarmup,
+            isCompleted: false,
+            plannedWeightKg: setRow.plannedWeightKg,
+            plannedReps: setRow.plannedReps,
+            plannedDurationSec: setRow.plannedDurationSec,
+            plannedDistanceM: setRow.plannedDistanceM,
+            side: BodySide.values.byName(setRow.side),
+            createdAt: now,
+            updatedAt: now,
+            isDeleted: false,
+          );
+          await _db.into(_db.exerciseSets).insert(exerciseSet.toInsertCompanion());
+        }
+      }
+    });
+
+    return workout;
+  }
+
+  @override
   Future<void> reorderExercises({
     required String workoutId,
     required List<String> orderedWorkoutExerciseIds,

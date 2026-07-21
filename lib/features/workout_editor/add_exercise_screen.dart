@@ -8,15 +8,19 @@ import '../../domain/models/exercise_catalog_filter.dart';
 import '../../l10n/app_localizations.dart';
 import '../exercises/exercise_type_labels.dart';
 
-/// "+ Упражнение" picker (S-03): pick an existing catalog entry, or create
-/// one on the spot ("Создать новое", S-08) — either way the result is
-/// popped back to the caller, which adds it to the workout right away.
-/// Stage 1 scope: no search/filters (those land with the full S-06 in
-/// Stage 2).
+/// "+ Упражнение" picker (S-03, and S-13's identical template flavor): pick
+/// an existing catalog entry, or create one on the spot ("Создать новое",
+/// S-08) — either way the result is popped back to the caller, which adds
+/// it to the workout/template right away. Stage 1 scope: no search/filters
+/// (those land with the full S-06 in Stage 2). [addExerciseRoute] is this
+/// screen's own full path (e.g. `/history/workout/$id/add-exercise` or
+/// `/more/templates/$id/add-exercise`) — used only to build the "Создать
+/// новое" child route, so this screen doesn't need to know which aggregate
+/// it's picking for.
 class AddExerciseScreen extends ConsumerWidget {
-  const AddExerciseScreen({super.key, required this.workoutId});
+  const AddExerciseScreen({super.key, required this.addExerciseRoute});
 
-  final String workoutId;
+  final String addExerciseRoute;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -51,9 +55,7 @@ class AddExerciseScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final created = await context.push<Exercise>(
-            '/history/workout/$workoutId/add-exercise/new',
-          );
+          final created = await context.push<Exercise>('$addExerciseRoute/new');
           if (created != null && context.mounted) context.pop(created);
         },
         tooltip: l10n.createExerciseAction,

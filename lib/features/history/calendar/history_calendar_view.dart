@@ -29,6 +29,7 @@ class HistoryCalendarView extends ConsumerStatefulWidget {
     required this.statuses,
     required this.tagIds,
     required this.onCopy,
+    required this.onCreateTemplate,
     required this.onDelete,
   });
 
@@ -36,6 +37,7 @@ class HistoryCalendarView extends ConsumerStatefulWidget {
   final Set<WorkoutStatus> statuses;
   final Set<String> tagIds;
   final void Function(Workout source) onCopy;
+  final void Function(Workout source) onCreateTemplate;
   final void Function(Workout workout) onDelete;
 
   @override
@@ -110,6 +112,7 @@ class _HistoryCalendarViewState extends ConsumerState<HistoryCalendarView> {
                             itemBuilder: (context, index) => WorkoutHistoryTile(
                               entry: selectedEntries[index],
                               onCopy: widget.onCopy,
+                              onCreateTemplate: widget.onCreateTemplate,
                               onDelete: widget.onDelete,
                             ),
                           ),

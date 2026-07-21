@@ -471,9 +471,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get newWorkoutFromTemplateAction => 'Из шаблона';
 
   @override
-  String get comingSoonLabel => 'Скоро';
-
-  @override
   String get copySourcePickerTitle => 'Копировать из…';
 
   @override
@@ -628,4 +625,113 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get notificationsOffHint => 'Уведомления выключены';
+
+  @override
+  String get workoutSummaryTitle => 'Итог тренировки';
+
+  @override
+  String get workoutSummaryDurationLabel => 'Длительность';
+
+  @override
+  String get workoutSummaryExercisesLabel => 'Упражнения';
+
+  @override
+  String get workoutSummarySetsLabel => 'Подходы';
+
+  @override
+  String get workoutSummaryTonnageLabel => 'Тоннаж';
+
+  @override
+  String workoutSummaryTonnageValue(String value) {
+    return '$value кг';
+  }
+
+  @override
+  String get workoutSummaryDoneAction => 'Готово';
+
+  @override
+  String get templatesTitle => 'Шаблоны';
+
+  @override
+  String get templatesEmptyTitle => 'Шаблонов пока нет';
+
+  @override
+  String get templatesLoadError => 'Не удалось загрузить шаблоны';
+
+  @override
+  String templateExerciseCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count упражнений',
+      many: '$count упражнений',
+      few: '$count упражнения',
+      one: '$count упражнение',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get createTemplateAction => 'Создать шаблон';
+
+  @override
+  String get createTemplateTitle => 'Новый шаблон';
+
+  @override
+  String get createTemplateError => 'Не удалось создать шаблон';
+
+  @override
+  String get templateNameLabel => 'Название';
+
+  @override
+  String get templateEditorTitle => 'Шаблон';
+
+  @override
+  String get templateCommentLabel => 'Комментарий';
+
+  @override
+  String get templateLoadError => 'Не удалось загрузить шаблон';
+
+  @override
+  String get templateExercisesEmpty => 'Пока нет упражнений';
+
+  @override
+  String get archiveTemplateAction => 'Архивировать';
+
+  @override
+  String get unarchiveTemplateAction => 'Разархивировать';
+
+  @override
+  String get archiveTemplateError => 'Не удалось обновить шаблон';
+
+  @override
+  String get deleteTemplateAction => 'Удалить';
+
+  @override
+  String get templateDeletedMessage => 'Шаблон удалён';
+
+  @override
+  String get deleteTemplateError => 'Не удалось удалить шаблон';
+
+  @override
+  String get createTemplateFromWorkoutAction => 'Создать шаблон';
+
+  @override
+  String get createWorkoutFromTemplateAction => 'Создать тренировку';
+
+  @override
+  String get createWorkoutFromTemplateError => 'Не удалось создать тренировку';
+
+  @override
+  String get templateSourcePickerTitle => 'Создать из шаблона...';
+
+  @override
+  String get templateSourcePickerEmpty =>
+      'Пока нет шаблонов, из которых можно создать тренировку';
+
+  @override
+  String get duplicateTemplateAction => 'Дублировать';
+
+  @override
+  String get duplicateTemplateTitle => 'Дублировать шаблон';
 }

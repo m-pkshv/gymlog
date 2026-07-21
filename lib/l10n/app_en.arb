@@ -509,11 +509,7 @@
   },
   "newWorkoutFromTemplateAction": "From a template",
   "@newWorkoutFromTemplateAction": {
-    "description": "Disabled stub option in the History FAB's creation menu (Stage 3) — templates are Stage 5 scope."
-  },
-  "comingSoonLabel": "Coming soon",
-  "@comingSoonLabel": {
-    "description": "Subtitle under the disabled \"From a template\" creation menu option."
+    "description": "Option in the History FAB's creation menu that opens the template-source picker (Stage 5)."
   },
   "copySourcePickerTitle": "Copy from...",
   "@copySourcePickerTitle": {
@@ -708,5 +704,139 @@
   "notificationsOffHint": "Notifications are off",
   "@notificationsOffHint": {
     "description": "Unobtrusive note on the rest-timer bar (Stage 4, TS 7.3) shown when notifications are currently disabled -- no settings deep-link (would need an additional package)."
+  },
+  "workoutSummaryTitle": "Workout summary",
+  "@workoutSummaryTitle": {
+    "description": "AppBar title of the S-05 workout summary screen, shown right after finishing a workout."
+  },
+  "workoutSummaryDurationLabel": "Duration",
+  "@workoutSummaryDurationLabel": {
+    "description": "Caption under the duration figure on S-05."
+  },
+  "workoutSummaryExercisesLabel": "Exercises",
+  "@workoutSummaryExercisesLabel": {
+    "description": "Caption under the exercise-count figure on S-05."
+  },
+  "workoutSummarySetsLabel": "Sets",
+  "@workoutSummarySetsLabel": {
+    "description": "Caption under the set-count figure on S-05."
+  },
+  "workoutSummaryTonnageLabel": "Tonnage",
+  "@workoutSummaryTonnageLabel": {
+    "description": "Caption under the tonnage figure on S-05 (03_TECHNICAL_SPEC.md, section 9: Σ actualWeightKg × actualReps)."
+  },
+  "workoutSummaryTonnageValue": "{value} kg",
+  "@workoutSummaryTonnageValue": {
+    "description": "Formatted tonnage figure on S-05 -- always metric (ASSUMPTION(fixed-metric-unit)).",
+    "placeholders": {
+      "value": {"type": "String"}
+    }
+  },
+  "workoutSummaryDoneAction": "Done",
+  "@workoutSummaryDoneAction": {
+    "description": "Button on S-05 that returns to History."
+  },
+  "templatesTitle": "Templates",
+  "@templatesTitle": {
+    "description": "AppBar title of the S-12 template list, and its entry on the 'More' menu (S-11)."
+  },
+  "templatesEmptyTitle": "No templates yet",
+  "@templatesEmptyTitle": {
+    "description": "Empty state on S-12 when there are no templates at all."
+  },
+  "templatesLoadError": "Couldn't load templates",
+  "@templatesLoadError": {
+    "description": "Error state on S-12."
+  },
+  "templateExerciseCount": "{count, plural, one{{count} exercise} other{{count} exercises}}",
+  "@templateExerciseCount": {
+    "description": "Exercise count on a template list card (S-12).",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "createTemplateAction": "Create template",
+  "@createTemplateAction": {
+    "description": "FAB tooltip and empty-state button on S-12 (create from scratch)."
+  },
+  "createTemplateTitle": "New template",
+  "@createTemplateTitle": {
+    "description": "Title of the create-template dialog opened from S-12's FAB."
+  },
+  "createTemplateError": "Couldn't create the template",
+  "@createTemplateError": {
+    "description": "Shown in the create-template dialog when WorkoutTemplateService.create fails."
+  },
+  "templateNameLabel": "Name",
+  "@templateNameLabel": {
+    "description": "Label for the template name field, both in the create dialog and the S-13 editor header."
+  },
+  "templateEditorTitle": "Template",
+  "@templateEditorTitle": {
+    "description": "AppBar title of the S-13 template editor."
+  },
+  "templateCommentLabel": "Comment",
+  "@templateCommentLabel": {
+    "description": "Label for the template-level comment field on S-13 (06_DATA_MODEL.md, section 6.8)."
+  },
+  "templateLoadError": "Couldn't load the template",
+  "@templateLoadError": {
+    "description": "Error state on S-13."
+  },
+  "templateExercisesEmpty": "No exercises yet",
+  "@templateExercisesEmpty": {
+    "description": "Empty state on S-13 before any exercise has been added."
+  },
+  "archiveTemplateAction": "Archive",
+  "@archiveTemplateAction": {
+    "description": "S-12 card menu item that archives a template."
+  },
+  "unarchiveTemplateAction": "Unarchive",
+  "@unarchiveTemplateAction": {
+    "description": "S-12 card menu item that unarchives a template."
+  },
+  "archiveTemplateError": "Couldn't update the template",
+  "@archiveTemplateError": {
+    "description": "Shown when archiving/unarchiving a template fails."
+  },
+  "deleteTemplateAction": "Delete",
+  "@deleteTemplateAction": {
+    "description": "S-12 card menu item that soft-deletes a template (D-19)."
+  },
+  "templateDeletedMessage": "Template deleted",
+  "@templateDeletedMessage": {
+    "description": "Snackbar shown after deleting a template, with the Undo action (D-19, 5s window)."
+  },
+  "deleteTemplateError": "Couldn't delete the template",
+  "@deleteTemplateError": {
+    "description": "Shown when deleting a template fails."
+  },
+  "createTemplateFromWorkoutAction": "Create template",
+  "@createTemplateFromWorkoutAction": {
+    "description": "S-02 workout card '⋮' menu item that creates a template from that workout's structure and planned values (TS 8 section 8)."
+  },
+  "createWorkoutFromTemplateAction": "Create workout",
+  "@createWorkoutFromTemplateAction": {
+    "description": "S-12 template card '⋮' menu item that creates a workout from that template's structure and planned values (TS 8 section 8, reverse of createTemplateFromWorkoutAction)."
+  },
+  "createWorkoutFromTemplateError": "Couldn't create the workout",
+  "@createWorkoutFromTemplateError": {
+    "description": "Shown when WorkoutRepository.createFromTemplate fails."
+  },
+  "templateSourcePickerTitle": "Create from template...",
+  "@templateSourcePickerTitle": {
+    "description": "AppBar title of the template-source picker screen (Stage 5, \"Из шаблона\")."
+  },
+  "templateSourcePickerEmpty": "No templates to create a workout from yet",
+  "@templateSourcePickerEmpty": {
+    "description": "Empty state on the template-source picker screen (Stage 5) when there are no templates."
+  },
+  "duplicateTemplateAction": "Duplicate",
+  "@duplicateTemplateAction": {
+    "description": "S-12 card menu item that clones a template (04_UI_UX_SPEC.md section 5)."
+  },
+  "duplicateTemplateTitle": "Duplicate template",
+  "@duplicateTemplateTitle": {
+    "description": "Title of the name-prompt dialog opened by the S-12 'Дублировать' menu item -- reuses CreateTemplateDialog with this title override."
   }
 }

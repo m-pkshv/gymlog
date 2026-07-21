@@ -9,13 +9,15 @@ import '../../domain/enums.dart';
 import '../../domain/models/workout.dart';
 import '../../domain/models/workout_history_filter.dart';
 import '../../domain/models/workout_tag.dart';
+import '../../domain/models/workout_template.dart';
 import '../../l10n/app_localizations.dart';
+import '../templates/widgets/create_template_dialog.dart';
 import '../workout_editor/status_labels.dart';
 import 'calendar/history_calendar_view.dart';
 import 'copy_workout_flow.dart';
 import 'widgets/workout_history_tile.dart';
 
-enum _NewWorkoutChoice { scratch, copy }
+enum _NewWorkoutChoice { scratch, copy, template }
 
 enum _HistoryViewMode { list, calendar }
 
@@ -133,10 +135,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   Navigator.of(sheetContext).pop(_NewWorkoutChoice.copy),
             ),
             ListTile(
-              enabled: false,
               leading: const Icon(Icons.description_outlined),
               title: Text(l10n.newWorkoutFromTemplateAction),
-              subtitle: Text(l10n.comingSoonLabel),
+              onTap: () =>
+                  Navigator.of(sheetContext).pop(_NewWorkoutChoice.template),
             ),
           ],
         ),
@@ -152,6 +154,30 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         if (mounted) context.push('/history/workout/${workout.id}');
       case _NewWorkoutChoice.copy:
         context.push('/history/copy-source');
+      case _NewWorkoutChoice.template:
+        context.push('/history/template-source');
+    }
+  }
+
+  /// "Создать шаблон" (S-02 "⋮" menu, TS 8 section 8): prompts for the
+  /// template's name (defaulting to the workout's own display name) and
+  /// opens the result for review, same "create then open" pattern as
+  /// [_openNewWorkoutMenu]'s "From scratch" and `copyWorkoutFlow`.
+  Future<void> _createTemplateFromWorkout(Workout source) async {
+    final l10n = AppLocalizations.of(context)!;
+    final service = ref.read(workoutTemplateServiceProvider);
+    final defaultName =
+        source.name ?? '${l10n.workoutDefaultNamePrefix} ${formatShortDate(source.date)}';
+    final created = await showDialog<WorkoutTemplate>(
+      context: context,
+      builder: (context) => CreateTemplateDialog(
+        initialName: defaultName,
+        create: (name) =>
+            service.createFromWorkout(workoutId: source.id, name: name),
+      ),
+    );
+    if (created != null && mounted) {
+      context.push('/more/templates/${created.id}');
     }
   }
 
@@ -234,6 +260,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     isFiltered: _hasActiveSearchOrFilters,
                     onReset: _resetAll,
                     onCopy: (source) => copyWorkoutFlow(context, ref, source),
+                    onCreateTemplate: _createTemplateFromWorkout,
                     onDelete: _deleteWorkout,
                   )
                 : HistoryCalendarView(
@@ -241,6 +268,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     statuses: _statuses,
                     tagIds: _tagIds,
                     onCopy: (source) => copyWorkoutFlow(context, ref, source),
+                    onCreateTemplate: _createTemplateFromWorkout,
                     onDelete: _deleteWorkout,
                   ),
           ),
@@ -261,6 +289,7 @@ class _HistoryList extends ConsumerWidget {
     required this.isFiltered,
     required this.onReset,
     required this.onCopy,
+    required this.onCreateTemplate,
     required this.onDelete,
   });
 
@@ -268,6 +297,7 @@ class _HistoryList extends ConsumerWidget {
   final bool isFiltered;
   final VoidCallback onReset;
   final void Function(Workout source) onCopy;
+  final void Function(Workout source) onCreateTemplate;
   final void Function(Workout workout) onDelete;
 
   @override
@@ -285,6 +315,7 @@ class _HistoryList extends ConsumerWidget {
           itemBuilder: (context, index) => WorkoutHistoryTile(
             entry: entries[index],
             onCopy: onCopy,
+            onCreateTemplate: onCreateTemplate,
             onDelete: onDelete,
           ),
         );

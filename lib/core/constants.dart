@@ -52,8 +52,18 @@ class CommentLengthLimits {
   static const int workout = 2000;
   static const int workoutExercise = 1000;
   static const int exerciseSet = 500;
+  static const int workoutTemplate = 2000;
 }
 
 /// Soft-delete Undo window (06_DATA_MODEL.md, section 10, D-19): how long
 /// the "Отменить" snackbar action stays available after a delete.
 const Duration undoSnackbarDuration = Duration(seconds: 5);
+
+/// `WorkoutTemplate.name` bounds (06_DATA_MODEL.md, section 6.8), validated
+/// in `WorkoutTemplateService.create`.
+class WorkoutTemplateRules {
+  const WorkoutTemplateRules._();
+
+  static const int minNameLength = 1;
+  static const int maxNameLength = 80;
+}
