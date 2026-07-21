@@ -12,16 +12,20 @@ import '../core/logger.dart';
 import '../data/database.dart' as drift;
 import '../data/repositories_impl/active_workout_repository_impl.dart';
 import '../data/repositories_impl/app_settings_repository_impl.dart';
+import '../data/repositories_impl/body_measurement_repository_impl.dart';
 import '../data/repositories_impl/exercise_repository_impl.dart';
+import '../data/repositories_impl/measurement_type_repository_impl.dart';
 import '../data/repositories_impl/progression_repository_impl.dart';
 import '../data/repositories_impl/workout_repository_impl.dart';
 import '../data/repositories_impl/workout_tag_repository_impl.dart';
 import '../data/repositories_impl/workout_template_repository_impl.dart';
 import '../domain/models/active_workout_state.dart';
 import '../domain/models/app_settings.dart';
+import '../domain/models/body_measurement.dart';
 import '../domain/models/exercise.dart';
 import '../domain/models/exercise_catalog_filter.dart';
 import '../domain/models/exercise_progression_state.dart';
+import '../domain/models/measurement_type.dart';
 import '../domain/models/template_details.dart';
 import '../domain/models/template_list_entry.dart';
 import '../domain/models/workout.dart';
@@ -31,7 +35,9 @@ import '../domain/models/workout_history_filter.dart';
 import '../domain/models/workout_tag.dart';
 import '../domain/repositories/active_workout_repository.dart';
 import '../domain/repositories/app_settings_repository.dart';
+import '../domain/repositories/body_measurement_repository.dart';
 import '../domain/repositories/exercise_repository.dart';
+import '../domain/repositories/measurement_type_repository.dart';
 import '../domain/repositories/progression_repository.dart';
 import '../domain/repositories/workout_repository.dart';
 import '../domain/repositories/workout_tag_repository.dart';
@@ -237,3 +243,36 @@ final templateEditorControllerProvider = StateNotifierProvider.autoDispose
         ref.read(loggerProvider),
       );
     });
+
+final measurementTypeRepositoryProvider = Provider<MeasurementTypeRepository>((
+  ref,
+) {
+  return MeasurementTypeRepositoryImpl(ref.watch(appDatabaseProvider));
+});
+
+final bodyMeasurementRepositoryProvider = Provider<BodyMeasurementRepository>((
+  ref,
+) {
+  return BodyMeasurementRepositoryImpl(ref.watch(appDatabaseProvider));
+});
+
+/// Built-in + user-created measurement types (S-14 tabs), archived hidden by
+/// default — same convention as [exercisesListProvider]/[templateListProvider].
+final measurementTypesListProvider = StreamProvider.family<
+  List<MeasurementType>,
+  bool
+>((ref, includeArchived) {
+  return ref
+      .watch(measurementTypeRepositoryProvider)
+      .watchAll(includeArchived: includeArchived);
+});
+
+/// One measurement type's entries, newest date first (S-14 list + graph).
+final bodyMeasurementsByTypeProvider = StreamProvider.family<
+  List<BodyMeasurement>,
+  String
+>((ref, measurementTypeId) {
+  return ref
+      .watch(bodyMeasurementRepositoryProvider)
+      .watchByType(measurementTypeId);
+});
