@@ -16,6 +16,12 @@ abstract class WorkoutRepository {
   /// The workout currently `inProgress`, if any (DM 6.4.1: at most one).
   Future<Workout?> getInProgressWorkout();
 
+  /// Reactive version of [getInProgressWorkout] (TS 7.2 step 5: the
+  /// "Тренировка продолжается" recovery banner needs to appear/disappear
+  /// live as the workout starts/finishes, including right after a cold
+  /// start with a workout already `inProgress`).
+  Stream<Workout?> watchInProgressWorkout();
+
   Future<WorkoutDetails?> getDetails(String workoutId);
 
   /// Non-deleted workouts matching [filter], with their exercise count and

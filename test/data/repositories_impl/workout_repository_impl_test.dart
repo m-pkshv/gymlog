@@ -47,6 +47,34 @@ void main() {
   );
 
   test(
+    'watchInProgressWorkout reflects the workout once one starts, and null '
+    'again once it finishes (Stage 4, TS 7.2 step 5)',
+    () async {
+      final stream = workouts.watchInProgressWorkout();
+      final emissions = <String?>[];
+      final subscription = stream.listen((w) => emissions.add(w?.id));
+
+      final draft = await workouts.createDraft(date: DateTime(2026, 7, 19));
+      await Future<void>.delayed(Duration.zero);
+      expect(emissions.last, isNull, reason: 'a draft is not inProgress');
+
+      await workouts.updateWorkout(
+        draft.copyWith(status: WorkoutStatus.inProgress),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(emissions.last, draft.id);
+
+      await workouts.updateWorkout(
+        draft.copyWith(status: WorkoutStatus.completed),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(emissions.last, isNull);
+
+      await subscription.cancel();
+    },
+  );
+
+  test(
     'the full vertical slice: create, add exercise, add sets, autosave, reopen',
     () async {
       final exercise = await exercises.create(

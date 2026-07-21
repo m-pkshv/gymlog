@@ -20,6 +20,7 @@ import '../domain/models/app_settings.dart';
 import '../domain/models/exercise.dart';
 import '../domain/models/exercise_catalog_filter.dart';
 import '../domain/models/exercise_progression_state.dart';
+import '../domain/models/workout.dart';
 import '../domain/models/workout_details.dart';
 import '../domain/models/workout_history_entry.dart';
 import '../domain/models/workout_history_filter.dart';
@@ -51,6 +52,12 @@ final exerciseRepositoryProvider = Provider<ExerciseRepository>((ref) {
 
 final workoutRepositoryProvider = Provider<WorkoutRepository>((ref) {
   return WorkoutRepositoryImpl(ref.watch(appDatabaseProvider));
+});
+
+/// The workout currently `inProgress`, if any (TS 7.2 step 5) — drives the
+/// "Тренировка продолжается" recovery banner on the tab shell.
+final inProgressWorkoutProvider = StreamProvider<Workout?>((ref) {
+  return ref.watch(workoutRepositoryProvider).watchInProgressWorkout();
 });
 
 final progressionRepositoryProvider = Provider<ProgressionRepository>((ref) {

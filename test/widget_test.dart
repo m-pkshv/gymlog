@@ -3,7 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymlog/app/providers.dart';
-import 'package:gymlog/data/database.dart';
+import 'package:gymlog/data/database.dart' as drift;
+import 'package:gymlog/data/repositories_impl/active_workout_repository_impl.dart';
+import 'package:gymlog/data/repositories_impl/workout_repository_impl.dart';
+import 'package:gymlog/domain/enums.dart';
+import 'package:gymlog/domain/models/active_workout_state.dart';
+import 'package:gymlog/features/workout_editor/screen.dart';
 
 import 'package:gymlog/main.dart';
 
@@ -15,10 +20,10 @@ Future<void> _unmountAndFlush(WidgetTester tester) async {
 }
 
 void main() {
-  late AppDatabase db;
+  late drift.AppDatabase db;
 
   setUp(() {
-    db = AppDatabase(NativeDatabase.memory());
+    db = drift.AppDatabase(NativeDatabase.memory());
   });
 
   tearDown(() async {
@@ -56,4 +61,49 @@ void main() {
 
     await _unmountAndFlush(tester);
   });
+
+  testWidgets('no recovery banner when nothing is inProgress', (
+    tester,
+  ) async {
+    await tester.pumpWidget(appUnderTest());
+    await tester.pumpAndSettle();
+
+    expect(find.byType(MaterialBanner), findsNothing);
+
+    await _unmountAndFlush(tester);
+  });
+
+  testWidgets(
+    'shows a recovery banner when a workout is inProgress, and "Continue" '
+    'opens it (Stage 4, TS 7.2 step 5)',
+    (tester) async {
+      final workout = await WorkoutRepositoryImpl(
+        db,
+      ).createDraft(date: DateTime(2026, 7, 21));
+      await WorkoutRepositoryImpl(
+        db,
+      ).updateWorkout(workout.copyWith(status: WorkoutStatus.inProgress));
+      final startedAt = DateTime.now().toUtc();
+      await ActiveWorkoutRepositoryImpl(db).upsert(
+        ActiveWorkoutState(
+          workoutId: workout.id,
+          startedAtUtc: startedAt,
+          updatedAt: startedAt,
+        ),
+      );
+
+      await tester.pumpWidget(appUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MaterialBanner), findsOneWidget);
+      expect(find.textContaining('Workout in progress'), findsOneWidget);
+
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WorkoutEditorScreen), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
 }

@@ -36,6 +36,16 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
   }
 
   @override
+  Stream<Workout?> watchInProgressWorkout() {
+    final query = _db.select(_db.workouts)..where(
+      (w) =>
+          w.status.equals(WorkoutStatus.inProgress.name) &
+          w.isDeleted.equals(false),
+    );
+    return query.watchSingleOrNull().map((row) => row?.toDomain());
+  }
+
+  @override
   Future<WorkoutDetails?> getDetails(String workoutId) async {
     final workoutRow = await (_db.select(_db.workouts)..where(
       (w) => w.id.equals(workoutId) & w.isDeleted.equals(false),

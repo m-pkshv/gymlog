@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../domain/models/exercise.dart';
@@ -13,6 +14,7 @@ import '../features/today/screen.dart';
 import '../features/workout_editor/add_exercise_screen.dart';
 import '../features/workout_editor/screen.dart';
 import '../l10n/app_localizations.dart';
+import 'providers.dart';
 
 /// App routes (04_UI_UX_SPEC.md, section 4). Stage 0 wired the 5 tab roots;
 /// `/history/workout/:workoutId` (S-03, Stage 1) and its nested
@@ -143,16 +145,26 @@ final GoRouter appRouter = GoRouter(
 /// Bottom navigation shell for the 5 tabs (04_UI_UX_SPEC.md, section 4).
 /// Android back on a tab root falls through to the system default (leave
 /// the app); `StatefulShellRoute` keeps each tab's own navigation stack.
-class _MainTabScaffold extends StatelessWidget {
+/// Also hosts the "Тренировка продолжается" recovery banner (Stage 4, TS
+/// 7.2 step 5) — visible on every tab, including right after a cold start
+/// with a workout already `inProgress` (the anchor-based timers need no
+/// extra recovery work of their own; this banner is purely about giving the
+/// owner a way back in).
+class _MainTabScaffold extends ConsumerWidget {
   const _MainTabScaffold({required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      body: navigationShell,
+      body: Column(
+        children: [
+          const _ResumeWorkoutBanner(),
+          Expanded(child: navigationShell),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: navigationShell.goBranch,
@@ -179,6 +191,42 @@ class _MainTabScaffold extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// "Тренировка продолжается, N мин" (Stage 4, TS 7.2 step 5) — shown
+/// whenever `inProgressWorkoutProvider` has a workout, on top of whichever
+/// tab is active. The elapsed minutes shown are computed once per rebuild
+/// (start/pause/resume of the workout, or a fresh app start) rather than
+/// ticking every second — this is a passive reminder, not a live clock, so
+/// per-minute staleness between those events is an acceptable simplification
+/// that avoids yet another `Timer.periodic` alongside the ones already
+/// living inside the workout editor.
+class _ResumeWorkoutBanner extends ConsumerWidget {
+  const _ResumeWorkoutBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final workoutAsync = ref.watch(inProgressWorkoutProvider);
+    final workout = workoutAsync.value;
+    if (workout == null) return const SizedBox.shrink();
+
+    final l10n = AppLocalizations.of(context)!;
+    final activeStateAsync = ref.watch(activeWorkoutStateProvider(workout.id));
+    final activeState = activeStateAsync.value;
+    final minutes = activeState == null
+        ? 0
+        : ref.read(activeWorkoutTimerServiceProvider).elapsedSeconds(activeState) ~/ 60;
+
+    return MaterialBanner(
+      content: Text(l10n.workoutContinuingBannerMessage(minutes)),
+      actions: [
+        TextButton(
+          onPressed: () => context.push('/history/workout/${workout.id}'),
+          child: Text(l10n.continueWorkoutAction),
+        ),
+      ],
     );
   }
 }

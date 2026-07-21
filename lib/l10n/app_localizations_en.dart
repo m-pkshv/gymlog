@@ -584,4 +584,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restTimerSkipAction => 'Skip';
+
+  @override
+  String workoutContinuingBannerMessage(int minutes) {
+    return 'Workout in progress, $minutes min';
+  }
+
+  @override
+  String get continueWorkoutAction => 'Continue';
 }
