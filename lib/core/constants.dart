@@ -90,3 +90,15 @@ class MeasurementValueRange {
   static const double minLengthCm = 1;
   static const double maxLengthCm = 300;
 }
+
+/// CSV export format (03_TECHNICAL_SPEC.md, section 10.1/10.2, D-9).
+class ExportFormat {
+  const ExportFormat._();
+
+  static const int formatVersion = 1;
+
+  /// Mirrors `pubspec.yaml`'s semantic version (currently `1.0.0+1`) --
+  /// there's no `package_info_plus` dependency (not in TS 3) to read it at
+  /// runtime, so this is updated by hand alongside `pubspec.yaml`.
+  static const String appVersion = '1.0.0';
+}
