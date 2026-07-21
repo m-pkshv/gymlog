@@ -41,4 +41,8 @@ abstract class BodyMeasurementRepository {
 
   /// Reverses [delete] within the Undo window.
   Future<void> restore(String id);
+
+  /// Every non-deleted entry across every type -- `measurements.csv`'s
+  /// source (03_TECHNICAL_SPEC.md, section 10.1).
+  Future<List<BodyMeasurement>> getAllForExport();
 }

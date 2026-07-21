@@ -236,6 +236,24 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
     )..where((e) => e.id.equals(exerciseId))).go();
   }
 
+  @override
+  Future<List<Exercise>> getAllForExport() async {
+    final rows = await (_db.select(
+      _db.exercises,
+    )..where((e) => e.isDeleted.equals(false))).get();
+    if (rows.isEmpty) return const [];
+
+    final ids = rows.map((row) => row.id).toList();
+    final secondaryByExercise = await _secondaryMuscleGroupIdsByExercise(ids);
+    return rows
+        .map(
+          (row) => row.toDomain(
+            secondaryMuscleGroupIds: secondaryByExercise[row.id] ?? const [],
+          ),
+        )
+        .toList();
+  }
+
   Future<Map<String, List<String>>> _secondaryMuscleGroupIdsByExercise(
     List<String> exerciseIds,
   ) async {

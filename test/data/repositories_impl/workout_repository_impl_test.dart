@@ -877,4 +877,67 @@ void main() {
       expect(stats.tonnageKg, 0.0);
     });
   });
+
+  group('getAllForExport (Stage 8, TS 10.1/10.3)', () {
+    test('returns every non-deleted status, not just completed', () async {
+      final draft = await workouts.createDraft(date: DateTime(2026, 7, 1));
+      final planned = await workouts.createDraft(date: DateTime(2026, 7, 2));
+      await workouts.updateWorkout(
+        planned.copyWith(status: WorkoutStatus.planned),
+      );
+      final cancelled = await workouts.createDraft(date: DateTime(2026, 7, 3));
+      await workouts.updateWorkout(
+        cancelled.copyWith(status: WorkoutStatus.cancelled),
+      );
+
+      final all = await workouts.getAllForExport();
+      expect(
+        all.map((d) => d.workout.id).toSet(),
+        {draft.id, planned.id, cancelled.id},
+      );
+    });
+
+    test('excludes soft-deleted workouts', () async {
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 1));
+      await workouts.deleteWorkout(workout.id);
+
+      final all = await workouts.getAllForExport();
+      expect(all, isEmpty);
+    });
+
+    test(
+      'includes full nested exercise/set/tag detail, excluding soft-deleted '
+      'exercises and sets',
+      () async {
+        final legs = await tags.create(name: 'Legs', colorHex: '#4C7BD9');
+        final exercise = await exercises.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+        final workout = await workouts.createDraft(date: DateTime(2026, 7, 1));
+        await workouts.setWorkoutTags(
+          workoutId: workout.id,
+          tagIds: [legs.id],
+        );
+        final we = await workouts.addExercise(
+          workoutId: workout.id,
+          exerciseId: exercise.id,
+        );
+        final set = await workouts.addSet(
+          workoutExerciseId: we.id,
+          isWarmup: false,
+        );
+        await workouts.updateSet(
+          set.copyWith(isCompleted: true, actualWeightKg: 100, actualReps: 5),
+        );
+
+        final all = await workouts.getAllForExport();
+        final details = all.single;
+        expect(details.tags.map((t) => t.name), ['Legs']);
+        expect(details.exercises, hasLength(1));
+        expect(details.exercises.single.exercise.name, 'Squat');
+        expect(details.exercises.single.sets.single.actualWeightKg, 100);
+      },
+    );
+  });
 }

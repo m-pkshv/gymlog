@@ -65,4 +65,9 @@ abstract class ExerciseRepository {
   /// links). Callers must have already established it's safe to do so
   /// (`exercise_service`, DM 10) — this just performs the write.
   Future<void> delete(String exerciseId);
+
+  /// Every non-deleted exercise, archived or not -- `exercises.csv`'s
+  /// source (03_TECHNICAL_SPEC.md, section 10.1: "архивные упражнения —
+  /// экспортируются, история на них ссылается").
+  Future<List<Exercise>> getAllForExport();
 }

@@ -118,4 +118,36 @@ void main() {
     expect(restored, hasLength(1));
     expect(restored.single.id, entry.id);
   });
+
+  group('getAllForExport (Stage 8, TS 10.1/10.4)', () {
+    test('returns entries across every type, excluding soft-deleted', () async {
+      final neckTypeId = (await types.create(
+        nameCustom: 'Neck (test)',
+        unitKind: MeasurementUnitKind.length,
+      )).id;
+
+      final weightEntry = await measurements.create(
+        measurementTypeId: weightTypeId,
+        date: DateTime(2026, 7, 21),
+        valueMetric: 82,
+      );
+      final neckEntry = await measurements.create(
+        measurementTypeId: neckTypeId,
+        date: DateTime(2026, 7, 21),
+        valueMetric: 38,
+      );
+      final deleted = await measurements.create(
+        measurementTypeId: weightTypeId,
+        date: DateTime(2026, 7, 20),
+        valueMetric: 83,
+      );
+      await measurements.delete(deleted.id);
+
+      final all = await measurements.getAllForExport();
+      expect(
+        all.map((m) => m.id).toSet(),
+        {weightEntry.id, neckEntry.id},
+      );
+    });
+  });
 }

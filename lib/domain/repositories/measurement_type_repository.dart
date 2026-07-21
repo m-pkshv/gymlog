@@ -14,8 +14,12 @@ abstract class MeasurementTypeRepository {
   /// archive UI).
   Stream<List<MeasurementType>> watchAll({bool includeArchived = false});
 
-  /// One-shot read of the same set [watchAll] streams, used for the
-  /// uniqueness check in `MeasurementTypeService.create`.
+  /// One-shot read of every type, built-in + user-created, **including
+  /// archived** (unlike [watchAll]'s default) -- used for the uniqueness
+  /// check in `MeasurementTypeService.create` (which filters archived ones
+  /// back out itself, since an archived name can be reused) and for
+  /// `measurements.csv`'s export (which needs archived custom types too,
+  /// since old measurements may still reference one).
   Future<List<MeasurementType>> getAll();
 
   Future<MeasurementType?> getById(String id);

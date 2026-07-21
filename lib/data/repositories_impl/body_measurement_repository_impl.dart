@@ -111,4 +111,12 @@ class BodyMeasurementRepositoryImpl implements BodyMeasurementRepository {
           ),
         );
   }
+
+  @override
+  Future<List<BodyMeasurement>> getAllForExport() async {
+    final rows = await (_db.select(
+      _db.bodyMeasurements,
+    )..where((m) => m.isDeleted.equals(false))).get();
+    return rows.map((row) => row.toDomain()).toList();
+  }
 }

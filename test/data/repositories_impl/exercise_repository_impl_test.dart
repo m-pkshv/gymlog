@@ -539,4 +539,48 @@ void main() {
       expect(await repository.hasLoggedSets(exercise2.id), isTrue);
     },
   );
+
+  group('getAllForExport (Stage 8, TS 10.1/10.5)', () {
+    test(
+      'includes archived exercises (unlike watchAll\'s default) and their '
+      'secondary muscles, excludes soft-deleted ones',
+      () async {
+        await db
+            .into(db.muscleGroups)
+            .insert(MuscleGroupsCompanion.insert(id: 'glutes', sortOrder: 0));
+        await db
+            .into(db.muscleGroups)
+            .insert(
+              MuscleGroupsCompanion.insert(id: 'hamstrings', sortOrder: 1),
+            );
+
+        final active = await repository.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+          secondaryMuscleGroupIds: const ['glutes', 'hamstrings'],
+        );
+        final archived = await repository.create(
+          name: 'Old Machine Exercise',
+          exerciseType: ExerciseType.strength,
+        );
+        await repository.setArchived(archived.id, archived: true);
+        final deleted = await repository.create(
+          name: 'Mistake',
+          exerciseType: ExerciseType.strength,
+        );
+        await repository.delete(deleted.id);
+
+        final all = await repository.getAllForExport();
+        expect(all.map((e) => e.id).toSet(), {active.id, archived.id});
+
+        final activeResult = all.firstWhere((e) => e.id == active.id);
+        expect(
+          activeResult.secondaryMuscleGroupIds.toSet(),
+          {'glutes', 'hamstrings'},
+        );
+        final archivedResult = all.firstWhere((e) => e.id == archived.id);
+        expect(archivedResult.isArchived, isTrue);
+      },
+    );
+  });
 }

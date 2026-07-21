@@ -712,4 +712,79 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
       );
     });
   }
+
+  @override
+  Future<List<WorkoutDetails>> getAllForExport() async {
+    final workoutRows = await (_db.select(
+      _db.workouts,
+    )..where((w) => w.isDeleted.equals(false))).get();
+    if (workoutRows.isEmpty) return const [];
+
+    final workoutIds = workoutRows.map((w) => w.id).toList();
+    final tagsByWorkout = await _tagsByWorkouts(workoutIds);
+
+    final workoutExerciseRows =
+        await (_db.select(_db.workoutExercises)
+              ..where(
+                (we) =>
+                    we.workoutId.isIn(workoutIds) & we.isDeleted.equals(false),
+              )
+              ..orderBy([(we) => OrderingTerm.asc(we.orderIndex)]))
+            .get();
+
+    final exerciseIds = workoutExerciseRows
+        .map((we) => we.exerciseId)
+        .toSet()
+        .toList();
+    final exerciseRows = exerciseIds.isEmpty
+        ? const <drift.Exercise>[]
+        : await (_db.select(
+            _db.exercises,
+          )..where((e) => e.id.isIn(exerciseIds))).get();
+    final exerciseById = {for (final row in exerciseRows) row.id: row};
+
+    final workoutExerciseIds = workoutExerciseRows.map((we) => we.id).toList();
+    final setRows = workoutExerciseIds.isEmpty
+        ? const <drift.ExerciseSet>[]
+        : await (_db.select(_db.exerciseSets)
+                ..where(
+                  (s) =>
+                      s.workoutExerciseId.isIn(workoutExerciseIds) &
+                      s.isDeleted.equals(false),
+                )
+                ..orderBy([(s) => OrderingTerm.asc(s.setNumber)]))
+              .get();
+    final setsByWorkoutExercise = <String, List<drift.ExerciseSet>>{};
+    for (final row in setRows) {
+      setsByWorkoutExercise
+          .putIfAbsent(row.workoutExerciseId, () => [])
+          .add(row);
+    }
+
+    final exercisesByWorkout = <String, List<WorkoutExerciseDetails>>{};
+    for (final weRow in workoutExerciseRows) {
+      final exerciseRow = exerciseById[weRow.exerciseId]!;
+      final sets =
+          setsByWorkoutExercise[weRow.id] ?? const <drift.ExerciseSet>[];
+      exercisesByWorkout
+          .putIfAbsent(weRow.workoutId, () => [])
+          .add(
+            WorkoutExerciseDetails(
+              workoutExercise: weRow.toDomain(),
+              exercise: exerciseRow.toDomain(),
+              sets: sets.map((s) => s.toDomain()).toList(),
+            ),
+          );
+    }
+
+    return workoutRows
+        .map(
+          (row) => WorkoutDetails(
+            workout: row.toDomain(),
+            exercises: exercisesByWorkout[row.id] ?? const [],
+            tags: tagsByWorkout[row.id] ?? const [],
+          ),
+        )
+        .toList();
+  }
 }

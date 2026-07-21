@@ -125,4 +125,12 @@ abstract class WorkoutRepository {
   /// not by loading every set into Dart (02_DEVELOPMENT_PLAN.md Stage 7
   /// performance risk note).
   Stream<WorkoutPeriodStats> watchPeriodStats({DateTime? from, DateTime? to});
+
+  /// Every non-deleted workout, any status, with full nested exercise/set/
+  /// tag detail -- `workouts.csv`'s source (03_TECHNICAL_SPEC.md, section
+  /// 10.1: "Экспортируются только неудалённые данные"; unlike
+  /// [watchHistory], there's no completed-only default here). Batched into
+  /// a fixed number of queries regardless of workout count, the same
+  /// pattern [getDetails] uses for one workout at a time.
+  Future<List<WorkoutDetails>> getAllForExport();
 }
