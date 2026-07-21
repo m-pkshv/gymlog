@@ -938,4 +938,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statsEmptyPeriod => 'No entries in this period';
+
+  @override
+  String get statsWorkoutsCardTitle => 'Workouts';
+
+  @override
+  String get statsWorkoutsCountLabel => 'Workouts';
+
+  @override
+  String get statsWorkoutsFrequencyLabel => 'Frequency';
+
+  @override
+  String statsWorkoutsFrequencyValue(String value) {
+    return '$value / wk';
+  }
 }

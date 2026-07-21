@@ -753,4 +753,128 @@ void main() {
       expect(history.any((e) => e.workout.id == workout.id), isTrue);
     });
   });
+
+  group('watchPeriodStats (Stage 7, S-09 "Тренировки" card, TS 9)', () {
+    Future<void> addCompletedWorkout({
+      required DateTime date,
+      required ExerciseType exerciseType,
+      required List<({bool isWarmup, bool isCompleted, double? weight, int? reps})>
+      sets,
+    }) async {
+      final exercise = await exercises.create(
+        name: 'Test exercise',
+        exerciseType: exerciseType,
+      );
+      final workout = await workouts.createDraft(date: date);
+      final workoutExercise = await workouts.addExercise(
+        workoutId: workout.id,
+        exerciseId: exercise.id,
+      );
+      for (final spec in sets) {
+        final set = await workouts.addSet(
+          workoutExerciseId: workoutExercise.id,
+          isWarmup: spec.isWarmup,
+        );
+        await workouts.updateSet(
+          set.copyWith(
+            plannedWeightKg: spec.weight,
+            plannedReps: spec.reps,
+            isCompleted: spec.isCompleted,
+            actualWeightKg: spec.weight,
+            actualReps: spec.reps,
+          ),
+        );
+      }
+      await workouts.updateWorkout(
+        workout.copyWith(status: WorkoutStatus.completed),
+      );
+    }
+
+    test('an empty period gives zero count and zero tonnage', () async {
+      final stats = await workouts
+          .watchPeriodStats(from: DateTime(2026, 1, 1), to: DateTime(2026, 1, 31))
+          .first;
+      expect(stats.workoutCount, 0);
+      expect(stats.tonnageKg, 0.0);
+    });
+
+    test(
+      'counts completed workouts in range and sums tonnage of working, '
+      'completed strength/reps sets',
+      () async {
+        await addCompletedWorkout(
+          date: DateTime(2026, 7, 10),
+          exerciseType: ExerciseType.strength,
+          sets: [
+            (isWarmup: true, isCompleted: true, weight: 20, reps: 10),
+            (isWarmup: false, isCompleted: true, weight: 100, reps: 5),
+            (isWarmup: false, isCompleted: false, weight: 100, reps: 5),
+          ],
+        );
+        await addCompletedWorkout(
+          date: DateTime(2026, 7, 15),
+          exerciseType: ExerciseType.reps,
+          sets: [(isWarmup: false, isCompleted: true, weight: null, reps: 20)],
+        );
+
+        final stats = await workouts
+            .watchPeriodStats(from: DateTime(2026, 7, 1), to: DateTime(2026, 7, 31))
+            .first;
+
+        expect(stats.workoutCount, 2);
+        // Only the working, completed strength set contributes: 100*5=500.
+        // The warmup set, the uncompleted set, and the weightless reps set
+        // all contribute 0.
+        expect(stats.tonnageKg, 500.0);
+      },
+    );
+
+    test('excludes workouts outside the date range', () async {
+      await addCompletedWorkout(
+        date: DateTime(2026, 6, 30),
+        exerciseType: ExerciseType.strength,
+        sets: [(isWarmup: false, isCompleted: true, weight: 50, reps: 10)],
+      );
+
+      final stats = await workouts
+          .watchPeriodStats(from: DateTime(2026, 7, 1), to: DateTime(2026, 7, 31))
+          .first;
+      expect(stats.workoutCount, 0);
+      expect(stats.tonnageKg, 0.0);
+    });
+
+    test('null from/to means unbounded ("Всё время")', () async {
+      await addCompletedWorkout(
+        date: DateTime(2000, 1, 1),
+        exerciseType: ExerciseType.strength,
+        sets: [(isWarmup: false, isCompleted: true, weight: 50, reps: 10)],
+      );
+
+      final stats = await workouts.watchPeriodStats().first;
+      expect(stats.workoutCount, 1);
+      expect(stats.tonnageKg, 500.0);
+    });
+
+    test('a draft workout in range is not counted', () async {
+      final exercise = await exercises.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      final draft = await workouts.createDraft(date: DateTime(2026, 7, 10));
+      final workoutExercise = await workouts.addExercise(
+        workoutId: draft.id,
+        exerciseId: exercise.id,
+      );
+      await workouts.addSet(
+        workoutExerciseId: workoutExercise.id,
+        isWarmup: false,
+      );
+
+      final stats = await workouts
+          .watchPeriodStats(from: DateTime(2026, 7, 1), to: DateTime(2026, 7, 31))
+          .first;
+      expect(stats.workoutCount, 0);
+      expect(stats.tonnageKg, 0.0);
+    });
+  });
 }

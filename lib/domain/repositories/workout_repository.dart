@@ -5,6 +5,7 @@ import '../models/workout_details.dart';
 import '../models/workout_exercise.dart';
 import '../models/workout_history_entry.dart';
 import '../models/workout_history_filter.dart';
+import '../models/workout_period_stats.dart';
 
 /// Storage contract for the workout aggregate — `Workout` +
 /// `WorkoutExercise` + `ExerciseSet` (06_DATA_MODEL.md, sections 6.4, 6.6,
@@ -114,4 +115,14 @@ abstract class WorkoutRepository {
   /// un-marks `isDeleted` on the workout and the same `WorkoutExercise`/
   /// `ExerciseSet` rows it cascaded to.
   Future<void> restoreWorkout(String workoutId);
+
+  /// S-09 "Тренировки" card (TS 9): count of completed, non-deleted
+  /// workouts in the inclusive local-date range [from, to], and the summed
+  /// tonnage of their working (`isWarmup = false`), completed
+  /// (`isCompleted = true`) `strength`/`reps` sets (`Σ actualWeightKg ×
+  /// actualReps`, TS 9's "Тоннаж за период"). `from`/`to` null means
+  /// unbounded on that side (the "Всё время" preset). Aggregated in SQL,
+  /// not by loading every set into Dart (02_DEVELOPMENT_PLAN.md Stage 7
+  /// performance risk note).
+  Stream<WorkoutPeriodStats> watchPeriodStats({DateTime? from, DateTime? to});
 }

@@ -9,6 +9,7 @@ import '../../domain/models/workout_details.dart';
 import '../../domain/models/workout_exercise.dart';
 import '../../domain/models/workout_history_entry.dart';
 import '../../domain/models/workout_history_filter.dart';
+import '../../domain/models/workout_period_stats.dart';
 import '../../domain/models/workout_tag.dart';
 import '../../domain/repositories/workout_repository.dart';
 import '../database.dart' as drift;
@@ -643,5 +644,72 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
       (we) => we.workoutId.equals(workoutId) & we.isDeleted.equals(false),
     )).get();
     return rows.map((row) => row.id).toList();
+  }
+
+  @override
+  Stream<WorkoutPeriodStats> watchPeriodStats({DateTime? from, DateTime? to}) {
+    // Left joins so a completed workout with zero exercises still counts
+    // (`isDeleted`/existence checks live in the join's ON clause, not the
+    // outer WHERE, the same pattern `watchHistory`'s `exerciseCount`
+    // aggregate already uses — a WHERE on the joined side would silently
+    // turn this into an inner join and drop exercise-less workouts).
+    // `actualWeightKg`/`actualReps` are nullable (e.g. a `reps` exercise
+    // never has a weight); SQL `NULL * x = NULL`, and `SUM` simply skips
+    // NULL rows, which is exactly the "a set without a weight contributes
+    // 0" behavior TS 9 asks for — no explicit COALESCE needed.
+    final tonnageExpr =
+        (_db.exerciseSets.actualWeightKg *
+                _db.exerciseSets.actualReps.dartCast<double>())
+            .sum(
+              filter:
+                  _db.exerciseSets.isWarmup.equals(false) &
+                  _db.exerciseSets.isCompleted.equals(true) &
+                  _db.exercises.exerciseType.isIn([
+                    ExerciseType.strength.name,
+                    ExerciseType.reps.name,
+                  ]),
+            );
+    final workoutCountExpr = _db.workouts.id.count(distinct: true);
+
+    final query =
+        _db.select(_db.workouts).join([
+            leftOuterJoin(
+              _db.workoutExercises,
+              _db.workoutExercises.workoutId.equalsExp(_db.workouts.id) &
+                  _db.workoutExercises.isDeleted.equals(false),
+            ),
+            leftOuterJoin(
+              _db.exercises,
+              _db.exercises.id.equalsExp(_db.workoutExercises.exerciseId),
+            ),
+            leftOuterJoin(
+              _db.exerciseSets,
+              _db.exerciseSets.workoutExerciseId.equalsExp(
+                _db.workoutExercises.id,
+              ) &
+                  _db.exerciseSets.isDeleted.equals(false),
+            ),
+          ])
+          ..addColumns([tonnageExpr, workoutCountExpr])
+          ..where(
+            _db.workouts.status.equals(WorkoutStatus.completed.name) &
+                _db.workouts.isDeleted.equals(false),
+          );
+    if (from != null) {
+      query.where(
+        _db.workouts.date.isBiggerOrEqualValue(dateOnlyString(from)),
+      );
+    }
+    if (to != null) {
+      query.where(_db.workouts.date.isSmallerOrEqualValue(dateOnlyString(to)));
+    }
+
+    return query.watch().map((rows) {
+      final row = rows.single;
+      return WorkoutPeriodStats(
+        workoutCount: row.read(workoutCountExpr) ?? 0,
+        tonnageKg: row.read(tonnageExpr) ?? 0.0,
+      );
+    });
   }
 }

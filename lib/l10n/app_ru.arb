@@ -295,5 +295,9 @@
   "statsPeriodYear": "Год",
   "statsPeriodAllTime": "Всё",
   "statsPeriodCustom": "Свой",
-  "statsEmptyPeriod": "Нет записей за этот период"
+  "statsEmptyPeriod": "Нет записей за этот период",
+  "statsWorkoutsCardTitle": "Тренировки",
+  "statsWorkoutsCountLabel": "Тренировок",
+  "statsWorkoutsFrequencyLabel": "Частота",
+  "statsWorkoutsFrequencyValue": "{value} / нед."
 }

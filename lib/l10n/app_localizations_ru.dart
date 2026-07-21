@@ -945,4 +945,18 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get statsEmptyPeriod => 'Нет записей за этот период';
+
+  @override
+  String get statsWorkoutsCardTitle => 'Тренировки';
+
+  @override
+  String get statsWorkoutsCountLabel => 'Тренировок';
+
+  @override
+  String get statsWorkoutsFrequencyLabel => 'Частота';
+
+  @override
+  String statsWorkoutsFrequencyValue(String value) {
+    return '$value / нед.';
+  }
 }

@@ -6,8 +6,12 @@ import 'package:gymlog/app/providers.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/body_measurement_repository_impl.dart';
+import 'package:gymlog/data/repositories_impl/exercise_repository_impl.dart';
+import 'package:gymlog/data/repositories_impl/workout_repository_impl.dart';
+import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/features/measurements/widgets/measurement_chart.dart';
 import 'package:gymlog/features/stats/screen.dart';
+import 'package:gymlog/features/stats/widgets/workout_stats_card.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
 Widget _appUnderTest(AppDatabase db) {
@@ -161,5 +165,157 @@ void main() {
     expect(find.text('Waist'), findsWidgets);
 
     await _unmountAndFlush(tester);
+  });
+
+  group('WorkoutStatsCard (Stage 7, S-09 "Тренировки" card)', () {
+    Future<void> addCompletedWorkout(
+      AppDatabase db, {
+      required DateTime date,
+      required double weight,
+      required int reps,
+    }) async {
+      final exercises = ExerciseRepositoryImpl(db);
+      final workouts = WorkoutRepositoryImpl(db);
+      final exercise = await exercises.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      final workout = await workouts.createDraft(date: date);
+      final workoutExercise = await workouts.addExercise(
+        workoutId: workout.id,
+        exerciseId: exercise.id,
+      );
+      final set = await workouts.addSet(
+        workoutExerciseId: workoutExercise.id,
+        isWarmup: false,
+      );
+      await workouts.updateSet(
+        set.copyWith(
+          isCompleted: true,
+          actualWeightKg: weight,
+          actualReps: reps,
+        ),
+      );
+      await workouts.updateWorkout(
+        workout.copyWith(status: WorkoutStatus.completed),
+      );
+    }
+
+    testWidgets('shows an empty state with no completed workouts', (
+      tester,
+    ) async {
+      // The Workouts card is the 4th card in the ListView, below the
+      // default test viewport -- ListView only builds visible children
+      // even when given a plain `children:` list (Stage 2 finding).
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      final card = find.byType(WorkoutStatsCard);
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.text('No entries in this period'),
+        ),
+        findsOneWidget,
+      );
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets(
+      'shows count, frequency, and tonnage for a completed workout in the '
+      'default Month period',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 3000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
+        await addCompletedWorkout(
+          db,
+          date: DateTime.now(),
+          weight: 100,
+          reps: 5,
+        );
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+
+        final card = find.byType(WorkoutStatsCard);
+        expect(find.descendant(of: card, matching: find.text('1')), findsOneWidget);
+        expect(
+          find.descendant(of: card, matching: find.text('500.0 kg')),
+          findsOneWidget,
+        );
+        // 1 workout / (30/7 weeks) rounds to 0.2 -- exercising the
+        // TS 9 "1 знак" formatting, not the exact value.
+        expect(
+          find.descendant(of: card, matching: find.text('0.2 / wk')),
+          findsOneWidget,
+        );
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'switching to the All period reveals a workout outside the default '
+      'Month range',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 3000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
+        await addCompletedWorkout(
+          db,
+          date: DateTime.now().subtract(const Duration(days: 200)),
+          weight: 50,
+          reps: 10,
+        );
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+
+        final card = find.byType(WorkoutStatsCard);
+        expect(
+          find.descendant(
+            of: card,
+            matching: find.text('No entries in this period'),
+          ),
+          findsOneWidget,
+        );
+
+        await tester.tap(
+          find.descendant(
+            of: card,
+            matching: find.widgetWithText(ChoiceChip, 'All'),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.descendant(
+            of: card,
+            matching: find.text('No entries in this period'),
+          ),
+          findsNothing,
+        );
+        expect(find.descendant(of: card, matching: find.text('1')), findsOneWidget);
+        // The "All" preset has no defined length, so frequency is hidden
+        // entirely rather than guessed (owner-confirmed 2026-07-21).
+        expect(
+          find.descendant(
+            of: card,
+            matching: find.textContaining('/ wk'),
+          ),
+          findsNothing,
+        );
+
+        await _unmountAndFlush(tester);
+      },
+    );
   });
 }

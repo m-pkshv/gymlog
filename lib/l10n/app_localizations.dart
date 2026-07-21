@@ -1873,6 +1873,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No entries in this period'**
   String get statsEmptyPeriod;
+
+  /// S-09 card title for the completed-workout count/frequency/tonnage card (Stage 7).
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts'**
+  String get statsWorkoutsCardTitle;
+
+  /// Label under the completed-workout count figure on the S-09 Workouts card.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts'**
+  String get statsWorkoutsCountLabel;
+
+  /// Label under the workout-frequency figure on the S-09 Workouts card. Hidden for the 'all time' period, which has no defined length.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency'**
+  String get statsWorkoutsFrequencyLabel;
+
+  /// Formatted frequency figure: completed workouts divided by the period's length in weeks, one decimal place (TS 9).
+  ///
+  /// In en, this message translates to:
+  /// **'{value} / wk'**
+  String statsWorkoutsFrequencyValue(String value);
 }
 
 class _AppLocalizationsDelegate

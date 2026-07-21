@@ -55,4 +55,46 @@ void main() {
       expect(from, DateTime(2026, 7, 15));
     });
   });
+
+  group(
+    'StatsPeriod.weeksInRange (TS 9: "Частота = завершённые / число недель периода")',
+    () {
+      test('week preset is exactly 1 week', () {
+        expect(
+          const StatsPeriod.preset(StatsPeriodPreset.week).weeksInRange(today),
+          1.0,
+        );
+      });
+
+      test('month preset is 30/7 weeks', () {
+        expect(
+          const StatsPeriod.preset(StatsPeriodPreset.month).weeksInRange(today),
+          closeTo(30 / 7, 1e-9),
+        );
+      });
+
+      test('year preset is 365/7 weeks', () {
+        expect(
+          const StatsPeriod.preset(StatsPeriodPreset.year).weeksInRange(today),
+          closeTo(365 / 7, 1e-9),
+        );
+      });
+
+      test('custom range is its inclusive day span / 7', () {
+        final period = StatsPeriod.custom(
+          from: DateTime(2026, 1, 1),
+          to: DateTime(2026, 1, 14),
+        );
+        // 14 days inclusive (Jan 1..Jan 14) = 2 weeks exactly.
+        expect(period.weeksInRange(today), 2.0);
+      });
+
+      test('allTime has no defined length (owner-confirmed: hide, not guess)', () {
+        expect(
+          const StatsPeriod.preset(StatsPeriodPreset.allTime).weeksInRange(today),
+          isNull,
+        );
+      });
+    },
+  );
 }

@@ -7,13 +7,12 @@ import '../../l10n/app_localizations.dart';
 import '../measurements/measurement_type_lookup.dart';
 import 'widgets/measurement_dynamics_body.dart';
 import 'widgets/measurement_type_dynamics_card.dart';
+import 'widgets/workout_stats_card.dart';
 
 /// S-09 "Статистика" (04_UI_UX_SPEC.md, section 5): "Секции-карточки: Вес
 /// тела, % жира, Замеры (выбор типа), Тренировки (число/частота/тоннаж),
-/// «Прогресс по упражнению»." This step covers the first three (dynamics
-/// charts, reusing Stage 6's `BodyMeasurementRepository` + the new S-09
-/// period filter); the workout-count/frequency/tonnage card and the
-/// exercise-progress search are a later step.
+/// «Прогресс по упражнению»." This step adds the fourth (workout count/
+/// frequency/tonnage); the exercise-progress search is a later step.
 class StatsScreen extends ConsumerWidget {
   const StatsScreen({super.key});
 
@@ -51,6 +50,8 @@ class StatsScreen extends ConsumerWidget {
               ],
               const SizedBox(height: 16),
               const MeasurementTypeDynamicsCard(),
+              const SizedBox(height: 16),
+              const WorkoutStatsCard(),
             ],
           );
         },

@@ -1118,5 +1118,24 @@
   "statsEmptyPeriod": "No entries in this period",
   "@statsEmptyPeriod": {
     "description": "Empty state shown on an S-09 chart when the selected period has no data."
+  },
+  "statsWorkoutsCardTitle": "Workouts",
+  "@statsWorkoutsCardTitle": {
+    "description": "S-09 card title for the completed-workout count/frequency/tonnage card (Stage 7)."
+  },
+  "statsWorkoutsCountLabel": "Workouts",
+  "@statsWorkoutsCountLabel": {
+    "description": "Label under the completed-workout count figure on the S-09 Workouts card."
+  },
+  "statsWorkoutsFrequencyLabel": "Frequency",
+  "@statsWorkoutsFrequencyLabel": {
+    "description": "Label under the workout-frequency figure on the S-09 Workouts card. Hidden for the 'all time' period, which has no defined length."
+  },
+  "statsWorkoutsFrequencyValue": "{value} / wk",
+  "@statsWorkoutsFrequencyValue": {
+    "description": "Formatted frequency figure: completed workouts divided by the period's length in weeks, one decimal place (TS 9).",
+    "placeholders": {
+      "value": {"type": "String"}
+    }
   }
 }

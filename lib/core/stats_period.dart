@@ -47,4 +47,16 @@ class StatsPeriod {
         return (anchor.subtract(Duration(days: days - 1)), anchor);
     }
   }
+
+  /// Number of weeks this period spans, for TS 9's "Частота = завершённые /
+  /// число недель периода". `null` for [StatsPeriodPreset.allTime]: an
+  /// unbounded period has no defined length to divide by, so the "Частота"
+  /// figure is not shown at all for it (owner-confirmed 2026-07-21) rather
+  /// than guessed from the data.
+  double? weeksInRange(DateTime today) {
+    if (preset == StatsPeriodPreset.allTime) return null;
+    final (from, to) = range(today);
+    final days = to!.difference(from!).inDays + 1;
+    return days / 7;
+  }
 }

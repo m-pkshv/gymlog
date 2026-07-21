@@ -34,6 +34,7 @@ import '../domain/models/workout.dart';
 import '../domain/models/workout_details.dart';
 import '../domain/models/workout_history_entry.dart';
 import '../domain/models/workout_history_filter.dart';
+import '../domain/models/workout_period_stats.dart';
 import '../domain/models/workout_tag.dart';
 import '../domain/repositories/active_workout_repository.dart';
 import '../domain/repositories/app_settings_repository.dart';
@@ -325,6 +326,19 @@ final bodyMeasurementsInRangeProvider = StreamProvider.autoDispose.family<
   return ref
       .watch(bodyMeasurementRepositoryProvider)
       .watchByType(params.measurementTypeId, from: params.from, to: params.to);
+});
+
+/// S-09 "Тренировки" card figures for a period (TS 9: count + tonnage;
+/// frequency is derived from the period's own length, computed UI-side).
+/// `autoDispose` for the same reason as [bodyMeasurementsInRangeProvider] —
+/// this card has its own independent period switcher.
+final workoutPeriodStatsProvider = StreamProvider.autoDispose.family<
+  WorkoutPeriodStats,
+  ({DateTime? from, DateTime? to})
+>((ref, params) {
+  return ref
+      .watch(workoutRepositoryProvider)
+      .watchPeriodStats(from: params.from, to: params.to);
 });
 
 /// The single point of truth for custom measurement type name validation
