@@ -45,3 +45,11 @@ enum RecordType {
   bestPace,
   longestDuration,
 }
+
+/// `ImportExportOperation.operationType` (06_DATA_MODEL.md, section 6.13).
+/// Only `export` is ever produced in the MVP (D-9); `import` is reserved for
+/// a post-MVP importer (TS 10.6).
+enum ImportExportOperationType { export, import }
+
+/// `ImportExportOperation.status` (06_DATA_MODEL.md, section 6.13).
+enum ImportExportOperationStatus { inProgress, success, failed }
