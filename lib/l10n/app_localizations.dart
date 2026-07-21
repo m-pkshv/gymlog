@@ -1219,6 +1219,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue'**
   String get continueWorkoutAction;
+
+  /// Title of the confirmation dialog (Stage 4, TS 7.2 step 6) shown when finishing a workout that still has unmarked working sets.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish workout?'**
+  String get finishWithIncompleteSetsTitle;
+
+  /// Body of the confirmation dialog (Stage 4, TS 7.2 step 6). Only working sets count -- warmups left unchecked don't trigger this (owner-confirmed 2026-07-21).
+  ///
+  /// In en, this message translates to:
+  /// **'Mark the remaining sets as not completed and finish?'**
+  String get finishWithIncompleteSetsMessage;
 }
 
 class _AppLocalizationsDelegate

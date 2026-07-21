@@ -186,5 +186,7 @@
   "restTimerPlus15Tooltip": "+15 с",
   "restTimerSkipAction": "Пропустить",
   "workoutContinuingBannerMessage": "Тренировка продолжается, {minutes} мин",
-  "continueWorkoutAction": "Продолжить"
+  "continueWorkoutAction": "Продолжить",
+  "finishWithIncompleteSetsTitle": "Завершить тренировку?",
+  "finishWithIncompleteSetsMessage": "Отметить оставшиеся подходы невыполненными и завершить?"
 }

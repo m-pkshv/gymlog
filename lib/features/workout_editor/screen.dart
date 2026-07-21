@@ -106,6 +106,27 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
       }
     }
 
+    // TS 7.2 step 6: finishing with unmarked *working* sets (warmups
+    // excluded, owner-confirmed 2026-07-21 -- warmups are routinely left
+    // unchecked and would make this fire on nearly every finish) asks for
+    // confirmation before completing.
+    if (newStatus == WorkoutStatus.completed) {
+      final details = ref
+          .read(workoutEditorControllerProvider(widget.workoutId))
+          .value;
+      final hasIncompleteWorkingSets =
+          details?.exercises.any(
+            (exerciseDetails) => exerciseDetails.sets.any(
+              (set) => !set.isWarmup && !set.isCompleted,
+            ),
+          ) ??
+          false;
+      if (hasIncompleteWorkingSets) {
+        final confirmed = await _confirmFinishWithIncompleteSets();
+        if (!confirmed || !mounted) return;
+      }
+    }
+
     final result = await ref
         .read(workoutEditorControllerProvider(widget.workoutId).notifier)
         .changeStatus(newStatus);
@@ -115,6 +136,32 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.workoutStatusChangeError)));
     });
+  }
+
+  /// TS 7.2 step 6: "Отметить оставшиеся невыполненными и завершить?" --
+  /// shown only when [_changeStatus] found at least one incomplete working
+  /// set. No data is written here; unmarked sets already store
+  /// `isCompleted = false`, so confirming is purely permission to proceed.
+  Future<bool> _confirmFinishWithIncompleteSets() async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.finishWithIncompleteSetsTitle),
+        content: Text(l10n.finishWithIncompleteSetsMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.actionCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.finishWorkoutAction),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
   }
 
   /// Shows the DM 6.4.1 conflict dialog and, if the owner picks an action,

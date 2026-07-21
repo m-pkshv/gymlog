@@ -431,6 +431,131 @@ void main() {
     },
   );
 
+  group('finish confirmation for incomplete sets (Stage 4, TS 7.2 step 6)', () {
+    testWidgets(
+      'shows a confirmation for an incomplete working set; "Cancel" keeps '
+      'it inProgress, confirming completes it',
+      (tester) async {
+        await _seedExercise(db);
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Add set'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Start workout'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Finish'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(AlertDialog), findsOneWidget);
+        expect(find.text('Finish workout?'), findsOneWidget);
+
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+        expect(find.text('In progress'), findsOneWidget);
+        expect(
+          (await db.select(db.workouts).get()).single.status,
+          WorkoutStatus.inProgress.name,
+        );
+
+        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Finish'));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.text('Finish'),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Completed'), findsOneWidget);
+        expect(
+          (await db.select(db.workouts).get()).single.status,
+          WorkoutStatus.completed.name,
+        );
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'a completed working set does not trigger the confirmation',
+      (tester) async {
+        await _seedExercise(db);
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Add set'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(Checkbox).last); // mark the set done
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Start workout'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Finish'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(AlertDialog), findsNothing);
+        expect(find.text('Completed'), findsOneWidget);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'an incomplete warmup set does not trigger the confirmation '
+      '(owner-confirmed 2026-07-21: only working sets count)',
+      (tester) async {
+        await _seedExercise(db);
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Add set'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(Checkbox).first); // mark it as warmup
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Start workout'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Finish'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(AlertDialog), findsNothing);
+        expect(find.text('Completed'), findsOneWidget);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+  });
+
   testWidgets(
     'the workout timer shows Pause while running and Play once paused '
     '(Stage 4, TS 7.1)',
@@ -1217,6 +1342,12 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
         await tester.pumpAndSettle();
+        await tester.tap(find.text('Finish'));
+        await tester.pumpAndSettle();
+        // The set's actual values were typed directly without ticking "✓",
+        // so it's still unmarked -- Stage 4's finish-with-incomplete-sets
+        // confirmation (TS 7.2 step 6) is expected here.
+        expect(find.byType(AlertDialog), findsOneWidget);
         await tester.tap(find.text('Finish'));
         await tester.pumpAndSettle();
 

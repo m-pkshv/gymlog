@@ -592,4 +592,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get continueWorkoutAction => 'Continue';
+
+  @override
+  String get finishWithIncompleteSetsTitle => 'Finish workout?';
+
+  @override
+  String get finishWithIncompleteSetsMessage =>
+      'Mark the remaining sets as not completed and finish?';
 }

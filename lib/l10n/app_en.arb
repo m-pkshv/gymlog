@@ -672,5 +672,13 @@
   "continueWorkoutAction": "Continue",
   "@continueWorkoutAction": {
     "description": "Action button on the recovery banner (Stage 4) that opens the inProgress workout in the editor."
+  },
+  "finishWithIncompleteSetsTitle": "Finish workout?",
+  "@finishWithIncompleteSetsTitle": {
+    "description": "Title of the confirmation dialog (Stage 4, TS 7.2 step 6) shown when finishing a workout that still has unmarked working sets."
+  },
+  "finishWithIncompleteSetsMessage": "Mark the remaining sets as not completed and finish?",
+  "@finishWithIncompleteSetsMessage": {
+    "description": "Body of the confirmation dialog (Stage 4, TS 7.2 step 6). Only working sets count -- warmups left unchecked don't trigger this (owner-confirmed 2026-07-21)."
   }
 }

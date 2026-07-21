@@ -599,4 +599,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get continueWorkoutAction => 'Продолжить';
+
+  @override
+  String get finishWithIncompleteSetsTitle => 'Завершить тренировку?';
+
+  @override
+  String get finishWithIncompleteSetsMessage =>
+      'Отметить оставшиеся подходы невыполненными и завершить?';
 }
