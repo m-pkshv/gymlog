@@ -3,9 +3,9 @@
 /// `lib/data/tables/`); mapping happens in `lib/data/mappers/`.
 ///
 /// Only the enums needed by the entities modeled so far (Exercise, Workout
-/// aggregate, MeasurementType/BodyMeasurement) are defined here. The rest of
-/// DM section 4 (RecordType, OperationType/Status, AppTheme, AppLocale) is
-/// added alongside the features that need them, per stage. `UnitSystem`
+/// aggregate, MeasurementType/BodyMeasurement, PersonalRecord) are defined
+/// here. The rest of DM section 4 (OperationType/Status, AppTheme, AppLocale)
+/// is added alongside the features that need them, per stage. `UnitSystem`
 /// already lives in `core/units/unit_converter.dart` (D-5) and is reused
 /// as-is.
 library;
@@ -30,3 +30,18 @@ enum MeasurementUnitKind { mass, percent, length }
 /// importer (Stage 8) and a future health-app sync, not produced anywhere
 /// yet.
 enum MeasurementSource { manual, import, health }
+
+/// `PersonalRecord.recordType` (06_DATA_MODEL.md, section 6.10, D-8) — which
+/// personal-best metric a cached row represents. `maxRepsAtWeight` is the
+/// only one keyed by `PersonalRecord.keyValue` (the weight); the app can
+/// have several `maxRepsAtWeight` rows per exercise, one per weight ever
+/// used.
+enum RecordType {
+  maxWeight,
+  maxRepsAtWeight,
+  max1RM,
+  maxVolumeWorkout,
+  maxDistance,
+  bestPace,
+  longestDuration,
+}

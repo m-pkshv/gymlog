@@ -15,6 +15,7 @@ import '../data/repositories_impl/app_settings_repository_impl.dart';
 import '../data/repositories_impl/body_measurement_repository_impl.dart';
 import '../data/repositories_impl/exercise_repository_impl.dart';
 import '../data/repositories_impl/measurement_type_repository_impl.dart';
+import '../data/repositories_impl/personal_record_repository_impl.dart';
 import '../data/repositories_impl/progression_repository_impl.dart';
 import '../data/repositories_impl/workout_repository_impl.dart';
 import '../data/repositories_impl/workout_tag_repository_impl.dart';
@@ -26,6 +27,7 @@ import '../domain/models/exercise.dart';
 import '../domain/models/exercise_catalog_filter.dart';
 import '../domain/models/exercise_progression_state.dart';
 import '../domain/models/measurement_type.dart';
+import '../domain/models/personal_record.dart';
 import '../domain/models/template_details.dart';
 import '../domain/models/template_list_entry.dart';
 import '../domain/models/workout.dart';
@@ -38,6 +40,7 @@ import '../domain/repositories/app_settings_repository.dart';
 import '../domain/repositories/body_measurement_repository.dart';
 import '../domain/repositories/exercise_repository.dart';
 import '../domain/repositories/measurement_type_repository.dart';
+import '../domain/repositories/personal_record_repository.dart';
 import '../domain/repositories/progression_repository.dart';
 import '../domain/repositories/workout_repository.dart';
 import '../domain/repositories/workout_tag_repository.dart';
@@ -97,6 +100,22 @@ final inProgressWorkoutProvider = StreamProvider<Workout?>((ref) {
 
 final progressionRepositoryProvider = Provider<ProgressionRepository>((ref) {
   return ProgressionRepositoryImpl(ref.watch(appDatabaseProvider));
+});
+
+final personalRecordRepositoryProvider = Provider<PersonalRecordRepository>((
+  ref,
+) {
+  return PersonalRecordRepositoryImpl(ref.watch(appDatabaseProvider));
+});
+
+/// The cached personal records for one exercise (S-10 records list).
+final personalRecordsForExerciseProvider = StreamProvider.family<
+  List<PersonalRecord>,
+  String
+>((ref, exerciseId) {
+  return ref
+      .watch(personalRecordRepositoryProvider)
+      .watchForExercise(exerciseId);
 });
 
 /// The D-7 stagnation-counter algorithm (03_TECHNICAL_SPEC.md, section 9.4).
