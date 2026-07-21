@@ -8,8 +8,11 @@ import '../../app/providers.dart';
 import '../../core/constants.dart';
 import '../../core/duration_format.dart';
 import '../../domain/enums.dart';
+import '../../domain/models/personal_record.dart';
 import '../../domain/models/workout_details.dart';
 import '../../l10n/app_localizations.dart';
+import '../stats/record_type_labels.dart';
+import '../stats/record_value_format.dart';
 import '../workout_editor/controller.dart';
 import '../workout_editor/widgets/comment_field.dart';
 import '../workout_editor/widgets/progression_segmented_button.dart';
@@ -20,10 +23,11 @@ import 'workout_summary_stats.dart';
 /// [WorkoutEditorController] (same `workoutId`, a fresh `.autoDispose`
 /// instance) for the comment field and progression decisions -- they're the
 /// same underlying fields the editor already exposes, not a separate copy.
-/// "Новые рекорды" is intentionally absent: the `PersonalRecord` cache
-/// (D-8) and its "is this a record" logic don't exist until Stage 7
-/// (owner-confirmed 2026-07-21, same reasoning as the S-07 "Рекорды" tab
-/// omitted at Stage 2).
+/// "Новые рекорды (если есть)" (Stage 7): a `PersonalRecord` counts as "new"
+/// here when its cached `workoutId` equals this workout's id -- since
+/// `RecordsService` only overwrites a record's `workoutId` when a value is
+/// *strictly* beaten (never on a tie), this is exactly "the record this
+/// workout just set", no separate before/after diffing needed.
 class WorkoutSummaryScreen extends ConsumerStatefulWidget {
   const WorkoutSummaryScreen({super.key, required this.workoutId});
 
@@ -136,6 +140,10 @@ class _SummaryBody extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 24),
+        _NewRecordsSection(
+          workoutId: details.workout.id,
+          exercises: details.exercises,
+        ),
         CommentField(
           key: ValueKey('workout-comment-${details.workout.id}'),
           value: details.workout.comment,
@@ -239,6 +247,94 @@ class _ExerciseProgressionRow extends ConsumerWidget {
                 l10n.stagnationHint(stagnationCount),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Новые рекорды (если есть)" (04_UI_UX_SPEC.md S-05, Stage 7): renders
+/// nothing at all when no exercise in this workout set a record just now --
+/// the section itself, including its own trailing spacing, is conditional,
+/// not just its content (the caller places this right after the stat tiles
+/// unconditionally).
+class _NewRecordsSection extends ConsumerWidget {
+  const _NewRecordsSection({required this.workoutId, required this.exercises});
+
+  final String workoutId;
+  final List<WorkoutExerciseDetails> exercises;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final rows = <Widget>[];
+    for (final exerciseDetails in exercises) {
+      final records =
+          ref.watch(personalRecordsForExerciseProvider(exerciseDetails.exercise.id)).value ??
+          const <PersonalRecord>[];
+      for (final record in records) {
+        if (record.workoutId != workoutId) continue;
+        rows.add(
+          _NewRecordRow(
+            l10n: l10n,
+            exerciseName: exerciseDetails.exercise.name,
+            record: record,
+          ),
+        );
+      }
+    }
+    if (rows.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.workoutSummaryNewRecordsTitle,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        Card(child: Column(children: rows)),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+}
+
+class _NewRecordRow extends StatelessWidget {
+  const _NewRecordRow({
+    required this.l10n,
+    required this.exerciseName,
+    required this.record,
+  });
+
+  final AppLocalizations l10n;
+  final String exerciseName;
+  final PersonalRecord record;
+
+  @override
+  Widget build(BuildContext context) {
+    final subtitleParts = [
+      recordTypeLabel(l10n, record.recordType),
+      if (record.recordType == RecordType.maxRepsAtWeight)
+        l10n.statsKgValue(record.keyValue!.toStringAsFixed(1)),
+    ];
+    return ListTile(
+      leading: const Icon(Icons.emoji_events_outlined),
+      title: Text(exerciseName),
+      subtitle: Text(subtitleParts.join(' · ')),
+      trailing: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            formatRecordValue(l10n, record.recordType, record.value),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          if (isEstimatedRecord(record.recordType))
+            Text(
+              l10n.statsEstimatedBadge,
+              style: Theme.of(context).textTheme.bodySmall,
             ),
         ],
       ),

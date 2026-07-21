@@ -204,6 +204,7 @@
   "workoutSummarySetsLabel": "Подходы",
   "workoutSummaryTonnageLabel": "Тоннаж",
   "workoutSummaryTonnageValue": "{value} кг",
+  "workoutSummaryNewRecordsTitle": "Новые рекорды",
   "workoutSummaryDoneAction": "Готово",
   "templatesTitle": "Шаблоны",
   "templatesEmptyTitle": "Шаблонов пока нет",

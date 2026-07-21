@@ -1322,6 +1322,12 @@ abstract class AppLocalizations {
   /// **'{value} kg'**
   String workoutSummaryTonnageValue(String value);
 
+  /// S-05 section title shown only when this workout set at least one PersonalRecord (Stage 7).
+  ///
+  /// In en, this message translates to:
+  /// **'New records'**
+  String get workoutSummaryNewRecordsTitle;
+
   /// Button on S-05 that returns to History.
   ///
   /// In en, this message translates to:

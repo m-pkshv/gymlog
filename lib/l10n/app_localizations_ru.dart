@@ -656,6 +656,9 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get workoutSummaryNewRecordsTitle => 'Новые рекорды';
+
+  @override
   String get workoutSummaryDoneAction => 'Готово';
 
   @override

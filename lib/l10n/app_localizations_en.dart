@@ -649,6 +649,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get workoutSummaryNewRecordsTitle => 'New records';
+
+  @override
   String get workoutSummaryDoneAction => 'Done';
 
   @override

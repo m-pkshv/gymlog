@@ -206,6 +206,142 @@ void main() {
     await _unmountAndFlush(tester);
   });
 
+  group('New records (Stage 7, S-05)', () {
+    Future<void> insertRecord(
+      AppDatabase db, {
+      required String recordType,
+      required double value,
+      required String workoutId,
+      double? keyValue,
+    }) {
+      return db
+          .into(db.personalRecords)
+          .insert(
+            PersonalRecordsCompanion.insert(
+              exerciseId: 'squat',
+              recordType: recordType,
+              value: value,
+              workoutId: workoutId,
+              achievedAt: '2026-07-21',
+              computedAt: '2026-07-21T00:00:00Z',
+              keyValue: Value(keyValue),
+            ),
+          );
+    }
+
+    testWidgets('shows nothing when the exercise has no cached record at all', (
+      tester,
+    ) async {
+      await _seedCompletedWorkout(db);
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      expect(find.text('New records'), findsNothing);
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets(
+      'shows nothing when the exercise\'s only cached record belongs to a '
+      'different (older) workout',
+      (tester) async {
+        await _seedCompletedWorkout(db);
+        // A record's `workoutId` FK must point at a real workout.
+        await db
+            .into(db.workouts)
+            .insert(
+              WorkoutsCompanion.insert(
+                id: 'some-older-workout',
+                date: '2026-06-01',
+                status: const Value('completed'),
+                createdAt: '2026-06-01T00:00:00Z',
+                updatedAt: '2026-06-01T00:00:00Z',
+              ),
+            );
+        await insertRecord(
+          db,
+          recordType: 'maxWeight',
+          value: 90,
+          workoutId: 'some-older-workout',
+        );
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+
+        expect(find.text('New records'), findsNothing);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'shows a row for a record whose cached workoutId matches this workout',
+      (tester) async {
+        await _seedCompletedWorkout(db);
+        await insertRecord(
+          db,
+          recordType: 'maxWeight',
+          value: 100,
+          workoutId: 'w1',
+        );
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+
+        expect(find.text('New records'), findsOneWidget);
+        expect(find.text('Max weight'), findsOneWidget);
+        expect(find.text('100.0 kg'), findsWidgets); // also the tonnage tile
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets('shows the estimated badge for a new 1RM record', (
+      tester,
+    ) async {
+      await _seedCompletedWorkout(db);
+      await insertRecord(
+        db,
+        recordType: 'max1RM',
+        value: 116.7,
+        workoutId: 'w1',
+      );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      expect(find.text('New records'), findsOneWidget);
+      expect(find.text('Estimated 1RM'), findsOneWidget);
+      expect(find.text('116.7 kg'), findsOneWidget);
+      expect(find.text('estimated'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets(
+      'shows the weight in the subtitle for a new reps-at-weight record',
+      (tester) async {
+        await _seedCompletedWorkout(db);
+        await insertRecord(
+          db,
+          recordType: 'maxRepsAtWeight',
+          value: 12,
+          keyValue: 80,
+          workoutId: 'w1',
+        );
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+
+        expect(find.text('New records'), findsOneWidget);
+        expect(find.textContaining('80.0 kg'), findsOneWidget);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+  });
+
   testWidgets('"Done" navigates back to History', (tester) async {
     await _seedCompletedWorkout(db);
 

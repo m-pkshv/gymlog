@@ -744,6 +744,10 @@
       "value": {"type": "String"}
     }
   },
+  "workoutSummaryNewRecordsTitle": "New records",
+  "@workoutSummaryNewRecordsTitle": {
+    "description": "S-05 section title shown only when this workout set at least one PersonalRecord (Stage 7)."
+  },
   "workoutSummaryDoneAction": "Done",
   "@workoutSummaryDoneAction": {
     "description": "Button on S-05 that returns to History."
