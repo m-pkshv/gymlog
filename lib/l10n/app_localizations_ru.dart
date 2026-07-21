@@ -1028,4 +1028,79 @@ class AppLocalizationsRu extends AppLocalizations {
   String statsPaceValue(String value) {
     return '$value / км';
   }
+
+  @override
+  String get exportScreenTitle => 'Импорт/экспорт';
+
+  @override
+  String get exportAction => 'Экспортировать данные (CSV)';
+
+  @override
+  String get exportError => 'Не удалось экспортировать данные';
+
+  @override
+  String get importAction => 'Импорт';
+
+  @override
+  String get importComingSoonLabel => 'Появится в следующих версиях';
+
+  @override
+  String get exportFormatHelpAction => 'Описание формата CSV';
+
+  @override
+  String get exportFormatHelpTitle => 'Описание формата CSV';
+
+  @override
+  String get exportFormatHelpIntro =>
+      'Экспорт создаёт ZIP-архив с тремя CSV-файлами и manifest.json. Кодировка UTF-8 с BOM (открывается в Excel и Google Таблицах без искажений кириллицы). Разделитель — запятая, значения всегда в метрических единицах независимо от настройки единиц измерения. Даты — в формате ГГГГ-ММ-ДД. Экспортируются только неудалённые данные; заархивированные упражнения экспортируются, так как на них ссылается история тренировок.';
+
+  @override
+  String get exportFormatHelpManifestTitle => 'manifest.json';
+
+  @override
+  String get exportFormatHelpManifestDescription =>
+      'Версия формата, версия приложения, время экспорта и число строк в каждом файле.';
+
+  @override
+  String get exportFormatHelpWorkoutsDescription =>
+      'Одна строка на подход. Тренировка без упражнений или упражнение без подходов — отдельная строка с пустыми полями.';
+
+  @override
+  String get exportFormatHelpMeasurementsDescription =>
+      'Одна строка на запись измерения.';
+
+  @override
+  String get exportFormatHelpExercisesDescription =>
+      'Одна строка на упражнение из каталога.';
+
+  @override
+  String get exportFormatHelpColumnsLabel => 'Колонки:';
+
+  @override
+  String get exportJournalTitle => 'Журнал операций';
+
+  @override
+  String get exportJournalEmpty => 'Пока нет операций';
+
+  @override
+  String get exportJournalLoadError => 'Не удалось загрузить журнал';
+
+  @override
+  String get exportStatusInProgress => 'Выполняется';
+
+  @override
+  String get exportStatusSuccess => 'Успешно';
+
+  @override
+  String get exportStatusFailed => 'Ошибка';
+
+  @override
+  String exportJournalCounts(
+    int workouts,
+    int sets,
+    int measurements,
+    int exercises,
+  ) {
+    return '$workouts трен. · $sets подх. · $measurements изм. · $exercises упр.';
+  }
 }

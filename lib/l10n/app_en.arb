@@ -1230,5 +1230,95 @@
     "placeholders": {
       "value": {"type": "String"}
     }
+  },
+  "exportScreenTitle": "Import/Export",
+  "@exportScreenTitle": {
+    "description": "S-16 AppBar title (Stage 8)."
+  },
+  "exportAction": "Export data (CSV)",
+  "@exportAction": {
+    "description": "S-16's main export button."
+  },
+  "exportError": "Failed to export data",
+  "@exportError": {
+    "description": "Snackbar shown when ExportService.export throws."
+  },
+  "importAction": "Import",
+  "@importAction": {
+    "description": "S-16's disabled \"Import\" stub row title."
+  },
+  "importComingSoonLabel": "Coming in future versions",
+  "@importComingSoonLabel": {
+    "description": "Subtitle under the disabled \"Import\" stub row (04_UI_UX_SPEC.md S-16: import is post-MVP, TS 10.6)."
+  },
+  "exportFormatHelpAction": "CSV format description",
+  "@exportFormatHelpAction": {
+    "description": "S-16 row that opens the built-in CSV format help screen."
+  },
+  "exportFormatHelpTitle": "CSV format description",
+  "@exportFormatHelpTitle": {
+    "description": "AppBar title of the CSV format help screen."
+  },
+  "exportFormatHelpIntro": "Export produces a ZIP archive with three CSV files and manifest.json. UTF-8 encoding with a byte-order mark (opens correctly in Excel and Google Sheets, including Cyrillic text). Comma-separated, values are always metric regardless of the unit system setting. Dates use the YYYY-MM-DD format. Only non-deleted data is exported; archived exercises are included, since workout history still references them.",
+  "@exportFormatHelpIntro": {
+    "description": "General CSV export rules, from 03_TECHNICAL_SPEC.md section 10.1."
+  },
+  "exportFormatHelpManifestTitle": "manifest.json",
+  "@exportFormatHelpManifestTitle": {
+    "description": "Literal file name, not translated."
+  },
+  "exportFormatHelpManifestDescription": "Format version, app version, export timestamp, and row counts for each file.",
+  "@exportFormatHelpManifestDescription": {
+    "description": "TS 10.2 manifest.json contents, in prose."
+  },
+  "exportFormatHelpWorkoutsDescription": "One row per set. A workout with no exercises, or an exercise with no sets, still gets its own row with the remaining fields empty.",
+  "@exportFormatHelpWorkoutsDescription": {
+    "description": "TS 10.3 workouts.csv row shape."
+  },
+  "exportFormatHelpMeasurementsDescription": "One row per measurement entry.",
+  "@exportFormatHelpMeasurementsDescription": {
+    "description": "TS 10.4 measurements.csv row shape."
+  },
+  "exportFormatHelpExercisesDescription": "One row per catalog exercise.",
+  "@exportFormatHelpExercisesDescription": {
+    "description": "TS 10.5 exercises.csv row shape."
+  },
+  "exportFormatHelpColumnsLabel": "Columns:",
+  "@exportFormatHelpColumnsLabel": {
+    "description": "Label preceding the literal (untranslated) column-name list for each CSV file."
+  },
+  "exportJournalTitle": "Operations log",
+  "@exportJournalTitle": {
+    "description": "S-16 section title for the ImportExportOperation journal list."
+  },
+  "exportJournalEmpty": "No operations yet",
+  "@exportJournalEmpty": {
+    "description": "Empty state for the S-16 journal."
+  },
+  "exportJournalLoadError": "Failed to load the log",
+  "@exportJournalLoadError": {
+    "description": "Error state for the S-16 journal stream."
+  },
+  "exportStatusInProgress": "In progress",
+  "@exportStatusInProgress": {
+    "description": "ImportExportOperationStatus.inProgress label."
+  },
+  "exportStatusSuccess": "Success",
+  "@exportStatusSuccess": {
+    "description": "ImportExportOperationStatus.success label."
+  },
+  "exportStatusFailed": "Failed",
+  "@exportStatusFailed": {
+    "description": "ImportExportOperationStatus.failed label."
+  },
+  "exportJournalCounts": "{workouts} workouts · {sets} sets · {measurements} measurements · {exercises} exercises",
+  "@exportJournalCounts": {
+    "description": "Compact counts line on a successful S-16 journal row.",
+    "placeholders": {
+      "workouts": {"type": "int"},
+      "sets": {"type": "int"},
+      "measurements": {"type": "int"},
+      "exercises": {"type": "int"}
+    }
   }
 }

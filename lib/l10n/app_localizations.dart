@@ -2023,6 +2023,137 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{value} / km'**
   String statsPaceValue(String value);
+
+  /// S-16 AppBar title (Stage 8).
+  ///
+  /// In en, this message translates to:
+  /// **'Import/Export'**
+  String get exportScreenTitle;
+
+  /// S-16's main export button.
+  ///
+  /// In en, this message translates to:
+  /// **'Export data (CSV)'**
+  String get exportAction;
+
+  /// Snackbar shown when ExportService.export throws.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to export data'**
+  String get exportError;
+
+  /// S-16's disabled "Import" stub row title.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get importAction;
+
+  /// Subtitle under the disabled "Import" stub row (04_UI_UX_SPEC.md S-16: import is post-MVP, TS 10.6).
+  ///
+  /// In en, this message translates to:
+  /// **'Coming in future versions'**
+  String get importComingSoonLabel;
+
+  /// S-16 row that opens the built-in CSV format help screen.
+  ///
+  /// In en, this message translates to:
+  /// **'CSV format description'**
+  String get exportFormatHelpAction;
+
+  /// AppBar title of the CSV format help screen.
+  ///
+  /// In en, this message translates to:
+  /// **'CSV format description'**
+  String get exportFormatHelpTitle;
+
+  /// General CSV export rules, from 03_TECHNICAL_SPEC.md section 10.1.
+  ///
+  /// In en, this message translates to:
+  /// **'Export produces a ZIP archive with three CSV files and manifest.json. UTF-8 encoding with a byte-order mark (opens correctly in Excel and Google Sheets, including Cyrillic text). Comma-separated, values are always metric regardless of the unit system setting. Dates use the YYYY-MM-DD format. Only non-deleted data is exported; archived exercises are included, since workout history still references them.'**
+  String get exportFormatHelpIntro;
+
+  /// Literal file name, not translated.
+  ///
+  /// In en, this message translates to:
+  /// **'manifest.json'**
+  String get exportFormatHelpManifestTitle;
+
+  /// TS 10.2 manifest.json contents, in prose.
+  ///
+  /// In en, this message translates to:
+  /// **'Format version, app version, export timestamp, and row counts for each file.'**
+  String get exportFormatHelpManifestDescription;
+
+  /// TS 10.3 workouts.csv row shape.
+  ///
+  /// In en, this message translates to:
+  /// **'One row per set. A workout with no exercises, or an exercise with no sets, still gets its own row with the remaining fields empty.'**
+  String get exportFormatHelpWorkoutsDescription;
+
+  /// TS 10.4 measurements.csv row shape.
+  ///
+  /// In en, this message translates to:
+  /// **'One row per measurement entry.'**
+  String get exportFormatHelpMeasurementsDescription;
+
+  /// TS 10.5 exercises.csv row shape.
+  ///
+  /// In en, this message translates to:
+  /// **'One row per catalog exercise.'**
+  String get exportFormatHelpExercisesDescription;
+
+  /// Label preceding the literal (untranslated) column-name list for each CSV file.
+  ///
+  /// In en, this message translates to:
+  /// **'Columns:'**
+  String get exportFormatHelpColumnsLabel;
+
+  /// S-16 section title for the ImportExportOperation journal list.
+  ///
+  /// In en, this message translates to:
+  /// **'Operations log'**
+  String get exportJournalTitle;
+
+  /// Empty state for the S-16 journal.
+  ///
+  /// In en, this message translates to:
+  /// **'No operations yet'**
+  String get exportJournalEmpty;
+
+  /// Error state for the S-16 journal stream.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load the log'**
+  String get exportJournalLoadError;
+
+  /// ImportExportOperationStatus.inProgress label.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get exportStatusInProgress;
+
+  /// ImportExportOperationStatus.success label.
+  ///
+  /// In en, this message translates to:
+  /// **'Success'**
+  String get exportStatusSuccess;
+
+  /// ImportExportOperationStatus.failed label.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get exportStatusFailed;
+
+  /// Compact counts line on a successful S-16 journal row.
+  ///
+  /// In en, this message translates to:
+  /// **'{workouts} workouts · {sets} sets · {measurements} measurements · {exercises} exercises'**
+  String exportJournalCounts(
+    int workouts,
+    int sets,
+    int measurements,
+    int exercises,
+  );
 }
 
 class _AppLocalizationsDelegate

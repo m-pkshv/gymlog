@@ -6,6 +6,8 @@ import '../domain/models/exercise.dart';
 import '../features/exercises/create_exercise_screen.dart';
 import '../features/exercises/exercise_detail_screen.dart';
 import '../features/exercises/screen.dart';
+import '../features/export/export_format_help_screen.dart';
+import '../features/export/export_screen.dart';
 import '../features/history/copy_source_picker_screen.dart';
 import '../features/history/screen.dart';
 import '../features/history/template_picker_screen.dart';
@@ -247,6 +249,20 @@ final GoRouter appRouter = GoRouter(
                       builder: (_, state) => CustomMeasurementTypeScreen(
                         typeId: state.pathParameters['typeId']!,
                       ),
+                    ),
+                  ],
+                ),
+                GoRoute(
+                  path: 'export',
+                  builder: (_, _) => const ExportScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'format',
+                      // Read-only help content, not a creation form -- a
+                      // regular push, not a full-screen modal
+                      // (04_UI_UX_SPEC.md, section 6 reserves modals for
+                      // forms).
+                      builder: (_, _) => const ExportFormatHelpScreen(),
                     ),
                   ],
                 ),

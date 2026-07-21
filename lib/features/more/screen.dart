@@ -43,6 +43,11 @@ class MoreScreen extends ConsumerWidget {
               title: Text(l10n.measurementsTitle),
               onTap: () => context.push('/more/measurements'),
             ),
+            ListTile(
+              leading: const Icon(Icons.import_export_outlined),
+              title: Text(l10n.exportScreenTitle),
+              onTap: () => context.push('/more/export'),
+            ),
             const Divider(height: 1),
             SwitchListTile(
               title: Text(l10n.settingsShowTagsLabel),

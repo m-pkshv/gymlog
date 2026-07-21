@@ -1021,4 +1021,79 @@ class AppLocalizationsEn extends AppLocalizations {
   String statsPaceValue(String value) {
     return '$value / km';
   }
+
+  @override
+  String get exportScreenTitle => 'Import/Export';
+
+  @override
+  String get exportAction => 'Export data (CSV)';
+
+  @override
+  String get exportError => 'Failed to export data';
+
+  @override
+  String get importAction => 'Import';
+
+  @override
+  String get importComingSoonLabel => 'Coming in future versions';
+
+  @override
+  String get exportFormatHelpAction => 'CSV format description';
+
+  @override
+  String get exportFormatHelpTitle => 'CSV format description';
+
+  @override
+  String get exportFormatHelpIntro =>
+      'Export produces a ZIP archive with three CSV files and manifest.json. UTF-8 encoding with a byte-order mark (opens correctly in Excel and Google Sheets, including Cyrillic text). Comma-separated, values are always metric regardless of the unit system setting. Dates use the YYYY-MM-DD format. Only non-deleted data is exported; archived exercises are included, since workout history still references them.';
+
+  @override
+  String get exportFormatHelpManifestTitle => 'manifest.json';
+
+  @override
+  String get exportFormatHelpManifestDescription =>
+      'Format version, app version, export timestamp, and row counts for each file.';
+
+  @override
+  String get exportFormatHelpWorkoutsDescription =>
+      'One row per set. A workout with no exercises, or an exercise with no sets, still gets its own row with the remaining fields empty.';
+
+  @override
+  String get exportFormatHelpMeasurementsDescription =>
+      'One row per measurement entry.';
+
+  @override
+  String get exportFormatHelpExercisesDescription =>
+      'One row per catalog exercise.';
+
+  @override
+  String get exportFormatHelpColumnsLabel => 'Columns:';
+
+  @override
+  String get exportJournalTitle => 'Operations log';
+
+  @override
+  String get exportJournalEmpty => 'No operations yet';
+
+  @override
+  String get exportJournalLoadError => 'Failed to load the log';
+
+  @override
+  String get exportStatusInProgress => 'In progress';
+
+  @override
+  String get exportStatusSuccess => 'Success';
+
+  @override
+  String get exportStatusFailed => 'Failed';
+
+  @override
+  String exportJournalCounts(
+    int workouts,
+    int sets,
+    int measurements,
+    int exercises,
+  ) {
+    return '$workouts workouts · $sets sets · $measurements measurements · $exercises exercises';
+  }
 }
