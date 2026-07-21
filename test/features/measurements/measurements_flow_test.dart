@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gymlog/app/providers.dart';
+import 'package:gymlog/core/units/unit_converter.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/body_measurement_repository_impl.dart';
@@ -247,6 +248,38 @@ void main() {
       await tester.tap(find.text('Undo'));
       await tester.pumpAndSettle();
       expect(find.textContaining('80.0 kg'), findsOneWidget);
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'entering a value in lb under the imperial setting stores it correctly '
+    'in kg (D-5, end-to-end)',
+    (tester) async {
+      await (db.update(
+        db.appSettingsTable,
+      )..where((t) => t.id.equals('singleton'))).write(
+        const AppSettingsTableCompanion(unitSystem: Value('imperial')),
+      );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      expect(find.text('lb'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField).first, '150');
+      await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+      await tester.pumpAndSettle();
+
+      final stored = await BodyMeasurementRepositoryImpl(
+        db,
+      ).getByTypeAndDate(measurementTypeId: 'body_weight', date: DateTime.now());
+      expect(stored, isNotNull);
+      expect(stored!.valueMetric, closeTo(150 * UnitConverter.kgPerLb, 1e-6));
+      // The list re-displays it back in lb, not the raw stored kg.
+      expect(find.textContaining('150.0 lb'), findsOneWidget);
       await _unmountAndFlush(tester);
     },
   );
