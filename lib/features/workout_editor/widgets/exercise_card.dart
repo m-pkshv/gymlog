@@ -10,6 +10,7 @@ import '../../exercises/exercise_type_labels.dart';
 import '../set_field_config.dart';
 import 'comment_field.dart';
 import 'past_results_sheet.dart';
+import 'progression_segmented_button.dart';
 import 'set_row.dart';
 
 enum _ExerciseCardAction { pastResults, copyLastPerformance, moveUp, moveDown }
@@ -183,29 +184,9 @@ class ExerciseCard extends ConsumerWidget {
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
                 const SizedBox(width: 8),
-                SegmentedButton<ProgressionDecision>(
-                  segments: [
-                    ButtonSegment(
-                      value: ProgressionDecision.none,
-                      label: Text(l10n.progressionDecisionNone),
-                    ),
-                    ButtonSegment(
-                      value: ProgressionDecision.increase,
-                      label: Text(l10n.progressionDecisionIncrease),
-                    ),
-                    ButtonSegment(
-                      value: ProgressionDecision.repeat,
-                      label: Text(l10n.progressionDecisionRepeat),
-                    ),
-                    ButtonSegment(
-                      value: ProgressionDecision.decrease,
-                      label: Text(l10n.progressionDecisionDecrease),
-                    ),
-                  ],
-                  selected: {details.workoutExercise.progressionDecision},
-                  showSelectedIcon: false,
-                  onSelectionChanged: (selected) =>
-                      onProgressionDecisionChanged(selected.first),
+                ProgressionSegmentedButton(
+                  selected: details.workoutExercise.progressionDecision,
+                  onChanged: onProgressionDecisionChanged,
                 ),
               ],
             ),

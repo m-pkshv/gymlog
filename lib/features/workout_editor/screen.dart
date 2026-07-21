@@ -168,6 +168,12 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
             newStatus == WorkoutStatus.cancelled) {
           unawaited(_cancelRestTimerNotification());
         }
+        // TS 7.2 step 6: "... → итоговый экран" (S-05). A replacement, not
+        // a push, so system back from the summary goes to History, same as
+        // it did from the editor.
+        if (newStatus == WorkoutStatus.completed) {
+          context.pushReplacement('/history/workout/${widget.workoutId}/summary');
+        }
       },
       (error) {
         ScaffoldMessenger.of(

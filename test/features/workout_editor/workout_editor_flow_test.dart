@@ -15,6 +15,7 @@ import 'package:gymlog/features/workout_editor/add_exercise_screen.dart';
 import 'package:gymlog/features/workout_editor/screen.dart';
 import 'package:gymlog/features/workout_editor/widgets/comment_field.dart';
 import 'package:gymlog/features/workout_editor/widgets/set_row.dart';
+import 'package:gymlog/features/workout_summary/screen.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 import 'package:gymlog/services/notification_service.dart';
 import 'package:mocktail/mocktail.dart';
@@ -37,9 +38,16 @@ Widget _appUnderTest(AppDatabase db, {NotificationService? notificationService})
         ),
         routes: [
           GoRoute(
+            path: 'summary',
+            builder: (_, state) => WorkoutSummaryScreen(
+              workoutId: state.pathParameters['workoutId']!,
+            ),
+          ),
+          GoRoute(
             path: 'add-exercise',
             builder: (_, state) => AddExerciseScreen(
-              workoutId: state.pathParameters['workoutId']!,
+              addExerciseRoute:
+                  '/history/workout/${state.pathParameters['workoutId']}/add-exercise',
             ),
             routes: [
               GoRoute(
@@ -462,7 +470,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Finish'));
       await tester.pumpAndSettle();
-      expect(find.text('Completed'), findsOneWidget);
+      // TS 7.2 step 6: finishing replaces the editor with the S-05 summary.
+      expect(find.byType(WorkoutSummaryScreen), findsOneWidget);
 
       workouts = await db.select(db.workouts).get();
       expect(workouts.single.status, WorkoutStatus.completed.name);
@@ -519,7 +528,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Completed'), findsOneWidget);
+        expect(find.byType(WorkoutSummaryScreen), findsOneWidget);
         expect(
           (await db.select(db.workouts).get()).single.status,
           WorkoutStatus.completed.name,
@@ -555,7 +564,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.byType(AlertDialog), findsNothing);
-        expect(find.text('Completed'), findsOneWidget);
+        expect(find.byType(WorkoutSummaryScreen), findsOneWidget);
 
         await _unmountAndFlush(tester);
       },
@@ -588,7 +597,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.byType(AlertDialog), findsNothing);
-        expect(find.text('Completed'), findsOneWidget);
+        expect(find.byType(WorkoutSummaryScreen), findsOneWidget);
 
         await _unmountAndFlush(tester);
       },
