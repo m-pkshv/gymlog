@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gymlog/app/providers.dart';
+import 'package:gymlog/core/date_format.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/features/history/copy_source_picker_screen.dart';
@@ -820,4 +821,84 @@ void main() {
       await _unmountAndFlush(tester);
     });
   });
+
+  group(
+    '★ regression (Stage 3, 02_DEVELOPMENT_PLAN.md: "скопировать прошлую → '
+    'перенести дату → провести")',
+    () {
+      testWidgets(
+        'copying a completed workout, moving its date, then running it '
+        'through start -> finish leaves the copy completed on the new date '
+        'and the source untouched',
+        (tester) async {
+          await _insertCompletedWorkout(
+            db,
+            id: 'w1',
+            date: '2026-07-01',
+            name: 'Leg day',
+            exerciseCount: 1,
+          );
+
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
+
+          // "Скопировать прошлую".
+          await tester.tap(find.byIcon(Icons.more_vert));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Copy'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('OK')); // accepts today as the copy's date
+          await tester.pumpAndSettle();
+
+          expect(find.byType(WorkoutEditorScreen), findsOneWidget);
+          expect(find.text('Draft'), findsOneWidget);
+
+          // "Перенести дату".
+          await tester.tap(find.text(formatShortDate(DateTime.now())));
+          await tester.pumpAndSettle();
+          await tester.tap(find.byIcon(Icons.edit_outlined));
+          await tester.pumpAndSettle();
+          await tester.enterText(
+            find.descendant(
+              of: find.byType(DatePickerDialog),
+              matching: find.byType(TextField),
+            ),
+            '08/15/2026',
+          );
+          await tester.tap(find.text('OK'));
+          await tester.pumpAndSettle();
+          expect(find.text('15.08.2026'), findsOneWidget);
+
+          // "Провести": draft -> inProgress -> completed.
+          await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Start workout'));
+          await tester.pumpAndSettle();
+          expect(find.text('In progress'), findsOneWidget);
+
+          await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Finish'));
+          await tester.pumpAndSettle();
+          expect(find.text('Completed'), findsOneWidget);
+
+          await tester.pageBack();
+          await tester.pumpAndSettle();
+
+          // The source is untouched; the copy shows up completed, dated.
+          expect(find.text('Leg day'), findsOneWidget);
+          final workouts = await db.select(db.workouts).get();
+          expect(workouts, hasLength(2));
+          final source = workouts.firstWhere((w) => w.id == 'w1');
+          expect(source.status, 'completed');
+          expect(source.date, '2026-07-01');
+          final copy = workouts.firstWhere((w) => w.id != 'w1');
+          expect(copy.status, 'completed');
+          expect(copy.date, '2026-08-15');
+
+          await _unmountAndFlush(tester);
+        },
+      );
+    },
+  );
 }
