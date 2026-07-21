@@ -54,6 +54,7 @@ import '../features/workout_editor/controller.dart';
 import '../services/active_workout_timer_service.dart';
 import '../services/body_measurement_service.dart';
 import '../services/exercise_service.dart';
+import '../services/export/export_service.dart';
 import '../services/measurement_type_service.dart';
 import '../services/notification_service.dart';
 import '../services/progression_service.dart';
@@ -133,6 +134,17 @@ final importExportOperationsProvider =
     StreamProvider<List<ImportExportOperation>>((ref) {
       return ref.watch(importExportOperationRepositoryProvider).watchAll();
     });
+
+/// The Stage 8 CSV export pipeline (TS 10).
+final exportServiceProvider = Provider<ExportService>((ref) {
+  return ExportService(
+    ref.watch(workoutRepositoryProvider),
+    ref.watch(bodyMeasurementRepositoryProvider),
+    ref.watch(measurementTypeRepositoryProvider),
+    ref.watch(exerciseRepositoryProvider),
+    ref.watch(importExportOperationRepositoryProvider),
+  );
+});
 
 /// The D-7 stagnation-counter algorithm (03_TECHNICAL_SPEC.md, section 9.4).
 final progressionServiceProvider = Provider<ProgressionService>((ref) {
