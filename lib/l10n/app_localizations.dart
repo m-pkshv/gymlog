@@ -1171,6 +1171,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No workouts this day'**
   String get historyCalendarDayEmpty;
+
+  /// Tooltip on the workout timer's pause button (S-03, Stage 4, TS 7.1), shown while the timer is running.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get workoutTimerPauseAction;
+
+  /// Tooltip on the workout timer's resume button (S-03, Stage 4, TS 7.1), shown while the timer is paused.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get workoutTimerResumeAction;
 }
 
 class _AppLocalizationsDelegate

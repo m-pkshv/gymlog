@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/providers.dart';
 import '../../core/constants.dart';
 import '../../core/date_format.dart';
+import '../../core/duration_format.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/exercise.dart';
 import '../../domain/models/workout.dart';
@@ -258,6 +259,8 @@ class _EditorBody extends StatelessWidget {
             ],
           ),
         ),
+        if (workout.status == WorkoutStatus.inProgress)
+          _WorkoutTimerRow(workoutId: workout.id),
         _TagsRow(workoutId: workout.id, tags: details.tags),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -387,6 +390,80 @@ class _StatusMenu extends StatelessWidget {
         label: Text(workoutStatusLabel(l10n, status)),
         avatar: const Icon(Icons.arrow_drop_down, size: 18),
       ),
+    );
+  }
+}
+
+/// Workout timer (S-03, Stage 4, TS 7.1): shown only while `inProgress`
+/// (`ActiveWorkoutState` exists only then, DM 6.14). Ticks once a second
+/// purely to re-render the elapsed-time text — the underlying value is
+/// always recomputed from UTC anchors, never accumulated in memory, so a
+/// missed tick (backgrounded app) never desyncs the displayed time. Pause
+/// is the only manual control (rest timer with notifications is a later
+/// Stage 4 step).
+class _WorkoutTimerRow extends ConsumerStatefulWidget {
+  const _WorkoutTimerRow({required this.workoutId});
+
+  final String workoutId;
+
+  @override
+  ConsumerState<_WorkoutTimerRow> createState() => _WorkoutTimerRowState();
+}
+
+class _WorkoutTimerRowState extends ConsumerState<_WorkoutTimerRow> {
+  Timer? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final stateAsync = ref.watch(activeWorkoutStateProvider(widget.workoutId));
+
+    return stateAsync.maybeWhen(
+      data: (state) {
+        if (state == null) return const SizedBox.shrink();
+        final timerService = ref.read(activeWorkoutTimerServiceProvider);
+        final controller = ref.read(
+          workoutEditorControllerProvider(widget.workoutId).notifier,
+        );
+        final elapsed = timerService.elapsedSeconds(state);
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: Row(
+            children: [
+              Text(
+                formatElapsedTime(elapsed),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                tooltip: state.isPaused
+                    ? l10n.workoutTimerResumeAction
+                    : l10n.workoutTimerPauseAction,
+                icon: Icon(state.isPaused ? Icons.play_arrow : Icons.pause),
+                onPressed: state.isPaused
+                    ? controller.resumeTimer
+                    : controller.pauseTimer,
+              ),
+            ],
+          ),
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
     );
   }
 }

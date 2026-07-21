@@ -9,11 +9,13 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import '../core/logger.dart';
 import '../data/database.dart' as drift;
+import '../data/repositories_impl/active_workout_repository_impl.dart';
 import '../data/repositories_impl/app_settings_repository_impl.dart';
 import '../data/repositories_impl/exercise_repository_impl.dart';
 import '../data/repositories_impl/progression_repository_impl.dart';
 import '../data/repositories_impl/workout_repository_impl.dart';
 import '../data/repositories_impl/workout_tag_repository_impl.dart';
+import '../domain/models/active_workout_state.dart';
 import '../domain/models/app_settings.dart';
 import '../domain/models/exercise.dart';
 import '../domain/models/exercise_catalog_filter.dart';
@@ -22,12 +24,14 @@ import '../domain/models/workout_details.dart';
 import '../domain/models/workout_history_entry.dart';
 import '../domain/models/workout_history_filter.dart';
 import '../domain/models/workout_tag.dart';
+import '../domain/repositories/active_workout_repository.dart';
 import '../domain/repositories/app_settings_repository.dart';
 import '../domain/repositories/exercise_repository.dart';
 import '../domain/repositories/progression_repository.dart';
 import '../domain/repositories/workout_repository.dart';
 import '../domain/repositories/workout_tag_repository.dart';
 import '../features/workout_editor/controller.dart';
+import '../services/active_workout_timer_service.dart';
 import '../services/exercise_service.dart';
 import '../services/progression_service.dart';
 import '../services/workout_service.dart';
@@ -62,10 +66,20 @@ final progressionServiceProvider = Provider<ProgressionService>((ref) {
   );
 });
 
+final activeWorkoutRepositoryProvider = Provider<ActiveWorkoutRepository>((ref) {
+  return ActiveWorkoutRepositoryImpl(ref.watch(appDatabaseProvider));
+});
+
+/// The workout timer (03_TECHNICAL_SPEC.md, section 7.1).
+final activeWorkoutTimerServiceProvider = Provider<ActiveWorkoutTimerService>((ref) {
+  return ActiveWorkoutTimerService(ref.watch(activeWorkoutRepositoryProvider));
+});
+
 final workoutServiceProvider = Provider<WorkoutService>((ref) {
   return WorkoutService(
     ref.watch(workoutRepositoryProvider),
     ref.watch(progressionServiceProvider),
+    ref.watch(activeWorkoutTimerServiceProvider),
   );
 });
 
@@ -142,6 +156,16 @@ final workoutEditorControllerProvider = StateNotifierProvider.autoDispose
         ref.read(workoutRepositoryProvider),
         ref.read(workoutServiceProvider),
         ref.read(progressionServiceProvider),
+        ref.read(activeWorkoutTimerServiceProvider),
         ref.read(loggerProvider),
       );
     });
+
+/// The workout timer's live state (TS 7.1), keyed by workout id — `null`
+/// while the workout isn't `inProgress` (no row exists, DM 6.14).
+final activeWorkoutStateProvider = StreamProvider.family<ActiveWorkoutState?, String>((
+  ref,
+  workoutId,
+) {
+  return ref.watch(activeWorkoutRepositoryProvider).watch(workoutId);
+});

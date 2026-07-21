@@ -573,4 +573,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get historyCalendarDayEmpty => 'В этот день нет тренировок';
+
+  @override
+  String get workoutTimerPauseAction => 'Пауза';
+
+  @override
+  String get workoutTimerResumeAction => 'Продолжить';
 }

@@ -566,4 +566,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get historyCalendarDayEmpty => 'No workouts this day';
+
+  @override
+  String get workoutTimerPauseAction => 'Pause';
+
+  @override
+  String get workoutTimerResumeAction => 'Resume';
 }

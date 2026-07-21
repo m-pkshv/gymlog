@@ -4,6 +4,7 @@ import '../domain/enums.dart';
 import '../domain/models/workout.dart';
 import '../domain/models/workout_details.dart';
 import '../domain/repositories/workout_repository.dart';
+import 'active_workout_timer_service.dart';
 import 'progression_service.dart';
 
 /// The single point of truth for workout status changes
@@ -13,10 +14,15 @@ import 'progression_service.dart';
 /// the D-7 stagnation counter for every exercise the workout touches when a
 /// DM 6.10/6.11 trigger fires (completed/resumed/deleted/restored).
 class WorkoutService {
-  WorkoutService(this._workoutRepository, this._progressionService);
+  WorkoutService(
+    this._workoutRepository,
+    this._progressionService,
+    this._activeWorkoutTimerService,
+  );
 
   final WorkoutRepository _workoutRepository;
   final ProgressionService _progressionService;
+  final ActiveWorkoutTimerService _activeWorkoutTimerService;
 
   /// Allowed status transitions (DM 6.4.1). Anything not listed here is
   /// rejected. `completed -> inProgress` ("Возобновить") additionally
@@ -88,15 +94,26 @@ class WorkoutService {
     if (newStatus == WorkoutStatus.inProgress) {
       // Only set on the first "Начать"; a resume keeps the original anchor.
       updated = updated.copyWith(startedAt: workout.startedAt ?? now);
+      if (workout.status == WorkoutStatus.completed) {
+        // Resuming a finished workout (DM 6.4.1): keep adding to the time
+        // already logged rather than restarting the clock (owner-confirmed
+        // 2026-07-21).
+        await _activeWorkoutTimerService.resumeCompleted(
+          workout.id,
+          priorDurationSec: workout.actualDurationSec ?? 0,
+        );
+      } else {
+        await _activeWorkoutTimerService.start(workout.id);
+      }
     }
-    if (newStatus == WorkoutStatus.completed) {
-      final startedAt = updated.startedAt;
-      updated = updated.copyWith(
-        finishedAt: now,
-        actualDurationSec: startedAt != null
-            ? now.difference(startedAt).inSeconds
-            : null,
-      );
+    if (newStatus == WorkoutStatus.completed || newStatus == WorkoutStatus.cancelled) {
+      // TS 7.1: the workout timer (anchors in ActiveWorkoutState), not a
+      // naive finishedAt-startedAt diff, is the source of truth for
+      // elapsed active time -- it excludes any paused stretches.
+      final elapsedSec = await _activeWorkoutTimerService.finish(workout.id);
+      if (newStatus == WorkoutStatus.completed) {
+        updated = updated.copyWith(finishedAt: now, actualDurationSec: elapsedSec);
+      }
     }
 
     await _workoutRepository.updateWorkout(updated);

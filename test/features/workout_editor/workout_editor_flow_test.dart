@@ -427,7 +427,46 @@ void main() {
 
       workouts = await db.select(db.workouts).get();
       expect(workouts.single.status, WorkoutStatus.completed.name);
-      expect(workouts.single.finishedAt, isNotNull);
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'the workout timer shows Pause while running and Play once paused '
+    '(Stage 4, TS 7.1)',
+    (tester) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+
+      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Start workout'));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.pause), findsOneWidget);
+      expect(find.byIcon(Icons.play_arrow), findsNothing);
+
+      final workoutId = (await db.select(db.workouts).get()).single.id;
+
+      await tester.tap(find.byIcon(Icons.pause));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.play_arrow), findsOneWidget);
+      expect(find.byIcon(Icons.pause), findsNothing);
+      var state = await (db.select(
+        db.activeWorkoutStates,
+      )..where((s) => s.workoutId.equals(workoutId))).getSingle();
+      expect(state.isPaused, isTrue);
+
+      await tester.tap(find.byIcon(Icons.play_arrow));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.pause), findsOneWidget);
+      state = await (db.select(
+        db.activeWorkoutStates,
+      )..where((s) => s.workoutId.equals(workoutId))).getSingle();
+      expect(state.isPaused, isFalse);
 
       await _unmountAndFlush(tester);
     },

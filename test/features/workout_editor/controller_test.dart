@@ -3,12 +3,14 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymlog/core/logger.dart';
 import 'package:gymlog/data/database.dart';
+import 'package:gymlog/data/repositories_impl/active_workout_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/exercise_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/progression_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_tag_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/features/workout_editor/controller.dart';
+import 'package:gymlog/services/active_workout_timer_service.dart';
 import 'package:gymlog/services/progression_service.dart';
 import 'package:gymlog/services/workout_service.dart';
 
@@ -23,6 +25,7 @@ void main() {
   late WorkoutRepositoryImpl workouts;
   late ExerciseRepositoryImpl exercises;
   late ProgressionService progressionService;
+  late ActiveWorkoutTimerService activeWorkoutTimerService;
   late WorkoutService service;
   late AppLogger logger;
 
@@ -35,7 +38,10 @@ void main() {
       exercises,
       ProgressionRepositoryImpl(db),
     );
-    service = WorkoutService(workouts, progressionService);
+    activeWorkoutTimerService = ActiveWorkoutTimerService(
+      ActiveWorkoutRepositoryImpl(db),
+    );
+    service = WorkoutService(workouts, progressionService, activeWorkoutTimerService);
     logger = AppLogger();
   });
 
@@ -66,6 +72,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        activeWorkoutTimerService,
         logger,
       );
       addTearDown(controller.dispose);
@@ -112,6 +119,7 @@ void main() {
       workouts,
       service,
       progressionService,
+      activeWorkoutTimerService,
       logger,
     );
     await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -146,6 +154,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        activeWorkoutTimerService,
         logger,
       );
       addTearDown(controller.dispose);
@@ -212,6 +221,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          activeWorkoutTimerService,
           logger,
         );
         addTearDown(controller.dispose);
@@ -293,6 +303,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          activeWorkoutTimerService,
           logger,
         );
         addTearDown(controller.dispose);
@@ -324,6 +335,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        activeWorkoutTimerService,
         logger,
       );
       addTearDown(controller.dispose);
@@ -346,6 +358,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        activeWorkoutTimerService,
         logger,
       );
       addTearDown(controller.dispose);
@@ -368,6 +381,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        activeWorkoutTimerService,
         logger,
       );
       addTearDown(controller.dispose);
@@ -399,6 +413,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          activeWorkoutTimerService,
           logger,
         );
         addTearDown(controller.dispose);
@@ -421,6 +436,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        activeWorkoutTimerService,
         logger,
       );
       addTearDown(controller.dispose);
@@ -461,6 +477,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          activeWorkoutTimerService,
           logger,
         );
         await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -553,6 +570,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          activeWorkoutTimerService,
           logger,
         );
         addTearDown(controller.dispose);
@@ -589,6 +607,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          activeWorkoutTimerService,
           logger,
         );
         addTearDown(controller.dispose);
@@ -627,6 +646,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        activeWorkoutTimerService,
         logger,
       );
       addTearDown(controller.dispose);
@@ -660,6 +680,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          activeWorkoutTimerService,
           logger,
         );
         await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -695,6 +716,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        activeWorkoutTimerService,
         logger,
       );
       addTearDown(controller.dispose);
@@ -772,6 +794,7 @@ void main() {
           workouts,
           service,
           progressionService,
+          activeWorkoutTimerService,
           logger,
         );
         addTearDown(controller.dispose);
@@ -812,6 +835,7 @@ void main() {
         workouts,
         service,
         progressionService,
+        activeWorkoutTimerService,
         logger,
       );
       addTearDown(controller.dispose);

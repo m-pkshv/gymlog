@@ -6,6 +6,7 @@ import 'package:gymlog/domain/models/workout.dart';
 import 'package:gymlog/domain/models/workout_details.dart';
 import 'package:gymlog/domain/models/workout_exercise.dart';
 import 'package:gymlog/domain/repositories/workout_repository.dart';
+import 'package:gymlog/services/active_workout_timer_service.dart';
 import 'package:gymlog/services/progression_service.dart';
 import 'package:gymlog/services/workout_service.dart';
 import 'package:mocktail/mocktail.dart';
@@ -13,6 +14,9 @@ import 'package:mocktail/mocktail.dart';
 class MockWorkoutRepository extends Mock implements WorkoutRepository {}
 
 class MockProgressionService extends Mock implements ProgressionService {}
+
+class MockActiveWorkoutTimerService extends Mock
+    implements ActiveWorkoutTimerService {}
 
 /// A `WorkoutDetails` fixture with one entry per id in [exerciseIds], no
 /// sets -- enough for `WorkoutService`'s recompute-trigger wiring, which
@@ -64,6 +68,7 @@ Workout _workout({
   WorkoutStatus status = WorkoutStatus.draft,
   DateTime? startedAt,
   DateTime? finishedAt,
+  int? actualDurationSec,
 }) {
   final now = DateTime.utc(2026, 7, 19, 12);
   return Workout(
@@ -75,12 +80,14 @@ Workout _workout({
     isDeleted: false,
     startedAt: startedAt,
     finishedAt: finishedAt,
+    actualDurationSec: actualDurationSec,
   );
 }
 
 void main() {
   late MockWorkoutRepository repository;
   late MockProgressionService progressionService;
+  late MockActiveWorkoutTimerService activeWorkoutTimerService;
   late WorkoutService service;
 
   setUpAll(() {
@@ -90,11 +97,25 @@ void main() {
   setUp(() {
     repository = MockWorkoutRepository();
     progressionService = MockProgressionService();
-    service = WorkoutService(repository, progressionService);
+    activeWorkoutTimerService = MockActiveWorkoutTimerService();
+    service = WorkoutService(repository, progressionService, activeWorkoutTimerService);
     when(() => repository.updateWorkout(any())).thenAnswer((_) async {});
     // No workout has exercises to recompute unless a test says otherwise.
     when(() => repository.getDetails(any())).thenAnswer((_) async => null);
     when(() => progressionService.recompute(any())).thenAnswer((_) async {});
+    when(() => activeWorkoutTimerService.start(any())).thenAnswer((_) async {});
+    when(
+      () => activeWorkoutTimerService.resumeCompleted(
+        any(),
+        priorDurationSec: any(named: 'priorDurationSec'),
+      ),
+    ).thenAnswer((_) async {});
+    // Default stub for tests that don't care about the exact elapsed value
+    // -- the anchor-based calculation itself is unit-tested in
+    // active_workout_timer_service_test.dart, not here.
+    when(
+      () => activeWorkoutTimerService.finish(any()),
+    ).thenAnswer((_) async => 3600);
   });
 
   group('isTransitionAllowed (DM 6.4.1, full matrix)', () {
@@ -161,6 +182,30 @@ void main() {
     });
 
     test(
+      'draft -> inProgress starts a fresh workout timer (TS 7.1), not a '
+      'resume',
+      () async {
+        when(
+          () => repository.getInProgressWorkout(),
+        ).thenAnswer((_) async => null);
+        final workout = _workout(status: WorkoutStatus.draft);
+
+        await service.changeStatus(
+          workout: workout,
+          newStatus: WorkoutStatus.inProgress,
+        );
+
+        verify(() => activeWorkoutTimerService.start(workout.id)).called(1);
+        verifyNever(
+          () => activeWorkoutTimerService.resumeCompleted(
+            any(),
+            priorDurationSec: any(named: 'priorDurationSec'),
+          ),
+        );
+      },
+    );
+
+    test(
       'rejects starting a second workout while one is already in progress (DM 6.4.1)',
       () async {
         final other = _workout(id: 'other', status: WorkoutStatus.inProgress);
@@ -197,8 +242,29 @@ void main() {
         expect(updated, isNotNull);
         expect(updated!.status, WorkoutStatus.completed);
         expect(updated.finishedAt, isNotNull);
-        expect(updated.actualDurationSec, isNotNull);
-        expect(updated.actualDurationSec, greaterThan(0));
+        // TS 7.1: actualDurationSec comes from the workout timer (mocked to
+        // return 3600 by default in setUp), not a naive finishedAt-startedAt
+        // diff -- that's what makes paused stretches excluded.
+        expect(updated.actualDurationSec, 3600);
+        verify(() => activeWorkoutTimerService.finish(workout.id)).called(1);
+      },
+    );
+
+    test(
+      'inProgress -> cancelled cleans up the timer but does not set '
+      'actualDurationSec',
+      () async {
+        final workout = _workout(status: WorkoutStatus.inProgress);
+
+        final result = await service.changeStatus(
+          workout: workout,
+          newStatus: WorkoutStatus.cancelled,
+        );
+
+        final updated = result.getOrNull();
+        expect(updated, isNotNull);
+        expect(updated!.actualDurationSec, isNull);
+        verify(() => activeWorkoutTimerService.finish(workout.id)).called(1);
       },
     );
 
@@ -213,6 +279,7 @@ void main() {
         status: WorkoutStatus.completed,
         startedAt: recentlyFinished.subtract(const Duration(minutes: 30)),
         finishedAt: recentlyFinished,
+        actualDurationSec: 1800,
       );
 
       final result = await service.changeStatus(
@@ -221,6 +288,12 @@ void main() {
       );
 
       expect(result.isOk, isTrue);
+      verify(
+        () => activeWorkoutTimerService.resumeCompleted(
+          workout.id,
+          priorDurationSec: 1800,
+        ),
+      ).called(1);
     });
 
     test(

@@ -637,5 +637,13 @@
   "historyCalendarDayEmpty": "No workouts this day",
   "@historyCalendarDayEmpty": {
     "description": "Shown below the calendar grid (S-02, Stage 3) when the selected day has no workouts matching the active search/status/tag filters."
+  },
+  "workoutTimerPauseAction": "Pause",
+  "@workoutTimerPauseAction": {
+    "description": "Tooltip on the workout timer's pause button (S-03, Stage 4, TS 7.1), shown while the timer is running."
+  },
+  "workoutTimerResumeAction": "Resume",
+  "@workoutTimerResumeAction": {
+    "description": "Tooltip on the workout timer's resume button (S-03, Stage 4, TS 7.1), shown while the timer is paused."
   }
 }

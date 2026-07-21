@@ -13,6 +13,7 @@ import '../../domain/models/workout.dart';
 import '../../domain/models/workout_details.dart';
 import '../../domain/models/workout_exercise.dart';
 import '../../domain/repositories/workout_repository.dart';
+import '../../services/active_workout_timer_service.dart';
 import '../../services/progression_service.dart';
 import '../../services/workout_service.dart';
 import 'set_field_config.dart';
@@ -32,6 +33,7 @@ class WorkoutEditorController
     this._workoutRepository,
     this._workoutService,
     this._progressionService,
+    this._activeWorkoutTimerService,
     this._logger,
   ) : super(const AsyncValue<WorkoutDetails>.loading()) {
     unawaited(_load());
@@ -41,6 +43,7 @@ class WorkoutEditorController
   final WorkoutRepository _workoutRepository;
   final WorkoutService _workoutService;
   final ProgressionService _progressionService;
+  final ActiveWorkoutTimerService _activeWorkoutTimerService;
   final AppLogger _logger;
   final Map<String, Timer> _debounceTimers = {};
   Timer? _workoutCommentDebounceTimer;
@@ -371,6 +374,15 @@ class WorkoutEditorController
     }, (_) {});
     return result;
   }
+
+  /// Pauses the workout timer (TS 7.1) — the only manual control the owner
+  /// has over it. A no-op if there's no active timer or it's already
+  /// paused (`ActiveWorkoutTimerService.pause`).
+  Future<void> pauseTimer() => _activeWorkoutTimerService.pause(_workoutId);
+
+  /// Resumes a paused workout timer. A no-op if there's no active timer or
+  /// it isn't paused.
+  Future<void> resumeTimer() => _activeWorkoutTimerService.resume(_workoutId);
 
   /// Assigns exactly [tagIds] to this workout (S-03 tag picker/create
   /// dialog), replacing whatever was assigned before. No debounce — tag
