@@ -4,11 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymlog/core/logger.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/repositories_impl/active_workout_repository_impl.dart';
+import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/exercise_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/progression_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_tag_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
+import 'package:gymlog/domain/repositories/app_settings_repository.dart';
 import 'package:gymlog/features/workout_editor/controller.dart';
 import 'package:gymlog/services/active_workout_timer_service.dart';
 import 'package:gymlog/services/progression_service.dart';
@@ -26,10 +28,11 @@ void main() {
   late ExerciseRepositoryImpl exercises;
   late ProgressionService progressionService;
   late ActiveWorkoutTimerService activeWorkoutTimerService;
+  late AppSettingsRepository appSettingsRepository;
   late WorkoutService service;
   late AppLogger logger;
 
-  setUp(() {
+  setUp(() async {
     db = AppDatabase(NativeDatabase.memory());
     workouts = WorkoutRepositoryImpl(db);
     exercises = ExerciseRepositoryImpl(db);
@@ -41,6 +44,8 @@ void main() {
     activeWorkoutTimerService = ActiveWorkoutTimerService(
       ActiveWorkoutRepositoryImpl(db),
     );
+    appSettingsRepository = AppSettingsRepositoryImpl(db);
+    await appSettingsRepository.ensureInitialized();
     service = WorkoutService(workouts, progressionService, activeWorkoutTimerService);
     logger = AppLogger();
   });
@@ -73,6 +78,7 @@ void main() {
         service,
         progressionService,
         activeWorkoutTimerService,
+        appSettingsRepository,
         logger,
       );
       addTearDown(controller.dispose);
@@ -120,6 +126,7 @@ void main() {
       service,
       progressionService,
       activeWorkoutTimerService,
+      appSettingsRepository,
       logger,
     );
     await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -155,6 +162,7 @@ void main() {
         service,
         progressionService,
         activeWorkoutTimerService,
+        appSettingsRepository,
         logger,
       );
       addTearDown(controller.dispose);
@@ -222,6 +230,7 @@ void main() {
           service,
           progressionService,
           activeWorkoutTimerService,
+          appSettingsRepository,
           logger,
         );
         addTearDown(controller.dispose);
@@ -304,6 +313,7 @@ void main() {
           service,
           progressionService,
           activeWorkoutTimerService,
+          appSettingsRepository,
           logger,
         );
         addTearDown(controller.dispose);
@@ -336,6 +346,7 @@ void main() {
         service,
         progressionService,
         activeWorkoutTimerService,
+        appSettingsRepository,
         logger,
       );
       addTearDown(controller.dispose);
@@ -359,6 +370,7 @@ void main() {
         service,
         progressionService,
         activeWorkoutTimerService,
+        appSettingsRepository,
         logger,
       );
       addTearDown(controller.dispose);
@@ -382,6 +394,7 @@ void main() {
         service,
         progressionService,
         activeWorkoutTimerService,
+        appSettingsRepository,
         logger,
       );
       addTearDown(controller.dispose);
@@ -414,6 +427,7 @@ void main() {
           service,
           progressionService,
           activeWorkoutTimerService,
+          appSettingsRepository,
           logger,
         );
         addTearDown(controller.dispose);
@@ -437,6 +451,7 @@ void main() {
         service,
         progressionService,
         activeWorkoutTimerService,
+        appSettingsRepository,
         logger,
       );
       addTearDown(controller.dispose);
@@ -478,6 +493,7 @@ void main() {
           service,
           progressionService,
           activeWorkoutTimerService,
+          appSettingsRepository,
           logger,
         );
         await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -571,6 +587,7 @@ void main() {
           service,
           progressionService,
           activeWorkoutTimerService,
+          appSettingsRepository,
           logger,
         );
         addTearDown(controller.dispose);
@@ -608,6 +625,7 @@ void main() {
           service,
           progressionService,
           activeWorkoutTimerService,
+          appSettingsRepository,
           logger,
         );
         addTearDown(controller.dispose);
@@ -647,6 +665,7 @@ void main() {
         service,
         progressionService,
         activeWorkoutTimerService,
+        appSettingsRepository,
         logger,
       );
       addTearDown(controller.dispose);
@@ -681,6 +700,7 @@ void main() {
           service,
           progressionService,
           activeWorkoutTimerService,
+          appSettingsRepository,
           logger,
         );
         await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -717,6 +737,7 @@ void main() {
         service,
         progressionService,
         activeWorkoutTimerService,
+        appSettingsRepository,
         logger,
       );
       addTearDown(controller.dispose);
@@ -795,6 +816,7 @@ void main() {
           service,
           progressionService,
           activeWorkoutTimerService,
+          appSettingsRepository,
           logger,
         );
         addTearDown(controller.dispose);
@@ -836,6 +858,7 @@ void main() {
         service,
         progressionService,
         activeWorkoutTimerService,
+        appSettingsRepository,
         logger,
       );
       addTearDown(controller.dispose);
@@ -849,5 +872,184 @@ void main() {
       ).watchState(exercise.id).first;
       expect(state, isNull, reason: 'draft workouts are not completed yet');
     });
+  });
+
+  group('rest timer auto-start (Stage 4, TS 7.2 step 2)', () {
+    test(
+      'marking a set done starts the rest timer using the AppSettings default',
+      () async {
+        final exercise = await exercises.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+        final workout = await workouts.createDraft(date: DateTime(2026, 7, 21));
+        final we = await workouts.addExercise(
+          workoutId: workout.id,
+          exerciseId: exercise.id,
+        );
+        final set = await workouts.addSet(
+          workoutExerciseId: we.id,
+          isWarmup: false,
+        );
+        await service.changeStatus(
+          workout: workout,
+          newStatus: WorkoutStatus.inProgress,
+        );
+
+        final controller = WorkoutEditorController(
+          workout.id,
+          workouts,
+          service,
+          progressionService,
+          activeWorkoutTimerService,
+          appSettingsRepository,
+          logger,
+        );
+        addTearDown(controller.dispose);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        await controller.setCompleted(set.id, value: true);
+
+        final activeState = await ActiveWorkoutRepositoryImpl(
+          db,
+        ).getByWorkoutId(workout.id);
+        expect(activeState!.restTimerEndsAtUtc, isNotNull);
+        expect(activeState.restTimerDurationSec, 120); // Q-4 default
+      },
+    );
+
+    test('unchecking a set does not start the rest timer', () async {
+      final exercise = await exercises.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 21));
+      final we = await workouts.addExercise(
+        workoutId: workout.id,
+        exerciseId: exercise.id,
+      );
+      final set = await workouts.addSet(
+        workoutExerciseId: we.id,
+        isWarmup: false,
+      );
+      await service.changeStatus(
+        workout: workout,
+        newStatus: WorkoutStatus.inProgress,
+      );
+
+      final controller = WorkoutEditorController(
+        workout.id,
+        workouts,
+        service,
+        progressionService,
+        activeWorkoutTimerService,
+        appSettingsRepository,
+        logger,
+      );
+      addTearDown(controller.dispose);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      await controller.setCompleted(set.id, value: false);
+
+      final activeState = await ActiveWorkoutRepositoryImpl(
+        db,
+      ).getByWorkoutId(workout.id);
+      expect(activeState!.restTimerEndsAtUtc, isNull);
+    });
+
+    test(
+      'does not start the rest timer when AppSettings.restTimerAutoStart is off',
+      () async {
+        await (db.update(
+          db.appSettingsTable,
+        )..where((t) => t.id.equals('singleton'))).write(
+          AppSettingsTableCompanion(restTimerAutoStart: Value(false)),
+        );
+        final exercise = await exercises.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+        final workout = await workouts.createDraft(date: DateTime(2026, 7, 21));
+        final we = await workouts.addExercise(
+          workoutId: workout.id,
+          exerciseId: exercise.id,
+        );
+        final set = await workouts.addSet(
+          workoutExerciseId: we.id,
+          isWarmup: false,
+        );
+        await service.changeStatus(
+          workout: workout,
+          newStatus: WorkoutStatus.inProgress,
+        );
+
+        final controller = WorkoutEditorController(
+          workout.id,
+          workouts,
+          service,
+          progressionService,
+          activeWorkoutTimerService,
+          appSettingsRepository,
+          logger,
+        );
+        addTearDown(controller.dispose);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        await controller.setCompleted(set.id, value: true);
+
+        final activeState = await ActiveWorkoutRepositoryImpl(
+          db,
+        ).getByWorkoutId(workout.id);
+        expect(activeState!.restTimerEndsAtUtc, isNull);
+      },
+    );
+
+    test(
+      'adjustRestTimer/skipRestTimer delegate to ActiveWorkoutTimerService',
+      () async {
+        final exercise = await exercises.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+        final workout = await workouts.createDraft(date: DateTime(2026, 7, 21));
+        final we = await workouts.addExercise(
+          workoutId: workout.id,
+          exerciseId: exercise.id,
+        );
+        final set = await workouts.addSet(
+          workoutExerciseId: we.id,
+          isWarmup: false,
+        );
+        await service.changeStatus(
+          workout: workout,
+          newStatus: WorkoutStatus.inProgress,
+        );
+
+        final controller = WorkoutEditorController(
+          workout.id,
+          workouts,
+          service,
+          progressionService,
+          activeWorkoutTimerService,
+          appSettingsRepository,
+          logger,
+        );
+        addTearDown(controller.dispose);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        await controller.setCompleted(set.id, value: true);
+
+        final repository = ActiveWorkoutRepositoryImpl(db);
+        final before = await repository.getByWorkoutId(workout.id);
+        expect(before!.restTimerDurationSec, 120);
+
+        await controller.adjustRestTimer(15);
+        final afterAdjust = await repository.getByWorkoutId(workout.id);
+        expect(afterAdjust!.restTimerDurationSec, 135);
+
+        await controller.skipRestTimer();
+        final afterSkip = await repository.getByWorkoutId(workout.id);
+        expect(afterSkip!.restTimerEndsAtUtc, isNull);
+      },
+    );
   });
 }

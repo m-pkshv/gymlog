@@ -8,10 +8,12 @@ import '../../core/constants.dart';
 import '../../core/logger.dart';
 import '../../core/result.dart';
 import '../../domain/enums.dart';
+import '../../domain/models/app_settings.dart';
 import '../../domain/models/exercise_set.dart';
 import '../../domain/models/workout.dart';
 import '../../domain/models/workout_details.dart';
 import '../../domain/models/workout_exercise.dart';
+import '../../domain/repositories/app_settings_repository.dart';
 import '../../domain/repositories/workout_repository.dart';
 import '../../services/active_workout_timer_service.dart';
 import '../../services/progression_service.dart';
@@ -34,9 +36,28 @@ class WorkoutEditorController
     this._workoutService,
     this._progressionService,
     this._activeWorkoutTimerService,
+    AppSettingsRepository appSettingsRepository,
     this._logger,
   ) : super(const AsyncValue<WorkoutDetails>.loading()) {
     unawaited(_load());
+    // Cached rather than re-read per set completion: the settings row
+    // rarely changes mid-workout, and re-subscribing on every ✓ added an
+    // extra async hop between the set write and the rest-timer upsert that
+    // could land after a widget test's pumpAndSettle() already considered
+    // itself settled.
+    _settingsSubscription = appSettingsRepository.watchSettings().listen(
+      (settings) => _latestSettings = settings,
+      onError: (Object error, StackTrace stackTrace) {
+        // Falls back to no auto-start (_maybeAutoStartRestTimer treats a
+        // null _latestSettings as "not loaded yet") rather than crashing —
+        // e.g. a test harness that never seeded the settings singleton row.
+        _logger.error(
+          'Failed to load app settings for workout $_workoutId',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      },
+    );
   }
 
   final String _workoutId;
@@ -45,6 +66,8 @@ class WorkoutEditorController
   final ProgressionService _progressionService;
   final ActiveWorkoutTimerService _activeWorkoutTimerService;
   final AppLogger _logger;
+  late final StreamSubscription<AppSettings> _settingsSubscription;
+  AppSettings? _latestSettings;
   final Map<String, Timer> _debounceTimers = {};
   Timer? _workoutCommentDebounceTimer;
   final Map<String, Timer> _exerciseCommentDebounceTimers = {};
@@ -221,6 +244,7 @@ class WorkoutEditorController
     try {
       await _workoutRepository.updateSet(updated);
       await _recomputeIfCompleted(_findExerciseIdForSet(setId));
+      if (value) await _maybeAutoStartRestTimer();
     } catch (error, stackTrace) {
       _logger.error(
         'Failed to save set $setId',
@@ -229,6 +253,28 @@ class WorkoutEditorController
       );
     }
   }
+
+  /// TS 7.2 step 2: marking a set done starts the rest timer if
+  /// `AppSettings.restTimerAutoStart` — a no-op (via
+  /// `ActiveWorkoutTimerService.startRestTimer`) when the workout isn't
+  /// `inProgress`, since there's no `ActiveWorkoutState` row to attach it to,
+  /// or when the settings subscription hasn't delivered its first value yet.
+  Future<void> _maybeAutoStartRestTimer() async {
+    final settings = _latestSettings;
+    if (settings == null || !settings.restTimerAutoStart) return;
+    await _activeWorkoutTimerService.startRestTimer(
+      _workoutId,
+      durationSec: settings.defaultRestTimerSec,
+    );
+  }
+
+  /// Manual "±15 с" adjustment of the running rest timer (S-04).
+  Future<void> adjustRestTimer(int deltaSec) =>
+      _activeWorkoutTimerService.adjustRestTimer(_workoutId, deltaSec: deltaSec);
+
+  /// "Пропустить" (S-04): cancels the running rest timer early.
+  Future<void> skipRestTimer() =>
+      _activeWorkoutTimerService.skipRestTimer(_workoutId);
 
   Future<void> setWarmup(String setId, {required bool value}) async {
     final current = _findSet(setId);
@@ -588,6 +634,8 @@ class WorkoutEditorController
 
   @override
   void dispose() {
+    unawaited(_settingsSubscription.cancel());
+
     // Force-write on screen leave (03_TECHNICAL_SPEC.md, section 5): the
     // provider is disposed synchronously, so pending writes are fired and
     // forgotten rather than awaited — the repository/database outlive this

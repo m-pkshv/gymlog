@@ -157,6 +157,7 @@ final workoutEditorControllerProvider = StateNotifierProvider.autoDispose
         ref.read(workoutServiceProvider),
         ref.read(progressionServiceProvider),
         ref.read(activeWorkoutTimerServiceProvider),
+        ref.read(appSettingsRepositoryProvider),
         ref.read(loggerProvider),
       );
     });

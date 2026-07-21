@@ -572,4 +572,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get workoutTimerResumeAction => 'Resume';
+
+  @override
+  String get restTimerLabel => 'Rest';
+
+  @override
+  String get restTimerMinus15Tooltip => '-15 s';
+
+  @override
+  String get restTimerPlus15Tooltip => '+15 s';
+
+  @override
+  String get restTimerSkipAction => 'Skip';
 }

@@ -190,5 +190,112 @@ void main() {
       final elapsed = await service.finish(workoutId);
       expect(elapsed, 0);
     });
+
+    group('rest timer (TS 7.2 step 2)', () {
+      test('startRestTimer sets a fresh endsAt/durationSec pair', () async {
+        await service.start(workoutId);
+
+        await service.startRestTimer(workoutId, durationSec: 90);
+
+        final state = await repository.getByWorkoutId(workoutId);
+        expect(state!.restTimerDurationSec, 90);
+        final remaining = service.remainingRestSeconds(state)!;
+        expect(remaining, greaterThan(85));
+        expect(remaining, lessThanOrEqualTo(90));
+      });
+
+      test('startRestTimer is a no-op when there is no active workout timer', () async {
+        await service.startRestTimer(workoutId, durationSec: 90);
+        expect(await repository.getByWorkoutId(workoutId), isNull);
+      });
+
+      test('adjustRestTimer extends the remaining time by deltaSec', () async {
+        final now = DateTime.now().toUtc();
+        await repository.upsert(
+          ActiveWorkoutState(
+            workoutId: workoutId,
+            startedAtUtc: now,
+            restTimerEndsAtUtc: now.add(const Duration(seconds: 60)),
+            restTimerDurationSec: 60,
+            updatedAt: now,
+          ),
+        );
+
+        await service.adjustRestTimer(workoutId, deltaSec: 15);
+
+        final state = await repository.getByWorkoutId(workoutId);
+        expect(state!.restTimerDurationSec, 75);
+        expect(
+          state.restTimerEndsAtUtc!.difference(now).inSeconds,
+          75,
+        );
+      });
+
+      test('adjustRestTimer shortens the remaining time for a negative deltaSec', () async {
+        final now = DateTime.now().toUtc();
+        await repository.upsert(
+          ActiveWorkoutState(
+            workoutId: workoutId,
+            startedAtUtc: now,
+            restTimerEndsAtUtc: now.add(const Duration(seconds: 60)),
+            restTimerDurationSec: 60,
+            updatedAt: now,
+          ),
+        );
+
+        await service.adjustRestTimer(workoutId, deltaSec: -15);
+
+        final state = await repository.getByWorkoutId(workoutId);
+        expect(state!.restTimerDurationSec, 45);
+      });
+
+      test('adjustRestTimer is a no-op when no rest timer is running', () async {
+        await service.start(workoutId);
+
+        await service.adjustRestTimer(workoutId, deltaSec: 15);
+
+        final state = await repository.getByWorkoutId(workoutId);
+        expect(state!.restTimerEndsAtUtc, isNull);
+      });
+
+      test('skipRestTimer clears the rest timer fields', () async {
+        final now = DateTime.now().toUtc();
+        await repository.upsert(
+          ActiveWorkoutState(
+            workoutId: workoutId,
+            startedAtUtc: now,
+            restTimerEndsAtUtc: now.add(const Duration(seconds: 60)),
+            restTimerDurationSec: 60,
+            updatedAt: now,
+          ),
+        );
+
+        await service.skipRestTimer(workoutId);
+
+        final state = await repository.getByWorkoutId(workoutId);
+        expect(state!.restTimerEndsAtUtc, isNull);
+        expect(state.restTimerDurationSec, isNull);
+      });
+
+      test('remainingRestSeconds is null when no rest timer is running', () async {
+        await service.start(workoutId);
+        final state = await repository.getByWorkoutId(workoutId);
+
+        expect(service.remainingRestSeconds(state!), isNull);
+      });
+
+      test('remainingRestSeconds is negative once expired (TS 7.1)', () {
+        final now = DateTime.utc(2026, 7, 21, 10, 0, 0);
+        final state = ActiveWorkoutState(
+          workoutId: workoutId,
+          startedAtUtc: now,
+          restTimerEndsAtUtc: now.subtract(const Duration(seconds: 5)),
+          restTimerDurationSec: 60,
+          updatedAt: now,
+        );
+
+        expect(service.remainingRestSeconds(state, now: now), -5);
+      });
+    });
   });
 }

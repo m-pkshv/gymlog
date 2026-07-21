@@ -472,6 +472,69 @@ void main() {
     },
   );
 
+  testWidgets(
+    'the rest timer starts automatically when a set is marked done, '
+    '"+15 s" extends it, and "Skip" clears it (Stage 4, TS 7.2 step 2)',
+    (tester) async {
+      // Production seeds this singleton row at app startup (main.dart);
+      // this harness doesn't, so it's seeded here directly -- same
+      // approach as the "showTags is off" test above.
+      await db
+          .into(db.appSettingsTable)
+          .insert(
+            AppSettingsTableCompanion.insert(
+              id: 'singleton',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      await _seedExercise(db);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add set'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Start workout'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rest'), findsNothing);
+
+      await tester.tap(find.byType(Checkbox).last);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rest'), findsOneWidget);
+      final workoutId = (await db.select(db.workouts).get()).single.id;
+      var state = await (db.select(
+        db.activeWorkoutStates,
+      )..where((s) => s.workoutId.equals(workoutId))).getSingle();
+      expect(state.restTimerDurationSec, 120); // Q-4 default
+
+      await tester.tap(find.byTooltip('+15 s'));
+      await tester.pumpAndSettle();
+      state = await (db.select(
+        db.activeWorkoutStates,
+      )..where((s) => s.workoutId.equals(workoutId))).getSingle();
+      expect(state.restTimerDurationSec, 135);
+
+      await tester.tap(find.text('Skip'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rest'), findsNothing);
+      state = await (db.select(
+        db.activeWorkoutStates,
+      )..where((s) => s.workoutId.equals(workoutId))).getSingle();
+      expect(state.restTimerEndsAtUtc, isNull);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
   testWidgets('reopening the editor shows previously saved data', (
     tester,
   ) async {

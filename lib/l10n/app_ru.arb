@@ -180,5 +180,9 @@
   "historyViewListTooltip": "Вид списком",
   "historyCalendarDayEmpty": "В этот день нет тренировок",
   "workoutTimerPauseAction": "Пауза",
-  "workoutTimerResumeAction": "Продолжить"
+  "workoutTimerResumeAction": "Продолжить",
+  "restTimerLabel": "Отдых",
+  "restTimerMinus15Tooltip": "-15 с",
+  "restTimerPlus15Tooltip": "+15 с",
+  "restTimerSkipAction": "Пропустить"
 }

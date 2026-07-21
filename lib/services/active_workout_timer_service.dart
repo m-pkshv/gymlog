@@ -1,12 +1,16 @@
 import '../domain/models/active_workout_state.dart';
 import '../domain/repositories/active_workout_repository.dart';
 
-/// The workout timer (03_TECHNICAL_SPEC.md, section 7.1): one running clock
-/// per `inProgress` workout, always derived from UTC anchors in
-/// `ActiveWorkoutState`, never an in-memory tick — a manual Pause/Resume is
-/// the only user control over it (distinct from the per-set rest timer,
-/// Stage 4 later step). `WorkoutService` is the only caller — it owns
-/// wiring this into the `Workout.status` state machine (DM 6.4.1).
+/// The workout timer and the rest timer (03_TECHNICAL_SPEC.md, section 7):
+/// both are anchor-based clocks stored on `ActiveWorkoutState`, never an
+/// in-memory tick. The *workout* timer is one running clock per
+/// `inProgress` workout, with a manual Pause/Resume — `WorkoutService` is
+/// the only caller of [start]/[resumeCompleted]/[finish], which it wires
+/// into the `Workout.status` state machine (DM 6.4.1). The *rest* timer
+/// (TS 7.2 step 2) is a separate, independent countdown between sets —
+/// started (if `AppSettings.restTimerAutoStart`) when a set is marked done,
+/// adjustable by ±15s, skippable — called directly from the workout editor
+/// controller, not through `WorkoutService`.
 class ActiveWorkoutTimerService {
   ActiveWorkoutTimerService(this._repository);
 
@@ -93,5 +97,64 @@ class ActiveWorkoutTimerService {
     final elapsed = state == null ? 0 : elapsedSeconds(state);
     await _repository.delete(workoutId);
     return elapsed;
+  }
+
+  /// Starts (or replaces) the rest timer for [workoutId] with a fresh
+  /// [durationSec] countdown (TS 7.2 step 2 — marking a set done, if
+  /// `AppSettings.restTimerAutoStart`). A no-op if there's no active
+  /// workout timer (the rest timer only makes sense while `inProgress`).
+  Future<void> startRestTimer(String workoutId, {required int durationSec}) async {
+    final state = await _repository.getByWorkoutId(workoutId);
+    if (state == null) return;
+    final now = DateTime.now().toUtc();
+    await _repository.upsert(
+      state.copyWith(
+        restTimerEndsAtUtc: now.add(Duration(seconds: durationSec)),
+        restTimerDurationSec: durationSec,
+        updatedAt: now,
+      ),
+    );
+  }
+
+  /// Adjusts the running rest timer's remaining time by [deltaSec] (S-04:
+  /// "±15 с") — positive extends, negative shortens. A no-op if no rest
+  /// timer is currently running.
+  Future<void> adjustRestTimer(String workoutId, {required int deltaSec}) async {
+    final state = await _repository.getByWorkoutId(workoutId);
+    final endsAt = state?.restTimerEndsAtUtc;
+    if (state == null || endsAt == null) return;
+    final newEndsAt = endsAt.add(Duration(seconds: deltaSec));
+    await _repository.upsert(
+      state.copyWith(
+        restTimerEndsAtUtc: newEndsAt,
+        restTimerDurationSec:
+            (state.restTimerDurationSec ?? 0) + deltaSec,
+        updatedAt: DateTime.now().toUtc(),
+      ),
+    );
+  }
+
+  /// Cancels the rest timer early (S-04: "пропустить"). A no-op if none is
+  /// running.
+  Future<void> skipRestTimer(String workoutId) async {
+    final state = await _repository.getByWorkoutId(workoutId);
+    if (state == null || state.restTimerEndsAtUtc == null) return;
+    await _repository.upsert(
+      state.copyWith(
+        restTimerEndsAtUtc: null,
+        restTimerDurationSec: null,
+        updatedAt: DateTime.now().toUtc(),
+      ),
+    );
+  }
+
+  /// The TS 7.1 rest-timer formula: `endsAt - now`. `null` when no rest
+  /// timer is running; negative once it has expired (the caller decides
+  /// how to display that — this step doesn't fire a notification, TS 7.3).
+  int? remainingRestSeconds(ActiveWorkoutState state, {DateTime? now}) {
+    final endsAt = state.restTimerEndsAtUtc;
+    if (endsAt == null) return null;
+    final n = now ?? DateTime.now().toUtc();
+    return endsAt.difference(n).inSeconds;
   }
 }

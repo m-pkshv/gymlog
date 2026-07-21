@@ -1183,6 +1183,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resume'**
   String get workoutTimerResumeAction;
+
+  /// Label on the rest-timer bar (S-04, Stage 4, TS 7.2), shown only while a rest timer is running.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest'**
+  String get restTimerLabel;
+
+  /// Tooltip on the rest-timer bar's shorten button (S-04, Stage 4).
+  ///
+  /// In en, this message translates to:
+  /// **'-15 s'**
+  String get restTimerMinus15Tooltip;
+
+  /// Tooltip on the rest-timer bar's extend button (S-04, Stage 4).
+  ///
+  /// In en, this message translates to:
+  /// **'+15 s'**
+  String get restTimerPlus15Tooltip;
+
+  /// Button on the rest-timer bar (S-04, Stage 4) that cancels the running rest timer early.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get restTimerSkipAction;
 }
 
 class _AppLocalizationsDelegate

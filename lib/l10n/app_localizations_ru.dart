@@ -579,4 +579,16 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get workoutTimerResumeAction => 'Продолжить';
+
+  @override
+  String get restTimerLabel => 'Отдых';
+
+  @override
+  String get restTimerMinus15Tooltip => '-15 с';
+
+  @override
+  String get restTimerPlus15Tooltip => '+15 с';
+
+  @override
+  String get restTimerSkipAction => 'Пропустить';
 }

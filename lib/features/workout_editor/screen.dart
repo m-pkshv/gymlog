@@ -260,7 +260,7 @@ class _EditorBody extends StatelessWidget {
           ),
         ),
         if (workout.status == WorkoutStatus.inProgress)
-          _WorkoutTimerRow(workoutId: workout.id),
+          _ActiveWorkoutTimers(workoutId: workout.id, controller: controller),
         _TagsRow(workoutId: workout.id, tags: details.tags),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -394,23 +394,24 @@ class _StatusMenu extends StatelessWidget {
   }
 }
 
-/// Workout timer (S-03, Stage 4, TS 7.1): shown only while `inProgress`
-/// (`ActiveWorkoutState` exists only then, DM 6.14). Ticks once a second
-/// purely to re-render the elapsed-time text — the underlying value is
-/// always recomputed from UTC anchors, never accumulated in memory, so a
-/// missed tick (backgrounded app) never desyncs the displayed time. Pause
-/// is the only manual control (rest timer with notifications is a later
-/// Stage 4 step).
-class _WorkoutTimerRow extends ConsumerStatefulWidget {
-  const _WorkoutTimerRow({required this.workoutId});
+/// Wraps the workout timer row and rest timer bar (S-03/S-04, Stage 4)
+/// under a single once-a-second ticker, instead of each owning its own
+/// `Timer.periodic` — two independent periodic timers made
+/// `tester.pumpAndSettle()` pathologically slow in widget tests (it never
+/// found a quiet moment where neither was about to fire), and it's wasted
+/// work in production too. Both children stay plain `ConsumerWidget`s that
+/// just read the current anchors fresh on every rebuild this ticker causes.
+class _ActiveWorkoutTimers extends StatefulWidget {
+  const _ActiveWorkoutTimers({required this.workoutId, required this.controller});
 
   final String workoutId;
+  final WorkoutEditorController controller;
 
   @override
-  ConsumerState<_WorkoutTimerRow> createState() => _WorkoutTimerRowState();
+  State<_ActiveWorkoutTimers> createState() => _ActiveWorkoutTimersState();
 }
 
-class _WorkoutTimerRowState extends ConsumerState<_WorkoutTimerRow> {
+class _ActiveWorkoutTimersState extends State<_ActiveWorkoutTimers> {
   Timer? _ticker;
 
   @override
@@ -429,15 +430,37 @@ class _WorkoutTimerRowState extends ConsumerState<_WorkoutTimerRow> {
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _WorkoutTimerRow(workoutId: widget.workoutId),
+        _RestTimerBar(workoutId: widget.workoutId, controller: widget.controller),
+      ],
+    );
+  }
+}
+
+/// Workout timer (S-03, Stage 4, TS 7.1): shown only while `inProgress`
+/// (`ActiveWorkoutState` exists only then, DM 6.14). The elapsed value is
+/// always recomputed from UTC anchors, never accumulated in memory, so a
+/// missed tick (backgrounded app) never desyncs the displayed time. Pause
+/// is the only manual control (rest timer is a separate, independent
+/// countdown below).
+class _WorkoutTimerRow extends ConsumerWidget {
+  const _WorkoutTimerRow({required this.workoutId});
+
+  final String workoutId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final stateAsync = ref.watch(activeWorkoutStateProvider(widget.workoutId));
+    final stateAsync = ref.watch(activeWorkoutStateProvider(workoutId));
 
     return stateAsync.maybeWhen(
       data: (state) {
         if (state == null) return const SizedBox.shrink();
         final timerService = ref.read(activeWorkoutTimerServiceProvider);
         final controller = ref.read(
-          workoutEditorControllerProvider(widget.workoutId).notifier,
+          workoutEditorControllerProvider(workoutId).notifier,
         );
         final elapsed = timerService.elapsedSeconds(state);
 
@@ -458,6 +481,73 @@ class _WorkoutTimerRowState extends ConsumerState<_WorkoutTimerRow> {
                 onPressed: state.isPaused
                     ? controller.resumeTimer
                     : controller.pauseTimer,
+              ),
+            ],
+          ),
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+/// Rest timer bar (S-04, Stage 4, TS 7.2 step 2): shown only while a rest
+/// timer is running (`ActiveWorkoutState.restTimerEndsAtUtc != null`),
+/// started automatically when a set is marked done (if
+/// `AppSettings.restTimerAutoStart` — see
+/// `WorkoutEditorController._maybeAutoStartRestTimer`). "±15 с" adjusts the
+/// running countdown; "Пропустить" cancels it early. No local notification
+/// yet (TS 7.3 is a separate, later Stage 4 step) — once the remaining time
+/// goes negative this just shows `00:00` until skipped or a new set starts
+/// a fresh timer.
+class _RestTimerBar extends ConsumerWidget {
+  const _RestTimerBar({required this.workoutId, required this.controller});
+
+  final String workoutId;
+  final WorkoutEditorController controller;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final stateAsync = ref.watch(activeWorkoutStateProvider(workoutId));
+
+    return stateAsync.maybeWhen(
+      data: (state) {
+        if (state == null || state.restTimerEndsAtUtc == null) {
+          return const SizedBox.shrink();
+        }
+        final timerService = ref.read(activeWorkoutTimerServiceProvider);
+        final remaining = timerService.remainingRestSeconds(state) ?? 0;
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: Row(
+            children: [
+              Icon(
+                Icons.timer_outlined,
+                size: 18,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(l10n.restTimerLabel),
+              const Spacer(),
+              IconButton(
+                tooltip: l10n.restTimerMinus15Tooltip,
+                icon: const Icon(Icons.remove_circle_outline),
+                onPressed: () => controller.adjustRestTimer(-15),
+              ),
+              Text(
+                formatElapsedTime(remaining),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              IconButton(
+                tooltip: l10n.restTimerPlus15Tooltip,
+                icon: const Icon(Icons.add_circle_outline),
+                onPressed: () => controller.adjustRestTimer(15),
+              ),
+              TextButton(
+                onPressed: controller.skipRestTimer,
+                child: Text(l10n.restTimerSkipAction),
               ),
             ],
           ),

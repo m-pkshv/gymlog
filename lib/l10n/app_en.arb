@@ -645,5 +645,21 @@
   "workoutTimerResumeAction": "Resume",
   "@workoutTimerResumeAction": {
     "description": "Tooltip on the workout timer's resume button (S-03, Stage 4, TS 7.1), shown while the timer is paused."
+  },
+  "restTimerLabel": "Rest",
+  "@restTimerLabel": {
+    "description": "Label on the rest-timer bar (S-04, Stage 4, TS 7.2), shown only while a rest timer is running."
+  },
+  "restTimerMinus15Tooltip": "-15 s",
+  "@restTimerMinus15Tooltip": {
+    "description": "Tooltip on the rest-timer bar's shorten button (S-04, Stage 4)."
+  },
+  "restTimerPlus15Tooltip": "+15 s",
+  "@restTimerPlus15Tooltip": {
+    "description": "Tooltip on the rest-timer bar's extend button (S-04, Stage 4)."
+  },
+  "restTimerSkipAction": "Skip",
+  "@restTimerSkipAction": {
+    "description": "Button on the rest-timer bar (S-04, Stage 4) that cancels the running rest timer early."
   }
 }
