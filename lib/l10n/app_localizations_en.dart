@@ -485,6 +485,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLanguageEn => 'English';
 
   @override
+  String get settingsRestTimerLabel => 'Default rest timer (sec)';
+
+  @override
+  String get settingsRestTimerRangeError =>
+      'Enter a value from 10 to 600 seconds';
+
+  @override
+  String get settingsRestTimerAutoStartLabel => 'Auto-start rest timer';
+
+  @override
   String get settingsLoadError => 'Couldn\'t load settings';
 
   @override

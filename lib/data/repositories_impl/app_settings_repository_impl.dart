@@ -86,4 +86,28 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       ),
     );
   }
+
+  @override
+  Future<void> setDefaultRestTimerSec(int value) async {
+    await (_db.update(
+      _db.appSettingsTable,
+    )..where((t) => t.id.equals(_singletonId))).write(
+      drift.AppSettingsTableCompanion(
+        defaultRestTimerSec: Value(value),
+        updatedAt: Value(DateTime.now().toUtc().toIso8601String()),
+      ),
+    );
+  }
+
+  @override
+  Future<void> setRestTimerAutoStart(bool value) async {
+    await (_db.update(
+      _db.appSettingsTable,
+    )..where((t) => t.id.equals(_singletonId))).write(
+      drift.AppSettingsTableCompanion(
+        restTimerAutoStart: Value(value),
+        updatedAt: Value(DateTime.now().toUtc().toIso8601String()),
+      ),
+    );
+  }
 }

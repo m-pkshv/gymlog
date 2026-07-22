@@ -86,4 +86,41 @@ void main() {
     await settings.setLocale(AppLocale.en);
     expect((await settings.watchSettings().first).locale, AppLocale.en);
   });
+
+  test(
+    'ensureInitialized creates the singleton row with defaultRestTimerSec = '
+    '120 and restTimerAutoStart = true by default (DM 6.12, Q-4)',
+    () async {
+      await settings.ensureInitialized();
+      final current = await settings.watchSettings().first;
+      expect(current.defaultRestTimerSec, 120);
+      expect(current.restTimerAutoStart, isTrue);
+    },
+  );
+
+  test(
+    'setDefaultRestTimerSec updates the row, reflected in watchSettings',
+    () async {
+      await settings.ensureInitialized();
+
+      await settings.setDefaultRestTimerSec(90);
+      expect(
+        (await settings.watchSettings().first).defaultRestTimerSec,
+        90,
+      );
+    },
+  );
+
+  test(
+    'setRestTimerAutoStart updates the row, reflected in watchSettings',
+    () async {
+      await settings.ensureInitialized();
+
+      await settings.setRestTimerAutoStart(false);
+      expect(
+        (await settings.watchSettings().first).restTimerAutoStart,
+        isFalse,
+      );
+    },
+  );
 }

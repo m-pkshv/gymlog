@@ -91,6 +91,15 @@ class MeasurementValueRange {
   static const double maxLengthCm = 300;
 }
 
+/// `AppSettings.defaultRestTimerSec` bounds (06_DATA_MODEL.md, section
+/// 6.12, Q-4), validated in `AppSettingsService.setDefaultRestTimerSec`.
+class RestTimerRules {
+  const RestTimerRules._();
+
+  static const int minSeconds = 10;
+  static const int maxSeconds = 600;
+}
+
 /// CSV export format (03_TECHNICAL_SPEC.md, section 10.1/10.2, D-9).
 class ExportFormat {
   const ExportFormat._();

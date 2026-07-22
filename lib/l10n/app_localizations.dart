@@ -1022,6 +1022,24 @@ abstract class AppLocalizations {
   /// **'English'**
   String get settingsLanguageEn;
 
+  /// Label on the S-17 rest-timer-seconds text field (AppSettings.defaultRestTimerSec, DM 6.12, Q-4).
+  ///
+  /// In en, this message translates to:
+  /// **'Default rest timer (sec)'**
+  String get settingsRestTimerLabel;
+
+  /// Inline error under the rest-timer-seconds field when the entered value is out of the DM 6.12 10-600 range, or not a whole number.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a value from 10 to 600 seconds'**
+  String get settingsRestTimerRangeError;
+
+  /// Switch on the S-17 settings screen for AppSettings.restTimerAutoStart (DM 6.12).
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-start rest timer'**
+  String get settingsRestTimerAutoStartLabel;
+
   /// Error state on the S-17 settings screen (and anywhere else appSettingsProvider is watched) when the settings row fails to load.
   ///
   /// In en, this message translates to:

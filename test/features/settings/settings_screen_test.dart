@@ -172,4 +172,90 @@ void main() {
 
     await _unmountAndFlush(tester);
   });
+
+  testWidgets(
+    'shows the default rest timer (120 s) and auto-start on by default '
+    '(DM 6.12, Q-4)',
+    (tester) async {
+      await AppSettingsRepositoryImpl(db).ensureInitialized();
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).controller!.text,
+        '120',
+      );
+      final autoStart = tester.widget<SwitchListTile>(
+        _switchTile('Auto-start rest timer'),
+      );
+      expect(autoStart.value, isTrue);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'entering a valid rest timer value and losing focus persists it '
+    '(DM 6.12, Q-4)',
+    (tester) async {
+      await AppSettingsRepositoryImpl(db).ensureInitialized();
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), '90');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Enter a value from 10 to 600 seconds'), findsNothing);
+      final row = await (db.select(
+        db.appSettingsTable,
+      )..where((t) => t.id.equals('singleton'))).getSingle();
+      expect(row.defaultRestTimerSec, 90);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'entering an out-of-range rest timer value shows an inline error and '
+    "doesn't persist it (DM 6.12, Q-4)",
+    (tester) async {
+      await AppSettingsRepositoryImpl(db).ensureInitialized();
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), '5');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Enter a value from 10 to 600 seconds'),
+        findsOneWidget,
+      );
+      final row = await (db.select(
+        db.appSettingsTable,
+      )..where((t) => t.id.equals('singleton'))).getSingle();
+      expect(row.defaultRestTimerSec, 120);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets('toggling auto-start persists restTimerAutoStart = false', (
+    tester,
+  ) async {
+    await AppSettingsRepositoryImpl(db).ensureInitialized();
+    await tester.pumpWidget(_appUnderTest(db));
+    await tester.pumpAndSettle();
+
+    await tester.tap(_switchTile('Auto-start rest timer'));
+    await tester.pumpAndSettle();
+
+    final row = await (db.select(
+      db.appSettingsTable,
+    )..where((t) => t.id.equals('singleton'))).getSingle();
+    expect(row.restTimerAutoStart, isFalse);
+
+    await _unmountAndFlush(tester);
+  });
 }

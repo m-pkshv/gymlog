@@ -52,6 +52,7 @@ import '../domain/repositories/workout_template_repository.dart';
 import '../features/template_editor/controller.dart';
 import '../features/workout_editor/controller.dart';
 import '../services/active_workout_timer_service.dart';
+import '../services/app_settings_service.dart';
 import '../services/body_measurement_service.dart';
 import '../services/exercise_service.dart';
 import '../services/export/export_service.dart';
@@ -201,6 +202,10 @@ final workoutTemplateServiceProvider = Provider<WorkoutTemplateService>((ref) {
 
 final appSettingsRepositoryProvider = Provider<AppSettingsRepository>((ref) {
   return AppSettingsRepositoryImpl(ref.watch(appDatabaseProvider));
+});
+
+final appSettingsServiceProvider = Provider<AppSettingsService>((ref) {
+  return AppSettingsService(ref.watch(appSettingsRepositoryProvider));
 });
 
 /// The single point of truth for the catalog's archive/delete rules and

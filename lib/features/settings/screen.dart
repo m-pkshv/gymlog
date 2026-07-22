@@ -6,11 +6,12 @@ import '../../core/units/unit_converter.dart';
 import '../../domain/enums.dart';
 import '../../l10n/app_localizations.dart';
 
-/// S-17 settings screen (04_UI_UX_SPEC.md, section 5). Stage 9, step 2:
-/// theme + language selectors, plus unit system/"show tags" (moved here
-/// from the temporary switches on the "More" placeholder,
+/// S-17 settings screen (04_UI_UX_SPEC.md, section 5). Stage 9, step 3:
+/// theme + language selectors, unit system/"show tags" (moved here from the
+/// temporary switches on the "More" placeholder,
 /// `ASSUMPTION(temp-show-tags-toggle)` / `ASSUMPTION(temp-unit-system-toggle)`,
-/// both resolved at step 1). Rest-timer defaults, notifications status and
+/// resolved at step 1), and the default rest-timer seconds/auto-start
+/// controls (backend from Stage 4, TS 7.1/7.2). Notifications status and
 /// "About" land in later steps of this stage.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -67,6 +68,15 @@ class SettingsScreen extends ConsumerWidget {
                     imperial ? UnitSystem.imperial : UnitSystem.metric,
                   ),
             ),
+            const Divider(height: 33),
+            _RestTimerSecondsField(value: settings.defaultRestTimerSec),
+            SwitchListTile(
+              title: Text(l10n.settingsRestTimerAutoStartLabel),
+              value: settings.restTimerAutoStart,
+              onChanged: (value) => ref
+                  .read(appSettingsRepositoryProvider)
+                  .setRestTimerAutoStart(value),
+            ),
           ],
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -115,6 +125,94 @@ class _SegmentedSection<T extends Object> extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The default-rest-timer-seconds field (DM 6.12, Q-4: 10-600). Same
+/// resync-while-unfocused mechanics as `SetNumberField`/`CommentField`
+/// (03_TECHNICAL_SPEC.md, section 5) — an in-flight edit is never clobbered
+/// by a settings-stream rebuild — but with its own inline range error,
+/// since `AppSettingsService.setDefaultRestTimerSec` can reject the value.
+class _RestTimerSecondsField extends ConsumerStatefulWidget {
+  const _RestTimerSecondsField({required this.value});
+
+  final int value;
+
+  @override
+  ConsumerState<_RestTimerSecondsField> createState() =>
+      _RestTimerSecondsFieldState();
+}
+
+class _RestTimerSecondsFieldState
+    extends ConsumerState<_RestTimerSecondsField> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value.toString());
+    _focusNode = FocusNode()..addListener(_handleFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(covariant _RestTimerSecondsField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_focusNode.hasFocus && widget.value != oldWidget.value) {
+      _controller.text = widget.value.toString();
+    }
+  }
+
+  void _handleFocusChange() {
+    if (!_focusNode.hasFocus) _commit();
+  }
+
+  Future<void> _commit() async {
+    final l10n = AppLocalizations.of(context)!;
+    final parsed = int.tryParse(_controller.text.trim());
+    if (parsed == null) {
+      setState(() => _error = l10n.settingsRestTimerRangeError);
+      return;
+    }
+    final result = await ref
+        .read(appSettingsServiceProvider)
+        .setDefaultRestTimerSec(parsed);
+    if (!mounted) return;
+    setState(
+      () => _error = result.fold(
+        (_) => null,
+        (_) => l10n.settingsRestTimerRangeError,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _focusNode
+      ..removeListener(_handleFocusChange)
+      ..dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: TextField(
+        controller: _controller,
+        focusNode: _focusNode,
+        keyboardType: TextInputType.number,
+        textInputAction: TextInputAction.done,
+        decoration: InputDecoration(
+          labelText: l10n.settingsRestTimerLabel,
+          errorText: _error,
+        ),
+        onSubmitted: (_) => _commit(),
+      ),
     );
   }
 }

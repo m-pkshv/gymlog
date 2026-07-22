@@ -20,4 +20,10 @@ abstract class AppSettingsRepository {
   Future<void> setTheme(AppTheme value);
 
   Future<void> setLocale(AppLocale value);
+
+  /// No range validation here — that's `AppSettingsService.
+  /// setDefaultRestTimerSec` (DM 6.12, Q-4: 10-600 seconds).
+  Future<void> setDefaultRestTimerSec(int value);
+
+  Future<void> setRestTimerAutoStart(bool value);
 }

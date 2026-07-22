@@ -535,6 +535,18 @@
   "@settingsLanguageEn": {
     "description": "Language segment: pin the app to English (AppLocale.en). Shown in English regardless of the app's current language, same convention as settingsLanguageRu."
   },
+  "settingsRestTimerLabel": "Default rest timer (sec)",
+  "@settingsRestTimerLabel": {
+    "description": "Label on the S-17 rest-timer-seconds text field (AppSettings.defaultRestTimerSec, DM 6.12, Q-4)."
+  },
+  "settingsRestTimerRangeError": "Enter a value from 10 to 600 seconds",
+  "@settingsRestTimerRangeError": {
+    "description": "Inline error under the rest-timer-seconds field when the entered value is out of the DM 6.12 10-600 range, or not a whole number."
+  },
+  "settingsRestTimerAutoStartLabel": "Auto-start rest timer",
+  "@settingsRestTimerAutoStartLabel": {
+    "description": "Switch on the S-17 settings screen for AppSettings.restTimerAutoStart (DM 6.12)."
+  },
   "settingsLoadError": "Couldn't load settings",
   "@settingsLoadError": {
     "description": "Error state on the S-17 settings screen (and anywhere else appSettingsProvider is watched) when the settings row fails to load."

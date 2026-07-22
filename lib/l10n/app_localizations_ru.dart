@@ -489,6 +489,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsLanguageEn => 'English';
 
   @override
+  String get settingsRestTimerLabel => 'Таймер отдыха по умолчанию (сек)';
+
+  @override
+  String get settingsRestTimerRangeError =>
+      'Введите значение от 10 до 600 секунд';
+
+  @override
+  String get settingsRestTimerAutoStartLabel => 'Автозапуск таймера отдыха';
+
+  @override
   String get settingsLoadError => 'Не удалось загрузить настройки';
 
   @override
