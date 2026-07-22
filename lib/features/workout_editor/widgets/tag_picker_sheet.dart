@@ -186,6 +186,11 @@ class _CreateTagDialogState extends ConsumerState<_CreateTagDialog> {
                   child: CircleAvatar(
                     backgroundColor: tagColor(colorHex),
                     radius: 14,
+                    // Fixed white, not `Theme.of(context)`, on purpose: the
+                    // swatch itself is `colorHex` from the tag palette
+                    // (UX-1), not a themed surface -- the checkmark needs
+                    // to contrast against that arbitrary fixed color, not
+                    // against the current theme.
                     child: _colorHex == colorHex
                         ? const Icon(Icons.check, color: Colors.white, size: 16)
                         : null,
