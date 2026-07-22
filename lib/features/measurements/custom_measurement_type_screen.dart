@@ -128,7 +128,17 @@ class _CustomMeasurementTypeScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(type == null ? '' : measurementTypeLabel(l10n, type)),
+        // Custom type names can be up to 60 chars (MeasurementTypeRules) --
+        // UX 12: long ones must ellipsize, not overflow the AppBar, with
+        // the full text still reachable via long-press.
+        title: Tooltip(
+          message: type == null ? '' : measurementTypeLabel(l10n, type),
+          child: Text(
+            type == null ? '' : measurementTypeLabel(l10n, type),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
         actions: type == null
             ? null
             : [

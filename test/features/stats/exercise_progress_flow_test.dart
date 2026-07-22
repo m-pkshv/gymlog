@@ -106,6 +106,38 @@ void main() {
     },
   );
 
+  testWidgets(
+    'a long exercise name in the AppBar title ellipsizes instead of '
+    'overflowing (UX 12: exercise names have no length limit, DM 6.1)',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final longName = 'A' * 200;
+      await ExerciseRepositoryImpl(
+        db,
+      ).create(name: longName, exerciseType: ExerciseType.strength);
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Choose exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(longName));
+      await tester.pumpAndSettle();
+
+      final titleText = tester.widget<Text>(
+        find
+            .descendant(of: find.byType(AppBar), matching: find.byType(Text))
+            .first,
+      );
+      expect(titleText.maxLines, 1);
+      expect(titleText.overflow, TextOverflow.ellipsis);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
   testWidgets('searching the picker narrows the list', (tester) async {
     tester.view.physicalSize = const Size(1080, 3000);
     tester.view.devicePixelRatio = 1.0;

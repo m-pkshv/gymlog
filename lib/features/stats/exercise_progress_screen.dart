@@ -82,7 +82,19 @@ class _ExerciseProgressScreenState
     final exercise = _exercise;
 
     return Scaffold(
-      appBar: AppBar(title: Text(exercise?.name ?? '')),
+      appBar: AppBar(
+        // Exercise names have no length limit (DM 6.1) -- UX 12: a long
+        // one must ellipsize, not silently clip/overflow the AppBar, with
+        // the full text still reachable via long-press.
+        title: Tooltip(
+          message: exercise?.name ?? '',
+          child: Text(
+            exercise?.name ?? '',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _loadError || exercise == null
