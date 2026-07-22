@@ -15,6 +15,7 @@ import '../features/measurements/custom_measurement_type_screen.dart';
 import '../features/measurements/measurement_form_screen.dart';
 import '../features/measurements/screen.dart';
 import '../features/more/screen.dart';
+import '../features/settings/screen.dart';
 import '../features/stats/exercise_progress_picker_screen.dart';
 import '../features/stats/exercise_progress_screen.dart';
 import '../features/stats/screen.dart';
@@ -265,6 +266,10 @@ final GoRouter appRouter = GoRouter(
                       builder: (_, _) => const ExportFormatHelpScreen(),
                     ),
                   ],
+                ),
+                GoRoute(
+                  path: 'settings',
+                  builder: (_, _) => const SettingsScreen(),
                 ),
               ],
             ),

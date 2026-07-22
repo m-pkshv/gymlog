@@ -11,6 +11,7 @@ import 'core/logger.dart';
 import 'data/database.dart';
 import 'data/repositories_impl/app_settings_repository_impl.dart';
 import 'data/seed/seed_runner.dart';
+import 'domain/enums.dart';
 import 'l10n/app_localizations.dart';
 import 'services/notification_service.dart';
 
@@ -66,17 +67,21 @@ Future<void> main() async {
   );
 }
 
-class GymLogApp extends StatelessWidget {
+class GymLogApp extends ConsumerWidget {
   const GymLogApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // `AppTheme.system` (table default) while the settings row hasn't
+    // loaded yet — same as the pre-Stage-9 hardcoded default, so there's no
+    // flash of the wrong theme before the first frame.
+    final theme =
+        ref.watch(appSettingsProvider).value?.theme ?? AppTheme.system;
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       theme: buildLightTheme(),
       darkTheme: buildDarkTheme(),
-      // Default per UX 9; a settings-driven override lands with Stage 9.
-      themeMode: ThemeMode.system,
+      themeMode: flutterThemeMode(theme),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: appRouter,

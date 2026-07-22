@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../core/units/unit_converter.dart';
+import '../../domain/enums.dart';
 import '../../domain/models/app_settings.dart';
 import '../../domain/repositories/app_settings_repository.dart';
 import '../database.dart' as drift;
@@ -57,6 +58,18 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     )..where((t) => t.id.equals(_singletonId))).write(
       drift.AppSettingsTableCompanion(
         unitSystem: Value(value.name),
+        updatedAt: Value(DateTime.now().toUtc().toIso8601String()),
+      ),
+    );
+  }
+
+  @override
+  Future<void> setTheme(AppTheme value) async {
+    await (_db.update(
+      _db.appSettingsTable,
+    )..where((t) => t.id.equals(_singletonId))).write(
+      drift.AppSettingsTableCompanion(
+        theme: Value(value.name),
         updatedAt: Value(DateTime.now().toUtc().toIso8601String()),
       ),
     );

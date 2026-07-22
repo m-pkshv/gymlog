@@ -3,11 +3,10 @@
 /// `lib/data/tables/`); mapping happens in `lib/data/mappers/`.
 ///
 /// Only the enums needed by the entities modeled so far (Exercise, Workout
-/// aggregate, MeasurementType/BodyMeasurement, PersonalRecord) are defined
-/// here. The rest of DM section 4 (OperationType/Status, AppTheme, AppLocale)
-/// is added alongside the features that need them, per stage. `UnitSystem`
-/// already lives in `core/units/unit_converter.dart` (D-5) and is reused
-/// as-is.
+/// aggregate, MeasurementType/BodyMeasurement, PersonalRecord, AppSettings)
+/// are defined here. `AppLocale` is added alongside the language switcher
+/// (Stage 9, later step). `UnitSystem` already lives in
+/// `core/units/unit_converter.dart` (D-5) and is reused as-is.
 library;
 
 enum ExerciseType { strength, cardio, reps, time, stretch }
@@ -53,3 +52,10 @@ enum ImportExportOperationType { export, import }
 
 /// `ImportExportOperation.status` (06_DATA_MODEL.md, section 6.13).
 enum ImportExportOperationStatus { inProgress, success, failed }
+
+/// `AppSettings.theme` (06_DATA_MODEL.md, section 6.12; 04_UI_UX_SPEC.md,
+/// section 9). `system` follows the OS light/dark setting; `light`/`dark`
+/// pin the app to one regardless of the OS. Mapped to Flutter's own
+/// `ThemeMode` in `app/theme.dart` rather than reused directly, so this
+/// (Flutter-free) domain layer stays testable without `package:flutter`.
+enum AppTheme { system, light, dark }

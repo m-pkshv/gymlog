@@ -446,6 +446,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tagNameLabel => 'Name';
 
   @override
+  String get settingsTitle => 'Settings';
+
+  @override
   String get settingsShowTagsLabel => 'Show tags';
 
   @override
@@ -456,6 +459,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsUnitSystemImperial => 'Imperial (lb, in)';
+
+  @override
+  String get settingsThemeLabel => 'Theme';
+
+  @override
+  String get settingsThemeSystem => 'System';
+
+  @override
+  String get settingsThemeLight => 'Light';
+
+  @override
+  String get settingsThemeDark => 'Dark';
 
   @override
   String get settingsLoadError => 'Couldn\'t load settings';

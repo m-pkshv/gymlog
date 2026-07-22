@@ -483,13 +483,17 @@
   "@tagNameLabel": {
     "description": "Text field label in the create-tag dialog (S-03, DM 6.3: 1-30 chars)."
   },
+  "settingsTitle": "Settings",
+  "@settingsTitle": {
+    "description": "S-17 settings screen title (AppBar) and its entry point label on the \"More\" screen."
+  },
   "settingsShowTagsLabel": "Show tags",
   "@settingsShowTagsLabel": {
-    "description": "Temporary switch on the \"More\" placeholder (ASSUMPTION(temp-show-tags-toggle)) that toggles AppSettings.showTags; moves to the real S-17 settings screen at Stage 9."
+    "description": "Switch on the S-17 settings screen that toggles AppSettings.showTags (DM 6.12)."
   },
   "settingsUnitSystemLabel": "Imperial units",
   "@settingsUnitSystemLabel": {
-    "description": "Temporary switch on the \"More\" placeholder (ASSUMPTION(temp-unit-system-toggle), Stage 6) that toggles AppSettings.unitSystem between metric/imperial; moves to the real S-17 settings screen at Stage 9."
+    "description": "Switch on the S-17 settings screen that toggles AppSettings.unitSystem between metric/imperial (D-5)."
   },
   "settingsUnitSystemMetric": "Metric (kg, cm)",
   "@settingsUnitSystemMetric": {
@@ -499,9 +503,25 @@
   "@settingsUnitSystemImperial": {
     "description": "Subtitle shown under settingsUnitSystemLabel when unitSystem is imperial."
   },
+  "settingsThemeLabel": "Theme",
+  "@settingsThemeLabel": {
+    "description": "Label above the theme segmented button on the S-17 settings screen (04_UI_UX_SPEC.md, section 9)."
+  },
+  "settingsThemeSystem": "System",
+  "@settingsThemeSystem": {
+    "description": "Theme segment: follow the OS light/dark setting (AppTheme.system)."
+  },
+  "settingsThemeLight": "Light",
+  "@settingsThemeLight": {
+    "description": "Theme segment: always light (AppTheme.light)."
+  },
+  "settingsThemeDark": "Dark",
+  "@settingsThemeDark": {
+    "description": "Theme segment: always dark (AppTheme.dark)."
+  },
   "settingsLoadError": "Couldn't load settings",
   "@settingsLoadError": {
-    "description": "Error state on the \"More\" placeholder (and anywhere else appSettingsProvider is watched) when the settings row fails to load."
+    "description": "Error state on the S-17 settings screen (and anywhere else appSettingsProvider is watched) when the settings row fails to load."
   },
   "copyWorkoutAction": "Copy",
   "@copyWorkoutAction": {

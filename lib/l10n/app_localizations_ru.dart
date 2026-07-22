@@ -450,6 +450,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get tagNameLabel => 'Название';
 
   @override
+  String get settingsTitle => 'Настройки';
+
+  @override
   String get settingsShowTagsLabel => 'Показывать теги';
 
   @override
@@ -460,6 +463,18 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsUnitSystemImperial => 'Имперские (фунты, дюймы)';
+
+  @override
+  String get settingsThemeLabel => 'Тема';
+
+  @override
+  String get settingsThemeSystem => 'Системная';
+
+  @override
+  String get settingsThemeLight => 'Светлая';
+
+  @override
+  String get settingsThemeDark => 'Тёмная';
 
   @override
   String get settingsLoadError => 'Не удалось загрузить настройки';

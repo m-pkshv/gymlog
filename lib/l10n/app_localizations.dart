@@ -944,13 +944,19 @@ abstract class AppLocalizations {
   /// **'Name'**
   String get tagNameLabel;
 
-  /// Temporary switch on the "More" placeholder (ASSUMPTION(temp-show-tags-toggle)) that toggles AppSettings.showTags; moves to the real S-17 settings screen at Stage 9.
+  /// S-17 settings screen title (AppBar) and its entry point label on the "More" screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
+  /// Switch on the S-17 settings screen that toggles AppSettings.showTags (DM 6.12).
   ///
   /// In en, this message translates to:
   /// **'Show tags'**
   String get settingsShowTagsLabel;
 
-  /// Temporary switch on the "More" placeholder (ASSUMPTION(temp-unit-system-toggle), Stage 6) that toggles AppSettings.unitSystem between metric/imperial; moves to the real S-17 settings screen at Stage 9.
+  /// Switch on the S-17 settings screen that toggles AppSettings.unitSystem between metric/imperial (D-5).
   ///
   /// In en, this message translates to:
   /// **'Imperial units'**
@@ -968,7 +974,31 @@ abstract class AppLocalizations {
   /// **'Imperial (lb, in)'**
   String get settingsUnitSystemImperial;
 
-  /// Error state on the "More" placeholder (and anywhere else appSettingsProvider is watched) when the settings row fails to load.
+  /// Label above the theme segmented button on the S-17 settings screen (04_UI_UX_SPEC.md, section 9).
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingsThemeLabel;
+
+  /// Theme segment: follow the OS light/dark setting (AppTheme.system).
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get settingsThemeSystem;
+
+  /// Theme segment: always light (AppTheme.light).
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get settingsThemeLight;
+
+  /// Theme segment: always dark (AppTheme.dark).
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get settingsThemeDark;
+
+  /// Error state on the S-17 settings screen (and anywhere else appSettingsProvider is watched) when the settings row fails to load.
   ///
   /// In en, this message translates to:
   /// **'Couldn\'t load settings'**
