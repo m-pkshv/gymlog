@@ -671,4 +671,48 @@ void main() {
       await _unmountAndFlush(tester);
     },
   );
+
+  group('"Add localization" (Stage 10, DM 12)', () {
+    testWidgets(
+      'adding a localization while creating an exercise saves it alongside the canonical record',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 5000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(FloatingActionButton));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(find.byType(TextField).first, 'Squat');
+        await tester.tap(find.text('Add localization'));
+        await tester.pumpAndSettle();
+
+        // The new entry's own name field, scoped to the Card it lives in --
+        // the main form already has its own "Name" TextField.
+        final localizationNameField = find.descendant(
+          of: find.byType(Card),
+          matching: find.byType(TextField),
+        ).first;
+        await tester.enterText(localizationNameField, 'Приседания');
+        await tester.pump();
+        await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+        await tester.pumpAndSettle();
+
+        final exercise = await (db.select(
+          db.exercises,
+        )..where((e) => e.name.equals('Squat'))).getSingle();
+        final localizations = await ExerciseRepositoryImpl(
+          db,
+        ).getLocalizations(exercise.id);
+        expect(localizations, hasLength(1));
+        expect(localizations.single.locale, 'ru');
+        expect(localizations.single.name, 'Приседания');
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+  });
 }

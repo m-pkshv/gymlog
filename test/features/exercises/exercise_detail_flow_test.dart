@@ -398,4 +398,47 @@ void main() {
       await _unmountAndFlush(tester);
     },
   );
+
+  testWidgets(
+    'removing an existing localization entry while editing clears it on save '
+    '(Stage 10, DM 12, "Add localization")',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 5000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final id = await _insertExercise(db, id: 'squat', name: 'Squat');
+      await db
+          .into(db.exerciseL10n)
+          .insert(
+            ExerciseL10nCompanion.insert(
+              exerciseId: id,
+              locale: 'ru',
+              name: 'Приседания',
+            ),
+          );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Edit'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Приседания'), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      final localizations = await (db.select(
+        db.exerciseL10n,
+      )..where((l) => l.exerciseId.equals(id))).get();
+      expect(localizations, isEmpty);
+
+      await _unmountAndFlush(tester);
+    },
+  );
 }

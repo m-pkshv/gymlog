@@ -319,6 +319,26 @@
   "@exerciseYoutubeUrlWarning": {
     "description": "Non-blocking hint under the YouTube field when the URL doesn't look like a youtube.com/youtu.be link (DM 6.1: a soft rule, saving stays allowed)."
   },
+  "exerciseLocalizationSectionTitle": "Localization",
+  "@exerciseLocalizationSectionTitle": {
+    "description": "Section heading on the exercise form (S-08) for the list of per-language name/description translations (DM 12, Stage 10)."
+  },
+  "exerciseAddLocalizationAction": "Add localization",
+  "@exerciseAddLocalizationAction": {
+    "description": "Button that adds one more translation entry to the exercise form's localization section (DM 12, Stage 10)."
+  },
+  "exerciseLocalizationLanguageLabel": "Language",
+  "@exerciseLocalizationLanguageLabel": {
+    "description": "Label for the language dropdown within one localization entry on the exercise form (DM 12, Stage 10)."
+  },
+  "exerciseRemoveLocalizationAction": "Remove translation",
+  "@exerciseRemoveLocalizationAction": {
+    "description": "Tooltip/semantic label for the icon button that removes one localization entry from the exercise form (DM 12, Stage 10)."
+  },
+  "exerciseLocalizationNameRequiredError": "Enter a translated name or remove this entry",
+  "@exerciseLocalizationNameRequiredError": {
+    "description": "Validation message when a localization entry's name is left empty on submit (DM 12, Stage 10)."
+  },
   "exerciseNotSpecified": "Not specified",
   "@exerciseNotSpecified": {
     "description": "\"No selection\" option for the optional primary muscle/equipment dropdowns on the exercise form (S-08)."

@@ -322,6 +322,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get exerciseYoutubeUrlWarning => 'Не похоже на ссылку YouTube';
 
   @override
+  String get exerciseLocalizationSectionTitle => 'Локализация';
+
+  @override
+  String get exerciseAddLocalizationAction => 'Добавить локализацию';
+
+  @override
+  String get exerciseLocalizationLanguageLabel => 'Язык';
+
+  @override
+  String get exerciseRemoveLocalizationAction => 'Удалить перевод';
+
+  @override
+  String get exerciseLocalizationNameRequiredError =>
+      'Введите переведённое название или удалите эту запись';
+
+  @override
   String get exerciseNotSpecified => 'Не указано';
 
   @override

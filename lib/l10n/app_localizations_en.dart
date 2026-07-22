@@ -320,6 +320,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exerciseYoutubeUrlWarning => 'Doesn\'t look like a YouTube link';
 
   @override
+  String get exerciseLocalizationSectionTitle => 'Localization';
+
+  @override
+  String get exerciseAddLocalizationAction => 'Add localization';
+
+  @override
+  String get exerciseLocalizationLanguageLabel => 'Language';
+
+  @override
+  String get exerciseRemoveLocalizationAction => 'Remove translation';
+
+  @override
+  String get exerciseLocalizationNameRequiredError =>
+      'Enter a translated name or remove this entry';
+
+  @override
   String get exerciseNotSpecified => 'Not specified';
 
   @override

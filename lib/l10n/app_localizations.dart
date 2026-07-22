@@ -698,6 +698,36 @@ abstract class AppLocalizations {
   /// **'Doesn\'t look like a YouTube link'**
   String get exerciseYoutubeUrlWarning;
 
+  /// Section heading on the exercise form (S-08) for the list of per-language name/description translations (DM 12, Stage 10).
+  ///
+  /// In en, this message translates to:
+  /// **'Localization'**
+  String get exerciseLocalizationSectionTitle;
+
+  /// Button that adds one more translation entry to the exercise form's localization section (DM 12, Stage 10).
+  ///
+  /// In en, this message translates to:
+  /// **'Add localization'**
+  String get exerciseAddLocalizationAction;
+
+  /// Label for the language dropdown within one localization entry on the exercise form (DM 12, Stage 10).
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get exerciseLocalizationLanguageLabel;
+
+  /// Tooltip/semantic label for the icon button that removes one localization entry from the exercise form (DM 12, Stage 10).
+  ///
+  /// In en, this message translates to:
+  /// **'Remove translation'**
+  String get exerciseRemoveLocalizationAction;
+
+  /// Validation message when a localization entry's name is left empty on submit (DM 12, Stage 10).
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a translated name or remove this entry'**
+  String get exerciseLocalizationNameRequiredError;
+
   /// "No selection" option for the optional primary muscle/equipment dropdowns on the exercise form (S-08).
   ///
   /// In en, this message translates to:

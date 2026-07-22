@@ -10,6 +10,30 @@ import '../../l10n/app_localizations.dart';
 import 'exercise_type_labels.dart';
 import 'reference_data_labels.dart';
 
+/// The two locales `ExerciseL10n` supports (DM 12) -- same set the table's
+/// `CHECK` constraint enforces, kept as plain strings rather than mapped
+/// through `AppLocale` since `system` isn't a valid translation target.
+const _supportedLocalizationCodes = ['ru', 'en'];
+
+/// One row in the exercise form's "Add localization" section (S-08,
+/// Stage 10): an in-progress or already-saved translation for one locale.
+/// Not written until [CreateExerciseScreen] submits -- mirrors the rest of
+/// the form, which also only writes on "Create"/"Save".
+class _LocalizationEntry {
+  _LocalizationEntry({required this.locale, String name = '', String description = ''})
+    : nameController = TextEditingController(text: name),
+      descriptionController = TextEditingController(text: description);
+
+  String locale;
+  final TextEditingController nameController;
+  final TextEditingController descriptionController;
+
+  void dispose() {
+    nameController.dispose();
+    descriptionController.dispose();
+  }
+}
+
 /// S-08 form (06_DATA_MODEL.md, section 6.1), full field set: name, type,
 /// primary/secondary muscle groups, equipment, effort metric (strength
 /// only), description, YouTube link. Only [name] is required.
@@ -42,6 +66,8 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
   bool _isSubmitting = false;
   bool _typeLocked = false;
   String? _nameError;
+  final List<_LocalizationEntry> _localizations = [];
+  Set<String> _initialLocales = const {};
 
   bool get _isEditing => widget.exercise != null;
 
@@ -59,6 +85,7 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
       _equipmentId = exercise.equipmentId;
       _secondaryMuscleGroupIds.addAll(exercise.secondaryMuscleGroupIds);
       _loadTypeLock(exercise.id);
+      _loadLocalizations(exercise.id);
     }
   }
 
@@ -69,11 +96,33 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
     if (mounted) setState(() => _typeLocked = !canChange);
   }
 
+  Future<void> _loadLocalizations(String exerciseId) async {
+    final localizations = await ref
+        .read(exerciseRepositoryProvider)
+        .getLocalizations(exerciseId);
+    if (!mounted) return;
+    setState(() {
+      _initialLocales = localizations.map((l) => l.locale).toSet();
+      _localizations.addAll(
+        localizations.map(
+          (l) => _LocalizationEntry(
+            locale: l.locale,
+            name: l.name,
+            description: l.description ?? '',
+          ),
+        ),
+      );
+    });
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
     _youtubeUrlController.dispose();
+    for (final entry in _localizations) {
+      entry.dispose();
+    }
     super.dispose();
   }
 
@@ -90,6 +139,50 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
     return uri.host == 'youtube.com' ||
         uri.host == 'www.youtube.com' ||
         uri.host == 'youtu.be';
+  }
+
+  void _addLocalization() {
+    final used = _localizations.map((e) => e.locale).toSet();
+    final nextLocale = _supportedLocalizationCodes.firstWhere(
+      (code) => !used.contains(code),
+      orElse: () => _supportedLocalizationCodes.first,
+    );
+    setState(() => _localizations.add(_LocalizationEntry(locale: nextLocale)));
+  }
+
+  void _removeLocalizationEntry(_LocalizationEntry entry) {
+    setState(() {
+      _localizations.remove(entry);
+      entry.dispose();
+    });
+  }
+
+  /// Upserts every entry with a non-empty name and removes any locale that
+  /// was present when the form opened but no longer has one (deleted, or
+  /// cleared to empty) -- DM 12. Called after the main exercise
+  /// create/update already succeeded, using its (possibly new) id.
+  Future<void> _saveLocalizations(String exerciseId) async {
+    final repository = ref.read(exerciseRepositoryProvider);
+    final currentLocales = <String>{};
+    for (final entry in _localizations) {
+      final name = entry.nameController.text.trim();
+      if (name.isEmpty) continue;
+      currentLocales.add(entry.locale);
+      await repository.setLocalization(
+        exerciseId: exerciseId,
+        locale: entry.locale,
+        name: name,
+        description: entry.descriptionController.text.trim().isEmpty
+            ? null
+            : entry.descriptionController.text.trim(),
+      );
+    }
+    for (final locale in _initialLocales.difference(currentLocales)) {
+      await repository.removeLocalization(
+        exerciseId: exerciseId,
+        locale: locale,
+      );
+    }
   }
 
   Future<void> _submit() async {
@@ -122,6 +215,7 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
               effortMetric: effortMetric,
               secondaryMuscleGroupIds: _secondaryMuscleGroupIds.toList(),
             );
+        await _saveLocalizations(created.id);
         if (mounted) context.pop(created);
         return;
       }
@@ -139,6 +233,10 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
             effortMetric: effortMetric,
             secondaryMuscleGroupIds: _secondaryMuscleGroupIds.toList(),
           );
+      final updated = result.getOrNull();
+      if (updated != null) {
+        await _saveLocalizations(updated.id);
+      }
       if (!mounted) return;
       result.fold(
         (updated) => context.pop(updated),
@@ -340,6 +438,38 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
                     ),
                     onChanged: (_) => setState(() {}),
                   ),
+                  const SizedBox(height: 24),
+                  Text(
+                    l10n.exerciseLocalizationSectionTitle,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  for (final entry in _localizations)
+                    _LocalizationEntryCard(
+                      key: ObjectKey(entry),
+                      entry: entry,
+                      // Every other entry's locale is off-limits here so
+                      // two entries can never target the same translation.
+                      availableLocales: _supportedLocalizationCodes
+                          .where(
+                            (code) =>
+                                code == entry.locale ||
+                                !_localizations.any((e) => e.locale == code),
+                          )
+                          .toList(),
+                      onLocaleChanged: (locale) =>
+                          setState(() => entry.locale = locale),
+                      onRemove: () => _removeLocalizationEntry(entry),
+                      onChanged: () => setState(() {}),
+                    ),
+                  if (_localizations.length < _supportedLocalizationCodes.length)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: OutlinedButton.icon(
+                        onPressed: _addLocalization,
+                        icon: const Icon(Icons.add),
+                        label: Text(l10n.exerciseAddLocalizationAction),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -354,6 +484,104 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : Text(_isEditing ? l10n.actionSave : l10n.actionCreate),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _localeLabel(AppLocalizations l10n, String code) {
+  switch (code) {
+    case 'ru':
+      return l10n.settingsLanguageRu;
+    case 'en':
+      return l10n.settingsLanguageEn;
+  }
+  return code;
+}
+
+/// One row of the exercise form's "Add localization" section (DM 12,
+/// Stage 10): a language picker plus that language's name/description,
+/// with a button to drop the entry. Not written until the form submits.
+class _LocalizationEntryCard extends StatelessWidget {
+  const _LocalizationEntryCard({
+    super.key,
+    required this.entry,
+    required this.availableLocales,
+    required this.onLocaleChanged,
+    required this.onRemove,
+    required this.onChanged,
+  });
+
+  final _LocalizationEntry entry;
+  final List<String> availableLocales;
+  final ValueChanged<String> onLocaleChanged;
+  final VoidCallback onRemove;
+  final VoidCallback onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final nameMissing = entry.nameController.text.trim().isEmpty;
+
+    return Card(
+      margin: const EdgeInsets.only(top: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    initialValue: entry.locale,
+                    decoration: InputDecoration(
+                      labelText: l10n.exerciseLocalizationLanguageLabel,
+                    ),
+                    items: [
+                      for (final code in availableLocales)
+                        DropdownMenuItem(
+                          value: code,
+                          child: Text(_localeLabel(l10n, code)),
+                        ),
+                    ],
+                    onChanged: (code) {
+                      if (code != null) onLocaleChanged(code);
+                    },
+                  ),
+                ),
+                IconButton(
+                  onPressed: onRemove,
+                  icon: const Icon(Icons.delete_outline),
+                  tooltip: l10n.exerciseRemoveLocalizationAction,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: entry.nameController,
+              maxLength: 80,
+              decoration: InputDecoration(
+                labelText: l10n.exerciseNameLabel,
+                helperText: nameMissing
+                    ? l10n.exerciseLocalizationNameRequiredError
+                    : null,
+              ),
+              onChanged: (_) => onChanged(),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: entry.descriptionController,
+              maxLines: 3,
+              maxLength: 2000,
+              decoration: InputDecoration(
+                labelText: l10n.exerciseDescriptionLabel,
+                alignLabelWithHint: true,
               ),
             ),
           ],
