@@ -12,13 +12,14 @@ class MockFlutterLocalNotificationsPlugin extends Mock
 /// channel mock -- they're pure `SharedPreferences` reads/writes
 /// (`SharedPreferences.setMockInitialValues`, a standard test utility the
 /// package ships for exactly this). The plugin-facing methods
-/// (initialize/requestPermission/schedule/cancel) call
-/// `resolvePlatformSpecificImplementation`, which dispatches on the actual
-/// host platform -- meaningfully verifying those needs a real device
-/// (same accepted-risk category as the rest of this project's Android/iOS
-/// gaps); `workout_editor_flow_test.dart`'s "notifications" group instead
-/// verifies the *screen's* orchestration logic by mocking
-/// `NotificationService` as a whole.
+/// (initialize/requestPermission/schedule/cancel/openNotificationSettings)
+/// call `resolvePlatformSpecificImplementation` or `permission_handler`'s
+/// own platform channel, which dispatch on the actual host platform --
+/// meaningfully verifying those needs a real device (same accepted-risk
+/// category as the rest of this project's Android/iOS gaps);
+/// `workout_editor_flow_test.dart`'s "notifications" group and
+/// `settings_screen_test.dart` instead verify the *screen's* orchestration
+/// logic by mocking `NotificationService` as a whole.
 void main() {
   late NotificationService service;
   late MockFlutterLocalNotificationsPlugin plugin;

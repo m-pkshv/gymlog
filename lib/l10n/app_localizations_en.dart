@@ -495,6 +495,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsRestTimerAutoStartLabel => 'Auto-start rest timer';
 
   @override
+  String get settingsNotificationsLabel => 'Notifications';
+
+  @override
+  String get settingsNotificationsEnabled => 'Enabled';
+
+  @override
+  String get settingsNotificationsDisabled => 'Disabled';
+
+  @override
+  String get settingsNotificationsOpenSettingsAction => 'Settings';
+
+  @override
+  String get settingsNotificationsOpenSettingsError =>
+      'Couldn\'t open system settings';
+
+  @override
   String get settingsLoadError => 'Couldn\'t load settings';
 
   @override

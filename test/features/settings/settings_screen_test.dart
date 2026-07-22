@@ -8,10 +8,24 @@ import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart'
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/features/settings/screen.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
+import 'package:gymlog/services/notification_service.dart';
+import 'package:mocktail/mocktail.dart';
 
-Widget _appUnderTest(AppDatabase db) {
+/// `NotificationService.openNotificationSettings` dispatches through
+/// `permission_handler`'s own platform channel -- meaningfully verifying it
+/// needs a real device (same accepted-risk category as the rest of
+/// `NotificationService`, see `notification_service_test.dart`). Mocked
+/// here so these widget tests verify the *screen's* orchestration
+/// (status text, button wiring) without ever touching the real plugin.
+class MockNotificationService extends Mock implements NotificationService {}
+
+Widget _appUnderTest(AppDatabase db, {NotificationService? notificationService}) {
   return ProviderScope(
-    overrides: [appDatabaseProvider.overrideWithValue(db)],
+    overrides: [
+      appDatabaseProvider.overrideWithValue(db),
+      if (notificationService != null)
+        notificationServiceProvider.overrideWithValue(notificationService),
+    ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -257,5 +271,106 @@ void main() {
     expect(row.restTimerAutoStart, isFalse);
 
     await _unmountAndFlush(tester);
+  });
+
+  group('notifications (S-17)', () {
+    late MockNotificationService notificationService;
+
+    setUp(() {
+      notificationService = MockNotificationService();
+    });
+
+    testWidgets('shows "Enabled" when notifications are enabled', (
+      tester,
+    ) async {
+      when(
+        () => notificationService.areNotificationsEnabled(),
+      ).thenAnswer((_) async => true);
+      await AppSettingsRepositoryImpl(db).ensureInitialized();
+      await tester.pumpWidget(
+        _appUnderTest(db, notificationService: notificationService),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Enabled'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets('shows "Disabled" when notifications are disabled', (
+      tester,
+    ) async {
+      when(
+        () => notificationService.areNotificationsEnabled(),
+      ).thenAnswer((_) async => false);
+      await AppSettingsRepositoryImpl(db).ensureInitialized();
+      await tester.pumpWidget(
+        _appUnderTest(db, notificationService: notificationService),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Disabled'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets(
+      'tapping "Settings" on the notifications row opens OS settings via '
+      'NotificationService, not a real platform call',
+      (tester) async {
+        when(
+          () => notificationService.areNotificationsEnabled(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => notificationService.openNotificationSettings(),
+        ).thenAnswer((_) async => true);
+        // The notifications row is below the default 800x600 test
+        // viewport's fold -- a taller viewport is needed to actually hit
+        // test the button (documented CLAUDE.md finding).
+        tester.view.physicalSize = const Size(1080, 3000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        await AppSettingsRepositoryImpl(db).ensureInitialized();
+        await tester.pumpWidget(
+          _appUnderTest(db, notificationService: notificationService),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.widgetWithText(TextButton, 'Settings'));
+        await tester.pumpAndSettle();
+
+        verify(() => notificationService.openNotificationSettings()).called(1);
+        expect(find.text("Couldn't open system settings"), findsNothing);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'shows an error snackbar when opening OS settings fails',
+      (tester) async {
+        when(
+          () => notificationService.areNotificationsEnabled(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => notificationService.openNotificationSettings(),
+        ).thenAnswer((_) async => false);
+        tester.view.physicalSize = const Size(1080, 3000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        await AppSettingsRepositoryImpl(db).ensureInitialized();
+        await tester.pumpWidget(
+          _appUnderTest(db, notificationService: notificationService),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.widgetWithText(TextButton, 'Settings'));
+        await tester.pumpAndSettle();
+
+        expect(find.text("Couldn't open system settings"), findsOneWidget);
+
+        await _unmountAndFlush(tester);
+      },
+    );
   });
 }

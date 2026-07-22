@@ -1040,6 +1040,36 @@ abstract class AppLocalizations {
   /// **'Auto-start rest timer'**
   String get settingsRestTimerAutoStartLabel;
 
+  /// Title of the S-17 notifications row (04_UI_UX_SPEC.md, section 5: status + link to OS settings).
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get settingsNotificationsLabel;
+
+  /// Notifications row subtitle when NotificationService.areNotificationsEnabled() is true.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get settingsNotificationsEnabled;
+
+  /// Notifications row subtitle when NotificationService.areNotificationsEnabled() is false.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get settingsNotificationsDisabled;
+
+  /// Button on the S-17 notifications row that opens the OS app-settings screen via permission_handler.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsNotificationsOpenSettingsAction;
+
+  /// Snackbar shown when NotificationService.openNotificationSettings() reports it could not open the OS settings screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open system settings'**
+  String get settingsNotificationsOpenSettingsError;
+
   /// Error state on the S-17 settings screen (and anywhere else appSettingsProvider is watched) when the settings row fails to load.
   ///
   /// In en, this message translates to:

@@ -6,13 +6,13 @@ import '../../core/units/unit_converter.dart';
 import '../../domain/enums.dart';
 import '../../l10n/app_localizations.dart';
 
-/// S-17 settings screen (04_UI_UX_SPEC.md, section 5). Stage 9, step 3:
+/// S-17 settings screen (04_UI_UX_SPEC.md, section 5). Stage 9, step 4:
 /// theme + language selectors, unit system/"show tags" (moved here from the
 /// temporary switches on the "More" placeholder,
 /// `ASSUMPTION(temp-show-tags-toggle)` / `ASSUMPTION(temp-unit-system-toggle)`,
-/// resolved at step 1), and the default rest-timer seconds/auto-start
-/// controls (backend from Stage 4, TS 7.1/7.2). Notifications status and
-/// "About" land in later steps of this stage.
+/// resolved at step 1), default rest-timer seconds/auto-start (backend from
+/// Stage 4, TS 7.1/7.2), and the notifications status row + link to the OS
+/// settings screen. "About" lands in a later step of this stage.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -77,6 +77,8 @@ class SettingsScreen extends ConsumerWidget {
                   .read(appSettingsRepositoryProvider)
                   .setRestTimerAutoStart(value),
             ),
+            const Divider(height: 33),
+            const _NotificationsSection(),
           ],
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -212,6 +214,58 @@ class _RestTimerSecondsFieldState
           errorText: _error,
         ),
         onSubmitted: (_) => _commit(),
+      ),
+    );
+  }
+}
+
+/// Notifications status + "open OS settings" link (S-17, 04_UI_UX_SPEC.md,
+/// section 5). Reuses `notificationsEnabledProvider`, the same one already
+/// driving the "Уведомления выключены" hint on the in-workout rest-timer
+/// bar (Stage 4, TS 7.3) -- one source of truth for the enabled/disabled
+/// status, not a second poll of the plugin.
+class _NotificationsSection extends ConsumerWidget {
+  const _NotificationsSection();
+
+  Future<void> _openSettings(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    var opened = false;
+    try {
+      opened = await ref
+          .read(notificationServiceProvider)
+          .openNotificationSettings();
+    } catch (error, stackTrace) {
+      ref
+          .read(loggerProvider)
+          .error(
+            'Failed to open notification settings',
+            error: error,
+            stackTrace: stackTrace,
+          );
+    }
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.settingsNotificationsOpenSettingsError)),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final enabled = ref
+        .watch(notificationsEnabledProvider)
+        .maybeWhen(data: (value) => value, orElse: () => true);
+    return ListTile(
+      title: Text(l10n.settingsNotificationsLabel),
+      subtitle: Text(
+        enabled
+            ? l10n.settingsNotificationsEnabled
+            : l10n.settingsNotificationsDisabled,
+      ),
+      trailing: TextButton(
+        onPressed: () => _openSettings(context, ref),
+        child: Text(l10n.settingsNotificationsOpenSettingsAction),
       ),
     );
   }

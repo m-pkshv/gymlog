@@ -547,6 +547,26 @@
   "@settingsRestTimerAutoStartLabel": {
     "description": "Switch on the S-17 settings screen for AppSettings.restTimerAutoStart (DM 6.12)."
   },
+  "settingsNotificationsLabel": "Notifications",
+  "@settingsNotificationsLabel": {
+    "description": "Title of the S-17 notifications row (04_UI_UX_SPEC.md, section 5: status + link to OS settings)."
+  },
+  "settingsNotificationsEnabled": "Enabled",
+  "@settingsNotificationsEnabled": {
+    "description": "Notifications row subtitle when NotificationService.areNotificationsEnabled() is true."
+  },
+  "settingsNotificationsDisabled": "Disabled",
+  "@settingsNotificationsDisabled": {
+    "description": "Notifications row subtitle when NotificationService.areNotificationsEnabled() is false."
+  },
+  "settingsNotificationsOpenSettingsAction": "Settings",
+  "@settingsNotificationsOpenSettingsAction": {
+    "description": "Button on the S-17 notifications row that opens the OS app-settings screen via permission_handler."
+  },
+  "settingsNotificationsOpenSettingsError": "Couldn't open system settings",
+  "@settingsNotificationsOpenSettingsError": {
+    "description": "Snackbar shown when NotificationService.openNotificationSettings() reports it could not open the OS settings screen."
+  },
   "settingsLoadError": "Couldn't load settings",
   "@settingsLoadError": {
     "description": "Error state on the S-17 settings screen (and anywhere else appSettingsProvider is watched) when the settings row fails to load."

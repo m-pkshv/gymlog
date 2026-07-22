@@ -60,6 +60,10 @@ dependencies:
   archive: ^4.0.9
   csv: ^8.0.0
   uuid: ^4.6.0
+  # Opens the OS notification-settings screen from S-17 (04_UI_UX_SPEC.md,
+  # section 5: "Уведомления" -- статус + переход в системные настройки) --
+  # owner-approved 2026-07-22.
+  permission_handler: ^12.0.3
 
 dev_dependencies:
   flutter_test:

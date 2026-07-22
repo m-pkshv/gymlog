@@ -499,6 +499,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsRestTimerAutoStartLabel => 'Автозапуск таймера отдыха';
 
   @override
+  String get settingsNotificationsLabel => 'Уведомления';
+
+  @override
+  String get settingsNotificationsEnabled => 'Включены';
+
+  @override
+  String get settingsNotificationsDisabled => 'Выключены';
+
+  @override
+  String get settingsNotificationsOpenSettingsAction => 'Настройки';
+
+  @override
+  String get settingsNotificationsOpenSettingsError =>
+      'Не удалось открыть системные настройки';
+
+  @override
   String get settingsLoadError => 'Не удалось загрузить настройки';
 
   @override

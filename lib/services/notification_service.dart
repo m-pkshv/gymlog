@@ -1,4 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart'
+    as permission_handler;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
@@ -134,4 +136,12 @@ class NotificationService {
 
   Future<void> cancelRestTimerEndNotification() =>
       _plugin.cancel(id: _restTimerNotificationId);
+
+  /// Opens the OS-level app settings screen (S-17, 04_UI_UX_SPEC.md,
+  /// section 5: "Уведомления" -- статус + переход в системные настройки),
+  /// via `permission_handler`, since neither platform exposes a
+  /// notification-specific deep link through `flutter_local_notifications`
+  /// itself. Returns whether a settings screen could be opened at all.
+  Future<bool> openNotificationSettings() =>
+      permission_handler.openAppSettings();
 }
