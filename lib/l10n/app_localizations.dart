@@ -998,6 +998,30 @@ abstract class AppLocalizations {
   /// **'Dark'**
   String get settingsThemeDark;
 
+  /// Label above the language segmented button on the S-17 settings screen (04_UI_UX_SPEC.md, section 5).
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsLanguageLabel;
+
+  /// Language segment: follow the OS language, resolved against AppLocalizations.supportedLocales (AppLocale.system).
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get settingsLanguageSystem;
+
+  /// Language segment: pin the app to Russian (AppLocale.ru). Shown in Russian regardless of the app's current language, per convention -- language names name themselves, they aren't translated.
+  ///
+  /// In en, this message translates to:
+  /// **'Русский'**
+  String get settingsLanguageRu;
+
+  /// Language segment: pin the app to English (AppLocale.en). Shown in English regardless of the app's current language, same convention as settingsLanguageRu.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get settingsLanguageEn;
+
   /// Error state on the S-17 settings screen (and anywhere else appSettingsProvider is watched) when the settings row fails to load.
   ///
   /// In en, this message translates to:

@@ -4,8 +4,7 @@
 ///
 /// Only the enums needed by the entities modeled so far (Exercise, Workout
 /// aggregate, MeasurementType/BodyMeasurement, PersonalRecord, AppSettings)
-/// are defined here. `AppLocale` is added alongside the language switcher
-/// (Stage 9, later step). `UnitSystem` already lives in
+/// are defined here. `UnitSystem` already lives in
 /// `core/units/unit_converter.dart` (D-5) and is reused as-is.
 library;
 
@@ -59,3 +58,11 @@ enum ImportExportOperationStatus { inProgress, success, failed }
 /// `ThemeMode` in `app/theme.dart` rather than reused directly, so this
 /// (Flutter-free) domain layer stays testable without `package:flutter`.
 enum AppTheme { system, light, dark }
+
+/// `AppSettings.locale` (06_DATA_MODEL.md, section 6.12; 04_UI_UX_SPEC.md,
+/// section 5, S-17). `system` follows the OS language (falling back to
+/// `AppLocalizations.supportedLocales`' own resolution); `ru`/`en` pin the
+/// app to one regardless of the OS. Mapped to Flutter's `Locale` in
+/// `app/locale.dart`, kept out of this Flutter-free domain layer for the
+/// same reason as `AppTheme`.
+enum AppLocale { system, ru, en }

@@ -11,6 +11,7 @@ extension AppSettingsRowMapper on drift.AppSettingsRow {
       restTimerAutoStart: restTimerAutoStart,
       unitSystem: UnitSystem.values.byName(unitSystem),
       theme: AppTheme.values.byName(theme),
+      locale: AppLocale.values.byName(locale),
       updatedAt: DateTime.parse(updatedAt),
     );
   }

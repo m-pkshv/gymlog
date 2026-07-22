@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymlog/app/providers.dart';
 import 'package:gymlog/data/database.dart' as drift;
 import 'package:gymlog/data/repositories_impl/active_workout_repository_impl.dart';
+import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/domain/models/active_workout_state.dart';
@@ -102,6 +103,23 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(WorkoutEditorScreen), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'AppSettings.locale = ru switches the rendered language on the fly '
+    '(S-17, Stage 9)',
+    (tester) async {
+      await AppSettingsRepositoryImpl(db).ensureInitialized();
+      await AppSettingsRepositoryImpl(db).setLocale(AppLocale.ru);
+
+      await tester.pumpWidget(appUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Сегодня'), findsWidgets);
+      expect(find.text('Today'), findsNothing);
 
       await _unmountAndFlush(tester);
     },

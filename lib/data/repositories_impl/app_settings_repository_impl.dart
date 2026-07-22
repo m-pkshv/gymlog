@@ -74,4 +74,16 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       ),
     );
   }
+
+  @override
+  Future<void> setLocale(AppLocale value) async {
+    await (_db.update(
+      _db.appSettingsTable,
+    )..where((t) => t.id.equals(_singletonId))).write(
+      drift.AppSettingsTableCompanion(
+        locale: Value(value.name),
+        updatedAt: Value(DateTime.now().toUtc().toIso8601String()),
+      ),
+    );
+  }
 }

@@ -519,6 +519,22 @@
   "@settingsThemeDark": {
     "description": "Theme segment: always dark (AppTheme.dark)."
   },
+  "settingsLanguageLabel": "Language",
+  "@settingsLanguageLabel": {
+    "description": "Label above the language segmented button on the S-17 settings screen (04_UI_UX_SPEC.md, section 5)."
+  },
+  "settingsLanguageSystem": "System",
+  "@settingsLanguageSystem": {
+    "description": "Language segment: follow the OS language, resolved against AppLocalizations.supportedLocales (AppLocale.system)."
+  },
+  "settingsLanguageRu": "Русский",
+  "@settingsLanguageRu": {
+    "description": "Language segment: pin the app to Russian (AppLocale.ru). Shown in Russian regardless of the app's current language, per convention -- language names name themselves, they aren't translated."
+  },
+  "settingsLanguageEn": "English",
+  "@settingsLanguageEn": {
+    "description": "Language segment: pin the app to English (AppLocale.en). Shown in English regardless of the app's current language, same convention as settingsLanguageRu."
+  },
   "settingsLoadError": "Couldn't load settings",
   "@settingsLoadError": {
     "description": "Error state on the S-17 settings screen (and anywhere else appSettingsProvider is watched) when the settings row fails to load."

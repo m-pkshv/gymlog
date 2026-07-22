@@ -66,4 +66,24 @@ void main() {
     await settings.setTheme(AppTheme.light);
     expect((await settings.watchSettings().first).theme, AppTheme.light);
   });
+
+  test(
+    'ensureInitialized creates the singleton row with locale = system by '
+    'default (DM 6.12, Stage 9)',
+    () async {
+      await settings.ensureInitialized();
+      final current = await settings.watchSettings().first;
+      expect(current.locale, AppLocale.system);
+    },
+  );
+
+  test('setLocale updates the row, reflected in watchSettings', () async {
+    await settings.ensureInitialized();
+
+    await settings.setLocale(AppLocale.ru);
+    expect((await settings.watchSettings().first).locale, AppLocale.ru);
+
+    await settings.setLocale(AppLocale.en);
+    expect((await settings.watchSettings().first).locale, AppLocale.en);
+  });
 }

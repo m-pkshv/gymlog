@@ -73,6 +73,39 @@ void main() {
     await _unmountAndFlush(tester);
   });
 
+  testWidgets('shows system language selected by default (DM 6.12)', (
+    tester,
+  ) async {
+    await AppSettingsRepositoryImpl(db).ensureInitialized();
+    await tester.pumpWidget(_appUnderTest(db));
+    await tester.pumpAndSettle();
+
+    final segmented = tester.widget<SegmentedButton<AppLocale>>(
+      find.byType(SegmentedButton<AppLocale>),
+    );
+    expect(segmented.selected, {AppLocale.system});
+
+    await _unmountAndFlush(tester);
+  });
+
+  testWidgets('tapping the "Русский" segment persists locale = ru', (
+    tester,
+  ) async {
+    await AppSettingsRepositoryImpl(db).ensureInitialized();
+    await tester.pumpWidget(_appUnderTest(db));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Русский'));
+    await tester.pumpAndSettle();
+
+    final row = await (db.select(
+      db.appSettingsTable,
+    )..where((t) => t.id.equals('singleton'))).getSingle();
+    expect(row.locale, 'ru');
+
+    await _unmountAndFlush(tester);
+  });
+
   testWidgets('shows the showTags switch on by default (DM 6.12)', (
     tester,
   ) async {

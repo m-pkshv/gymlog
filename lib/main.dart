@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'app/locale.dart';
 import 'app/providers.dart';
 import 'app/router.dart';
 import 'app/theme.dart';
@@ -72,16 +73,19 @@ class GymLogApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // `AppTheme.system` (table default) while the settings row hasn't
-    // loaded yet — same as the pre-Stage-9 hardcoded default, so there's no
-    // flash of the wrong theme before the first frame.
-    final theme =
-        ref.watch(appSettingsProvider).value?.theme ?? AppTheme.system;
+    // `AppTheme.system`/`AppLocale.system` (table defaults) while the
+    // settings row hasn't loaded yet — same as the pre-Stage-9 hardcoded
+    // theme default and the implicit OS-locale resolution, so there's no
+    // flash of the wrong theme/language before the first frame.
+    final settings = ref.watch(appSettingsProvider).value;
+    final theme = settings?.theme ?? AppTheme.system;
+    final locale = settings?.locale ?? AppLocale.system;
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       theme: buildLightTheme(),
       darkTheme: buildDarkTheme(),
       themeMode: flutterThemeMode(theme),
+      locale: flutterLocale(locale),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: appRouter,

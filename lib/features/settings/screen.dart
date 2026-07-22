@@ -6,11 +6,11 @@ import '../../core/units/unit_converter.dart';
 import '../../domain/enums.dart';
 import '../../l10n/app_localizations.dart';
 
-/// S-17 settings screen (04_UI_UX_SPEC.md, section 5). Stage 9, step 1:
-/// unit system + "show tags" (moved here from the temporary switches on the
-/// "More" placeholder, `ASSUMPTION(temp-show-tags-toggle)` /
-/// `ASSUMPTION(temp-unit-system-toggle)`, both now resolved) plus the new
-/// theme selector. Language, rest-timer defaults, notifications status and
+/// S-17 settings screen (04_UI_UX_SPEC.md, section 5). Stage 9, step 2:
+/// theme + language selectors, plus unit system/"show tags" (moved here
+/// from the temporary switches on the "More" placeholder,
+/// `ASSUMPTION(temp-show-tags-toggle)` / `ASSUMPTION(temp-unit-system-toggle)`,
+/// both resolved at step 1). Rest-timer defaults, notifications status and
 /// "About" land in later steps of this stage.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -24,36 +24,27 @@ class SettingsScreen extends ConsumerWidget {
       body: settingsAsync.when(
         data: (settings) => ListView(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(
-                l10n.settingsThemeLabel,
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
+            _SegmentedSection<AppTheme>(
+              label: l10n.settingsThemeLabel,
+              segments: {
+                AppTheme.system: l10n.settingsThemeSystem,
+                AppTheme.light: l10n.settingsThemeLight,
+                AppTheme.dark: l10n.settingsThemeDark,
+              },
+              selected: settings.theme,
+              onChanged: (value) =>
+                  ref.read(appSettingsRepositoryProvider).setTheme(value),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: SegmentedButton<AppTheme>(
-                segments: [
-                  ButtonSegment(
-                    value: AppTheme.system,
-                    label: Text(l10n.settingsThemeSystem),
-                  ),
-                  ButtonSegment(
-                    value: AppTheme.light,
-                    label: Text(l10n.settingsThemeLight),
-                  ),
-                  ButtonSegment(
-                    value: AppTheme.dark,
-                    label: Text(l10n.settingsThemeDark),
-                  ),
-                ],
-                selected: {settings.theme},
-                showSelectedIcon: false,
-                onSelectionChanged: (selected) => ref
-                    .read(appSettingsRepositoryProvider)
-                    .setTheme(selected.first),
-              ),
+            _SegmentedSection<AppLocale>(
+              label: l10n.settingsLanguageLabel,
+              segments: {
+                AppLocale.system: l10n.settingsLanguageSystem,
+                AppLocale.ru: l10n.settingsLanguageRu,
+                AppLocale.en: l10n.settingsLanguageEn,
+              },
+              selected: settings.locale,
+              onChanged: (value) =>
+                  ref.read(appSettingsRepositoryProvider).setLocale(value),
             ),
             const Divider(height: 33),
             SwitchListTile(
@@ -82,6 +73,48 @@ class SettingsScreen extends ConsumerWidget {
         error: (error, stackTrace) =>
             Center(child: Text(l10n.settingsLoadError)),
       ),
+    );
+  }
+}
+
+/// A labeled `SegmentedButton` (used for both theme and language on this
+/// screen — same shape, different enum). `segments` gives each value its
+/// label, in display order.
+class _SegmentedSection<T extends Object> extends StatelessWidget {
+  const _SegmentedSection({
+    required this.label,
+    required this.segments,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final String label;
+  final Map<T, String> segments;
+  final T selected;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Text(label, style: Theme.of(context).textTheme.labelLarge),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SegmentedButton<T>(
+            segments: [
+              for (final entry in segments.entries)
+                ButtonSegment(value: entry.key, label: Text(entry.value)),
+            ],
+            selected: {selected},
+            showSelectedIcon: false,
+            onSelectionChanged: (selected) => onChanged(selected.first),
+          ),
+        ),
+      ],
     );
   }
 }
