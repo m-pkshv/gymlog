@@ -1,6 +1,7 @@
 import '../enums.dart';
 import '../models/exercise.dart';
 import '../models/exercise_catalog_filter.dart';
+import '../models/exercise_localization.dart';
 
 /// Storage contract for the exercise catalog (06_DATA_MODEL.md, section
 /// 6.1). Implemented in the Data layer (D-13); services/UI depend only on
@@ -76,4 +77,27 @@ abstract class ExerciseRepository {
   /// source (03_TECHNICAL_SPEC.md, section 10.1: "архивные упражнения —
   /// экспортируются, история на них ссылается").
   Future<List<Exercise>> getAllForExport();
+
+  /// Every translation of [exerciseId] across all locales (DM 12) -- the
+  /// create/edit form's "Add localization" section reads this to prefill
+  /// existing entries. At most one row per locale (`'ru'`/`'en'`).
+  Future<List<ExerciseLocalization>> getLocalizations(String exerciseId);
+
+  /// Creates or overwrites the translation of [exerciseId] for [locale]
+  /// (DM 12, S-08 "Add localization"). The repository itself doesn't care
+  /// whose exercise this is -- the UI only offers this on the create/edit
+  /// form, which built-in exercises never reach (DM 10: they get "Archive"
+  /// only, no general "Edit").
+  Future<void> setLocalization({
+    required String exerciseId,
+    required String locale,
+    required String name,
+    String? description,
+  });
+
+  /// Removes [exerciseId]'s translation for [locale], if any.
+  Future<void> removeLocalization({
+    required String exerciseId,
+    required String locale,
+  });
 }

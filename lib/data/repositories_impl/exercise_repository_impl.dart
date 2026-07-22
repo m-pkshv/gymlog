@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/exercise.dart';
 import '../../domain/models/exercise_catalog_filter.dart';
+import '../../domain/models/exercise_localization.dart';
 import '../../domain/repositories/exercise_repository.dart';
 import '../database.dart' as drift;
 import '../mappers/exercise_mapper.dart';
@@ -263,6 +264,46 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
           ),
         )
         .toList();
+  }
+
+  @override
+  Future<List<ExerciseLocalization>> getLocalizations(
+    String exerciseId,
+  ) async {
+    final rows = await (_db.select(
+      _db.exerciseL10n,
+    )..where((l) => l.exerciseId.equals(exerciseId))).get();
+    return rows.map((row) => row.toDomain()).toList();
+  }
+
+  @override
+  Future<void> setLocalization({
+    required String exerciseId,
+    required String locale,
+    required String name,
+    String? description,
+  }) {
+    return _db
+        .into(_db.exerciseL10n)
+        .insertOnConflictUpdate(
+          drift.ExerciseL10nCompanion.insert(
+            exerciseId: exerciseId,
+            locale: locale,
+            name: name,
+            description: Value(description),
+          ),
+        );
+  }
+
+  @override
+  Future<void> removeLocalization({
+    required String exerciseId,
+    required String locale,
+  }) async {
+    await (_db.delete(_db.exerciseL10n)..where(
+          (l) => l.exerciseId.equals(exerciseId) & l.locale.equals(locale),
+        ))
+        .go();
   }
 
   Future<Map<String, List<String>>> _secondaryMuscleGroupIdsByExercise(

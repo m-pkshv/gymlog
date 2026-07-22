@@ -677,4 +677,108 @@ void main() {
       },
     );
   });
+
+  group('localization write (Stage 10, DM 12, "Add localization")', () {
+    test('getLocalizations is empty until a translation is added', () async {
+      final exercise = await repository.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+
+      expect(await repository.getLocalizations(exercise.id), isEmpty);
+    });
+
+    test('setLocalization creates a translation readable back via getLocalizations and watchAll', () async {
+      final exercise = await repository.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+
+      await repository.setLocalization(
+        exerciseId: exercise.id,
+        locale: 'ru',
+        name: 'Приседания',
+        description: 'Согните колени.',
+      );
+
+      final localizations = await repository.getLocalizations(exercise.id);
+      expect(localizations, hasLength(1));
+      expect(localizations.single.locale, 'ru');
+      expect(localizations.single.name, 'Приседания');
+      expect(localizations.single.description, 'Согните колени.');
+
+      final results = await repository.watchAll(locale: 'ru').first;
+      expect(results.single.name, 'Приседания');
+    });
+
+    test('setLocalization on an existing locale overwrites it rather than duplicating', () async {
+      final exercise = await repository.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+
+      await repository.setLocalization(
+        exerciseId: exercise.id,
+        locale: 'ru',
+        name: 'Присед',
+      );
+      await repository.setLocalization(
+        exerciseId: exercise.id,
+        locale: 'ru',
+        name: 'Приседания',
+        description: 'Согните колени.',
+      );
+
+      final localizations = await repository.getLocalizations(exercise.id);
+      expect(localizations, hasLength(1));
+      expect(localizations.single.name, 'Приседания');
+      expect(localizations.single.description, 'Согните колени.');
+    });
+
+    test('setLocalization can add both locales independently', () async {
+      final exercise = await repository.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+
+      await repository.setLocalization(
+        exerciseId: exercise.id,
+        locale: 'ru',
+        name: 'Приседания',
+      );
+      await repository.setLocalization(
+        exerciseId: exercise.id,
+        locale: 'en',
+        name: 'Back Squat',
+      );
+
+      final localizations = await repository.getLocalizations(exercise.id);
+      expect(
+        {for (final l in localizations) l.locale: l.name},
+        {'ru': 'Приседания', 'en': 'Back Squat'},
+      );
+    });
+
+    test('removeLocalization deletes only the given locale', () async {
+      final exercise = await repository.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      await repository.setLocalization(
+        exerciseId: exercise.id,
+        locale: 'ru',
+        name: 'Приседания',
+      );
+      await repository.setLocalization(
+        exerciseId: exercise.id,
+        locale: 'en',
+        name: 'Back Squat',
+      );
+
+      await repository.removeLocalization(exerciseId: exercise.id, locale: 'ru');
+
+      final localizations = await repository.getLocalizations(exercise.id);
+      expect(localizations.map((l) => l.locale), ['en']);
+    });
+  });
 }

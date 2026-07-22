@@ -11,6 +11,7 @@ import 'package:gymlog/data/repositories_impl/exercise_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/domain/models/exercise.dart';
 import 'package:gymlog/domain/models/exercise_catalog_filter.dart';
+import 'package:gymlog/domain/models/exercise_localization.dart';
 import 'package:gymlog/domain/repositories/exercise_repository.dart';
 import 'package:gymlog/features/exercises/create_exercise_screen.dart';
 import 'package:gymlog/features/exercises/screen.dart';
@@ -142,6 +143,29 @@ class _ToggleableExerciseRepository implements ExerciseRepository {
 
   @override
   Future<List<Exercise>> getAllForExport() => _real.getAllForExport();
+
+  @override
+  Future<List<ExerciseLocalization>> getLocalizations(String exerciseId) =>
+      _real.getLocalizations(exerciseId);
+
+  @override
+  Future<void> setLocalization({
+    required String exerciseId,
+    required String locale,
+    required String name,
+    String? description,
+  }) => _real.setLocalization(
+    exerciseId: exerciseId,
+    locale: locale,
+    name: name,
+    description: description,
+  );
+
+  @override
+  Future<void> removeLocalization({
+    required String exerciseId,
+    required String locale,
+  }) => _real.removeLocalization(exerciseId: exerciseId, locale: locale);
 }
 
 void main() {

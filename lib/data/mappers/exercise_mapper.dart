@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../domain/enums.dart';
 import '../../domain/models/exercise.dart';
+import '../../domain/models/exercise_localization.dart';
 import '../database.dart' as drift;
 
 /// Maps a drift `Exercises` row to the domain `Exercise` model
@@ -33,6 +34,17 @@ extension ExerciseRowMapper on drift.Exercise {
       createdAt: DateTime.parse(createdAt),
       updatedAt: DateTime.parse(updatedAt),
       isDeleted: isDeleted,
+    );
+  }
+}
+
+extension ExerciseL10nRowMapper on drift.ExerciseL10nData {
+  ExerciseLocalization toDomain() {
+    return ExerciseLocalization(
+      exerciseId: exerciseId,
+      locale: locale,
+      name: name,
+      description: description,
     );
   }
 }
