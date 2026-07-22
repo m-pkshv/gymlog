@@ -27,6 +27,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tabMore => 'More';
 
   @override
+  String get todayStartAction => 'Start';
+
+  @override
+  String get todayEmptyTitle => 'No workout planned today';
+
+  @override
+  String get todayLoadError => 'Couldn\'t load today\'s workout';
+
+  @override
   String get exercisesEmptyTitle => 'No exercises yet';
 
   @override

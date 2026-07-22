@@ -45,13 +45,24 @@ Future<void> showNewWorkoutMenu(BuildContext context, WidgetRef ref) async {
 
   switch (choice) {
     case _NewWorkoutChoice.scratch:
-      final workout = await ref
-          .read(workoutRepositoryProvider)
-          .createDraft(date: DateTime.now());
-      if (context.mounted) context.push('/history/workout/${workout.id}');
+      await createWorkoutFromScratchFlow(context, ref);
     case _NewWorkoutChoice.copy:
       context.push('/history/copy-source');
     case _NewWorkoutChoice.template:
       context.push('/history/template-source');
   }
+}
+
+/// "С нуля" (this menu's own choice, and the S-01 "Новая тренировка" quick
+/// action, Stage 9): creates today's draft and opens it directly, the same
+/// "create then open" pattern as `copyWorkoutFlow`/
+/// `createWorkoutFromTemplateFlow`.
+Future<void> createWorkoutFromScratchFlow(
+  BuildContext context,
+  WidgetRef ref,
+) async {
+  final workout = await ref
+      .read(workoutRepositoryProvider)
+      .createDraft(date: DateTime.now());
+  if (context.mounted) context.push('/history/workout/${workout.id}');
 }

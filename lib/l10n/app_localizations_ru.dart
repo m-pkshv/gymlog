@@ -27,6 +27,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get tabMore => 'Ещё';
 
   @override
+  String get todayStartAction => 'Начать';
+
+  @override
+  String get todayEmptyTitle => 'Тренировок пока не запланировано';
+
+  @override
+  String get todayLoadError => 'Не удалось загрузить тренировку';
+
+  @override
   String get exercisesEmptyTitle => 'Упражнений пока нет';
 
   @override

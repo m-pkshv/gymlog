@@ -134,6 +134,24 @@ abstract class AppLocalizations {
   /// **'More'**
   String get tabMore;
 
+  /// S-01 upcoming-workout card button: starts it directly (draft/planned -> inProgress, DM 6.4.1) via startWorkoutFlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get todayStartAction;
+
+  /// S-01 empty state (04_UI_UX_SPEC.md section 5: "приветствие") shown when there's no inProgress and no upcoming draft/planned workout.
+  ///
+  /// In en, this message translates to:
+  /// **'No workout planned today'**
+  String get todayEmptyTitle;
+
+  /// S-01 error state when inProgressWorkoutProvider or nextUpcomingWorkoutProvider fails to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load today\'s workout'**
+  String get todayLoadError;
+
   /// Empty state title on the Exercises list (S-06) when the catalog has no entries.
   ///
   /// In en, this message translates to:
