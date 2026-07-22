@@ -56,15 +56,24 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('No completed workouts yet'), findsOneWidget);
 
-    // FAB creates a draft and opens the editor (S-03).
+    // FAB opens the "from scratch / from template / copy" menu (Stage 3,
+    // S-01); "From scratch" creates a draft and opens the editor (S-03).
     await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('From scratch'));
     await tester.pumpAndSettle();
     expect(find.text('Draft'), findsOneWidget);
     expect(find.text('No exercises added yet'), findsOneWidget);
 
-    // Add an existing catalog exercise (seeded by SeedRunner, DM 12).
+    // Add an existing catalog exercise (seeded by SeedRunner, DM 12). The
+    // picker (Stage 1 scope: no search, unlike the main catalog's S-06) is a
+    // plain `ListView.builder` over the full 199-exercise seed (Stage 2),
+    // sorted newest-created-first with every seeded row sharing one
+    // timestamp -- so the target tile isn't guaranteed to already be built
+    // within the initial viewport and has to be scrolled into view first.
     await tester.tap(find.text('Add exercise'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Barbell Back Squat'), 300);
     await tester.tap(find.text('Barbell Back Squat'));
     await tester.pumpAndSettle();
     expect(find.text('Barbell Back Squat'), findsOneWidget);
@@ -108,12 +117,16 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Finish'));
     await tester.pumpAndSettle();
-    expect(find.text('Completed'), findsOneWidget);
 
-    // Back to History: the finished workout is listed with both exercises
-    // counted.
-    await tester.pageBack();
+    // Finishing replaces the editor with the summary screen (S-05, Stage 4
+    // step 6), not a "Completed" chip on the editor itself. "Done" returns
+    // to History.
+    expect(find.text('Workout summary'), findsOneWidget);
+    await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
+
+    // Back on History: the finished workout is listed with both exercises
+    // counted.
     expect(find.text('No completed workouts yet'), findsNothing);
     expect(find.textContaining('2 exercises'), findsOneWidget);
 
