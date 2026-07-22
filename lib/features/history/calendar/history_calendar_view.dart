@@ -149,17 +149,23 @@ class _MonthHeader extends StatelessWidget {
         ? rawLabel
         : rawLabel[0].toUpperCase() + rawLabel.substring(1);
 
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
+            tooltip: l10n.historyCalendarPreviousMonthTooltip,
             icon: const Icon(Icons.chevron_left),
             onPressed: onPrevious,
           ),
           Text(label, style: Theme.of(context).textTheme.titleMedium),
-          IconButton(icon: const Icon(Icons.chevron_right), onPressed: onNext),
+          IconButton(
+            tooltip: l10n.historyCalendarNextMonthTooltip,
+            icon: const Icon(Icons.chevron_right),
+            onPressed: onNext,
+          ),
         ],
       ),
     );
@@ -182,11 +188,20 @@ class _MonthGrid extends StatelessWidget {
   // A fixed row height (rather than GridView's width-driven aspect ratio)
   // keeps the grid's total height bounded (<= 7 rows * _rowHeight) no
   // matter how wide the screen is — an aspect-ratio-1 GridView cell grows
-  // with screen width and overflowed the column on wide viewports.
-  static const _rowHeight = 40.0;
+  // with screen width and overflowed the column on wide viewports. 48dp is
+  // also the UX 11 minimum touch target height (04_UI_UX_SPEC.md, section
+  // 11); the marker dot needs its own space below the day number too,
+  // which doubles as headroom against the 1.6x text-scale check (UX 9).
+  // Cell *width* on a 320dp-wide phone (04's minimum supported width,
+  // section 10) is ~43dp after padding — below 48dp is unavoidable for a
+  // 7-column grid at that width (7 × 48 alone exceeds 320dp); accepted the
+  // same way section 10 already accepts icon-only compression elsewhere on
+  // small screens.
+  static const _rowHeight = 48.0;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
     final monthStart = DateTime(month.year, month.month, 1);
     final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
@@ -213,42 +228,58 @@ class _MonthGrid extends StatelessWidget {
       final isToday = day == today;
       final isMarked = markedDays.contains(day);
 
-      return InkWell(
-        onTap: () => onSelectDay(day),
-        customBorder: const CircleBorder(),
-        child: Container(
-          margin: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isSelected ? colorScheme.primary : null,
-            border: isToday && !isSelected
-                ? Border.all(color: colorScheme.primary)
-                : null,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '${day.day}',
-                style: TextStyle(
-                  color: isSelected ? colorScheme.onPrimary : null,
-                ),
-              ),
-              if (isMarked)
-                Container(
-                  width: 4,
-                  height: 4,
-                  margin: const EdgeInsets.only(top: 2),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isSelected
-                        ? colorScheme.onPrimary
-                        : colorScheme.primary,
+      // UX 11: the marker dot signals "has a workout" by shape/presence,
+      // not color alone, but a screen reader can't see it at all without
+      // this — same reasoning as "состояния передаются не только цветом"
+      // for workout status chips elsewhere in the app.
+      final semanticLabel = [
+        DateFormat.yMMMMd(locale).format(day),
+        if (isMarked) l10n.historyCalendarDayHasWorkout,
+        if (isToday) l10n.historyCalendarDayToday,
+      ].join(', ');
+
+      return Semantics(
+        label: semanticLabel,
+        button: true,
+        selected: isSelected,
+        excludeSemantics: true,
+        child: InkWell(
+          onTap: () => onSelectDay(day),
+          customBorder: const CircleBorder(),
+          child: Container(
+            margin: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isSelected ? colorScheme.primary : null,
+              border: isToday && !isSelected
+                  ? Border.all(color: colorScheme.primary)
+                  : null,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '${day.day}',
+                  style: TextStyle(
+                    color: isSelected ? colorScheme.onPrimary : null,
                   ),
-                )
-              else
-                const SizedBox(height: 6),
-            ],
+                ),
+                if (isMarked)
+                  Container(
+                    width: 4,
+                    height: 4,
+                    margin: const EdgeInsets.only(top: 2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isSelected
+                          ? colorScheme.onPrimary
+                          : colorScheme.primary,
+                    ),
+                  )
+                else
+                  const SizedBox(height: 6),
+              ],
+            ),
           ),
         ),
       );

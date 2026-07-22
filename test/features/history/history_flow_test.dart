@@ -736,6 +736,36 @@ void main() {
     });
 
     testWidgets(
+      'the date-clear buttons have accessible tooltips, not just an icon '
+      '(UX 11)',
+      (tester) async {
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byIcon(Icons.tune));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('From'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byIcon(Icons.edit_outlined));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.descendant(
+            of: find.byType(DatePickerDialog),
+            matching: find.byType(TextField),
+          ),
+          '07/01/2026',
+        );
+        await tester.tap(find.text('OK'));
+        await tester.pumpAndSettle();
+
+        expect(find.byTooltip('Clear start date'), findsOneWidget);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
       'tag filter (OR mode) narrows the list and cards show tag chips',
       (tester) async {
         await _seedTag(db, id: 'legs', name: 'Legs');
@@ -932,6 +962,71 @@ void main() {
       await tester.tap(find.byIcon(Icons.chevron_left));
       await tester.pumpAndSettle();
       expect(find.text('Leg day'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets(
+      'month navigation buttons have accessible tooltips, not just an '
+      'icon (UX 11)',
+      (tester) async {
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byIcon(Icons.calendar_month_outlined));
+        await tester.pumpAndSettle();
+
+        expect(find.byTooltip('Previous month'), findsOneWidget);
+        expect(find.byTooltip('Next month'), findsOneWidget);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'a day with a workout has a Semantics label saying so, not just a '
+      'color-only dot (UX 11: "состояния передаются не только цветом")',
+      (tester) async {
+        final today = DateTime.now();
+        await _insertCompletedWorkout(
+          db,
+          id: 'w1',
+          date: isoDate(today),
+          name: 'Leg day',
+        );
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byIcon(Icons.calendar_month_outlined));
+        await tester.pumpAndSettle();
+
+        final markedDay = find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics &&
+              (widget.properties.label?.contains('has a workout') ?? false),
+        );
+        expect(markedDay, findsOneWidget);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets("today's cell has a Semantics label saying so (UX 11)", (
+      tester,
+    ) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.calendar_month_outlined));
+      await tester.pumpAndSettle();
+
+      final todayCell = find.byWidgetPredicate(
+        (widget) =>
+            widget is Semantics &&
+            (widget.properties.label?.contains('today') ?? false),
+      );
+      expect(todayCell, findsOneWidget);
 
       await _unmountAndFlush(tester);
     });

@@ -639,6 +639,14 @@
   "@filterDateToLabel": {
     "description": "Label for the range-end date picker in History's filter sheet (S-02, Stage 3)."
   },
+  "filterClearDateFromTooltip": "Clear start date",
+  "@filterClearDateFromTooltip": {
+    "description": "UX 11 accessibility: label for the icon-only \"clear\" button next to the range-start date in History's filter sheet."
+  },
+  "filterClearDateToTooltip": "Clear end date",
+  "@filterClearDateToTooltip": {
+    "description": "UX 11 accessibility: label for the icon-only \"clear\" button next to the range-end date in History's filter sheet."
+  },
   "filterAnyDate": "Any date",
   "@filterAnyDate": {
     "description": "Shown instead of a date when a History filter date-range bound isn't set."
@@ -737,6 +745,22 @@
   "historyCalendarDayEmpty": "No workouts this day",
   "@historyCalendarDayEmpty": {
     "description": "Shown below the calendar grid (S-02, Stage 3) when the selected day has no workouts matching the active search/status/tag filters."
+  },
+  "historyCalendarPreviousMonthTooltip": "Previous month",
+  "@historyCalendarPreviousMonthTooltip": {
+    "description": "UX 11 accessibility: label for the icon-only back-a-month button above the calendar grid."
+  },
+  "historyCalendarNextMonthTooltip": "Next month",
+  "@historyCalendarNextMonthTooltip": {
+    "description": "UX 11 accessibility: label for the icon-only forward-a-month button above the calendar grid."
+  },
+  "historyCalendarDayHasWorkout": "has a workout",
+  "@historyCalendarDayHasWorkout": {
+    "description": "UX 11 accessibility: appended to a calendar day cell's Semantics label (e.g. \"July 15, 2026, has a workout\") so the marker dot's meaning isn't color-only."
+  },
+  "historyCalendarDayToday": "today",
+  "@historyCalendarDayToday": {
+    "description": "UX 11 accessibility: appended to a calendar day cell's Semantics label when it's the current date."
   },
   "workoutTimerPauseAction": "Pause",
   "@workoutTimerPauseAction": {

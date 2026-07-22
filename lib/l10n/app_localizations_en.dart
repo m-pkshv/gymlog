@@ -565,6 +565,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterDateToLabel => 'To';
 
   @override
+  String get filterClearDateFromTooltip => 'Clear start date';
+
+  @override
+  String get filterClearDateToTooltip => 'Clear end date';
+
+  @override
   String get filterAnyDate => 'Any date';
 
   @override
@@ -643,6 +649,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get historyCalendarDayEmpty => 'No workouts this day';
+
+  @override
+  String get historyCalendarPreviousMonthTooltip => 'Previous month';
+
+  @override
+  String get historyCalendarNextMonthTooltip => 'Next month';
+
+  @override
+  String get historyCalendarDayHasWorkout => 'has a workout';
+
+  @override
+  String get historyCalendarDayToday => 'today';
 
   @override
   String get workoutTimerPauseAction => 'Pause';

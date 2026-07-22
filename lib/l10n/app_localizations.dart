@@ -1178,6 +1178,18 @@ abstract class AppLocalizations {
   /// **'To'**
   String get filterDateToLabel;
 
+  /// UX 11 accessibility: label for the icon-only "clear" button next to the range-start date in History's filter sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear start date'**
+  String get filterClearDateFromTooltip;
+
+  /// UX 11 accessibility: label for the icon-only "clear" button next to the range-end date in History's filter sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear end date'**
+  String get filterClearDateToTooltip;
+
   /// Shown instead of a date when a History filter date-range bound isn't set.
   ///
   /// In en, this message translates to:
@@ -1321,6 +1333,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No workouts this day'**
   String get historyCalendarDayEmpty;
+
+  /// UX 11 accessibility: label for the icon-only back-a-month button above the calendar grid.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous month'**
+  String get historyCalendarPreviousMonthTooltip;
+
+  /// UX 11 accessibility: label for the icon-only forward-a-month button above the calendar grid.
+  ///
+  /// In en, this message translates to:
+  /// **'Next month'**
+  String get historyCalendarNextMonthTooltip;
+
+  /// UX 11 accessibility: appended to a calendar day cell's Semantics label (e.g. "July 15, 2026, has a workout") so the marker dot's meaning isn't color-only.
+  ///
+  /// In en, this message translates to:
+  /// **'has a workout'**
+  String get historyCalendarDayHasWorkout;
+
+  /// UX 11 accessibility: appended to a calendar day cell's Semantics label when it's the current date.
+  ///
+  /// In en, this message translates to:
+  /// **'today'**
+  String get historyCalendarDayToday;
 
   /// Tooltip on the workout timer's pause button (S-03, Stage 4, TS 7.1), shown while the timer is running.
   ///

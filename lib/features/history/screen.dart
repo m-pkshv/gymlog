@@ -453,6 +453,7 @@ class _HistoryFilterSheetState extends ConsumerState<_HistoryFilterSheet> {
                         onTap: _pickDateFrom,
                         trailing: _dateFrom != null
                             ? IconButton(
+                                tooltip: l10n.filterClearDateFromTooltip,
                                 icon: const Icon(Icons.clear),
                                 onPressed: () =>
                                     setState(() => _dateFrom = null),
@@ -476,6 +477,7 @@ class _HistoryFilterSheetState extends ConsumerState<_HistoryFilterSheet> {
                         onTap: _pickDateTo,
                         trailing: _dateTo != null
                             ? IconButton(
+                                tooltip: l10n.filterClearDateToTooltip,
                                 icon: const Icon(Icons.clear),
                                 onPressed: () => setState(() => _dateTo = null),
                               )

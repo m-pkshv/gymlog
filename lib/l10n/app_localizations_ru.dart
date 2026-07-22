@@ -570,6 +570,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get filterDateToLabel => 'По';
 
   @override
+  String get filterClearDateFromTooltip => 'Очистить начальную дату';
+
+  @override
+  String get filterClearDateToTooltip => 'Очистить конечную дату';
+
+  @override
   String get filterAnyDate => 'Любая дата';
 
   @override
@@ -650,6 +656,18 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get historyCalendarDayEmpty => 'В этот день нет тренировок';
+
+  @override
+  String get historyCalendarPreviousMonthTooltip => 'Предыдущий месяц';
+
+  @override
+  String get historyCalendarNextMonthTooltip => 'Следующий месяц';
+
+  @override
+  String get historyCalendarDayHasWorkout => 'есть тренировка';
+
+  @override
+  String get historyCalendarDayToday => 'сегодня';
 
   @override
   String get workoutTimerPauseAction => 'Пауза';
