@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gymlog/app/providers.dart';
 import 'package:gymlog/data/database.dart' hide Exercise;
+import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/exercise_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/domain/models/exercise.dart';
@@ -615,4 +616,35 @@ void main() {
 
     await _unmountAndFlush(tester);
   });
+
+  testWidgets(
+    'the catalog shows the translated name/description when the app locale is Russian (DM 12)',
+    (tester) async {
+      final exercise = await ExerciseRepositoryImpl(db).create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+        description: 'Bend the knees.',
+      );
+      await db
+          .into(db.exerciseL10n)
+          .insert(
+            ExerciseL10nCompanion.insert(
+              exerciseId: exercise.id,
+              locale: 'ru',
+              name: 'Приседания',
+              description: const Value('Согните колени.'),
+            ),
+          );
+      await AppSettingsRepositoryImpl(db).ensureInitialized();
+      await AppSettingsRepositoryImpl(db).setLocale(AppLocale.ru);
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Приседания'), findsOneWidget);
+      expect(find.text('Squat'), findsNothing);
+
+      await _unmountAndFlush(tester);
+    },
+  );
 }

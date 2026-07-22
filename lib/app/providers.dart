@@ -21,6 +21,7 @@ import '../data/repositories_impl/progression_repository_impl.dart';
 import '../data/repositories_impl/workout_repository_impl.dart';
 import '../data/repositories_impl/workout_tag_repository_impl.dart';
 import '../data/repositories_impl/workout_template_repository_impl.dart';
+import '../domain/enums.dart';
 import '../domain/models/active_workout_state.dart';
 import '../domain/models/app_settings.dart';
 import '../domain/models/body_measurement.dart';
@@ -52,6 +53,7 @@ import '../domain/repositories/workout_tag_repository.dart';
 import '../domain/repositories/workout_template_repository.dart';
 import '../features/template_editor/controller.dart';
 import '../features/workout_editor/controller.dart';
+import 'locale.dart';
 import '../services/active_workout_timer_service.dart';
 import '../services/app_settings_service.dart';
 import '../services/body_measurement_service.dart';
@@ -241,6 +243,17 @@ final exerciseServiceProvider = Provider<ExerciseService>((ref) {
   return ExerciseService(ref.watch(exerciseRepositoryProvider));
 });
 
+/// The current display language for `ExerciseL10n`-aware reads (Stage 10,
+/// DM 12) — `resolvedLocaleCode` applied to `AppSettings.locale`, reactive
+/// so switching the language on the fly (S-17) re-resolves exercise names
+/// the same way it already does everything else. Falls back to
+/// `AppLocale.system` while settings are still loading, same as
+/// `GymLogApp`'s theme/locale defaults.
+final effectiveLocaleProvider = Provider<String>((ref) {
+  final settings = ref.watch(appSettingsProvider).value;
+  return resolvedLocaleCode(settings?.locale ?? AppLocale.system);
+});
+
 /// The exercise catalog list (S-06), keyed by the active search/filters
 /// (`emptyExerciseCatalogFilter` for "no filtering" — e.g. the add-exercise
 /// picker in the workout editor, which doesn't have its own filter UI yet).
@@ -248,7 +261,10 @@ final exercisesListProvider = StreamProvider.family<
   List<Exercise>,
   ExerciseCatalogFilter
 >((ref, filter) {
-  return ref.watch(exerciseRepositoryProvider).watchAll(filter: filter);
+  final locale = ref.watch(effectiveLocaleProvider);
+  return ref
+      .watch(exerciseRepositoryProvider)
+      .watchAll(filter: filter, locale: locale);
 });
 
 /// The history list (S-02), keyed by the active filters
@@ -291,6 +307,7 @@ final workoutEditorControllerProvider = StateNotifierProvider.autoDispose
       ref,
       workoutId,
     ) {
+      final locale = ref.watch(effectiveLocaleProvider);
       return WorkoutEditorController(
         workoutId,
         ref.read(workoutRepositoryProvider),
@@ -300,6 +317,7 @@ final workoutEditorControllerProvider = StateNotifierProvider.autoDispose
         ref.read(activeWorkoutTimerServiceProvider),
         ref.read(appSettingsRepositoryProvider),
         ref.read(loggerProvider),
+        locale: locale,
       );
     });
 
@@ -329,10 +347,12 @@ final templateEditorControllerProvider = StateNotifierProvider.autoDispose
       ref,
       templateId,
     ) {
+      final locale = ref.watch(effectiveLocaleProvider);
       return TemplateEditorController(
         templateId,
         ref.read(workoutTemplateRepositoryProvider),
         ref.read(loggerProvider),
+        locale: locale,
       );
     });
 

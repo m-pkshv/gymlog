@@ -8,6 +8,7 @@ import 'package:gymlog/app/providers.dart';
 import 'package:gymlog/core/constants.dart';
 import 'package:gymlog/core/date_format.dart';
 import 'package:gymlog/data/database.dart';
+import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/features/exercises/create_exercise_screen.dart';
 import 'package:gymlog/features/history/screen.dart';
@@ -1605,4 +1606,36 @@ void main() {
       },
     );
   });
+
+  testWidgets(
+    'the exercise card shows the translated name when the app locale is Russian (DM 12)',
+    (tester) async {
+      await _seedExercise(db);
+      await db
+          .into(db.exerciseL10n)
+          .insert(
+            ExerciseL10nCompanion.insert(
+              exerciseId: 'squat',
+              locale: 'ru',
+              name: 'Приседания',
+            ),
+          );
+      await AppSettingsRepositoryImpl(db).ensureInitialized();
+      await AppSettingsRepositoryImpl(db).setLocale(AppLocale.ru);
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await _createDraftViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Приседания'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Приседания'), findsOneWidget);
+      expect(find.text('Squat'), findsNothing);
+
+      await _unmountAndFlush(tester);
+    },
+  );
 }

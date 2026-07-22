@@ -48,7 +48,7 @@ class _ExerciseProgressScreenState
     try {
       final exercise = await ref
           .read(exerciseRepositoryProvider)
-          .getById(widget.exerciseId);
+          .getById(widget.exerciseId, locale: ref.read(effectiveLocaleProvider));
       final history = exercise == null
           ? const <ExerciseHistoryEntry>[]
           : await ref

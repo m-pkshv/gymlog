@@ -23,12 +23,17 @@ class TemplateEditorController
   TemplateEditorController(
     this._templateId,
     this._repository,
-    this._logger,
-  ) : super(const AsyncValue<TemplateDetails>.loading()) {
+    this._logger, {
+    this.locale,
+  }) : super(const AsyncValue<TemplateDetails>.loading()) {
     unawaited(_load());
   }
 
   final String _templateId;
+  // Stage 10, DM 12: see WorkoutEditorController's identical field for why
+  // this is fixed for the controller's lifetime, not reactive mid-lifetime,
+  // and `null` (every existing test's default) means canonical text.
+  final String? locale;
   final WorkoutTemplateRepository _repository;
   final AppLogger _logger;
   final Map<String, Timer> _setDebounceTimers = {};
@@ -38,7 +43,7 @@ class TemplateEditorController
 
   Future<void> _load() async {
     try {
-      final details = await _repository.getDetails(_templateId);
+      final details = await _repository.getDetails(_templateId, locale: locale);
       state = details == null
           ? AsyncValue<TemplateDetails>.error(
               StateError('Template $_templateId not found'),

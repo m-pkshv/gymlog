@@ -54,7 +54,9 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen>
     try {
       final exercise = await ref
           .read(exerciseRepositoryProvider)
-          .getById(widget.exerciseId);
+          .getById(widget.exerciseId, locale: ref.read(effectiveLocaleProvider));
+      // `_exercise` below carries this localized text -- `_edit()` re-fetches
+      // the canonical record separately (DM 12: never edit a translation).
       final canDelete = exercise == null
           ? false
           : await ref.read(exerciseServiceProvider).canDelete(exercise);
@@ -88,12 +90,21 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen>
   Future<void> _edit() async {
     final exercise = _exercise;
     if (exercise == null || _isBusy) return;
+    // The form must edit the canonical record, not the localized display
+    // text `_exercise` may currently carry (DM 12) -- re-fetch canonical.
+    final canonical = await ref
+        .read(exerciseRepositoryProvider)
+        .getById(exercise.id);
+    if (canonical == null || !mounted) return;
     final updated = await context.push<Exercise>(
       '/exercises/${exercise.id}/edit',
-      extra: exercise,
+      extra: canonical,
     );
     if (updated != null && mounted) {
-      setState(() => _exercise = updated);
+      final relocalized = await ref
+          .read(exerciseRepositoryProvider)
+          .getById(exercise.id, locale: ref.read(effectiveLocaleProvider));
+      setState(() => _exercise = relocalized ?? updated);
     }
   }
 

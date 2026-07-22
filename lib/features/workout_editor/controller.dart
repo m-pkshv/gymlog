@@ -39,8 +39,9 @@ class WorkoutEditorController
     this._recordsService,
     this._activeWorkoutTimerService,
     AppSettingsRepository appSettingsRepository,
-    this._logger,
-  ) : super(const AsyncValue<WorkoutDetails>.loading()) {
+    this._logger, {
+    this.locale,
+  }) : super(const AsyncValue<WorkoutDetails>.loading()) {
     unawaited(_load());
     // Cached rather than re-read per set completion: the settings row
     // rarely changes mid-workout, and re-subscribing on every ✓ added an
@@ -63,6 +64,13 @@ class WorkoutEditorController
   }
 
   final String _workoutId;
+  // Stage 10, DM 12: fixed for this controller instance's lifetime -- the
+  // owning `.autoDispose` provider watches `effectiveLocaleProvider` and
+  // recreates the controller (with a fresh value) when the language
+  // actually changes, rather than this reacting to it mid-lifetime. `null`
+  // (the default, used by every existing test construction site) means
+  // canonical text -- only the real app provider passes a resolved value.
+  final String? locale;
   final WorkoutRepository _workoutRepository;
   final WorkoutService _workoutService;
   final ProgressionService _progressionService;
@@ -77,7 +85,10 @@ class WorkoutEditorController
 
   Future<void> _load() async {
     try {
-      final details = await _workoutRepository.getDetails(_workoutId);
+      final details = await _workoutRepository.getDetails(
+        _workoutId,
+        locale: locale,
+      );
       state = details == null
           ? AsyncValue<WorkoutDetails>.error(
               StateError('Workout $_workoutId not found'),
