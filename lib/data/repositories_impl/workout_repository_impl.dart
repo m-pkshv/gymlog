@@ -47,6 +47,43 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
   }
 
   @override
+  Stream<WorkoutHistoryEntry?> watchNextUpcomingWorkout({
+    required DateTime notBefore,
+  }) {
+    final exerciseCount = _db.workoutExercises.id.count();
+    final query =
+        _db.select(_db.workouts).join([
+              leftOuterJoin(
+                _db.workoutExercises,
+                _db.workoutExercises.workoutId.equalsExp(_db.workouts.id) &
+                    _db.workoutExercises.isDeleted.equals(false),
+              ),
+            ])
+            ..addColumns([exerciseCount])
+            ..where(
+              _db.workouts.status.isIn([
+                    WorkoutStatus.draft.name,
+                    WorkoutStatus.planned.name,
+                  ]) &
+                  _db.workouts.isDeleted.equals(false) &
+                  _db.workouts.date.isBiggerOrEqualValue(
+                    dateOnlyString(notBefore),
+                  ),
+            )
+            ..groupBy([_db.workouts.id])
+            ..orderBy([OrderingTerm.asc(_db.workouts.date)])
+            ..limit(1);
+
+    return query.watchSingleOrNull().map((row) {
+      if (row == null) return null;
+      return WorkoutHistoryEntry(
+        workout: row.readTable(_db.workouts).toDomain(),
+        exerciseCount: row.read(exerciseCount) ?? 0,
+      );
+    });
+  }
+
+  @override
   Future<WorkoutDetails?> getDetails(String workoutId) async {
     final workoutRow = await (_db.select(_db.workouts)..where(
       (w) => w.id.equals(workoutId) & w.isDeleted.equals(false),

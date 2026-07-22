@@ -105,6 +105,17 @@ final inProgressWorkoutProvider = StreamProvider<Workout?>((ref) {
   return ref.watch(workoutRepositoryProvider).watchInProgressWorkout();
 });
 
+/// The nearest upcoming `draft`/`planned` workout (S-01 "Сегодня" card,
+/// Stage 9) — `DateTime.now()` is read once per provider rebuild, which is
+/// fine since "today" doesn't change while the app stays open.
+final nextUpcomingWorkoutProvider = StreamProvider<WorkoutHistoryEntry?>((
+  ref,
+) {
+  return ref
+      .watch(workoutRepositoryProvider)
+      .watchNextUpcomingWorkout(notBefore: DateTime.now());
+});
+
 final progressionRepositoryProvider = Provider<ProgressionRepository>((ref) {
   return ProgressionRepositoryImpl(ref.watch(appDatabaseProvider));
 });

@@ -15,9 +15,8 @@ import '../templates/widgets/create_template_dialog.dart';
 import '../workout_editor/status_labels.dart';
 import 'calendar/history_calendar_view.dart';
 import 'copy_workout_flow.dart';
+import 'new_workout_menu.dart';
 import 'widgets/workout_history_tile.dart';
-
-enum _NewWorkoutChoice { scratch, copy, template }
 
 enum _HistoryViewMode { list, calendar }
 
@@ -112,57 +111,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     });
   }
 
-  Future<void> _openNewWorkoutMenu() async {
-    final l10n = AppLocalizations.of(context)!;
-    final choice = await showModalBottomSheet<_NewWorkoutChoice>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.add),
-              title: Text(l10n.newWorkoutFromScratchAction),
-              onTap: () => Navigator.of(
-                sheetContext,
-              ).pop(_NewWorkoutChoice.scratch),
-            ),
-            ListTile(
-              leading: const Icon(Icons.copy_outlined),
-              title: Text(l10n.newWorkoutFromCopyAction),
-              onTap: () =>
-                  Navigator.of(sheetContext).pop(_NewWorkoutChoice.copy),
-            ),
-            ListTile(
-              leading: const Icon(Icons.description_outlined),
-              title: Text(l10n.newWorkoutFromTemplateAction),
-              onTap: () =>
-                  Navigator.of(sheetContext).pop(_NewWorkoutChoice.template),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (choice == null || !mounted) return;
-
-    switch (choice) {
-      case _NewWorkoutChoice.scratch:
-        final workout = await ref
-            .read(workoutRepositoryProvider)
-            .createDraft(date: DateTime.now());
-        if (mounted) context.push('/history/workout/${workout.id}');
-      case _NewWorkoutChoice.copy:
-        context.push('/history/copy-source');
-      case _NewWorkoutChoice.template:
-        context.push('/history/template-source');
-    }
-  }
-
   /// "Создать шаблон" (S-02 "⋮" menu, TS 8 section 8): prompts for the
   /// template's name (defaulting to the workout's own display name) and
   /// opens the result for review, same "create then open" pattern as
-  /// [_openNewWorkoutMenu]'s "From scratch" and `copyWorkoutFlow`.
+  /// [showNewWorkoutMenu]'s "From scratch" and `copyWorkoutFlow`.
   Future<void> _createTemplateFromWorkout(Workout source) async {
     final l10n = AppLocalizations.of(context)!;
     final service = ref.read(workoutTemplateServiceProvider);
@@ -275,7 +227,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _openNewWorkoutMenu,
+        onPressed: () => showNewWorkoutMenu(context, ref),
         tooltip: l10n.newWorkoutAction,
         child: const Icon(Icons.add),
       ),

@@ -125,6 +125,96 @@ void main() {
     },
   );
 
+  group('watchNextUpcomingWorkout (Stage 9, S-01)', () {
+    test('null when there is no draft/planned workout at all', () async {
+      expect(
+        await workouts.watchNextUpcomingWorkout(notBefore: DateTime(2026, 7, 19)).first,
+        isNull,
+      );
+    });
+
+    test(
+      'picks the closest-dated draft/planned workout on or after notBefore',
+      () async {
+        final farther = await workouts.createDraft(date: DateTime(2026, 7, 25));
+        final closer = await workouts.createDraft(date: DateTime(2026, 7, 20));
+
+        final next = await workouts
+            .watchNextUpcomingWorkout(notBefore: DateTime(2026, 7, 19))
+            .first;
+
+        expect(next, isNotNull);
+        expect(next!.workout.id, closer.id);
+        expect(next.workout.id, isNot(farther.id));
+      },
+    );
+
+    test('excludes workouts dated before notBefore', () async {
+      await workouts.createDraft(date: DateTime(2026, 7, 18));
+
+      final next = await workouts
+          .watchNextUpcomingWorkout(notBefore: DateTime(2026, 7, 19))
+          .first;
+
+      expect(next, isNull);
+    });
+
+    test(
+      'excludes inProgress/completed/skipped/cancelled workouts (only draft/planned qualify)',
+      () async {
+        final inProgress = await workouts.createDraft(
+          date: DateTime(2026, 7, 19),
+        );
+        await workouts.updateWorkout(
+          inProgress.copyWith(status: WorkoutStatus.inProgress),
+        );
+        final completed = await workouts.createDraft(
+          date: DateTime(2026, 7, 20),
+        );
+        await workouts.updateWorkout(
+          completed.copyWith(status: WorkoutStatus.completed),
+        );
+        final planned = await workouts.createDraft(date: DateTime(2026, 7, 21));
+        await workouts.updateWorkout(
+          planned.copyWith(status: WorkoutStatus.planned),
+        );
+
+        final next = await workouts
+            .watchNextUpcomingWorkout(notBefore: DateTime(2026, 7, 19))
+            .first;
+
+        expect(next, isNotNull);
+        expect(next!.workout.id, planned.id);
+      },
+    );
+
+    test('reports the exercise count', () async {
+      final exercise = await exercises.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 19));
+      await workouts.addExercise(workoutId: workout.id, exerciseId: exercise.id);
+
+      final next = await workouts
+          .watchNextUpcomingWorkout(notBefore: DateTime(2026, 7, 19))
+          .first;
+
+      expect(next!.exerciseCount, 1);
+    });
+
+    test('excludes soft-deleted workouts', () async {
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 19));
+      await workouts.deleteWorkout(workout.id);
+
+      final next = await workouts
+          .watchNextUpcomingWorkout(notBefore: DateTime(2026, 7, 19))
+          .first;
+
+      expect(next, isNull);
+    });
+  });
+
   test(
     'watchHistory only lists completed workouts, most recent first, with '
     'their exercise count',
