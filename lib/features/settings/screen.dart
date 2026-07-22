@@ -2,17 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
+import '../../core/constants.dart';
 import '../../core/units/unit_converter.dart';
 import '../../domain/enums.dart';
 import '../../l10n/app_localizations.dart';
 
-/// S-17 settings screen (04_UI_UX_SPEC.md, section 5). Stage 9, step 4:
-/// theme + language selectors, unit system/"show tags" (moved here from the
-/// temporary switches on the "More" placeholder,
+/// S-17 settings screen (04_UI_UX_SPEC.md, section 5) -- complete as of
+/// Stage 9, step 5: theme + language selectors, unit system/"show tags"
+/// (moved here from the temporary switches on the "More" placeholder,
 /// `ASSUMPTION(temp-show-tags-toggle)` / `ASSUMPTION(temp-unit-system-toggle)`,
 /// resolved at step 1), default rest-timer seconds/auto-start (backend from
-/// Stage 4, TS 7.1/7.2), and the notifications status row + link to the OS
-/// settings screen. "About" lands in a later step of this stage.
+/// Stage 4, TS 7.1/7.2), notifications status + link to the OS settings
+/// screen, and the "About" rows (version, CSV export format version).
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -79,6 +80,8 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const Divider(height: 33),
             const _NotificationsSection(),
+            const Divider(height: 33),
+            const _AboutSection(),
           ],
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -267,6 +270,40 @@ class _NotificationsSection extends ConsumerWidget {
         onPressed: () => _openSettings(context, ref),
         child: Text(l10n.settingsNotificationsOpenSettingsAction),
       ),
+    );
+  }
+}
+
+/// Read-only "About" rows (S-17, 04_UI_UX_SPEC.md, section 5: version, CSV
+/// export format version) -- both come from `ExportFormat` (`core/
+/// constants.dart`), the same constants the export pipeline itself writes
+/// into `manifest.json` (Stage 8), so this can never drift from what a
+/// generated export actually claims.
+class _AboutSection extends StatelessWidget {
+  const _AboutSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Text(
+            l10n.settingsAboutLabel,
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+        ),
+        ListTile(
+          title: Text(l10n.settingsAboutVersionLabel),
+          trailing: const Text(ExportFormat.appVersion),
+        ),
+        ListTile(
+          title: Text(l10n.settingsAboutExportFormatVersionLabel),
+          trailing: Text('${ExportFormat.formatVersion}'),
+        ),
+      ],
     );
   }
 }

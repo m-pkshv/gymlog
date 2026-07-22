@@ -511,6 +511,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t open system settings';
 
   @override
+  String get settingsAboutLabel => 'About';
+
+  @override
+  String get settingsAboutVersionLabel => 'Version';
+
+  @override
+  String get settingsAboutExportFormatVersionLabel => 'Export format version';
+
+  @override
   String get settingsLoadError => 'Couldn\'t load settings';
 
   @override

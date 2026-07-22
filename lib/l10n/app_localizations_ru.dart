@@ -515,6 +515,15 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось открыть системные настройки';
 
   @override
+  String get settingsAboutLabel => 'О приложении';
+
+  @override
+  String get settingsAboutVersionLabel => 'Версия';
+
+  @override
+  String get settingsAboutExportFormatVersionLabel => 'Версия формата экспорта';
+
+  @override
   String get settingsLoadError => 'Не удалось загрузить настройки';
 
   @override

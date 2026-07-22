@@ -1070,6 +1070,24 @@ abstract class AppLocalizations {
   /// **'Couldn\'t open system settings'**
   String get settingsNotificationsOpenSettingsError;
 
+  /// Header above the S-17 'About' rows (04_UI_UX_SPEC.md, section 5: version, export format version).
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAboutLabel;
+
+  /// Row title for the app version (ExportFormat.appVersion), shown as the row's trailing value.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get settingsAboutVersionLabel;
+
+  /// Row title for the CSV export format version (ExportFormat.formatVersion, D-9), shown as the row's trailing value.
+  ///
+  /// In en, this message translates to:
+  /// **'Export format version'**
+  String get settingsAboutExportFormatVersionLabel;
+
   /// Error state on the S-17 settings screen (and anywhere else appSettingsProvider is watched) when the settings row fails to load.
   ///
   /// In en, this message translates to:

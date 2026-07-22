@@ -567,6 +567,18 @@
   "@settingsNotificationsOpenSettingsError": {
     "description": "Snackbar shown when NotificationService.openNotificationSettings() reports it could not open the OS settings screen."
   },
+  "settingsAboutLabel": "About",
+  "@settingsAboutLabel": {
+    "description": "Header above the S-17 'About' rows (04_UI_UX_SPEC.md, section 5: version, export format version)."
+  },
+  "settingsAboutVersionLabel": "Version",
+  "@settingsAboutVersionLabel": {
+    "description": "Row title for the app version (ExportFormat.appVersion), shown as the row's trailing value."
+  },
+  "settingsAboutExportFormatVersionLabel": "Export format version",
+  "@settingsAboutExportFormatVersionLabel": {
+    "description": "Row title for the CSV export format version (ExportFormat.formatVersion, D-9), shown as the row's trailing value."
+  },
   "settingsLoadError": "Couldn't load settings",
   "@settingsLoadError": {
     "description": "Error state on the S-17 settings screen (and anywhere else appSettingsProvider is watched) when the settings row fails to load."

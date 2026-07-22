@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymlog/app/providers.dart';
+import 'package:gymlog/core/constants.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
@@ -373,4 +374,23 @@ void main() {
       },
     );
   });
+
+  testWidgets(
+    'shows the app version and CSV export format version (S-17, D-9)',
+    (tester) async {
+      // The "About" rows are the last thing on the screen, below the
+      // default 800x600 test viewport's fold.
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      await AppSettingsRepositoryImpl(db).ensureInitialized();
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      expect(find.text(ExportFormat.appVersion), findsOneWidget);
+      expect(find.text('${ExportFormat.formatVersion}'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
 }
