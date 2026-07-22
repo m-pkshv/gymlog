@@ -81,6 +81,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionCancel => 'Cancel';
 
   @override
+  String get retryAction => 'Retry';
+
+  @override
   String get newWorkoutAction => 'New workout';
 
   @override

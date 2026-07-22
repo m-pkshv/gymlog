@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
+import '../../core/widgets/error_retry_state.dart';
 import '../../domain/models/exercise_catalog_filter.dart';
 import '../../l10n/app_localizations.dart';
 import '../exercises/exercise_type_labels.dart';
@@ -100,8 +101,10 @@ class _ExerciseProgressPickerScreenState
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stackTrace) =>
-                  Center(child: Text(l10n.exercisesLoadError)),
+              error: (error, stackTrace) => ErrorRetryState(
+                message: l10n.exercisesLoadError,
+                onRetry: () => ref.invalidate(exercisesListProvider(filter)),
+              ),
             ),
           ),
         ],

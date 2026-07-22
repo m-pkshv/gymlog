@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/stats_period.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../l10n/app_localizations.dart';
 import 'period_selector.dart';
 
@@ -25,9 +26,8 @@ class _WorkoutStatsCardState extends ConsumerState<WorkoutStatsCard> {
     final l10n = AppLocalizations.of(context)!;
     final (from, to) = _period.range(DateTime.now());
     final weeks = _period.weeksInRange(DateTime.now());
-    final statsAsync = ref.watch(
-      workoutPeriodStatsProvider((from: from, to: to)),
-    );
+    final rangeKey = (from: from, to: to);
+    final statsAsync = ref.watch(workoutPeriodStatsProvider(rangeKey));
 
     return Card(
       child: Padding(
@@ -81,7 +81,11 @@ class _WorkoutStatsCardState extends ConsumerState<WorkoutStatsCard> {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stackTrace) => Text(l10n.measurementsLoadError),
+              error: (error, stackTrace) => ErrorRetryState(
+                message: l10n.measurementsLoadError,
+                onRetry: () =>
+                    ref.invalidate(workoutPeriodStatsProvider(rangeKey)),
+              ),
             ),
           ],
         ),

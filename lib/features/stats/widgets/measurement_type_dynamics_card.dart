@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../domain/enums.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../measurements/measurement_type_labels.dart';
@@ -94,7 +95,11 @@ class _MeasurementTypeDynamicsCardState
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stackTrace) => Text(l10n.measurementsLoadError),
+              error: (error, stackTrace) => ErrorRetryState(
+                message: l10n.measurementsLoadError,
+                onRetry: () =>
+                    ref.invalidate(measurementTypesListProvider(false)),
+              ),
             ),
           ],
         ),

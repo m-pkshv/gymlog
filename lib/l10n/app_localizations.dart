@@ -242,6 +242,12 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get actionCancel;
 
+  /// Button on the storage-error state (04_UI_UX_SPEC.md, section 6: "Не удалось загрузить" + "Повторить") -- re-fetches via ErrorRetryState's onRetry, typically ref.invalidate(provider).
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retryAction;
+
   /// FAB on the History list (S-02) that creates a draft workout and opens the editor (S-03).
   ///
   /// In en, this message translates to:

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/models/workout.dart';
 import '../../../domain/models/workout_history_entry.dart';
@@ -121,8 +122,10 @@ class _HistoryCalendarViewState extends ConsumerState<HistoryCalendarView> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stackTrace) =>
-                Center(child: Text(l10n.historyLoadError)),
+            error: (error, stackTrace) => ErrorRetryState(
+              message: l10n.historyLoadError,
+              onRetry: () => ref.invalidate(historyListProvider(filter)),
+            ),
           ),
         ),
       ],

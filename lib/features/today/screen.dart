@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../core/date_format.dart';
+import '../../core/widgets/error_retry_state.dart';
 import '../../domain/models/workout.dart';
 import '../../domain/models/workout_history_entry.dart';
 import '../../l10n/app_localizations.dart';
@@ -40,14 +41,17 @@ class TodayScreen extends ConsumerWidget {
                       : const _EmptyTodayState(),
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (error, stackTrace) => Center(
-                    child: Text(l10n.todayLoadError),
+                  error: (error, stackTrace) => ErrorRetryState(
+                    message: l10n.todayLoadError,
+                    onRetry: () => ref.invalidate(nextUpcomingWorkoutProvider),
                   ),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stackTrace) =>
-                  Center(child: Text(l10n.todayLoadError)),
+              error: (error, stackTrace) => ErrorRetryState(
+                message: l10n.todayLoadError,
+                onRetry: () => ref.invalidate(inProgressWorkoutProvider),
+              ),
             ),
             const SizedBox(height: 24),
             const _QuickActions(),

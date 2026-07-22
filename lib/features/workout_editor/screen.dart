@@ -8,6 +8,7 @@ import '../../app/providers.dart';
 import '../../core/constants.dart';
 import '../../core/date_format.dart';
 import '../../core/duration_format.dart';
+import '../../core/widgets/error_retry_state.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/exercise.dart';
 import '../../domain/models/workout_details.dart';
@@ -326,8 +327,12 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
           onSetCompletedChanged: _onSetCompletedChanged,
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) =>
-            Center(child: Text(l10n.workoutLoadError)),
+        error: (error, stackTrace) => ErrorRetryState(
+          message: l10n.workoutLoadError,
+          onRetry: () => ref.invalidate(
+            workoutEditorControllerProvider(widget.workoutId),
+          ),
+        ),
       ),
     );
   }

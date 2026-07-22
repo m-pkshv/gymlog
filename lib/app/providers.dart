@@ -26,6 +26,7 @@ import '../domain/models/app_settings.dart';
 import '../domain/models/body_measurement.dart';
 import '../domain/models/exercise.dart';
 import '../domain/models/exercise_catalog_filter.dart';
+import '../domain/models/exercise_history_entry.dart';
 import '../domain/models/exercise_progression_state.dart';
 import '../domain/models/import_export_operation.dart';
 import '../domain/models/measurement_type.dart';
@@ -115,6 +116,21 @@ final nextUpcomingWorkoutProvider = StreamProvider<WorkoutHistoryEntry?>((
       .watch(workoutRepositoryProvider)
       .watchNextUpcomingWorkout(notBefore: DateTime.now());
 });
+
+/// One exercise's completed-workout history (S-07 "История" tab, Stage 9) —
+/// `.autoDispose` since `exerciseId` varies per screen instance and this
+/// would otherwise keep every exercise ever viewed cached for the rest of
+/// the session. Previously a bare `FutureBuilder` inside the widget itself,
+/// which re-created (and re-awaited) its future on every parent rebuild —
+/// e.g. every time the card's own "⋮" menu triggered a `setState` a few
+/// levels up — causing an avoidable loading-spinner flicker and repeat
+/// query; a provider is cached by [exerciseId] instead, and `ref.invalidate`
+/// gives the S-06 error state's "Повторить" button (04_UI_UX_SPEC.md,
+/// section 6) something concrete to call.
+final exerciseHistoryProvider = FutureProvider.autoDispose
+    .family<List<ExerciseHistoryEntry>, String>((ref, exerciseId) {
+      return ref.watch(workoutRepositoryProvider).getExerciseHistory(exerciseId);
+    });
 
 final progressionRepositoryProvider = Provider<ProgressionRepository>((ref) {
   return ProgressionRepositoryImpl(ref.watch(appDatabaseProvider));

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../core/constants.dart';
+import '../../core/widgets/error_retry_state.dart';
 import '../../domain/models/exercise.dart';
 import '../../domain/models/template_details.dart';
 import '../../l10n/app_localizations.dart';
@@ -82,7 +83,12 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen>
           onAddExercise: _addExercise,
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(child: Text(l10n.templateLoadError)),
+        error: (error, stackTrace) => ErrorRetryState(
+          message: l10n.templateLoadError,
+          onRetry: () => ref.invalidate(
+            templateEditorControllerProvider(widget.templateId),
+          ),
+        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../core/date_format.dart';
+import '../../core/widgets/error_retry_state.dart';
 import '../../domain/models/workout_history_filter.dart';
 import '../../l10n/app_localizations.dart';
 import 'copy_workout_flow.dart';
@@ -51,8 +52,11 @@ class CopySourcePickerScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) =>
-            Center(child: Text(l10n.historyLoadError)),
+        error: (error, stackTrace) => ErrorRetryState(
+          message: l10n.historyLoadError,
+          onRetry: () =>
+              ref.invalidate(historyListProvider(emptyWorkoutHistoryFilter)),
+        ),
       ),
     );
   }

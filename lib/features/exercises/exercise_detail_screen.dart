@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../core/date_format.dart';
+import '../../core/widgets/error_retry_state.dart';
 import '../../domain/models/exercise.dart';
-import '../../domain/models/exercise_history_entry.dart';
 import '../../l10n/app_localizations.dart';
 import 'exercise_set_format.dart';
 import 'exercise_type_labels.dart';
@@ -73,7 +73,15 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen>
             error: error,
             stackTrace: stackTrace,
           );
-      if (mounted) setState(() => _loadError = true);
+      // Without clearing _isLoading here, the body's `_isLoading ? spinner :
+      // ...` check never reaches the error branch at all -- a load failure
+      // would spin forever instead of showing "Не удалось загрузить".
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _loadError = true;
+        });
+      }
     }
   }
 
@@ -216,7 +224,10 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen>
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _loadError || exercise == null
-          ? Center(child: Text(l10n.exerciseDetailLoadError))
+          ? ErrorRetryState(
+              message: l10n.exerciseDetailLoadError,
+              onRetry: _load,
+            )
           : TabBarView(
               controller: _tabController,
               children: [
@@ -327,19 +338,15 @@ class _HistoryTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final historyAsync = ref.watch(exerciseHistoryProvider(exercise.id));
 
-    return FutureBuilder<List<ExerciseHistoryEntry>>(
-      future: ref
-          .read(workoutRepositoryProvider)
-          .getExerciseHistory(exercise.id),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Center(child: Text(l10n.exerciseDetailLoadError));
-        }
-        final entries = snapshot.data ?? const [];
+    return historyAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stackTrace) => ErrorRetryState(
+        message: l10n.exerciseDetailLoadError,
+        onRetry: () => ref.invalidate(exerciseHistoryProvider(exercise.id)),
+      ),
+      data: (entries) {
         if (entries.isEmpty) {
           return Center(child: Text(l10n.exerciseHistoryEmpty));
         }

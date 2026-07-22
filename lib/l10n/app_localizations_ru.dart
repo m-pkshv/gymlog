@@ -81,6 +81,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get actionCancel => 'Отмена';
 
   @override
+  String get retryAction => 'Повторить';
+
+  @override
   String get newWorkoutAction => 'Новая тренировка';
 
   @override

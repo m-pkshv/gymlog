@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/constants.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../domain/models/workout_tag.dart';
 import '../../../l10n/app_localizations.dart';
 import '../controller.dart';
@@ -99,8 +100,10 @@ class TagPickerSheet extends ConsumerWidget {
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Center(child: CircularProgressIndicator()),
               ),
-              error: (error, stackTrace) =>
-                  Text(l10n.workoutTagsLoadError),
+              error: (error, stackTrace) => ErrorRetryState(
+                message: l10n.workoutTagsLoadError,
+                onRetry: () => ref.invalidate(workoutTagsListProvider),
+              ),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(

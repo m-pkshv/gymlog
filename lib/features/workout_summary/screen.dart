@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/providers.dart';
 import '../../core/constants.dart';
 import '../../core/duration_format.dart';
+import '../../core/widgets/error_retry_state.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/personal_record.dart';
 import '../../domain/models/workout_details.dart';
@@ -85,8 +86,12 @@ class _WorkoutSummaryScreenState extends ConsumerState<WorkoutSummaryScreen>
           onDone: () => context.go('/history'),
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) =>
-            Center(child: Text(l10n.workoutLoadError)),
+        error: (error, stackTrace) => ErrorRetryState(
+          message: l10n.workoutLoadError,
+          onRetry: () => ref.invalidate(
+            workoutEditorControllerProvider(widget.workoutId),
+          ),
+        ),
       ),
     );
   }

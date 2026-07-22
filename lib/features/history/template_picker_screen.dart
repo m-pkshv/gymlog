@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
+import '../../core/widgets/error_retry_state.dart';
 import '../../l10n/app_localizations.dart';
 import 'create_workout_from_template_flow.dart';
 
@@ -37,8 +38,10 @@ class TemplatePickerScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) =>
-            Center(child: Text(l10n.templatesLoadError)),
+        error: (error, stackTrace) => ErrorRetryState(
+          message: l10n.templatesLoadError,
+          onRetry: () => ref.invalidate(templateListProvider(false)),
+        ),
       ),
     );
   }

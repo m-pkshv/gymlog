@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../core/constants.dart';
+import '../../core/widgets/error_retry_state.dart';
 import '../../domain/models/template_list_entry.dart';
 import '../../domain/models/workout_template.dart';
 import '../../l10n/app_localizations.dart';
@@ -150,7 +151,10 @@ class TemplateListScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(child: Text(l10n.templatesLoadError)),
+        error: (error, stackTrace) => ErrorRetryState(
+          message: l10n.templatesLoadError,
+          onRetry: () => ref.invalidate(templateListProvider(false)),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _createTemplate(context, ref),

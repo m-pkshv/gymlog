@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../core/date_format.dart';
+import '../../core/widgets/error_retry_state.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/exercise.dart';
 import '../../domain/models/exercise_history_entry.dart';
@@ -98,7 +99,10 @@ class _ExerciseProgressScreenState
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _loadError || exercise == null
-          ? Center(child: Text(l10n.exerciseProgressLoadError))
+          ? ErrorRetryState(
+              message: l10n.exerciseProgressLoadError,
+              onRetry: _load,
+            )
           : _ProgressBody(exercise: exercise, history: _history),
     );
   }
@@ -169,7 +173,11 @@ class _ProgressBody extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stackTrace) => Center(child: Text(l10n.exerciseProgressLoadError)),
+      error: (error, stackTrace) => ErrorRetryState(
+        message: l10n.exerciseProgressLoadError,
+        onRetry: () =>
+            ref.invalidate(personalRecordsForExerciseProvider(exercise.id)),
+      ),
     );
   }
 

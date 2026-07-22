@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../core/constants.dart';
+import '../../core/widgets/error_retry_state.dart';
 import '../../core/date_format.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/workout.dart';
@@ -273,7 +274,10 @@ class _HistoryList extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stackTrace) => Center(child: Text(l10n.historyLoadError)),
+      error: (error, stackTrace) => ErrorRetryState(
+        message: l10n.historyLoadError,
+        onRetry: () => ref.invalidate(historyListProvider(filter)),
+      ),
     );
   }
 }
@@ -540,7 +544,10 @@ class _HistoryFilterSheetState extends ConsumerState<_HistoryFilterSheet> {
                           ],
                         ),
                   loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (error, stackTrace) => Text(l10n.workoutTagsLoadError),
+                  error: (error, stackTrace) => ErrorRetryState(
+                    message: l10n.workoutTagsLoadError,
+                    onRetry: () => ref.invalidate(workoutTagsListProvider),
+                  ),
                 ),
               ],
               const SizedBox(height: 16),

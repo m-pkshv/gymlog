@@ -24,6 +24,7 @@
   "createExerciseError": "Не удалось создать упражнение",
   "actionCreate": "Создать",
   "actionCancel": "Отмена",
+  "retryAction": "Повторить",
   "newWorkoutAction": "Новая тренировка",
   "workoutEditorTitle": "Тренировка",
   "workoutLoadError": "Не удалось загрузить тренировку",

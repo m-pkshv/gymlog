@@ -8,6 +8,7 @@ import '../../core/constants.dart';
 import '../../core/date_format.dart';
 import '../../core/result.dart';
 import '../../core/units/unit_converter.dart';
+import '../../core/widgets/error_retry_state.dart';
 import '../../domain/models/body_measurement.dart';
 import '../../domain/models/measurement_type.dart';
 import '../../l10n/app_localizations.dart';
@@ -307,8 +308,11 @@ class _MeasurementFormScreenState extends ConsumerState<MeasurementFormScreen> {
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stackTrace) =>
-              Center(child: Text(l10n.measurementsLoadError)),
+          error: (error, stackTrace) => ErrorRetryState(
+            message: l10n.measurementsLoadError,
+            onRetry: () =>
+                ref.invalidate(measurementTypesListProvider(false)),
+          ),
         ),
       ),
     );

@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../app/providers.dart';
 import '../../core/date_format.dart';
+import '../../core/widgets/error_retry_state.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/import_export_operation.dart';
 import '../../l10n/app_localizations.dart';
@@ -103,7 +104,10 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stackTrace) => Text(l10n.exportJournalLoadError),
+            error: (error, stackTrace) => ErrorRetryState(
+              message: l10n.exportJournalLoadError,
+              onRetry: () => ref.invalidate(importExportOperationsProvider),
+            ),
           ),
         ],
       ),

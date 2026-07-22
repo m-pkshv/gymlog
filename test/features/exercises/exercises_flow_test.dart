@@ -5,13 +5,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gymlog/app/providers.dart';
-import 'package:gymlog/data/database.dart';
+import 'package:gymlog/data/database.dart' hide Exercise;
+import 'package:gymlog/data/repositories_impl/exercise_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
+import 'package:gymlog/domain/models/exercise.dart';
+import 'package:gymlog/domain/models/exercise_catalog_filter.dart';
+import 'package:gymlog/domain/repositories/exercise_repository.dart';
 import 'package:gymlog/features/exercises/create_exercise_screen.dart';
 import 'package:gymlog/features/exercises/screen.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
-Widget _appUnderTest(AppDatabase db) {
+Widget _appUnderTest(AppDatabase db, {ExerciseRepository? exerciseRepository}) {
   final router = GoRouter(
     initialLocation: '/exercises',
     routes: [
@@ -24,7 +28,11 @@ Widget _appUnderTest(AppDatabase db) {
   );
 
   return ProviderScope(
-    overrides: [appDatabaseProvider.overrideWithValue(db)],
+    overrides: [
+      appDatabaseProvider.overrideWithValue(db),
+      if (exerciseRepository != null)
+        exerciseRepositoryProvider.overrideWithValue(exerciseRepository),
+    ],
     child: MaterialApp.router(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -42,6 +50,97 @@ Future<void> _unmountAndFlush(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// Delegates to a real [ExerciseRepositoryImpl] for everything, except
+/// [watchAll] fails for as long as [shouldSucceed] is `false` (the test
+/// flips it explicitly, between asserting the error state and tapping
+/// "Retry") -- deliberately *not* a "fail exactly once" call counter,
+/// since Riverpod's `StreamProvider` may itself re-invoke the builder more
+/// than once while a widget settles; a call-count-based fake would make
+/// this test's outcome depend on that internal, undocumented detail
+/// instead of on what "Retry" (`ErrorRetryState`, `ref.invalidate`)
+/// actually does.
+class _ToggleableExerciseRepository implements ExerciseRepository {
+  _ToggleableExerciseRepository(this._real);
+
+  final ExerciseRepositoryImpl _real;
+  bool shouldSucceed = false;
+
+  @override
+  Stream<List<Exercise>> watchAll({
+    ExerciseCatalogFilter filter = emptyExerciseCatalogFilter,
+  }) {
+    if (!shouldSucceed) {
+      return Stream.error(Exception('simulated storage error'));
+    }
+    return _real.watchAll(filter: filter);
+  }
+
+  @override
+  Future<Exercise?> getById(String id) => _real.getById(id);
+
+  @override
+  Future<Exercise> create({
+    required String name,
+    required ExerciseType exerciseType,
+    String? description,
+    String? youtubeUrl,
+    String? primaryMuscleGroupId,
+    String? equipmentId,
+    EffortMetric effortMetric = EffortMetric.none,
+    List<String> secondaryMuscleGroupIds = const [],
+  }) => _real.create(
+    name: name,
+    exerciseType: exerciseType,
+    description: description,
+    youtubeUrl: youtubeUrl,
+    primaryMuscleGroupId: primaryMuscleGroupId,
+    equipmentId: equipmentId,
+    effortMetric: effortMetric,
+    secondaryMuscleGroupIds: secondaryMuscleGroupIds,
+  );
+
+  @override
+  Future<Exercise> update({
+    required String id,
+    required String name,
+    required ExerciseType exerciseType,
+    String? description,
+    String? youtubeUrl,
+    String? primaryMuscleGroupId,
+    String? equipmentId,
+    EffortMetric effortMetric = EffortMetric.none,
+    List<String> secondaryMuscleGroupIds = const [],
+  }) => _real.update(
+    id: id,
+    name: name,
+    exerciseType: exerciseType,
+    description: description,
+    youtubeUrl: youtubeUrl,
+    primaryMuscleGroupId: primaryMuscleGroupId,
+    equipmentId: equipmentId,
+    effortMetric: effortMetric,
+    secondaryMuscleGroupIds: secondaryMuscleGroupIds,
+  );
+
+  @override
+  Future<bool> isUsedInWorkouts(String exerciseId) =>
+      _real.isUsedInWorkouts(exerciseId);
+
+  @override
+  Future<bool> hasLoggedSets(String exerciseId) =>
+      _real.hasLoggedSets(exerciseId);
+
+  @override
+  Future<void> setArchived(String exerciseId, {required bool archived}) =>
+      _real.setArchived(exerciseId, archived: archived);
+
+  @override
+  Future<void> delete(String exerciseId) => _real.delete(exerciseId);
+
+  @override
+  Future<List<Exercise>> getAllForExport() => _real.getAllForExport();
+}
+
 void main() {
   late AppDatabase db;
 
@@ -52,6 +151,47 @@ void main() {
   tearDown(() async {
     await db.close();
   });
+
+  testWidgets(
+    'a storage error shows "Retry", which re-fetches and recovers '
+    '(04_UI_UX_SPEC.md, section 6)',
+    (tester) async {
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'squat',
+              name: 'Squat',
+              exerciseType: ExerciseType.strength.name,
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      final repository = _ToggleableExerciseRepository(
+        ExerciseRepositoryImpl(db),
+      );
+
+      await tester.pumpWidget(
+        _appUnderTest(db, exerciseRepository: repository),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Couldn\'t load exercises'), findsOneWidget);
+      expect(find.widgetWithText(OutlinedButton, 'Retry'), findsOneWidget);
+      expect(find.text('Squat'), findsNothing);
+
+      // Only now let the (real) repository succeed -- "Retry" itself must
+      // still be what triggers the re-fetch, not a passage of time/pumps.
+      repository.shouldSucceed = true;
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Retry'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Squat'), findsOneWidget);
+      expect(find.widgetWithText(OutlinedButton, 'Retry'), findsNothing);
+
+      await _unmountAndFlush(tester);
+    },
+  );
 
   testWidgets('shows the empty state when the catalog has no exercises', (
     tester,

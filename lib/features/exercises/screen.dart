@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../core/reference_data_ids.dart';
+import '../../core/widgets/error_retry_state.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/exercise.dart';
 import '../../domain/models/exercise_catalog_filter.dart';
@@ -148,8 +149,10 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stackTrace) =>
-                  Center(child: Text(l10n.exercisesLoadError)),
+              error: (error, stackTrace) => ErrorRetryState(
+                message: l10n.exercisesLoadError,
+                onRetry: () => ref.invalidate(exercisesListProvider(_filter)),
+              ),
             ),
           ),
         ],

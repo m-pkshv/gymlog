@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/stats_period.dart';
+import '../../../core/widgets/error_retry_state.dart';
 import '../../../domain/models/body_measurement.dart';
 import '../../../domain/models/measurement_type.dart';
 import '../../../l10n/app_localizations.dart';
@@ -34,13 +35,12 @@ class _MeasurementDynamicsBodyState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final (from, to) = _period.range(DateTime.now());
-    final entriesAsync = ref.watch(
-      bodyMeasurementsInRangeProvider((
-        measurementTypeId: widget.type.id,
-        from: from,
-        to: to,
-      )),
+    final rangeKey = (
+      measurementTypeId: widget.type.id,
+      from: from,
+      to: to,
     );
+    final entriesAsync = ref.watch(bodyMeasurementsInRangeProvider(rangeKey));
     final settingsAsync = ref.watch(appSettingsProvider);
 
     return Column(
@@ -74,10 +74,17 @@ class _MeasurementDynamicsBodyState
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stackTrace) => Text(l10n.measurementsLoadError),
+            error: (error, stackTrace) => ErrorRetryState(
+              message: l10n.measurementsLoadError,
+              onRetry: () =>
+                  ref.invalidate(bodyMeasurementsInRangeProvider(rangeKey)),
+            ),
           ),
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stackTrace) => Text(l10n.measurementsLoadError),
+          error: (error, stackTrace) => ErrorRetryState(
+            message: l10n.measurementsLoadError,
+            onRetry: () => ref.invalidate(appSettingsProvider),
+          ),
         ),
       ],
     );

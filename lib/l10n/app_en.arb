@@ -96,6 +96,10 @@
   "@actionCancel": {
     "description": "Cancel button label on creation forms and confirmation dialogs."
   },
+  "retryAction": "Retry",
+  "@retryAction": {
+    "description": "Button on the storage-error state (04_UI_UX_SPEC.md, section 6: \"Не удалось загрузить\" + \"Повторить\") -- re-fetches via ErrorRetryState's onRetry, typically ref.invalidate(provider)."
+  },
   "newWorkoutAction": "New workout",
   "@newWorkoutAction": {
     "description": "FAB on the History list (S-02) that creates a draft workout and opens the editor (S-03)."
