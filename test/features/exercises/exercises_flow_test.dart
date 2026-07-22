@@ -196,6 +196,37 @@ void main() {
     },
   );
 
+  testWidgets(
+    "the form's dropdowns are isExpanded so long RU labels don't overflow "
+    '(UX 12)',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 5000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+
+      // DropdownButtonFormField renders an internal DropdownButton that
+      // actually carries `isExpanded` -- checking that one, not the form
+      // field wrapper, which doesn't expose the property itself.
+      expect(
+        find.byWidgetPredicate((widget) => widget is DropdownButton),
+        findsWidgets,
+      );
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is DropdownButton && widget.isExpanded != true,
+        ),
+        findsNothing,
+      );
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
   testWidgets('search narrows the list to matching names (S-06)', (
     tester,
   ) async {
@@ -300,6 +331,34 @@ void main() {
 
     await _unmountAndFlush(tester);
   });
+
+  testWidgets(
+    "the filter sheet's dropdowns are isExpanded so long RU labels don't "
+    'overflow (UX 12)',
+    (tester) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.tune));
+      await tester.pumpAndSettle();
+
+      // DropdownButtonFormField renders an internal DropdownButton that
+      // actually carries `isExpanded` -- checking that one, not the form
+      // field wrapper, which doesn't expose the property itself.
+      expect(
+        find.byWidgetPredicate((widget) => widget is DropdownButton),
+        findsWidgets,
+      );
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is DropdownButton && widget.isExpanded != true,
+        ),
+        findsNothing,
+      );
+
+      await _unmountAndFlush(tester);
+    },
+  );
 
   testWidgets('the type filter narrows the list and combines with search', (
     tester,

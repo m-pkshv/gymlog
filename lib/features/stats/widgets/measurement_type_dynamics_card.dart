@@ -74,6 +74,7 @@ class _MeasurementTypeDynamicsCardState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     DropdownButtonFormField<String>(
+                      isExpanded: true,
                       initialValue: currentId,
                       decoration: InputDecoration(
                         labelText: l10n.measurementTypeFieldLabel,

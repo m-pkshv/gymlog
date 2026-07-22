@@ -70,6 +70,7 @@ class _CreateMeasurementTypeDialogState
             }),
           ),
           DropdownButtonFormField<MeasurementUnitKind>(
+            isExpanded: true,
             initialValue: _unitKind,
             decoration: InputDecoration(
               labelText: l10n.measurementTypeUnitKindLabel,

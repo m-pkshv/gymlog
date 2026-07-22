@@ -122,6 +122,7 @@ class _MeasurementsScreenState extends ConsumerState<MeasurementsScreen>
                     Padding(
                       padding: const EdgeInsets.all(12),
                       child: DropdownButtonFormField<String>(
+                        isExpanded: true,
                         initialValue: selectedGirth?.id,
                         decoration: InputDecoration(
                           labelText: l10n.measurementGirthSelectorLabel,

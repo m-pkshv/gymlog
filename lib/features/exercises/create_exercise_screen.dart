@@ -198,6 +198,7 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<ExerciseType>(
+                    isExpanded: true,
                     initialValue: _selectedType,
                     decoration: InputDecoration(
                       labelText: l10n.exerciseTypeLabel,
@@ -230,6 +231,7 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String?>(
+                    isExpanded: true,
                     initialValue: _primaryMuscleGroupId,
                     decoration: InputDecoration(
                       labelText: l10n.exercisePrimaryMuscleLabel,
@@ -274,6 +276,7 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String?>(
+                    isExpanded: true,
                     initialValue: _equipmentId,
                     decoration: InputDecoration(
                       labelText: l10n.exerciseEquipmentLabel,
@@ -294,6 +297,7 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
                   if (_selectedType == ExerciseType.strength) ...[
                     const SizedBox(height: 16),
                     DropdownButtonFormField<EffortMetric>(
+                      isExpanded: true,
                       initialValue: _effortMetric,
                       decoration: InputDecoration(
                         labelText: l10n.exerciseEffortMetricLabel,

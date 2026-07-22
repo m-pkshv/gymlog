@@ -235,6 +235,7 @@ class _MeasurementFormScreenState extends ConsumerState<MeasurementFormScreen> {
                     padding: const EdgeInsets.all(16),
                     children: [
                       DropdownButtonFormField<String>(
+                        isExpanded: true,
                         initialValue: currentTypeId,
                         decoration: InputDecoration(
                           labelText: l10n.measurementTypeFieldLabel,

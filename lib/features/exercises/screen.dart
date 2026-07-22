@@ -334,6 +334,7 @@ class _FilterSheetState extends State<_FilterSheet> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<ExerciseType?>(
+              isExpanded: true,
               initialValue: _type,
               decoration: InputDecoration(labelText: l10n.exerciseTypeLabel),
               items: [
@@ -351,6 +352,7 @@ class _FilterSheetState extends State<_FilterSheet> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String?>(
+              isExpanded: true,
               initialValue: _muscleGroupId,
               decoration: InputDecoration(
                 labelText: l10n.filterMuscleGroupLabel,
@@ -370,6 +372,7 @@ class _FilterSheetState extends State<_FilterSheet> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String?>(
+              isExpanded: true,
               initialValue: _equipmentId,
               decoration: InputDecoration(
                 labelText: l10n.exerciseEquipmentLabel,
