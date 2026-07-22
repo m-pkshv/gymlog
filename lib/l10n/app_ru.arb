@@ -187,6 +187,7 @@
   "filterTagsLabel": "Теги",
   "historySearchEmptyTitle": "Ничего не найдено",
   "moveExerciseUpAction": "Переместить вверх",
+  "reorderDragHandleLabel": "Перетащить, чтобы изменить порядок",
   "moveExerciseDownAction": "Переместить вниз",
   "workoutCommentLabel": "Комментарий",
   "exerciseCommentLabel": "Комментарий",

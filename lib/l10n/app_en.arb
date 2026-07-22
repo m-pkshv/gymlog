@@ -671,6 +671,10 @@
   "@moveExerciseDownAction": {
     "description": "Menu action on an exercise card in the workout editor (S-03, Stage 3) — the gesture-free alternative to the drag handle. Hidden when the card is already last."
   },
+  "reorderDragHandleLabel": "Drag to reorder",
+  "@reorderDragHandleLabel": {
+    "description": "UX 11 accessibility: Semantics label for the icon-only drag handle on an exercise card (workout editor S-03 and template editor S-13) -- the handle itself has no visible text; the \"Move up\"/\"Move down\" menu items are its gesture-free alternative."
+  },
   "workoutCommentLabel": "Comment",
   "@workoutCommentLabel": {
     "description": "Label of the workout-level comment field in the editor header (S-03, Stage 3, DM 6.4, max 2000 chars)."

@@ -308,6 +308,32 @@ void main() {
   );
 
   testWidgets(
+    'the drag handle has an accessible label, not just an icon (UX 11)',
+    (tester) async {
+      await _seedExercise(db, id: 'squat', name: 'Squat');
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await _createTemplateViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics &&
+              widget.properties.label == 'Drag to reorder',
+        ),
+        findsOneWidget,
+      );
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
     'deleting a template shows an Undo snackbar; "Undo" restores it',
     (tester) async {
       await tester.pumpWidget(_appUnderTest(db));

@@ -90,11 +90,20 @@ class ExerciseCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                ReorderableDragStartListener(
-                  index: index,
-                  child: const Icon(Icons.drag_handle),
+                // UX 11: icon-only control, no visible text of its own --
+                // needs a Semantics label. The bare 24dp icon is also below
+                // the 48dp minimum touch target; the padding brings it up
+                // to exactly 48dp without changing what's visually drawn.
+                Semantics(
+                  label: l10n.reorderDragHandleLabel,
+                  child: ReorderableDragStartListener(
+                    index: index,
+                    child: const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Icon(Icons.drag_handle),
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 8),
                 Icon(exerciseTypeIcon(details.exercise.exerciseType)),
                 const SizedBox(width: 8),
                 Expanded(

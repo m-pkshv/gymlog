@@ -1226,6 +1226,12 @@ abstract class AppLocalizations {
   /// **'Move down'**
   String get moveExerciseDownAction;
 
+  /// UX 11 accessibility: Semantics label for the icon-only drag handle on an exercise card (workout editor S-03 and template editor S-13) -- the handle itself has no visible text; the "Move up"/"Move down" menu items are its gesture-free alternative.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder'**
+  String get reorderDragHandleLabel;
+
   /// Label of the workout-level comment field in the editor header (S-03, Stage 3, DM 6.4, max 2000 chars).
   ///
   /// In en, this message translates to:
