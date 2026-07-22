@@ -17,6 +17,7 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
   @override
   Stream<List<Exercise>> watchAll({
     ExerciseCatalogFilter filter = emptyExerciseCatalogFilter,
+    String? locale,
   }) {
     final query = _db.select(_db.exercises)
       ..where((e) => e.isDeleted.equals(false));
@@ -40,11 +41,16 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
       final secondaryByExercise = await _secondaryMuscleGroupIdsByExercise(
         ids,
       );
+      final l10nByExercise = locale == null
+          ? const <String, drift.ExerciseL10nData>{}
+          : await _l10nByExercise(ids, locale);
 
       var exercises = rows
           .map(
             (row) => row.toDomain(
               secondaryMuscleGroupIds: secondaryByExercise[row.id] ?? const [],
+              localizedName: l10nByExercise[row.id]?.name,
+              localizedDescription: l10nByExercise[row.id]?.description,
             ),
           )
           .toList();
@@ -82,15 +88,20 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
   }
 
   @override
-  Future<Exercise?> getById(String id) async {
+  Future<Exercise?> getById(String id, {String? locale}) async {
     final row = await (_db.select(
       _db.exercises,
     )..where((e) => e.id.equals(id))).getSingleOrNull();
     if (row == null) return null;
 
     final secondaryByExercise = await _secondaryMuscleGroupIdsByExercise([id]);
+    final l10n = locale == null
+        ? null
+        : (await _l10nByExercise([id], locale))[id];
     return row.toDomain(
       secondaryMuscleGroupIds: secondaryByExercise[id] ?? const [],
+      localizedName: l10n?.name,
+      localizedDescription: l10n?.description,
     );
   }
 
@@ -265,6 +276,21 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
       result.putIfAbsent(row.exerciseId, () => []).add(row.muscleGroupId);
     }
     return result;
+  }
+
+  /// One `ExerciseL10n` row per exercise for [locale] (DM 12) -- the
+  /// display text `toDomain` overrides the canonical name/description with,
+  /// as opposed to [_localizedNamesByExercise] below, which grabs every
+  /// locale's name just to widen search matching.
+  Future<Map<String, drift.ExerciseL10nData>> _l10nByExercise(
+    List<String> exerciseIds,
+    String locale,
+  ) async {
+    final rows = await (_db.select(_db.exerciseL10n)..where(
+          (l) => l.exerciseId.isIn(exerciseIds) & l.locale.equals(locale),
+        ))
+        .get();
+    return {for (final row in rows) row.exerciseId: row};
   }
 
   Future<Map<String, List<String>>> _localizedNamesByExercise(

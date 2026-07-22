@@ -22,7 +22,10 @@ abstract class WorkoutTemplateRepository {
     bool includeArchived = false,
   });
 
-  Future<TemplateDetails?> getDetails(String templateId);
+  /// [locale] (`'ru'`/`'en'`, from `resolvedLocaleCode`) resolves each
+  /// embedded exercise's name/description against `ExerciseL10n` (DM 12)
+  /// when a translation exists; omitted (`null`) returns canonical text.
+  Future<TemplateDetails?> getDetails(String templateId, {String? locale});
 
   Future<WorkoutTemplate> create({required String name, String? comment});
 

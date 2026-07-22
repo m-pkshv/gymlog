@@ -10,11 +10,17 @@ abstract class ExerciseRepository {
   /// 04_UI_UX_SPEC.md section 5). Non-archived and non-deleted by default;
   /// [ExerciseCatalogFilter.includeArchived] widens that. [ExerciseCatalogFilter.query]
   /// matches the canonical name or any localized name (DM 12).
+  /// [locale] (`'ru'`/`'en'`, from [resolvedLocaleCode]) resolves
+  /// `Exercise.name`/`description` against `ExerciseL10n` (DM 12) when a
+  /// translation exists for that exercise+locale; omitted (`null`) returns
+  /// the canonical text untouched, e.g. for the create/edit form.
   Stream<List<Exercise>> watchAll({
     ExerciseCatalogFilter filter = emptyExerciseCatalogFilter,
+    String? locale,
   });
 
-  Future<Exercise?> getById(String id);
+  /// [locale]: see [watchAll].
+  Future<Exercise?> getById(String id, {String? locale});
 
   /// Creates a user-created exercise (S-08, full form — DM 6.1). Only
   /// [name] and [exerciseType] are required; the rest default to "not set"

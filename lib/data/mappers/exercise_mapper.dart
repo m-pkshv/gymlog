@@ -8,11 +8,19 @@ import '../database.dart' as drift;
 /// (06_DATA_MODEL.md, section 6.1). Secondary muscle groups live in a
 /// separate join table, so callers pass them in after a separate query.
 extension ExerciseRowMapper on drift.Exercise {
-  Exercise toDomain({List<String> secondaryMuscleGroupIds = const []}) {
+  /// [localizedName]/[localizedDescription] (from `ExerciseL10n`, DM 12)
+  /// override the canonical `name`/`description` when given -- callers that
+  /// need locale-independent text (CSV export, the create/edit form's
+  /// canonical field, the create-exercise write path) simply omit them.
+  Exercise toDomain({
+    List<String> secondaryMuscleGroupIds = const [],
+    String? localizedName,
+    String? localizedDescription,
+  }) {
     return Exercise(
       id: id,
-      name: name,
-      description: description,
+      name: localizedName ?? name,
+      description: localizedDescription ?? description,
       youtubeUrl: youtubeUrl,
       imageAsset: imageAsset,
       exerciseType: ExerciseType.values.byName(exerciseType),

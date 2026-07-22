@@ -247,6 +247,100 @@ void main() {
       expect(results.map((e) => e.id), [exercise.id]);
     });
 
+    test('watchAll with no locale returns the canonical name/description', () async {
+      final exercise = await repository.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+        description: 'Bend the knees.',
+      );
+      await db
+          .into(db.exerciseL10n)
+          .insert(
+            ExerciseL10nCompanion.insert(
+              exerciseId: exercise.id,
+              locale: 'ru',
+              name: 'Приседания',
+              description: const Value('Согните колени.'),
+            ),
+          );
+
+      final results = await repository.watchAll().first;
+
+      expect(results.single.name, 'Squat');
+      expect(results.single.description, 'Bend the knees.');
+    });
+
+    test('watchAll(locale: "ru") returns the translated name/description when one exists', () async {
+      final exercise = await repository.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+        description: 'Bend the knees.',
+      );
+      await db
+          .into(db.exerciseL10n)
+          .insert(
+            ExerciseL10nCompanion.insert(
+              exerciseId: exercise.id,
+              locale: 'ru',
+              name: 'Приседания',
+              description: const Value('Согните колени.'),
+            ),
+          );
+
+      final results = await repository.watchAll(locale: 'ru').first;
+
+      expect(results.single.name, 'Приседания');
+      expect(results.single.description, 'Согните колени.');
+    });
+
+    test('watchAll(locale: "ru") falls back to canonical text when there is no translation', () async {
+      await repository.create(name: 'Squat', exerciseType: ExerciseType.strength);
+
+      final results = await repository.watchAll(locale: 'ru').first;
+
+      expect(results.single.name, 'Squat');
+    });
+
+    test('getById(locale: "ru") returns the translated name when one exists', () async {
+      final exercise = await repository.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      await db
+          .into(db.exerciseL10n)
+          .insert(
+            ExerciseL10nCompanion.insert(
+              exerciseId: exercise.id,
+              locale: 'ru',
+              name: 'Приседания',
+            ),
+          );
+
+      final result = await repository.getById(exercise.id, locale: 'ru');
+
+      expect(result!.name, 'Приседания');
+    });
+
+    test('getById with no locale returns the canonical name', () async {
+      final exercise = await repository.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      await db
+          .into(db.exerciseL10n)
+          .insert(
+            ExerciseL10nCompanion.insert(
+              exerciseId: exercise.id,
+              locale: 'ru',
+              name: 'Приседания',
+            ),
+          );
+
+      final result = await repository.getById(exercise.id);
+
+      expect(result!.name, 'Squat');
+    });
+
     test('type filter narrows the list', () async {
       await repository.create(name: 'Squat', exerciseType: ExerciseType.strength);
       await repository.create(name: 'Run', exerciseType: ExerciseType.cardio);

@@ -68,15 +68,17 @@ class _ToggleableExerciseRepository implements ExerciseRepository {
   @override
   Stream<List<Exercise>> watchAll({
     ExerciseCatalogFilter filter = emptyExerciseCatalogFilter,
+    String? locale,
   }) {
     if (!shouldSucceed) {
       return Stream.error(Exception('simulated storage error'));
     }
-    return _real.watchAll(filter: filter);
+    return _real.watchAll(filter: filter, locale: locale);
   }
 
   @override
-  Future<Exercise?> getById(String id) => _real.getById(id);
+  Future<Exercise?> getById(String id, {String? locale}) =>
+      _real.getById(id, locale: locale);
 
   @override
   Future<Exercise> create({

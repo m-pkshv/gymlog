@@ -35,7 +35,10 @@ abstract class WorkoutRepository {
     required DateTime notBefore,
   });
 
-  Future<WorkoutDetails?> getDetails(String workoutId);
+  /// [locale] (`'ru'`/`'en'`, from `resolvedLocaleCode`) resolves each
+  /// embedded exercise's name/description against `ExerciseL10n` (DM 12)
+  /// when a translation exists; omitted (`null`) returns canonical text.
+  Future<WorkoutDetails?> getDetails(String workoutId, {String? locale});
 
   /// Non-deleted workouts matching [filter], with their exercise count and
   /// tags, most recent date first (S-02). [WorkoutHistoryFilter.statuses]

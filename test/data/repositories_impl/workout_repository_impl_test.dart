@@ -125,6 +125,45 @@ void main() {
     },
   );
 
+  group('getDetails locale (Stage 10, DM 12)', () {
+    test('resolves the embedded exercise name against ExerciseL10n when a locale is given', () async {
+      final exercise = await exercises.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      await db
+          .into(db.exerciseL10n)
+          .insert(
+            ExerciseL10nCompanion.insert(
+              exerciseId: exercise.id,
+              locale: 'ru',
+              name: 'Приседания',
+            ),
+          );
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 19));
+      await workouts.addExercise(workoutId: workout.id, exerciseId: exercise.id);
+
+      final canonical = await workouts.getDetails(workout.id);
+      expect(canonical!.exercises.single.exercise.name, 'Squat');
+
+      final localized = await workouts.getDetails(workout.id, locale: 'ru');
+      expect(localized!.exercises.single.exercise.name, 'Приседания');
+    });
+
+    test('falls back to the canonical name when there is no translation for the given locale', () async {
+      final exercise = await exercises.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 19));
+      await workouts.addExercise(workoutId: workout.id, exerciseId: exercise.id);
+
+      final details = await workouts.getDetails(workout.id, locale: 'ru');
+
+      expect(details!.exercises.single.exercise.name, 'Squat');
+    });
+  });
+
   group('watchNextUpcomingWorkout (Stage 9, S-01)', () {
     test('null when there is no draft/planned workout at all', () async {
       expect(

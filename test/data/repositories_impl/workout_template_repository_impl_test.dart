@@ -77,6 +77,32 @@ void main() {
     },
   );
 
+  group('getDetails locale (Stage 10, DM 12)', () {
+    test('resolves the embedded exercise name against ExerciseL10n when a locale is given', () async {
+      final exercise = await exercises.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      await db
+          .into(db.exerciseL10n)
+          .insert(
+            ExerciseL10nCompanion.insert(
+              exerciseId: exercise.id,
+              locale: 'ru',
+              name: 'Приседания',
+            ),
+          );
+      final template = await templates.create(name: 'Leg day');
+      await templates.addExercise(templateId: template.id, exerciseId: exercise.id);
+
+      final canonical = await templates.getDetails(template.id);
+      expect(canonical!.exercises.single.exercise.name, 'Squat');
+
+      final localized = await templates.getDetails(template.id, locale: 'ru');
+      expect(localized!.exercises.single.exercise.name, 'Приседания');
+    });
+  });
+
   test('watchAll excludes archived templates by default, includes on request', () async {
     final active = await templates.create(name: 'Active');
     final archived = await templates.create(name: 'Archived');

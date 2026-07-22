@@ -70,7 +70,7 @@ class WorkoutTemplateRepositoryImpl implements WorkoutTemplateRepository {
   }
 
   @override
-  Future<TemplateDetails?> getDetails(String templateId) async {
+  Future<TemplateDetails?> getDetails(String templateId, {String? locale}) async {
     final templateRow = await (_db.select(_db.workoutTemplates)..where(
       (t) => t.id.equals(templateId) & t.isDeleted.equals(false),
     )).getSingleOrNull();
@@ -98,6 +98,9 @@ class WorkoutTemplateRepositoryImpl implements WorkoutTemplateRepository {
       _db.exercises,
     )..where((e) => e.id.isIn(exerciseIds))).get();
     final exerciseById = {for (final row in exerciseRows) row.id: row};
+    final l10nByExercise = locale == null
+        ? const <String, drift.ExerciseL10nData>{}
+        : await _l10nByExercise(exerciseIds, locale);
 
     final templateExerciseIds = templateExerciseRows
         .map((te) => te.id)
@@ -122,9 +125,13 @@ class WorkoutTemplateRepositoryImpl implements WorkoutTemplateRepository {
       final exerciseRow = exerciseById[teRow.exerciseId]!;
       final sets =
           setsByTemplateExercise[teRow.id] ?? const <drift.TemplateSet>[];
+      final l10n = l10nByExercise[teRow.exerciseId];
       return TemplateExerciseDetails(
         templateExercise: teRow.toDomain(),
-        exercise: exerciseRow.toDomain(),
+        exercise: exerciseRow.toDomain(
+          localizedName: l10n?.name,
+          localizedDescription: l10n?.description,
+        ),
         sets: sets.map((s) => s.toDomain()).toList(),
       );
     }).toList();
@@ -475,5 +482,20 @@ class WorkoutTemplateRepositoryImpl implements WorkoutTemplateRepository {
       (te) => te.templateId.equals(templateId) & te.isDeleted.equals(false),
     )).get();
     return rows.map((row) => row.id).toList();
+  }
+
+  /// One `ExerciseL10n` row per exercise for [locale] (DM 12) -- mirrors
+  /// the same-shaped private helper in the other repositories that embed
+  /// full `Exercise` objects.
+  Future<Map<String, drift.ExerciseL10nData>> _l10nByExercise(
+    List<String> exerciseIds,
+    String locale,
+  ) async {
+    if (exerciseIds.isEmpty) return const {};
+    final rows = await (_db.select(_db.exerciseL10n)..where(
+          (l) => l.exerciseId.isIn(exerciseIds) & l.locale.equals(locale),
+        ))
+        .get();
+    return {for (final row in rows) row.exerciseId: row};
   }
 }

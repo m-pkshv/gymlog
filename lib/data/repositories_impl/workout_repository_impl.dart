@@ -84,7 +84,7 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
   }
 
   @override
-  Future<WorkoutDetails?> getDetails(String workoutId) async {
+  Future<WorkoutDetails?> getDetails(String workoutId, {String? locale}) async {
     final workoutRow = await (_db.select(_db.workouts)..where(
       (w) => w.id.equals(workoutId) & w.isDeleted.equals(false),
     )).getSingleOrNull();
@@ -117,6 +117,9 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
       _db.exercises,
     )..where((e) => e.id.isIn(exerciseIds))).get();
     final exerciseById = {for (final row in exerciseRows) row.id: row};
+    final l10nByExercise = locale == null
+        ? const <String, drift.ExerciseL10nData>{}
+        : await _l10nByExercise(exerciseIds, locale);
 
     final workoutExerciseIds = workoutExerciseRows.map((we) => we.id).toList();
     final setRows =
@@ -139,9 +142,13 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
       final exerciseRow = exerciseById[weRow.exerciseId]!;
       final sets =
           setsByWorkoutExercise[weRow.id] ?? const <drift.ExerciseSet>[];
+      final l10n = l10nByExercise[weRow.exerciseId];
       return WorkoutExerciseDetails(
         workoutExercise: weRow.toDomain(),
-        exercise: exerciseRow.toDomain(),
+        exercise: exerciseRow.toDomain(
+          localizedName: l10n?.name,
+          localizedDescription: l10n?.description,
+        ),
         sets: sets.map((s) => s.toDomain()).toList(),
       );
     }).toList();
@@ -181,6 +188,22 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
       result.putIfAbsent(workoutId, () => []).add(tag);
     }
     return result;
+  }
+
+  /// One `ExerciseL10n` row per exercise for [locale] (DM 12) -- mirrors
+  /// `ExerciseRepositoryImpl`'s private helper of the same shape; kept
+  /// separate rather than shared since each repository already owns its own
+  /// small batch-lookup helpers (see [_tagsByWorkouts]).
+  Future<Map<String, drift.ExerciseL10nData>> _l10nByExercise(
+    List<String> exerciseIds,
+    String locale,
+  ) async {
+    if (exerciseIds.isEmpty) return const {};
+    final rows = await (_db.select(_db.exerciseL10n)..where(
+          (l) => l.exerciseId.isIn(exerciseIds) & l.locale.equals(locale),
+        ))
+        .get();
+    return {for (final row in rows) row.exerciseId: row};
   }
 
   @override
