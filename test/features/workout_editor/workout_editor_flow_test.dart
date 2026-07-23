@@ -299,6 +299,37 @@ void main() {
   });
 
   testWidgets(
+    'the add-exercise picker has a search field that narrows the catalog '
+    '(Stage 10, owner-reported)',
+    (tester) async {
+      await _seedExercise(db, id: 'squat', name: 'Squat');
+      await _seedExercise(db, id: 'bench', name: 'Bench Press');
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await _createDraftViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Squat'), findsOneWidget);
+      expect(find.text('Bench Press'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'Bench');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bench Press'), findsOneWidget);
+      expect(find.text('Squat'), findsNothing);
+
+      await tester.tap(find.text('Bench Press'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bench Press'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
     'creating a new exercise from the editor adds it immediately (Stage 1 ★)',
     (tester) async {
       await tester.pumpWidget(_appUnderTest(db));

@@ -12,54 +12,109 @@ import '../exercises/exercise_type_labels.dart';
 /// "+ Упражнение" picker (S-03, and S-13's identical template flavor): pick
 /// an existing catalog entry, or create one on the spot ("Создать новое",
 /// S-08) — either way the result is popped back to the caller, which adds
-/// it to the workout/template right away. Stage 1 scope: no search/filters
-/// (those land with the full S-06 in Stage 2). [addExerciseRoute] is this
-/// screen's own full path (e.g. `/history/workout/$id/add-exercise` or
-/// `/more/templates/$id/add-exercise`) — used only to build the "Создать
-/// новое" child route, so this screen doesn't need to know which aggregate
-/// it's picking for.
-class AddExerciseScreen extends ConsumerWidget {
+/// it to the workout/template right away. Name-only search (Stage 10,
+/// owner-reported: scrolling the full catalog mid-workout was unworkable) —
+/// same lightweight search-only shape as `ExerciseProgressPickerScreen`, not
+/// the full S-06 catalog's type/muscle/equipment filter sheet, which would
+/// be excessive for "pick one exercise and get back to logging".
+/// [addExerciseRoute] is this screen's own full path (e.g.
+/// `/history/workout/$id/add-exercise` or `/more/templates/$id/add-
+/// exercise`) — used only to build the "Создать новое" child route, so this
+/// screen doesn't need to know which aggregate it's picking for.
+class AddExerciseScreen extends ConsumerStatefulWidget {
   const AddExerciseScreen({super.key, required this.addExerciseRoute});
 
   final String addExerciseRoute;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AddExerciseScreen> createState() => _AddExerciseScreenState();
+}
+
+class _AddExerciseScreenState extends ConsumerState<AddExerciseScreen> {
+  final _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final exercisesAsync = ref.watch(
-      exercisesListProvider(emptyExerciseCatalogFilter),
+    final ExerciseCatalogFilter filter = (
+      query: _searchController.text.trim(),
+      type: null,
+      muscleGroupId: null,
+      equipmentId: null,
+      includeArchived: false,
+      onlyUserCreated: false,
     );
+    final exercisesAsync = ref.watch(exercisesListProvider(filter));
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.addExerciseAction)),
-      body: exercisesAsync.when(
-        data: (exercises) {
-          if (exercises.isEmpty) {
-            return _EmptyState(l10n: l10n);
-          }
-          return ListView.builder(
-            itemCount: exercises.length,
-            itemBuilder: (context, index) {
-              final exercise = exercises[index];
-              return ListTile(
-                leading: Icon(exerciseTypeIcon(exercise.exerciseType)),
-                title: Text(exercise.name),
-                subtitle: Text(exerciseTypeLabel(l10n, exercise.exerciseType)),
-                onTap: () => context.pop(exercise),
-              );
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => ErrorRetryState(
-          message: l10n.exercisesLoadError,
-          onRetry: () =>
-              ref.invalidate(exercisesListProvider(emptyExerciseCatalogFilter)),
-        ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: TextField(
+              controller: _searchController,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: l10n.searchExercisesHint,
+                prefixIcon: const Icon(Icons.search),
+                isDense: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: exercisesAsync.when(
+              data: (exercises) {
+                if (exercises.isEmpty) {
+                  return _EmptyState(
+                    l10n: l10n,
+                    isSearching: _searchController.text.trim().isNotEmpty,
+                  );
+                }
+                return ListView.builder(
+                  itemCount: exercises.length,
+                  itemBuilder: (context, index) {
+                    final exercise = exercises[index];
+                    return ListTile(
+                      leading: Icon(exerciseTypeIcon(exercise.exerciseType)),
+                      title: Text(exercise.name),
+                      subtitle: Text(
+                        exerciseTypeLabel(l10n, exercise.exerciseType),
+                      ),
+                      onTap: () => context.pop(exercise),
+                    );
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stackTrace) => ErrorRetryState(
+                message: l10n.exercisesLoadError,
+                onRetry: () => ref.invalidate(exercisesListProvider(filter)),
+              ),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final created = await context.push<Exercise>('$addExerciseRoute/new');
+          final created = await context.push<Exercise>(
+            '${widget.addExerciseRoute}/new',
+          );
           if (created != null && context.mounted) context.pop(created);
         },
         tooltip: l10n.createExerciseAction,
@@ -70,9 +125,10 @@ class AddExerciseScreen extends ConsumerWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.l10n});
+  const _EmptyState({required this.l10n, required this.isSearching});
 
   final AppLocalizations l10n;
+  final bool isSearching;
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +145,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              l10n.exercisesEmptyTitle,
+              isSearching ? l10n.exercisesSearchEmptyTitle : l10n.exercisesEmptyTitle,
               style: Theme.of(context).textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
