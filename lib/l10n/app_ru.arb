@@ -51,7 +51,6 @@
   "addSetAction": "Добавить подход",
   "workoutExercisesEmpty": "Пока нет упражнений",
   "setColumnNumber": "№",
-  "setColumnWarmup": "Разминка",
   "setColumnPlan": "План",
   "setColumnFact": "Факт",
   "setColumnDone": "Выполнено",

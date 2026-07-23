@@ -33,7 +33,6 @@ Exercise _exercise({
 ExerciseSet _set({
   required String id,
   required int setNumber,
-  required bool isWarmup,
   required bool isCompleted,
   double? plannedWeightKg,
   int? plannedReps,
@@ -47,7 +46,6 @@ ExerciseSet _set({
     id: id,
     workoutExerciseId: 'we',
     setNumber: setNumber,
-    isWarmup: isWarmup,
     isCompleted: isCompleted,
     side: BodySide.none,
     createdAt: _epoch,
@@ -120,7 +118,6 @@ void main() {
               _set(
                 id: 's1',
                 setNumber: 1,
-                isWarmup: true,
                 isCompleted: true,
                 plannedWeightKg: 40,
                 plannedReps: 10,
@@ -130,7 +127,6 @@ void main() {
               _set(
                 id: 's2',
                 setNumber: 2,
-                isWarmup: false,
                 isCompleted: true,
                 plannedWeightKg: 100,
                 plannedReps: 5,
@@ -211,7 +207,6 @@ void main() {
               'exercise_comment': 'focus on depth',
               'progression_decision': 'increase',
               'set_number': '1',
-              'is_warmup': 'true',
               'is_completed': 'true',
               'planned_weight_kg': '40.0',
               'planned_reps': '10',
@@ -238,7 +233,6 @@ void main() {
               'exercise_comment': 'focus on depth',
               'progression_decision': 'increase',
               'set_number': '2',
-              'is_warmup': 'false',
               'is_completed': 'true',
               'planned_weight_kg': '100.0',
               'planned_reps': '5',

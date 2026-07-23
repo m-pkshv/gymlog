@@ -40,7 +40,7 @@ void main() {
       workoutId: workout.id,
       exerciseId: exerciseId,
     );
-    final set = await workouts.addSet(workoutExerciseId: we.id, isWarmup: false);
+    final set = await workouts.addSet(workoutExerciseId: we.id);
     await workouts.updateSet(
       set.copyWith(
         isCompleted: true,
@@ -243,7 +243,7 @@ void main() {
         workoutId: workout.id,
         exerciseId: exercise.id,
       );
-      final set = await workouts.addSet(workoutExerciseId: we.id, isWarmup: false);
+      final set = await workouts.addSet(workoutExerciseId: we.id);
       await workouts.updateSet(
         set.copyWith(isCompleted: true, actualReps: reps),
       );
@@ -276,7 +276,7 @@ void main() {
         );
         final set = await workouts.addSet(
           workoutExerciseId: we.id,
-          isWarmup: false,
+
         );
         await workouts.updateSet(
           set.copyWith(
@@ -315,7 +315,7 @@ void main() {
         );
         final set = await workouts.addSet(
           workoutExerciseId: we.id,
-          isWarmup: false,
+
         );
         await workouts.updateSet(
           set.copyWith(
@@ -350,7 +350,7 @@ void main() {
         workoutId: workout.id,
         exerciseId: exercise.id,
       );
-      final set = await workouts.addSet(workoutExerciseId: we.id, isWarmup: false);
+      final set = await workouts.addSet(workoutExerciseId: we.id);
       await workouts.updateSet(
         set.copyWith(isCompleted: true, actualDurationSec: duration),
       );
@@ -366,7 +366,7 @@ void main() {
   });
 
   test(
-    'warmup-only or not-completed sets are ignored (TS 9 general rule)',
+    'not-completed sets are ignored (TS 9 general rule)',
     () async {
       final exercise = await exercises.create(
         name: 'Squat',
@@ -378,15 +378,15 @@ void main() {
         weight: 60,
         reps: 8,
       );
-      // A much heavier set, but it's a warmup -- must not count as "best".
+      // A heavier set, but never marked done -- must not count as "best".
       final workout = await workouts.createDraft(date: DateTime(2026, 7, 8));
       final we = await workouts.addExercise(
         workoutId: workout.id,
         exerciseId: exercise.id,
       );
-      final warmup = await workouts.addSet(workoutExerciseId: we.id, isWarmup: true);
+      final set = await workouts.addSet(workoutExerciseId: we.id);
       await workouts.updateSet(
-        warmup.copyWith(isCompleted: true, actualWeightKg: 100, actualReps: 8),
+        set.copyWith(actualWeightKg: 100, actualReps: 8),
       );
       await workouts.updateWorkout(
         workout.copyWith(status: WorkoutStatus.completed),
@@ -395,7 +395,7 @@ void main() {
       await service.recompute(exercise.id);
 
       final state = await progressionRepository.watchState(exercise.id).first;
-      // The warmup-only occurrence is a null vector -- not growth.
+      // No completed set that occurrence -- a null vector, not growth.
       expect(state!.stagnationCount, 1);
     },
   );
@@ -416,7 +416,7 @@ void main() {
       workoutId: cancelled.id,
       exerciseId: exercise.id,
     );
-    final set = await workouts.addSet(workoutExerciseId: we.id, isWarmup: false);
+    final set = await workouts.addSet(workoutExerciseId: we.id);
     await workouts.updateSet(
       set.copyWith(isCompleted: true, actualWeightKg: 999, actualReps: 1),
     );

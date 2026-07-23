@@ -172,9 +172,6 @@ class _EditorBody extends StatelessWidget {
                       onFieldCommit: (setId, field) {
                         controller.flushSet(setId);
                       },
-                      onWarmupChanged: (setId, value) {
-                        controller.setWarmup(setId, value: value);
-                      },
                       onAddSet: () => controller.addSet(templateExerciseId),
                       onMoveUp: () =>
                           controller.moveExercise(templateExerciseId, up: true),

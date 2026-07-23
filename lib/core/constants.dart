@@ -104,7 +104,9 @@ class RestTimerRules {
 class ExportFormat {
   const ExportFormat._();
 
-  static const int formatVersion = 1;
+  /// v2 (Stage 10, 2026-07-23, owner-confirmed): `workouts.csv` dropped the
+  /// `is_warmup` column -- the warm-up concept was removed from the app.
+  static const int formatVersion = 2;
 
   /// Mirrors `pubspec.yaml`'s semantic version (currently `1.0.0+1`) --
   /// there's no `package_info_plus` dependency (not in TS 3) to read it at

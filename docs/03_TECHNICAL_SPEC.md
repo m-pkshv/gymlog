@@ -105,7 +105,7 @@ test/ (unit), integration_test/
 - Шаблоны: создание из тренировки переносит структуру и плановые значения; создание тренировки из шаблона — обратное копирование (`06`, раздел 6.8).
 
 ## 9. Статистика: формулы и источники данных
-Общие правила: источник — только рабочие (`isWarmup = 0`) подходы с `isCompleted = 1` завершённых (`completed`, `isDeleted = 0`) тренировок; измерения — все неудалённые `BodyMeasurement`. Периоды графиков: 7 дн, 30 дн, 90 дн, 365 дн, всё время, пользовательский диапазон (включительно, по локальным датам). Пустой период — пустое состояние (`04`, раздел 6).
+Общие правила: источник — подходы с `isCompleted = 1` завершённых (`completed`, `isDeleted = 0`) тренировок (Этап 10, 2026-07-23: понятие «разминочный подход» удалено из приложения — раньше здесь было дополнительное условие `isWarmup = 0`, теперь все подходы равноценны); измерения — все неудалённые `BodyMeasurement`. Периоды графиков: 7 дн, 30 дн, 90 дн, 365 дн, всё время, пользовательский диапазон (включительно, по локальным датам). Пустой период — пустое состояние (`04`, раздел 6).
 
 | Показатель | Формула / источник |
 |---|---|
@@ -142,9 +142,10 @@ test/ (unit), integration_test/
 - Операция журналируется в `ImportExportOperation`; сборка — во временный каталог, ZIP формируется полностью и только затем передаётся в шаринг (частичный файл наружу не попадает).
 
 ### 10.2. `manifest.json`
+`formatVersion` v2 (Этап 10, 2026-07-23): убрана колонка `is_warmup` из `workouts.csv` (10.3) — понятие разминки удалено из приложения.
 ```json
 {
-  "formatVersion": 1,
+  "formatVersion": 2,
   "appVersion": "1.0.0",
   "exportedAtUtc": "2026-07-19T14:00:00Z",
   "files": {
@@ -157,7 +158,7 @@ test/ (unit), integration_test/
 ```
 
 ### 10.3. `workouts.csv` — строка = подход (порядок колонок фиксирован)
-`exercise_name, exercise_id, exercise_type, workout_id, workout_date, workout_name, workout_status, workout_tags, workout_comment, workout_duration_sec, exercise_order, exercise_comment, progression_decision, set_number, is_warmup, is_completed, planned_weight_kg, planned_reps, actual_weight_kg, actual_reps, rpe, rir, planned_duration_sec, actual_duration_sec, planned_distance_m, actual_distance_m, resistance, incline_percent, avg_heart_rate, side, set_comment`
+`exercise_name, exercise_id, exercise_type, workout_id, workout_date, workout_name, workout_status, workout_tags, workout_comment, workout_duration_sec, exercise_order, exercise_comment, progression_decision, set_number, is_completed, planned_weight_kg, planned_reps, actual_weight_kg, actual_reps, rpe, rir, planned_duration_sec, actual_duration_sec, planned_distance_m, actual_distance_m, resistance, incline_percent, avg_heart_rate, side, set_comment`
 - `exercise_name` — первая колонка (требование D-9); для встроенных — каноническое английское имя (`06`, раздел 12).
 - `workout_tags` — имена тегов через `;` внутри одной ячейки.
 - Булевы — `true`/`false`. Тренировка без упражнений — одна строка с пустыми полями подхода. Сортировка строк: `workout_date`, `workout_id`, `exercise_order`, `set_number`.

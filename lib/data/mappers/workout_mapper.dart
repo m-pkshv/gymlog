@@ -109,7 +109,6 @@ extension ExerciseSetRowMapper on drift.ExerciseSet {
       id: id,
       workoutExerciseId: workoutExerciseId,
       setNumber: setNumber,
-      isWarmup: isWarmup,
       isCompleted: isCompleted,
       plannedWeightKg: plannedWeightKg,
       plannedReps: plannedReps,
@@ -139,7 +138,6 @@ extension ExerciseSetCompanionMapper on ExerciseSet {
       id: id,
       workoutExerciseId: workoutExerciseId,
       setNumber: setNumber,
-      isWarmup: Value(isWarmup),
       isCompleted: Value(isCompleted),
       plannedWeightKg: Value(plannedWeightKg),
       plannedReps: Value(plannedReps),
@@ -163,7 +161,6 @@ extension ExerciseSetCompanionMapper on ExerciseSet {
 
   drift.ExerciseSetsCompanion toUpdateCompanion() {
     return drift.ExerciseSetsCompanion(
-      isWarmup: Value(isWarmup),
       isCompleted: Value(isCompleted),
       plannedWeightKg: Value(plannedWeightKg),
       plannedReps: Value(plannedReps),

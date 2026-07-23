@@ -404,12 +404,6 @@ abstract class AppLocalizations {
   /// **'#'**
   String get setColumnNumber;
 
-  /// Warm-up checkbox column header in the sets table (S-03).
-  ///
-  /// In en, this message translates to:
-  /// **'Warm-up'**
-  String get setColumnWarmup;
-
   /// Planned-values column header in the sets table (S-03).
   ///
   /// In en, this message translates to:
@@ -1454,7 +1448,7 @@ abstract class AppLocalizations {
   /// **'Finish workout?'**
   String get finishWithIncompleteSetsTitle;
 
-  /// Body of the confirmation dialog (Stage 4, TS 7.2 step 6). Only working sets count -- warmups left unchecked don't trigger this (owner-confirmed 2026-07-21).
+  /// Body of the confirmation dialog (Stage 4, TS 7.2 step 6). Shown when any set is left unchecked (Stage 10, 2026-07-23: the warm-up concept was removed -- every set counts).
   ///
   /// In en, this message translates to:
   /// **'Mark the remaining sets as not completed and finish?'**

@@ -94,11 +94,9 @@ void main() {
 
       final firstSet = await workouts.addSet(
         workoutExerciseId: workoutExercise.id,
-        isWarmup: true,
       );
       final secondSet = await workouts.addSet(
         workoutExerciseId: workoutExercise.id,
-        isWarmup: false,
       );
       expect(firstSet.setNumber, 1);
       expect(secondSet.setNumber, 2);
@@ -118,7 +116,6 @@ void main() {
       final exerciseDetails = details.exercises.single;
       expect(exerciseDetails.exercise.name, 'Squat');
       expect(exerciseDetails.sets, hasLength(2));
-      expect(exerciseDetails.sets[0].isWarmup, isTrue);
       expect(exerciseDetails.sets[1].isCompleted, isTrue);
       expect(exerciseDetails.sets[1].actualWeightKg, 100);
       expect(exerciseDetails.sets[1].actualReps, 5);
@@ -335,7 +332,6 @@ void main() {
         );
         final olderSet = await workouts.addSet(
           workoutExerciseId: olderWe.id,
-          isWarmup: false,
         );
         await workouts.updateSet(
           olderSet.copyWith(actualWeightKg: 80, actualReps: 5),
@@ -349,7 +345,7 @@ void main() {
           workoutId: newer.id,
           exerciseId: exercise.id,
         );
-        await workouts.addSet(workoutExerciseId: newerWe.id, isWarmup: false);
+        await workouts.addSet(workoutExerciseId: newerWe.id);
         await workouts.updateWorkout(
           newer.copyWith(status: WorkoutStatus.completed),
         );
@@ -444,7 +440,6 @@ void main() {
         );
         final sourceSet = await workouts.addSet(
           workoutExerciseId: sourceWe.id,
-          isWarmup: false,
         );
         await workouts.updateSet(
           sourceSet.copyWith(
@@ -511,8 +506,8 @@ void main() {
 
   group('createFromTemplate (Stage 5, TS 8 section 8, DM-1)', () {
     test(
-      'copies exercises, order, comment and planned values (including '
-      'warmup) into a new draft named after the template',
+      'copies exercises, order, comment and planned values into a new '
+      'draft named after the template',
       () async {
         final exercise = await exercises.create(
           name: 'Squat',
@@ -526,19 +521,17 @@ void main() {
         templateExercise = templateExercise.copyWith(comment: 'Go heavy');
         await templates.updateTemplateExercise(templateExercise);
 
-        final warmup = await templates.addSet(
+        final first = await templates.addSet(
           templateExerciseId: templateExercise.id,
-          isWarmup: true,
         );
         await templates.updateTemplateSet(
-          warmup.copyWith(plannedWeightKg: 40, plannedReps: 10),
+          first.copyWith(plannedWeightKg: 40, plannedReps: 10),
         );
-        final working = await templates.addSet(
+        final second = await templates.addSet(
           templateExerciseId: templateExercise.id,
-          isWarmup: false,
         );
         await templates.updateTemplateSet(
-          working.copyWith(plannedWeightKg: 100, plannedReps: 5),
+          second.copyWith(plannedWeightKg: 100, plannedReps: 5),
         );
 
         final workout = await workouts.createFromTemplate(
@@ -560,9 +553,7 @@ void main() {
           ProgressionDecision.none,
         );
         expect(exerciseDetails.sets, hasLength(2));
-        expect(exerciseDetails.sets[0].isWarmup, isTrue);
         expect(exerciseDetails.sets[0].plannedWeightKg, 40);
-        expect(exerciseDetails.sets[1].isWarmup, isFalse);
         expect(exerciseDetails.sets[1].plannedWeightKg, 100);
         expect(exerciseDetails.sets[1].plannedReps, 5);
         expect(exerciseDetails.sets[1].isCompleted, isFalse);
@@ -829,7 +820,6 @@ void main() {
         );
         await workouts.addSet(
           workoutExerciseId: workoutExercise.id,
-          isWarmup: false,
         );
 
         await workouts.deleteWorkout(workout.id);
@@ -868,7 +858,6 @@ void main() {
       );
       await workouts.addSet(
         workoutExerciseId: workoutExercise.id,
-        isWarmup: false,
       );
       await workouts.deleteWorkout(workout.id);
 
@@ -887,8 +876,7 @@ void main() {
     Future<void> addCompletedWorkout({
       required DateTime date,
       required ExerciseType exerciseType,
-      required List<({bool isWarmup, bool isCompleted, double? weight, int? reps})>
-      sets,
+      required List<({bool isCompleted, double? weight, int? reps})> sets,
     }) async {
       final exercise = await exercises.create(
         name: 'Test exercise',
@@ -902,7 +890,6 @@ void main() {
       for (final spec in sets) {
         final set = await workouts.addSet(
           workoutExerciseId: workoutExercise.id,
-          isWarmup: spec.isWarmup,
         );
         await workouts.updateSet(
           set.copyWith(
@@ -928,22 +915,22 @@ void main() {
     });
 
     test(
-      'counts completed workouts in range and sums tonnage of working, '
-      'completed strength/reps sets',
+      'counts completed workouts in range and sums tonnage of completed '
+      'strength/reps sets',
       () async {
         await addCompletedWorkout(
           date: DateTime(2026, 7, 10),
           exerciseType: ExerciseType.strength,
           sets: [
-            (isWarmup: true, isCompleted: true, weight: 20, reps: 10),
-            (isWarmup: false, isCompleted: true, weight: 100, reps: 5),
-            (isWarmup: false, isCompleted: false, weight: 100, reps: 5),
+            (isCompleted: true, weight: 20, reps: 10),
+            (isCompleted: true, weight: 100, reps: 5),
+            (isCompleted: false, weight: 100, reps: 5),
           ],
         );
         await addCompletedWorkout(
           date: DateTime(2026, 7, 15),
           exerciseType: ExerciseType.reps,
-          sets: [(isWarmup: false, isCompleted: true, weight: null, reps: 20)],
+          sets: [(isCompleted: true, weight: null, reps: 20)],
         );
 
         final stats = await workouts
@@ -951,10 +938,9 @@ void main() {
             .first;
 
         expect(stats.workoutCount, 2);
-        // Only the working, completed strength set contributes: 100*5=500.
-        // The warmup set, the uncompleted set, and the weightless reps set
-        // all contribute 0.
-        expect(stats.tonnageKg, 500.0);
+        // The two completed strength sets contribute: 20*10 + 100*5 = 700.
+        // The uncompleted set and the weightless reps set both contribute 0.
+        expect(stats.tonnageKg, 700.0);
       },
     );
 
@@ -962,7 +948,7 @@ void main() {
       await addCompletedWorkout(
         date: DateTime(2026, 6, 30),
         exerciseType: ExerciseType.strength,
-        sets: [(isWarmup: false, isCompleted: true, weight: 50, reps: 10)],
+        sets: [(isCompleted: true, weight: 50, reps: 10)],
       );
 
       final stats = await workouts
@@ -976,7 +962,7 @@ void main() {
       await addCompletedWorkout(
         date: DateTime(2000, 1, 1),
         exerciseType: ExerciseType.strength,
-        sets: [(isWarmup: false, isCompleted: true, weight: 50, reps: 10)],
+        sets: [(isCompleted: true, weight: 50, reps: 10)],
       );
 
       final stats = await workouts.watchPeriodStats().first;
@@ -994,10 +980,7 @@ void main() {
         workoutId: draft.id,
         exerciseId: exercise.id,
       );
-      await workouts.addSet(
-        workoutExerciseId: workoutExercise.id,
-        isWarmup: false,
-      );
+      await workouts.addSet(workoutExerciseId: workoutExercise.id);
 
       final stats = await workouts
           .watchPeriodStats(from: DateTime(2026, 7, 1), to: DateTime(2026, 7, 31))
@@ -1054,7 +1037,6 @@ void main() {
         );
         final set = await workouts.addSet(
           workoutExerciseId: we.id,
-          isWarmup: false,
         );
         await workouts.updateSet(
           set.copyWith(isCompleted: true, actualWeightKg: 100, actualReps: 5),

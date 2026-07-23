@@ -15,9 +15,12 @@ import 'tables/workout_tables.dart';
 
 part 'database.g.dart';
 
-/// The app's single SQLite database (D-2). Schema version 1 covers every
+/// The app's single SQLite database (D-2). Schema version 1 covered every
 /// table in 06_DATA_MODEL.md, sections 5-6 at once (02_DEVELOPMENT_PLAN.md,
-/// Stage 0) so Stage 0 doesn't need a second migration.
+/// Stage 0). Version 2 (Stage 10, owner-confirmed 2026-07-23) drops
+/// `ExerciseSets.isWarmup`/`TemplateSets.isWarmup` — the "warm-up set"
+/// concept was removed from the app entirely; every set now counts toward
+/// statistics, so the column would only ever read `false`.
 @DriftDatabase(
   tables: [
     MuscleGroups,
@@ -47,13 +50,24 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
       onCreate: (Migrator m) async {
         await m.createAll();
+      },
+      onUpgrade: (Migrator m, int from, int to) async {
+        if (from < 2) {
+          // v1 -> v2 (Stage 10, 2026-07-23): the "warm-up set" concept was
+          // removed from the app; every set now counts toward statistics.
+          // `dropColumn` requires sqlite 3.35+ (bundled by
+          // sqlite3_flutter_libs); neither column was indexed or referenced
+          // by another table/view/trigger.
+          await m.dropColumn(exerciseSets, 'isWarmup');
+          await m.dropColumn(templateSets, 'isWarmup');
+        }
       },
       beforeOpen: (details) async {
         // Foreign keys are off by default in SQLite; DM 3 requires them on

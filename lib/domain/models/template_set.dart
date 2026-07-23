@@ -8,7 +8,6 @@ class TemplateSet {
     required this.id,
     required this.templateExerciseId,
     required this.setNumber,
-    required this.isWarmup,
     required this.side,
     required this.createdAt,
     required this.updatedAt,
@@ -22,7 +21,6 @@ class TemplateSet {
   final String id;
   final String templateExerciseId;
   final int setNumber;
-  final bool isWarmup;
   final double? plannedWeightKg;
   final int? plannedReps;
   final int? plannedDurationSec;
@@ -39,7 +37,6 @@ class TemplateSet {
   static const Object _unset = Object();
 
   TemplateSet copyWith({
-    bool? isWarmup,
     Object? plannedWeightKg = _unset,
     Object? plannedReps = _unset,
     Object? plannedDurationSec = _unset,
@@ -52,7 +49,6 @@ class TemplateSet {
       id: id,
       templateExerciseId: templateExerciseId,
       setNumber: setNumber,
-      isWarmup: isWarmup ?? this.isWarmup,
       plannedWeightKg: identical(plannedWeightKg, _unset)
           ? this.plannedWeightKg
           : _asDouble(plannedWeightKg),

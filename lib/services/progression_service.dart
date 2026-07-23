@@ -84,7 +84,7 @@ class ProgressionService {
   /// comparison metrics. `null` entries mean "no measurable result".
   List<double?> _bestVector(ExerciseHistoryEntry entry, ExerciseType type) {
     final workingSets = entry.sets
-        .where((s) => !s.isWarmup && s.isCompleted)
+        .where((s) => s.isCompleted)
         .toList();
 
     switch (type) {

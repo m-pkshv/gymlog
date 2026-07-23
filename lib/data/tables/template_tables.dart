@@ -48,8 +48,6 @@ class TemplateSets extends Table with SoftDeleteColumns {
 
   IntColumn get setNumber => integer()();
 
-  BoolColumn get isWarmup => boolean().withDefault(const Constant(false))();
-
   RealColumn get plannedWeightKg => real().nullable()();
 
   IntColumn get plannedReps => integer().nullable()();

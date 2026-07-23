@@ -6,11 +6,10 @@ import '../../../l10n/app_localizations.dart';
 import '../set_field_config.dart';
 import 'set_number_field.dart';
 
-/// One row of the sets table (S-03): set number, warm-up toggle, plan/fact
-/// fields for the exercise's type, the "✓" completion checkbox that copies
-/// plan into empty facts (DM 6.7), and a comment action (dialog — DM 6.7
-/// caps it at 500 chars, too long to keep inline in this already-dense
-/// row).
+/// One row of the sets table (S-03): set number, plan/fact fields for the
+/// exercise's type, the "✓" completion checkbox that copies plan into
+/// empty facts (DM 6.7), and a comment action (dialog — DM 6.7 caps it at
+/// 500 chars, too long to keep inline in this already-dense row).
 class SetRow extends StatelessWidget {
   const SetRow({
     super.key,
@@ -18,7 +17,6 @@ class SetRow extends StatelessWidget {
     required this.fields,
     required this.onFieldChanged,
     required this.onFieldCommit,
-    required this.onWarmupChanged,
     required this.onCompletedChanged,
     required this.onCommentSaved,
   });
@@ -28,7 +26,6 @@ class SetRow extends StatelessWidget {
   final void Function(SetFieldSpec field, bool actual, double? value)
   onFieldChanged;
   final void Function(SetFieldSpec field, bool actual) onFieldCommit;
-  final ValueChanged<bool> onWarmupChanged;
   final ValueChanged<bool> onCompletedChanged;
   final ValueChanged<String> onCommentSaved;
 
@@ -73,15 +70,6 @@ class SetRow extends StatelessWidget {
           SizedBox(
             width: 24,
             child: Text('${set.setNumber}', textAlign: TextAlign.center),
-          ),
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: Checkbox(
-              value: set.isWarmup,
-              onChanged: (value) => onWarmupChanged(value ?? false),
-              semanticLabel: l10n.setColumnWarmup,
-            ),
           ),
           Expanded(
             child: Column(

@@ -60,7 +60,6 @@ void main() {
       );
       final set = await workouts.addSet(
         workoutExerciseId: workoutExercise.id,
-        isWarmup: false,
       );
       await workouts.updateSet(
         set.copyWith(isCompleted: true, actualWeightKg: 100, actualReps: 5),

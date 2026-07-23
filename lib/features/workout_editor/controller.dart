@@ -292,27 +292,6 @@ class WorkoutEditorController
   Future<void> skipRestTimer() =>
       _activeWorkoutTimerService.skipRestTimer(_workoutId);
 
-  Future<void> setWarmup(String setId, {required bool value}) async {
-    final current = _findSet(setId);
-    if (current == null) return;
-    _debounceTimers.remove(setId)?.cancel();
-    final updated = current.copyWith(
-      isWarmup: value,
-      updatedAt: DateTime.now().toUtc(),
-    );
-    _replaceSet(updated);
-    try {
-      await _workoutRepository.updateSet(updated);
-      await _recomputeIfCompleted(_findExerciseIdForSet(setId));
-    } catch (error, stackTrace) {
-      _logger.error(
-        'Failed to save set $setId',
-        error: error,
-        stackTrace: stackTrace,
-      );
-    }
-  }
-
   /// Adds [exerciseId] to the workout ("+ Упражнение", S-03).
   Future<void> addExercise(String exerciseId) async {
     try {
@@ -330,13 +309,10 @@ class WorkoutEditorController
     }
   }
 
-  /// Adds a working set to [workoutExerciseId] ("+ Подход", S-03).
+  /// Adds a set to [workoutExerciseId] ("+ Подход", S-03).
   Future<void> addSet(String workoutExerciseId) async {
     try {
-      await _workoutRepository.addSet(
-        workoutExerciseId: workoutExerciseId,
-        isWarmup: false,
-      );
+      await _workoutRepository.addSet(workoutExerciseId: workoutExerciseId);
       await _load();
     } catch (error, stackTrace) {
       _logger.error(
@@ -351,8 +327,8 @@ class WorkoutEditorController
   /// values of this exercise's most recent *completed* occurrence become
   /// the *planned* values of the current sets, matched by `setNumber`
   /// order. A mismatched count is handled per TS 8: missing sets are
-  /// appended (new rows, isWarmup copied from the historical set), extra
-  /// current sets are left untouched. Returns `false` (no write attempted)
+  /// appended (new rows), extra current sets are left untouched. Returns
+  /// `false` (no write attempted)
   /// if this exercise has no completed history yet or the write failed —
   /// the caller decides what to tell the user either way.
   Future<bool> copyLastPerformance(String workoutExerciseId) async {
@@ -385,7 +361,6 @@ class WorkoutEditorController
             ? currentSets[i]
             : await _workoutRepository.addSet(
                 workoutExerciseId: workoutExerciseId,
-                isWarmup: historical.isWarmup,
               );
         await _workoutRepository.updateSet(
           copyActualsToPlanned(
@@ -448,7 +423,7 @@ class WorkoutEditorController
 
   /// Assigns exactly [tagIds] to this workout (S-03 tag picker/create
   /// dialog), replacing whatever was assigned before. No debounce — tag
-  /// membership is a discrete toggle, like [setWarmup]/[setCompleted].
+  /// membership is a discrete toggle, like [setCompleted].
   Future<void> setTags(List<String> tagIds) async {
     try {
       await _workoutRepository.setWorkoutTags(
@@ -565,7 +540,7 @@ class WorkoutEditorController
   /// Sets an exercise's manual progression decision (S-03 segment
   /// —/↑/=/↓). Purely a user annotation (DM 6.11: "на счётчик не влияет")
   /// — never touches the D-7 stagnation counter, so no recompute here.
-  /// Immediate write, like [setWarmup]/[setCompleted] — a discrete choice,
+  /// Immediate write, like [setCompleted] — a discrete choice,
   /// not continuous typing.
   Future<void> setProgressionDecision(
     String workoutExerciseId,

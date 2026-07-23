@@ -38,7 +38,6 @@ WorkoutExercise _workoutExercise(String id, String exerciseId) {
 }
 
 ExerciseSet _set({
-  bool isWarmup = false,
   bool isCompleted = true,
   double? actualWeightKg,
   int? actualReps,
@@ -48,7 +47,6 @@ ExerciseSet _set({
     id: 's1',
     workoutExerciseId: 'we1',
     setNumber: 1,
-    isWarmup: isWarmup,
     isCompleted: isCompleted,
     side: BodySide.none,
     createdAt: _now,
@@ -83,7 +81,7 @@ void main() {
       expect(stats.tonnageKg, 0);
     });
 
-    test('counts every set of every exercise, regardless of warmup/completion', () {
+    test('counts every set of every exercise, regardless of completion', () {
       final details = WorkoutDetails(
         workout: _workout(),
         exercises: [
@@ -91,7 +89,7 @@ void main() {
             workoutExercise: _workoutExercise('we1', 'squat'),
             exercise: _exercise('squat', ExerciseType.strength),
             sets: [
-              _set(isWarmup: true, isCompleted: false),
+              _set(isCompleted: false),
               _set(isCompleted: true, actualWeightKg: 100, actualReps: 5),
               _set(isCompleted: false),
             ],
@@ -111,8 +109,8 @@ void main() {
     });
 
     test(
-      'tonnage sums actualWeightKg x actualReps over working, completed '
-      'strength/reps sets only (TS 9)',
+      'tonnage sums actualWeightKg x actualReps over completed strength/reps '
+      'sets only (TS 9)',
       () {
         final details = WorkoutDetails(
           workout: _workout(),
@@ -123,13 +121,8 @@ void main() {
               sets: [
                 // Counts: 100 x 5 = 500.
                 _set(isCompleted: true, actualWeightKg: 100, actualReps: 5),
-                // Warmup -- excluded even though completed.
-                _set(
-                  isWarmup: true,
-                  isCompleted: true,
-                  actualWeightKg: 40,
-                  actualReps: 10,
-                ),
+                // Counts: 40 x 10 = 400.
+                _set(isCompleted: true, actualWeightKg: 40, actualReps: 10),
                 // Not completed -- excluded.
                 _set(isCompleted: false, actualWeightKg: 100, actualReps: 5),
               ],
@@ -151,7 +144,7 @@ void main() {
 
         final stats = computeWorkoutSummaryStats(details);
 
-        expect(stats.tonnageKg, 500);
+        expect(stats.tonnageKg, 900);
       },
     );
   });

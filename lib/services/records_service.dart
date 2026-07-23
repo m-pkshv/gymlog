@@ -82,7 +82,7 @@ class RecordsService {
       var tonnage = 0.0;
       var hasWorkingSet = false;
 
-      for (final set in entry.sets.where((s) => !s.isWarmup && s.isCompleted)) {
+      for (final set in entry.sets.where((s) => s.isCompleted)) {
         hasWorkingSet = true;
         final weight = set.actualWeightKg;
         final reps = set.actualReps;
@@ -199,7 +199,7 @@ class RecordsService {
     var bestPace = double.infinity;
 
     for (final entry in history) {
-      for (final set in entry.sets.where((s) => !s.isWarmup && s.isCompleted)) {
+      for (final set in entry.sets.where((s) => s.isCompleted)) {
         final distance = set.actualDistanceM;
         final duration = set.actualDurationSec;
 

@@ -163,9 +163,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get setColumnNumber => '№';
 
   @override
-  String get setColumnWarmup => 'Разминка';
-
-  @override
   String get setColumnPlan => 'План';
 
   @override

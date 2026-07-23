@@ -8,18 +8,16 @@ import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/domain/models/personal_record.dart';
 import 'package:gymlog/services/records_service.dart';
 
-typedef StrengthSet = ({double? weight, int? reps, bool isWarmup, bool isCompleted});
-typedef CardioSet = ({double? distance, int? duration, bool isWarmup, bool isCompleted});
+typedef StrengthSet = ({double? weight, int? reps, bool isCompleted});
+typedef CardioSet = ({double? distance, int? duration, bool isCompleted});
 
 StrengthSet workingSet({double? weight, int? reps}) =>
-    (weight: weight, reps: reps, isWarmup: false, isCompleted: true);
-StrengthSet warmupSet({double? weight, int? reps}) =>
-    (weight: weight, reps: reps, isWarmup: true, isCompleted: true);
+    (weight: weight, reps: reps, isCompleted: true);
 StrengthSet incompleteSet({double? weight, int? reps}) =>
-    (weight: weight, reps: reps, isWarmup: false, isCompleted: false);
+    (weight: weight, reps: reps, isCompleted: false);
 
 CardioSet cardioWorkingSet({double? distance, int? duration}) =>
-    (distance: distance, duration: duration, isWarmup: false, isCompleted: true);
+    (distance: distance, duration: duration, isCompleted: true);
 
 void main() {
   late AppDatabase db;
@@ -51,7 +49,7 @@ void main() {
       exerciseId: exerciseId,
     );
     for (final s in sets) {
-      final set = await workouts.addSet(workoutExerciseId: we.id, isWarmup: s.isWarmup);
+      final set = await workouts.addSet(workoutExerciseId: we.id);
       await workouts.updateSet(
         set.copyWith(
           isCompleted: s.isCompleted,
@@ -74,7 +72,7 @@ void main() {
       exerciseId: exerciseId,
     );
     for (final s in sets) {
-      final set = await workouts.addSet(workoutExerciseId: we.id, isWarmup: s.isWarmup);
+      final set = await workouts.addSet(workoutExerciseId: we.id);
       await workouts.updateSet(
         set.copyWith(
           isCompleted: s.isCompleted,
@@ -105,7 +103,7 @@ void main() {
   });
 
   group('strength/reps (TS 9)', () {
-    test('maxWeight tracks the highest weight, ignoring warmup/incomplete sets', () async {
+    test('maxWeight tracks the highest weight, ignoring incomplete sets', () async {
       final exercise = await exercises.create(
         name: 'Squat',
         exerciseType: ExerciseType.strength,
@@ -114,7 +112,6 @@ void main() {
         exercise.id,
         date: DateTime(2026, 7, 1),
         sets: [
-          warmupSet(weight: 200, reps: 1), // heavier but a warmup -- excluded
           workingSet(weight: 80, reps: 5),
           incompleteSet(weight: 150, reps: 1), // unmarked -- excluded
         ],
@@ -287,7 +284,7 @@ void main() {
       workoutId: workout.id,
       exerciseId: exercise.id,
     );
-    final set = await workouts.addSet(workoutExerciseId: we.id, isWarmup: false);
+    final set = await workouts.addSet(workoutExerciseId: we.id);
     await workouts.updateSet(set.copyWith(isCompleted: true, actualDurationSec: 60));
     await workouts.updateWorkout(workout.copyWith(status: WorkoutStatus.completed));
 

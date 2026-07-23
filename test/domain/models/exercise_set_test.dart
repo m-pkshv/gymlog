@@ -8,7 +8,6 @@ ExerciseSet _set({double? plannedWeightKg, double? actualWeightKg}) {
     id: 's1',
     workoutExerciseId: 'we1',
     setNumber: 1,
-    isWarmup: false,
     isCompleted: false,
     side: BodySide.none,
     createdAt: now,
@@ -46,11 +45,7 @@ void main() {
 
   group('markCompleted (DM 6.7)', () {
     test('copies planned into empty actual fields', () {
-      final set = _set().copyWith(
-        plannedWeightKg: 80,
-        plannedReps: 8,
-        isWarmup: false,
-      );
+      final set = _set().copyWith(plannedWeightKg: 80, plannedReps: 8);
 
       final completed = set.markCompleted();
 

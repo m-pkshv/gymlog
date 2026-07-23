@@ -4328,21 +4328,6 @@ class $ExerciseSetsTable extends ExerciseSets
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _isWarmupMeta = const VerificationMeta(
-    'isWarmup',
-  );
-  @override
-  late final GeneratedColumn<bool> isWarmup = GeneratedColumn<bool>(
-    'isWarmup',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("isWarmup" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
   static const VerificationMeta _isCompletedMeta = const VerificationMeta(
     'isCompleted',
   );
@@ -4527,7 +4512,6 @@ class $ExerciseSetsTable extends ExerciseSets
     id,
     workoutExerciseId,
     setNumber,
-    isWarmup,
     isCompleted,
     plannedWeightKg,
     plannedReps,
@@ -4602,12 +4586,6 @@ class $ExerciseSetsTable extends ExerciseSets
       );
     } else if (isInserting) {
       context.missing(_setNumberMeta);
-    }
-    if (data.containsKey('isWarmup')) {
-      context.handle(
-        _isWarmupMeta,
-        isWarmup.isAcceptableOrUnknown(data['isWarmup']!, _isWarmupMeta),
-      );
     }
     if (data.containsKey('isCompleted')) {
       context.handle(
@@ -4768,10 +4746,6 @@ class $ExerciseSetsTable extends ExerciseSets
         DriftSqlType.int,
         data['${effectivePrefix}setNumber'],
       )!,
-      isWarmup: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}isWarmup'],
-      )!,
       isCompleted: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}isCompleted'],
@@ -4852,7 +4826,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
   final String id;
   final String workoutExerciseId;
   final int setNumber;
-  final bool isWarmup;
   final bool isCompleted;
   final double? plannedWeightKg;
   final int? plannedReps;
@@ -4876,7 +4849,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
     required this.id,
     required this.workoutExerciseId,
     required this.setNumber,
-    required this.isWarmup,
     required this.isCompleted,
     this.plannedWeightKg,
     this.plannedReps,
@@ -4903,7 +4875,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
     map['id'] = Variable<String>(id);
     map['workoutExerciseId'] = Variable<String>(workoutExerciseId);
     map['setNumber'] = Variable<int>(setNumber);
-    map['isWarmup'] = Variable<bool>(isWarmup);
     map['isCompleted'] = Variable<bool>(isCompleted);
     if (!nullToAbsent || plannedWeightKg != null) {
       map['plannedWeightKg'] = Variable<double>(plannedWeightKg);
@@ -4959,7 +4930,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
       id: Value(id),
       workoutExerciseId: Value(workoutExerciseId),
       setNumber: Value(setNumber),
-      isWarmup: Value(isWarmup),
       isCompleted: Value(isCompleted),
       plannedWeightKg: plannedWeightKg == null && nullToAbsent
           ? const Value.absent()
@@ -5015,7 +4985,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
       id: serializer.fromJson<String>(json['id']),
       workoutExerciseId: serializer.fromJson<String>(json['workoutExerciseId']),
       setNumber: serializer.fromJson<int>(json['setNumber']),
-      isWarmup: serializer.fromJson<bool>(json['isWarmup']),
       isCompleted: serializer.fromJson<bool>(json['isCompleted']),
       plannedWeightKg: serializer.fromJson<double?>(json['plannedWeightKg']),
       plannedReps: serializer.fromJson<int?>(json['plannedReps']),
@@ -5044,7 +5013,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
       'id': serializer.toJson<String>(id),
       'workoutExerciseId': serializer.toJson<String>(workoutExerciseId),
       'setNumber': serializer.toJson<int>(setNumber),
-      'isWarmup': serializer.toJson<bool>(isWarmup),
       'isCompleted': serializer.toJson<bool>(isCompleted),
       'plannedWeightKg': serializer.toJson<double?>(plannedWeightKg),
       'plannedReps': serializer.toJson<int?>(plannedReps),
@@ -5071,7 +5039,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
     String? id,
     String? workoutExerciseId,
     int? setNumber,
-    bool? isWarmup,
     bool? isCompleted,
     Value<double?> plannedWeightKg = const Value.absent(),
     Value<int?> plannedReps = const Value.absent(),
@@ -5095,7 +5062,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
     id: id ?? this.id,
     workoutExerciseId: workoutExerciseId ?? this.workoutExerciseId,
     setNumber: setNumber ?? this.setNumber,
-    isWarmup: isWarmup ?? this.isWarmup,
     isCompleted: isCompleted ?? this.isCompleted,
     plannedWeightKg: plannedWeightKg.present
         ? plannedWeightKg.value
@@ -5137,7 +5103,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
           ? data.workoutExerciseId.value
           : this.workoutExerciseId,
       setNumber: data.setNumber.present ? data.setNumber.value : this.setNumber,
-      isWarmup: data.isWarmup.present ? data.isWarmup.value : this.isWarmup,
       isCompleted: data.isCompleted.present
           ? data.isCompleted.value
           : this.isCompleted,
@@ -5190,7 +5155,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
           ..write('id: $id, ')
           ..write('workoutExerciseId: $workoutExerciseId, ')
           ..write('setNumber: $setNumber, ')
-          ..write('isWarmup: $isWarmup, ')
           ..write('isCompleted: $isCompleted, ')
           ..write('plannedWeightKg: $plannedWeightKg, ')
           ..write('plannedReps: $plannedReps, ')
@@ -5219,7 +5183,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
     id,
     workoutExerciseId,
     setNumber,
-    isWarmup,
     isCompleted,
     plannedWeightKg,
     plannedReps,
@@ -5247,7 +5210,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
           other.id == this.id &&
           other.workoutExerciseId == this.workoutExerciseId &&
           other.setNumber == this.setNumber &&
-          other.isWarmup == this.isWarmup &&
           other.isCompleted == this.isCompleted &&
           other.plannedWeightKg == this.plannedWeightKg &&
           other.plannedReps == this.plannedReps &&
@@ -5273,7 +5235,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
   final Value<String> id;
   final Value<String> workoutExerciseId;
   final Value<int> setNumber;
-  final Value<bool> isWarmup;
   final Value<bool> isCompleted;
   final Value<double?> plannedWeightKg;
   final Value<int?> plannedReps;
@@ -5298,7 +5259,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
     this.id = const Value.absent(),
     this.workoutExerciseId = const Value.absent(),
     this.setNumber = const Value.absent(),
-    this.isWarmup = const Value.absent(),
     this.isCompleted = const Value.absent(),
     this.plannedWeightKg = const Value.absent(),
     this.plannedReps = const Value.absent(),
@@ -5324,7 +5284,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
     required String id,
     required String workoutExerciseId,
     required int setNumber,
-    this.isWarmup = const Value.absent(),
     this.isCompleted = const Value.absent(),
     this.plannedWeightKg = const Value.absent(),
     this.plannedReps = const Value.absent(),
@@ -5354,7 +5313,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
     Expression<String>? id,
     Expression<String>? workoutExerciseId,
     Expression<int>? setNumber,
-    Expression<bool>? isWarmup,
     Expression<bool>? isCompleted,
     Expression<double>? plannedWeightKg,
     Expression<int>? plannedReps,
@@ -5380,7 +5338,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
       if (id != null) 'id': id,
       if (workoutExerciseId != null) 'workoutExerciseId': workoutExerciseId,
       if (setNumber != null) 'setNumber': setNumber,
-      if (isWarmup != null) 'isWarmup': isWarmup,
       if (isCompleted != null) 'isCompleted': isCompleted,
       if (plannedWeightKg != null) 'plannedWeightKg': plannedWeightKg,
       if (plannedReps != null) 'plannedReps': plannedReps,
@@ -5408,7 +5365,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
     Value<String>? id,
     Value<String>? workoutExerciseId,
     Value<int>? setNumber,
-    Value<bool>? isWarmup,
     Value<bool>? isCompleted,
     Value<double?>? plannedWeightKg,
     Value<int?>? plannedReps,
@@ -5434,7 +5390,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
       id: id ?? this.id,
       workoutExerciseId: workoutExerciseId ?? this.workoutExerciseId,
       setNumber: setNumber ?? this.setNumber,
-      isWarmup: isWarmup ?? this.isWarmup,
       isCompleted: isCompleted ?? this.isCompleted,
       plannedWeightKg: plannedWeightKg ?? this.plannedWeightKg,
       plannedReps: plannedReps ?? this.plannedReps,
@@ -5475,9 +5430,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
     }
     if (setNumber.present) {
       map['setNumber'] = Variable<int>(setNumber.value);
-    }
-    if (isWarmup.present) {
-      map['isWarmup'] = Variable<bool>(isWarmup.value);
     }
     if (isCompleted.present) {
       map['isCompleted'] = Variable<bool>(isCompleted.value);
@@ -5542,7 +5494,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
           ..write('id: $id, ')
           ..write('workoutExerciseId: $workoutExerciseId, ')
           ..write('setNumber: $setNumber, ')
-          ..write('isWarmup: $isWarmup, ')
           ..write('isCompleted: $isCompleted, ')
           ..write('plannedWeightKg: $plannedWeightKg, ')
           ..write('plannedReps: $plannedReps, ')
@@ -6636,21 +6587,6 @@ class $TemplateSetsTable extends TemplateSets
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _isWarmupMeta = const VerificationMeta(
-    'isWarmup',
-  );
-  @override
-  late final GeneratedColumn<bool> isWarmup = GeneratedColumn<bool>(
-    'isWarmup',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("isWarmup" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
   static const VerificationMeta _plannedWeightKgMeta = const VerificationMeta(
     'plannedWeightKg',
   );
@@ -6714,7 +6650,6 @@ class $TemplateSetsTable extends TemplateSets
     id,
     templateExerciseId,
     setNumber,
-    isWarmup,
     plannedWeightKg,
     plannedReps,
     plannedDurationSec,
@@ -6778,12 +6713,6 @@ class $TemplateSetsTable extends TemplateSets
       );
     } else if (isInserting) {
       context.missing(_setNumberMeta);
-    }
-    if (data.containsKey('isWarmup')) {
-      context.handle(
-        _isWarmupMeta,
-        isWarmup.isAcceptableOrUnknown(data['isWarmup']!, _isWarmupMeta),
-      );
     }
     if (data.containsKey('plannedWeightKg')) {
       context.handle(
@@ -6860,10 +6789,6 @@ class $TemplateSetsTable extends TemplateSets
         DriftSqlType.int,
         data['${effectivePrefix}setNumber'],
       )!,
-      isWarmup: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}isWarmup'],
-      )!,
       plannedWeightKg: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}plannedWeightKg'],
@@ -6900,7 +6825,6 @@ class TemplateSet extends DataClass implements Insertable<TemplateSet> {
   final String id;
   final String templateExerciseId;
   final int setNumber;
-  final bool isWarmup;
   final double? plannedWeightKg;
   final int? plannedReps;
   final int? plannedDurationSec;
@@ -6913,7 +6837,6 @@ class TemplateSet extends DataClass implements Insertable<TemplateSet> {
     required this.id,
     required this.templateExerciseId,
     required this.setNumber,
-    required this.isWarmup,
     this.plannedWeightKg,
     this.plannedReps,
     this.plannedDurationSec,
@@ -6929,7 +6852,6 @@ class TemplateSet extends DataClass implements Insertable<TemplateSet> {
     map['id'] = Variable<String>(id);
     map['templateExerciseId'] = Variable<String>(templateExerciseId);
     map['setNumber'] = Variable<int>(setNumber);
-    map['isWarmup'] = Variable<bool>(isWarmup);
     if (!nullToAbsent || plannedWeightKg != null) {
       map['plannedWeightKg'] = Variable<double>(plannedWeightKg);
     }
@@ -6954,7 +6876,6 @@ class TemplateSet extends DataClass implements Insertable<TemplateSet> {
       id: Value(id),
       templateExerciseId: Value(templateExerciseId),
       setNumber: Value(setNumber),
-      isWarmup: Value(isWarmup),
       plannedWeightKg: plannedWeightKg == null && nullToAbsent
           ? const Value.absent()
           : Value(plannedWeightKg),
@@ -6985,7 +6906,6 @@ class TemplateSet extends DataClass implements Insertable<TemplateSet> {
         json['templateExerciseId'],
       ),
       setNumber: serializer.fromJson<int>(json['setNumber']),
-      isWarmup: serializer.fromJson<bool>(json['isWarmup']),
       plannedWeightKg: serializer.fromJson<double?>(json['plannedWeightKg']),
       plannedReps: serializer.fromJson<int?>(json['plannedReps']),
       plannedDurationSec: serializer.fromJson<int?>(json['plannedDurationSec']),
@@ -7003,7 +6923,6 @@ class TemplateSet extends DataClass implements Insertable<TemplateSet> {
       'id': serializer.toJson<String>(id),
       'templateExerciseId': serializer.toJson<String>(templateExerciseId),
       'setNumber': serializer.toJson<int>(setNumber),
-      'isWarmup': serializer.toJson<bool>(isWarmup),
       'plannedWeightKg': serializer.toJson<double?>(plannedWeightKg),
       'plannedReps': serializer.toJson<int?>(plannedReps),
       'plannedDurationSec': serializer.toJson<int?>(plannedDurationSec),
@@ -7019,7 +6938,6 @@ class TemplateSet extends DataClass implements Insertable<TemplateSet> {
     String? id,
     String? templateExerciseId,
     int? setNumber,
-    bool? isWarmup,
     Value<double?> plannedWeightKg = const Value.absent(),
     Value<int?> plannedReps = const Value.absent(),
     Value<int?> plannedDurationSec = const Value.absent(),
@@ -7032,7 +6950,6 @@ class TemplateSet extends DataClass implements Insertable<TemplateSet> {
     id: id ?? this.id,
     templateExerciseId: templateExerciseId ?? this.templateExerciseId,
     setNumber: setNumber ?? this.setNumber,
-    isWarmup: isWarmup ?? this.isWarmup,
     plannedWeightKg: plannedWeightKg.present
         ? plannedWeightKg.value
         : this.plannedWeightKg,
@@ -7055,7 +6972,6 @@ class TemplateSet extends DataClass implements Insertable<TemplateSet> {
           ? data.templateExerciseId.value
           : this.templateExerciseId,
       setNumber: data.setNumber.present ? data.setNumber.value : this.setNumber,
-      isWarmup: data.isWarmup.present ? data.isWarmup.value : this.isWarmup,
       plannedWeightKg: data.plannedWeightKg.present
           ? data.plannedWeightKg.value
           : this.plannedWeightKg,
@@ -7081,7 +6997,6 @@ class TemplateSet extends DataClass implements Insertable<TemplateSet> {
           ..write('id: $id, ')
           ..write('templateExerciseId: $templateExerciseId, ')
           ..write('setNumber: $setNumber, ')
-          ..write('isWarmup: $isWarmup, ')
           ..write('plannedWeightKg: $plannedWeightKg, ')
           ..write('plannedReps: $plannedReps, ')
           ..write('plannedDurationSec: $plannedDurationSec, ')
@@ -7099,7 +7014,6 @@ class TemplateSet extends DataClass implements Insertable<TemplateSet> {
     id,
     templateExerciseId,
     setNumber,
-    isWarmup,
     plannedWeightKg,
     plannedReps,
     plannedDurationSec,
@@ -7116,7 +7030,6 @@ class TemplateSet extends DataClass implements Insertable<TemplateSet> {
           other.id == this.id &&
           other.templateExerciseId == this.templateExerciseId &&
           other.setNumber == this.setNumber &&
-          other.isWarmup == this.isWarmup &&
           other.plannedWeightKg == this.plannedWeightKg &&
           other.plannedReps == this.plannedReps &&
           other.plannedDurationSec == this.plannedDurationSec &&
@@ -7131,7 +7044,6 @@ class TemplateSetsCompanion extends UpdateCompanion<TemplateSet> {
   final Value<String> id;
   final Value<String> templateExerciseId;
   final Value<int> setNumber;
-  final Value<bool> isWarmup;
   final Value<double?> plannedWeightKg;
   final Value<int?> plannedReps;
   final Value<int?> plannedDurationSec;
@@ -7145,7 +7057,6 @@ class TemplateSetsCompanion extends UpdateCompanion<TemplateSet> {
     this.id = const Value.absent(),
     this.templateExerciseId = const Value.absent(),
     this.setNumber = const Value.absent(),
-    this.isWarmup = const Value.absent(),
     this.plannedWeightKg = const Value.absent(),
     this.plannedReps = const Value.absent(),
     this.plannedDurationSec = const Value.absent(),
@@ -7160,7 +7071,6 @@ class TemplateSetsCompanion extends UpdateCompanion<TemplateSet> {
     required String id,
     required String templateExerciseId,
     required int setNumber,
-    this.isWarmup = const Value.absent(),
     this.plannedWeightKg = const Value.absent(),
     this.plannedReps = const Value.absent(),
     this.plannedDurationSec = const Value.absent(),
@@ -7179,7 +7089,6 @@ class TemplateSetsCompanion extends UpdateCompanion<TemplateSet> {
     Expression<String>? id,
     Expression<String>? templateExerciseId,
     Expression<int>? setNumber,
-    Expression<bool>? isWarmup,
     Expression<double>? plannedWeightKg,
     Expression<int>? plannedReps,
     Expression<int>? plannedDurationSec,
@@ -7194,7 +7103,6 @@ class TemplateSetsCompanion extends UpdateCompanion<TemplateSet> {
       if (id != null) 'id': id,
       if (templateExerciseId != null) 'templateExerciseId': templateExerciseId,
       if (setNumber != null) 'setNumber': setNumber,
-      if (isWarmup != null) 'isWarmup': isWarmup,
       if (plannedWeightKg != null) 'plannedWeightKg': plannedWeightKg,
       if (plannedReps != null) 'plannedReps': plannedReps,
       if (plannedDurationSec != null) 'plannedDurationSec': plannedDurationSec,
@@ -7211,7 +7119,6 @@ class TemplateSetsCompanion extends UpdateCompanion<TemplateSet> {
     Value<String>? id,
     Value<String>? templateExerciseId,
     Value<int>? setNumber,
-    Value<bool>? isWarmup,
     Value<double?>? plannedWeightKg,
     Value<int?>? plannedReps,
     Value<int?>? plannedDurationSec,
@@ -7226,7 +7133,6 @@ class TemplateSetsCompanion extends UpdateCompanion<TemplateSet> {
       id: id ?? this.id,
       templateExerciseId: templateExerciseId ?? this.templateExerciseId,
       setNumber: setNumber ?? this.setNumber,
-      isWarmup: isWarmup ?? this.isWarmup,
       plannedWeightKg: plannedWeightKg ?? this.plannedWeightKg,
       plannedReps: plannedReps ?? this.plannedReps,
       plannedDurationSec: plannedDurationSec ?? this.plannedDurationSec,
@@ -7256,9 +7162,6 @@ class TemplateSetsCompanion extends UpdateCompanion<TemplateSet> {
     }
     if (setNumber.present) {
       map['setNumber'] = Variable<int>(setNumber.value);
-    }
-    if (isWarmup.present) {
-      map['isWarmup'] = Variable<bool>(isWarmup.value);
     }
     if (plannedWeightKg.present) {
       map['plannedWeightKg'] = Variable<double>(plannedWeightKg.value);
@@ -7290,7 +7193,6 @@ class TemplateSetsCompanion extends UpdateCompanion<TemplateSet> {
           ..write('id: $id, ')
           ..write('templateExerciseId: $templateExerciseId, ')
           ..write('setNumber: $setNumber, ')
-          ..write('isWarmup: $isWarmup, ')
           ..write('plannedWeightKg: $plannedWeightKg, ')
           ..write('plannedReps: $plannedReps, ')
           ..write('plannedDurationSec: $plannedDurationSec, ')
@@ -15714,7 +15616,6 @@ typedef $$ExerciseSetsTableCreateCompanionBuilder =
       required String id,
       required String workoutExerciseId,
       required int setNumber,
-      Value<bool> isWarmup,
       Value<bool> isCompleted,
       Value<double?> plannedWeightKg,
       Value<int?> plannedReps,
@@ -15741,7 +15642,6 @@ typedef $$ExerciseSetsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> workoutExerciseId,
       Value<int> setNumber,
-      Value<bool> isWarmup,
       Value<bool> isCompleted,
       Value<double?> plannedWeightKg,
       Value<int?> plannedReps,
@@ -15835,11 +15735,6 @@ class $$ExerciseSetsTableFilterComposer
 
   ColumnFilters<int> get setNumber => $composableBuilder(
     column: $table.setNumber,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get isWarmup => $composableBuilder(
-    column: $table.isWarmup,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -16006,11 +15901,6 @@ class $$ExerciseSetsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<bool> get isWarmup => $composableBuilder(
-    column: $table.isWarmup,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<bool> get isCompleted => $composableBuilder(
     column: $table.isCompleted,
     builder: (column) => ColumnOrderings(column),
@@ -16138,9 +16028,6 @@ class $$ExerciseSetsTableAnnotationComposer
 
   GeneratedColumn<int> get setNumber =>
       $composableBuilder(column: $table.setNumber, builder: (column) => column);
-
-  GeneratedColumn<bool> get isWarmup =>
-      $composableBuilder(column: $table.isWarmup, builder: (column) => column);
 
   GeneratedColumn<bool> get isCompleted => $composableBuilder(
     column: $table.isCompleted,
@@ -16300,7 +16187,6 @@ class $$ExerciseSetsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> workoutExerciseId = const Value.absent(),
                 Value<int> setNumber = const Value.absent(),
-                Value<bool> isWarmup = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
                 Value<double?> plannedWeightKg = const Value.absent(),
                 Value<int?> plannedReps = const Value.absent(),
@@ -16325,7 +16211,6 @@ class $$ExerciseSetsTableTableManager
                 id: id,
                 workoutExerciseId: workoutExerciseId,
                 setNumber: setNumber,
-                isWarmup: isWarmup,
                 isCompleted: isCompleted,
                 plannedWeightKg: plannedWeightKg,
                 plannedReps: plannedReps,
@@ -16352,7 +16237,6 @@ class $$ExerciseSetsTableTableManager
                 required String id,
                 required String workoutExerciseId,
                 required int setNumber,
-                Value<bool> isWarmup = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
                 Value<double?> plannedWeightKg = const Value.absent(),
                 Value<int?> plannedReps = const Value.absent(),
@@ -16377,7 +16261,6 @@ class $$ExerciseSetsTableTableManager
                 id: id,
                 workoutExerciseId: workoutExerciseId,
                 setNumber: setNumber,
-                isWarmup: isWarmup,
                 isCompleted: isCompleted,
                 plannedWeightKg: plannedWeightKg,
                 plannedReps: plannedReps,
@@ -17438,7 +17321,6 @@ typedef $$TemplateSetsTableCreateCompanionBuilder =
       required String id,
       required String templateExerciseId,
       required int setNumber,
-      Value<bool> isWarmup,
       Value<double?> plannedWeightKg,
       Value<int?> plannedReps,
       Value<int?> plannedDurationSec,
@@ -17454,7 +17336,6 @@ typedef $$TemplateSetsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> templateExerciseId,
       Value<int> setNumber,
-      Value<bool> isWarmup,
       Value<double?> plannedWeightKg,
       Value<int?> plannedReps,
       Value<int?> plannedDurationSec,
@@ -17518,11 +17399,6 @@ class $$TemplateSetsTableFilterComposer
 
   ColumnFilters<int> get setNumber => $composableBuilder(
     column: $table.setNumber,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get isWarmup => $composableBuilder(
-    column: $table.isWarmup,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -17609,11 +17485,6 @@ class $$TemplateSetsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<bool> get isWarmup => $composableBuilder(
-    column: $table.isWarmup,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<double> get plannedWeightKg => $composableBuilder(
     column: $table.plannedWeightKg,
     builder: (column) => ColumnOrderings(column),
@@ -17686,9 +17557,6 @@ class $$TemplateSetsTableAnnotationComposer
 
   GeneratedColumn<int> get setNumber =>
       $composableBuilder(column: $table.setNumber, builder: (column) => column);
-
-  GeneratedColumn<bool> get isWarmup =>
-      $composableBuilder(column: $table.isWarmup, builder: (column) => column);
 
   GeneratedColumn<double> get plannedWeightKg => $composableBuilder(
     column: $table.plannedWeightKg,
@@ -17772,7 +17640,6 @@ class $$TemplateSetsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> templateExerciseId = const Value.absent(),
                 Value<int> setNumber = const Value.absent(),
-                Value<bool> isWarmup = const Value.absent(),
                 Value<double?> plannedWeightKg = const Value.absent(),
                 Value<int?> plannedReps = const Value.absent(),
                 Value<int?> plannedDurationSec = const Value.absent(),
@@ -17786,7 +17653,6 @@ class $$TemplateSetsTableTableManager
                 id: id,
                 templateExerciseId: templateExerciseId,
                 setNumber: setNumber,
-                isWarmup: isWarmup,
                 plannedWeightKg: plannedWeightKg,
                 plannedReps: plannedReps,
                 plannedDurationSec: plannedDurationSec,
@@ -17802,7 +17668,6 @@ class $$TemplateSetsTableTableManager
                 required String id,
                 required String templateExerciseId,
                 required int setNumber,
-                Value<bool> isWarmup = const Value.absent(),
                 Value<double?> plannedWeightKg = const Value.absent(),
                 Value<int?> plannedReps = const Value.absent(),
                 Value<int?> plannedDurationSec = const Value.absent(),
@@ -17816,7 +17681,6 @@ class $$TemplateSetsTableTableManager
                 id: id,
                 templateExerciseId: templateExerciseId,
                 setNumber: setNumber,
-                isWarmup: isWarmup,
                 plannedWeightKg: plannedWeightKg,
                 plannedReps: plannedReps,
                 plannedDurationSec: plannedDurationSec,

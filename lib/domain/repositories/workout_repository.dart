@@ -64,10 +64,7 @@ abstract class WorkoutRepository {
   /// write (S-03, TS 5).
   Future<void> updateWorkoutExercise(WorkoutExercise workoutExercise);
 
-  Future<ExerciseSet> addSet({
-    required String workoutExerciseId,
-    required bool isWarmup,
-  });
+  Future<ExerciseSet> addSet({required String workoutExerciseId});
 
   /// Persists set field changes — the autosave write (TS 5).
   Future<void> updateSet(ExerciseSet set);
@@ -100,7 +97,7 @@ abstract class WorkoutRepository {
   /// шаблона" creation option, TS 8 section 8): the reverse of
   /// `WorkoutTemplateRepository.createFromWorkout` — copies
   /// [templateId]'s exercises (order + comment) and each set's planned
-  /// values (including warmup sets) into a brand-new `draft` workout dated
+  /// values into a brand-new `draft` workout dated
   /// [date], named after the template (DM-1, owner-confirmed 2026-07-21:
   /// `Workout` does not store a `sourceTemplateId` back-reference — nothing
   /// in Stage 5's scope needs to trace a workout back to the template it
@@ -133,8 +130,8 @@ abstract class WorkoutRepository {
 
   /// S-09 "Тренировки" card (TS 9): count of completed, non-deleted
   /// workouts in the inclusive local-date range [from, to], and the summed
-  /// tonnage of their working (`isWarmup = false`), completed
-  /// (`isCompleted = true`) `strength`/`reps` sets (`Σ actualWeightKg ×
+  /// tonnage of their completed (`isCompleted = true`) `strength`/`reps`
+  /// sets (`Σ actualWeightKg ×
   /// actualReps`, TS 9's "Тоннаж за период"). `from`/`to` null means
   /// unbounded on that side (the "Всё время" preset). Aggregated in SQL,
   /// not by loading every set into Dart (02_DEVELOPMENT_PLAN.md Stage 7

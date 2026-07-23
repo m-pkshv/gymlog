@@ -8,7 +8,6 @@ class ExerciseSet {
     required this.id,
     required this.workoutExerciseId,
     required this.setNumber,
-    required this.isWarmup,
     required this.isCompleted,
     required this.side,
     required this.createdAt,
@@ -33,7 +32,6 @@ class ExerciseSet {
   final String id;
   final String workoutExerciseId;
   final int setNumber;
-  final bool isWarmup;
   final bool isCompleted;
   final double? plannedWeightKg;
   final int? plannedReps;
@@ -75,7 +73,6 @@ class ExerciseSet {
   static const Object _unset = Object();
 
   ExerciseSet copyWith({
-    bool? isWarmup,
     bool? isCompleted,
     Object? plannedWeightKg = _unset,
     Object? plannedReps = _unset,
@@ -99,7 +96,6 @@ class ExerciseSet {
       id: id,
       workoutExerciseId: workoutExerciseId,
       setNumber: setNumber,
-      isWarmup: isWarmup ?? this.isWarmup,
       isCompleted: isCompleted ?? this.isCompleted,
       plannedWeightKg: identical(plannedWeightKg, _unset)
           ? this.plannedWeightKg

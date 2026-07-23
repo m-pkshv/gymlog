@@ -17,7 +17,6 @@ Workout _workout(DateTime date) {
 }
 
 ExerciseSet _set({
-  required bool isWarmup,
   required bool isCompleted,
   double? actualWeightKg,
   int? actualReps,
@@ -28,7 +27,6 @@ ExerciseSet _set({
     id: 's-${identityHashCode(actualWeightKg)}-${identityHashCode(actualReps)}',
     workoutExerciseId: 'we',
     setNumber: 1,
-    isWarmup: isWarmup,
     isCompleted: isCompleted,
     side: BodySide.none,
     createdAt: DateTime(2026),
@@ -43,22 +41,22 @@ ExerciseSet _set({
 
 void main() {
   group('maxWeightSeries', () {
-    test('one point per workout, oldest first, max weight among working '
-        'completed sets', () {
+    test('one point per workout, oldest first, max weight among completed '
+        'sets', () {
       final history = [
         // Newest first, as getExerciseHistory returns it.
         ExerciseHistoryEntry(
           workout: _workout(DateTime(2026, 7, 15)),
           sets: [
-            _set(isWarmup: false, isCompleted: true, actualWeightKg: 100, actualReps: 5),
-            _set(isWarmup: false, isCompleted: true, actualWeightKg: 110, actualReps: 3),
+            _set(isCompleted: true, actualWeightKg: 100, actualReps: 5),
+            _set(isCompleted: true, actualWeightKg: 110, actualReps: 3),
           ],
         ),
         ExerciseHistoryEntry(
           workout: _workout(DateTime(2026, 7, 1)),
           sets: [
-            _set(isWarmup: true, isCompleted: true, actualWeightKg: 40, actualReps: 10),
-            _set(isWarmup: false, isCompleted: true, actualWeightKg: 90, actualReps: 5),
+            _set(isCompleted: true, actualWeightKg: 40, actualReps: 10),
+            _set(isCompleted: true, actualWeightKg: 90, actualReps: 5),
           ],
         ),
       ];
@@ -67,16 +65,16 @@ void main() {
 
       expect(points, hasLength(2));
       expect(points[0].date, DateTime(2026, 7, 1));
-      expect(points[0].value, 90); // warmup excluded
+      expect(points[0].value, 90);
       expect(points[1].date, DateTime(2026, 7, 15));
       expect(points[1].value, 110);
     });
 
-    test('a workout with no completed working set is skipped, not zeroed', () {
+    test('a workout with no completed set is skipped, not zeroed', () {
       final history = [
         ExerciseHistoryEntry(
           workout: _workout(DateTime(2026, 7, 1)),
-          sets: [_set(isWarmup: false, isCompleted: false, actualWeightKg: 90, actualReps: 5)],
+          sets: [_set(isCompleted: false, actualWeightKg: 90, actualReps: 5)],
         ),
       ];
 
@@ -91,9 +89,9 @@ void main() {
           workout: _workout(DateTime(2026, 7, 1)),
           sets: [
             // 100 * (1 + 5/30) = 116.666...
-            _set(isWarmup: false, isCompleted: true, actualWeightKg: 100, actualReps: 5),
+            _set(isCompleted: true, actualWeightKg: 100, actualReps: 5),
             // 90 * (1 + 8/30) = 114
-            _set(isWarmup: false, isCompleted: true, actualWeightKg: 90, actualReps: 8),
+            _set(isCompleted: true, actualWeightKg: 90, actualReps: 8),
           ],
         ),
       ];
@@ -108,7 +106,7 @@ void main() {
         ExerciseHistoryEntry(
           workout: _workout(DateTime(2026, 7, 1)),
           sets: [
-            _set(isWarmup: false, isCompleted: true, actualWeightKg: 100, actualReps: 20),
+            _set(isCompleted: true, actualWeightKg: 100, actualReps: 20),
           ],
         ),
       ];
@@ -118,29 +116,29 @@ void main() {
   });
 
   group('tonnageSeries (TS 9: Σ weight×reps per workout)', () {
-    test('sums working completed sets; warmup and uncompleted excluded', () {
+    test('sums completed sets; uncompleted excluded', () {
       final history = [
         ExerciseHistoryEntry(
           workout: _workout(DateTime(2026, 7, 1)),
           sets: [
-            _set(isWarmup: true, isCompleted: true, actualWeightKg: 20, actualReps: 10),
-            _set(isWarmup: false, isCompleted: true, actualWeightKg: 100, actualReps: 5),
-            _set(isWarmup: false, isCompleted: false, actualWeightKg: 100, actualReps: 5),
+            _set(isCompleted: true, actualWeightKg: 20, actualReps: 10),
+            _set(isCompleted: true, actualWeightKg: 100, actualReps: 5),
+            _set(isCompleted: false, actualWeightKg: 100, actualReps: 5),
           ],
         ),
       ];
 
-      expect(tonnageSeries(history).single.value, 500.0);
+      expect(tonnageSeries(history).single.value, 700.0);
     });
 
     test(
-      'a working completed set without a weight (reps-type) contributes 0, '
+      'a completed set without a weight (reps-type) contributes 0, '
       'the workout is still plotted at 0.0 -- not skipped',
       () {
         final history = [
           ExerciseHistoryEntry(
             workout: _workout(DateTime(2026, 7, 1)),
-            sets: [_set(isWarmup: false, isCompleted: true, actualReps: 20)],
+            sets: [_set(isCompleted: true, actualReps: 20)],
           ),
         ];
 
@@ -157,8 +155,8 @@ void main() {
         ExerciseHistoryEntry(
           workout: _workout(DateTime(2026, 7, 1)),
           sets: [
-            _set(isWarmup: false, isCompleted: true, actualDistanceM: 3000, actualDurationSec: 900),
-            _set(isWarmup: false, isCompleted: true, actualDistanceM: 5000, actualDurationSec: 1500),
+            _set(isCompleted: true, actualDistanceM: 3000, actualDurationSec: 900),
+            _set(isCompleted: true, actualDistanceM: 5000, actualDurationSec: 1500),
           ],
         ),
       ];
@@ -171,8 +169,8 @@ void main() {
         ExerciseHistoryEntry(
           workout: _workout(DateTime(2026, 7, 1)),
           sets: [
-            _set(isWarmup: false, isCompleted: true, actualDistanceM: 3000, actualDurationSec: 900),
-            _set(isWarmup: false, isCompleted: true, actualDistanceM: 1000, actualDurationSec: 1800),
+            _set(isCompleted: true, actualDistanceM: 3000, actualDurationSec: 900),
+            _set(isCompleted: true, actualDistanceM: 1000, actualDurationSec: 1800),
           ],
         ),
       ];
@@ -186,9 +184,9 @@ void main() {
           workout: _workout(DateTime(2026, 7, 1)),
           sets: [
             // 400m in 100s would be a very fast (and excluded) pace.
-            _set(isWarmup: false, isCompleted: true, actualDistanceM: 400, actualDurationSec: 100),
+            _set(isCompleted: true, actualDistanceM: 400, actualDurationSec: 100),
             // 5000m in 1500s = 300 s/km.
-            _set(isWarmup: false, isCompleted: true, actualDistanceM: 5000, actualDurationSec: 1500),
+            _set(isCompleted: true, actualDistanceM: 5000, actualDurationSec: 1500),
           ],
         ),
       ];
@@ -201,7 +199,7 @@ void main() {
         ExerciseHistoryEntry(
           workout: _workout(DateTime(2026, 7, 1)),
           sets: [
-            _set(isWarmup: false, isCompleted: true, actualDistanceM: 400, actualDurationSec: 100),
+            _set(isCompleted: true, actualDistanceM: 400, actualDurationSec: 100),
           ],
         ),
       ];

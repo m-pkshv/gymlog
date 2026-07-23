@@ -138,22 +138,20 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
       }
     }
 
-    // TS 7.2 step 6: finishing with unmarked *working* sets (warmups
-    // excluded, owner-confirmed 2026-07-21 -- warmups are routinely left
-    // unchecked and would make this fire on nearly every finish) asks for
-    // confirmation before completing.
+    // TS 7.2 step 6: finishing with unmarked sets asks for confirmation
+    // before completing (Stage 10, 2026-07-23: the warm-up concept was
+    // removed -- every set now counts).
     if (newStatus == WorkoutStatus.completed) {
       final details = ref
           .read(workoutEditorControllerProvider(widget.workoutId))
           .value;
-      final hasIncompleteWorkingSets =
+      final hasIncompleteSets =
           details?.exercises.any(
-            (exerciseDetails) => exerciseDetails.sets.any(
-              (set) => !set.isWarmup && !set.isCompleted,
-            ),
+            (exerciseDetails) =>
+                exerciseDetails.sets.any((set) => !set.isCompleted),
           ) ??
           false;
-      if (hasIncompleteWorkingSets) {
+      if (hasIncompleteSets) {
         final confirmed = await _confirmFinishWithIncompleteSets();
         if (!confirmed || !mounted) return;
       }
@@ -203,7 +201,7 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
             .read(activeWorkoutRepositoryProvider)
             .getByWorkoutId(widget.workoutId))
         ?.restTimerEndsAtUtc;
-    if (endsAt == null || !mounted) return; // autostart off, warmup set, etc.
+    if (endsAt == null || !mounted) return; // autostart off, etc.
 
     await _ensureNotificationPermissionRequested();
     if (!mounted) return;
@@ -441,9 +439,6 @@ class _EditorBody extends StatelessWidget {
                       },
                       onFieldCommit: (setId, field, actual) {
                         controller.flushSet(setId);
-                      },
-                      onWarmupChanged: (setId, value) {
-                        controller.setWarmup(setId, value: value);
                       },
                       onCompletedChanged: onSetCompletedChanged,
                       onAddSet: () => controller.addSet(workoutExerciseId),

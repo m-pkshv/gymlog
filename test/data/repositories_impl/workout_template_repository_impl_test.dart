@@ -52,11 +52,9 @@ void main() {
 
       final firstSet = await templates.addSet(
         templateExerciseId: templateExercise.id,
-        isWarmup: true,
       );
       final secondSet = await templates.addSet(
         templateExerciseId: templateExercise.id,
-        isWarmup: false,
       );
       expect(firstSet.setNumber, 1);
       expect(secondSet.setNumber, 2);
@@ -71,7 +69,6 @@ void main() {
       final exerciseDetails = details.exercises.single;
       expect(exerciseDetails.exercise.name, 'Squat');
       expect(exerciseDetails.sets, hasLength(2));
-      expect(exerciseDetails.sets[0].isWarmup, isTrue);
       expect(exerciseDetails.sets[1].plannedWeightKg, 100);
       expect(exerciseDetails.sets[1].plannedReps, 5);
     },
@@ -157,7 +154,7 @@ void main() {
 
   test(
     'createFromWorkout copies exercises/order/comment and planned set '
-    'values, including warmup, but never facts or the workout comment '
+    'values, but never facts or the workout comment '
     '(TS 8 section 8)',
     () async {
       final exercise = await exercises.create(
@@ -175,19 +172,17 @@ void main() {
       workoutExercise = workoutExercise.copyWith(comment: 'Go heavy');
       await workouts.updateWorkoutExercise(workoutExercise);
 
-      final warmup = await workouts.addSet(
+      final first = await workouts.addSet(
         workoutExerciseId: workoutExercise.id,
-        isWarmup: true,
       );
       await workouts.updateSet(
-        warmup.copyWith(plannedWeightKg: 40, plannedReps: 10),
+        first.copyWith(plannedWeightKg: 40, plannedReps: 10),
       );
-      final working = await workouts.addSet(
+      final second = await workouts.addSet(
         workoutExerciseId: workoutExercise.id,
-        isWarmup: false,
       );
       await workouts.updateSet(
-        working
+        second
             .copyWith(plannedWeightKg: 100, plannedReps: 5)
             .markCompleted()
             .copyWith(actualWeightKg: 105, actualReps: 4),
@@ -204,9 +199,7 @@ void main() {
       final exerciseDetails = details.exercises.single;
       expect(exerciseDetails.templateExercise.comment, 'Go heavy');
       expect(exerciseDetails.sets, hasLength(2));
-      expect(exerciseDetails.sets[0].isWarmup, isTrue);
       expect(exerciseDetails.sets[0].plannedWeightKg, 40);
-      expect(exerciseDetails.sets[1].isWarmup, isFalse);
       expect(exerciseDetails.sets[1].plannedWeightKg, 100);
       expect(exerciseDetails.sets[1].plannedReps, 5);
 
@@ -225,7 +218,7 @@ void main() {
 
   test(
     'duplicate clones exercises, order, comments and all planned set '
-    'values (including warmup) under a new name, never archived '
+    'values under a new name, never archived '
     '(04_UI_UX_SPEC.md section 5)',
     () async {
       final exercise = await exercises.create(
@@ -244,19 +237,17 @@ void main() {
       templateExercise = templateExercise.copyWith(comment: 'Go heavy');
       await templates.updateTemplateExercise(templateExercise);
 
-      final warmup = await templates.addSet(
+      final first = await templates.addSet(
         templateExerciseId: templateExercise.id,
-        isWarmup: true,
       );
       await templates.updateTemplateSet(
-        warmup.copyWith(plannedWeightKg: 40, plannedReps: 10),
+        first.copyWith(plannedWeightKg: 40, plannedReps: 10),
       );
-      final working = await templates.addSet(
+      final second = await templates.addSet(
         templateExerciseId: templateExercise.id,
-        isWarmup: false,
       );
       await templates.updateTemplateSet(
-        working.copyWith(plannedWeightKg: 100, plannedReps: 5),
+        second.copyWith(plannedWeightKg: 100, plannedReps: 5),
       );
 
       final copy = await templates.duplicate(
@@ -275,7 +266,6 @@ void main() {
       expect(exerciseDetails.exercise.id, exercise.id);
       expect(exerciseDetails.templateExercise.comment, 'Go heavy');
       expect(exerciseDetails.sets, hasLength(2));
-      expect(exerciseDetails.sets[0].isWarmup, isTrue);
       expect(exerciseDetails.sets[0].plannedWeightKg, 40);
       expect(exerciseDetails.sets[1].plannedWeightKg, 100);
       expect(exerciseDetails.sets[1].plannedReps, 5);
@@ -306,10 +296,7 @@ void main() {
         templateId: template.id,
         exerciseId: exercise.id,
       );
-      await templates.addSet(
-        templateExerciseId: templateExercise.id,
-        isWarmup: false,
-      );
+      await templates.addSet(templateExerciseId: templateExercise.id);
 
       await templates.deleteTemplate(template.id);
       expect(await templates.getDetails(template.id), isNull);

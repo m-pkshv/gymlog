@@ -26,7 +26,6 @@ class TemplateExerciseCard extends StatelessWidget {
     required this.canMoveDown,
     required this.onFieldChanged,
     required this.onFieldCommit,
-    required this.onWarmupChanged,
     required this.onAddSet,
     required this.onMoveUp,
     required this.onMoveDown,
@@ -44,7 +43,6 @@ class TemplateExerciseCard extends StatelessWidget {
   final void Function(String setId, TemplateSetFieldSpec field, double? value)
   onFieldChanged;
   final void Function(String setId, TemplateSetFieldSpec field) onFieldCommit;
-  final void Function(String setId, bool value) onWarmupChanged;
   final VoidCallback onAddSet;
   final VoidCallback onMoveUp;
   final VoidCallback onMoveDown;
@@ -123,7 +121,6 @@ class TemplateExerciseCard extends StatelessWidget {
                 onFieldChanged: (field, value) =>
                     onFieldChanged(set.id, field, value),
                 onFieldCommit: (field) => onFieldCommit(set.id, field),
-                onWarmupChanged: (value) => onWarmupChanged(set.id, value),
               ),
             Align(
               alignment: Alignment.centerLeft,

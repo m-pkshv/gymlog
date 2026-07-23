@@ -153,27 +153,6 @@ class TemplateEditorController
     }
   }
 
-  /// Warmup toggle writes immediately, like `WorkoutEditorController.setWarmup`.
-  Future<void> setWarmup(String setId, {required bool value}) async {
-    final current = _findSet(setId);
-    if (current == null) return;
-    _setDebounceTimers.remove(setId)?.cancel();
-    final updated = current.copyWith(
-      isWarmup: value,
-      updatedAt: DateTime.now().toUtc(),
-    );
-    _replaceSet(updated);
-    try {
-      await _repository.updateTemplateSet(updated);
-    } catch (error, stackTrace) {
-      _logger.error(
-        'Failed to save template set $setId',
-        error: error,
-        stackTrace: stackTrace,
-      );
-    }
-  }
-
   Future<void> addExercise(String exerciseId) async {
     try {
       await _repository.addExercise(
@@ -192,10 +171,7 @@ class TemplateEditorController
 
   Future<void> addSet(String templateExerciseId) async {
     try {
-      await _repository.addSet(
-        templateExerciseId: templateExerciseId,
-        isWarmup: false,
-      );
+      await _repository.addSet(templateExerciseId: templateExerciseId);
       await _load();
     } catch (error, stackTrace) {
       _logger.error(

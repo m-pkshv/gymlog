@@ -85,7 +85,6 @@ extension TemplateSetRowMapper on drift.TemplateSet {
       id: id,
       templateExerciseId: templateExerciseId,
       setNumber: setNumber,
-      isWarmup: isWarmup,
       plannedWeightKg: plannedWeightKg,
       plannedReps: plannedReps,
       plannedDurationSec: plannedDurationSec,
@@ -104,7 +103,6 @@ extension TemplateSetCompanionMapper on TemplateSet {
       id: id,
       templateExerciseId: templateExerciseId,
       setNumber: setNumber,
-      isWarmup: Value(isWarmup),
       plannedWeightKg: Value(plannedWeightKg),
       plannedReps: Value(plannedReps),
       plannedDurationSec: Value(plannedDurationSec),
@@ -117,7 +115,6 @@ extension TemplateSetCompanionMapper on TemplateSet {
 
   drift.TemplateSetsCompanion toUpdateCompanion() {
     return drift.TemplateSetsCompanion(
-      isWarmup: Value(isWarmup),
       plannedWeightKg: Value(plannedWeightKg),
       plannedReps: Value(plannedReps),
       plannedDurationSec: Value(plannedDurationSec),

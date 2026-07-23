@@ -31,7 +31,7 @@ abstract class WorkoutTemplateRepository {
 
   /// "Создать шаблон" (S-02/S-03 workout action, TS 8 section 8): copies
   /// [workoutId]'s non-deleted exercises (order + `WorkoutExercise.comment`)
-  /// and each set's planned values (including warmup sets) into a
+  /// and each set's planned values into a
   /// brand-new template named [name]. Facts, completion, and the source
   /// workout's own comment are never copied — `TemplateSet` has no fact
   /// fields at all (DM 6.8), and the workout-level comment follows the same
@@ -45,8 +45,8 @@ abstract class WorkoutTemplateRepository {
 
   /// "Дублировать" (S-12 card menu, 04_UI_UX_SPEC.md section 5): full
   /// within-aggregate clone of [templateId] — every `TemplateExercise`
-  /// (order + comment) and `TemplateSet` (all planned fields, `isWarmup`,
-  /// `side`), plus the source template's own comment, into a brand-new,
+  /// (order + comment) and `TemplateSet` (all planned fields, `side`),
+  /// plus the source template's own comment, into a brand-new,
   /// never-archived template named [name] (04/TS 8 don't detail field
   /// copying for "duplicate" the way they do for the cross-aggregate
   /// workout<->template copies, so everything is copied 1:1 — this isn't a
@@ -69,10 +69,7 @@ abstract class WorkoutTemplateRepository {
   /// write (S-13, mirrors S-03's TS 5 contract).
   Future<void> updateTemplateExercise(TemplateExercise templateExercise);
 
-  Future<TemplateSet> addSet({
-    required String templateExerciseId,
-    required bool isWarmup,
-  });
+  Future<TemplateSet> addSet({required String templateExerciseId});
 
   /// Persists set field changes — the autosave write (S-13, TS 5).
   Future<void> updateTemplateSet(TemplateSet set);

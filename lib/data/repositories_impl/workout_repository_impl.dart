@@ -368,17 +368,13 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
   }
 
   @override
-  Future<ExerciseSet> addSet({
-    required String workoutExerciseId,
-    required bool isWarmup,
-  }) async {
+  Future<ExerciseSet> addSet({required String workoutExerciseId}) async {
     final now = DateTime.now().toUtc();
     final nextSetNumber = await _nextSetNumber(workoutExerciseId);
     final exerciseSet = ExerciseSet(
       id: const Uuid().v4(),
       workoutExerciseId: workoutExerciseId,
       setNumber: nextSetNumber,
-      isWarmup: isWarmup,
       isCompleted: false,
       side: BodySide.none,
       createdAt: now,
@@ -527,7 +523,6 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
             id: const Uuid().v4(),
             workoutExerciseId: workoutExercise.id,
             setNumber: sourceSet.setNumber,
-            isWarmup: sourceSet.isWarmup,
             isCompleted: false,
             plannedWeightKg: sourceSet.plannedWeightKg,
             plannedReps: sourceSet.plannedReps,
@@ -613,7 +608,6 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
             id: const Uuid().v4(),
             workoutExerciseId: workoutExercise.id,
             setNumber: setRow.setNumber,
-            isWarmup: setRow.isWarmup,
             isCompleted: false,
             plannedWeightKg: setRow.plannedWeightKg,
             plannedReps: setRow.plannedReps,
@@ -722,7 +716,6 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
                 _db.exerciseSets.actualReps.dartCast<double>())
             .sum(
               filter:
-                  _db.exerciseSets.isWarmup.equals(false) &
                   _db.exerciseSets.isCompleted.equals(true) &
                   _db.exercises.exerciseType.isIn([
                     ExerciseType.strength.name,

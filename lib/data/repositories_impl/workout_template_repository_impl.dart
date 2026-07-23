@@ -199,7 +199,6 @@ class WorkoutTemplateRepositoryImpl implements WorkoutTemplateRepository {
             id: const Uuid().v4(),
             templateExerciseId: templateExercise.id,
             setNumber: sourceSet.setNumber,
-            isWarmup: sourceSet.isWarmup,
             plannedWeightKg: sourceSet.plannedWeightKg,
             plannedReps: sourceSet.plannedReps,
             plannedDurationSec: sourceSet.plannedDurationSec,
@@ -279,7 +278,6 @@ class WorkoutTemplateRepositoryImpl implements WorkoutTemplateRepository {
             id: const Uuid().v4(),
             templateExerciseId: templateExercise.id,
             setNumber: setRow.setNumber,
-            isWarmup: setRow.isWarmup,
             plannedWeightKg: setRow.plannedWeightKg,
             plannedReps: setRow.plannedReps,
             plannedDurationSec: setRow.plannedDurationSec,
@@ -345,17 +343,13 @@ class WorkoutTemplateRepositoryImpl implements WorkoutTemplateRepository {
   }
 
   @override
-  Future<TemplateSet> addSet({
-    required String templateExerciseId,
-    required bool isWarmup,
-  }) async {
+  Future<TemplateSet> addSet({required String templateExerciseId}) async {
     final now = DateTime.now().toUtc();
     final nextSetNumber = await _nextSetNumber(templateExerciseId);
     final templateSet = TemplateSet(
       id: const Uuid().v4(),
       templateExerciseId: templateExerciseId,
       setNumber: nextSetNumber,
-      isWarmup: isWarmup,
       side: BodySide.none,
       createdAt: now,
       updatedAt: now,

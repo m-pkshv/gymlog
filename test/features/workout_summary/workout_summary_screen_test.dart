@@ -94,7 +94,7 @@ Future<void> _seedCompletedWorkout(
           updatedAt: '2026-07-21T00:00:00Z',
         ),
       );
-  // Warmup, completed -- counted in setCount, excluded from tonnage.
+  // Completed -- 40 x 10 = 400 kg of tonnage.
   await db
       .into(db.exerciseSets)
       .insert(
@@ -102,7 +102,6 @@ Future<void> _seedCompletedWorkout(
           id: 's1',
           workoutExerciseId: 'we1',
           setNumber: 1,
-          isWarmup: const Value(true),
           isCompleted: const Value(true),
           actualWeightKg: const Value(40),
           actualReps: const Value(10),
@@ -110,7 +109,7 @@ Future<void> _seedCompletedWorkout(
           updatedAt: '2026-07-21T00:00:00Z',
         ),
       );
-  // Working, completed -- 100 x 5 = 500 kg of tonnage.
+  // Completed -- 100 x 5 = 500 kg of tonnage.
   await db
       .into(db.exerciseSets)
       .insert(
@@ -125,7 +124,7 @@ Future<void> _seedCompletedWorkout(
           updatedAt: '2026-07-21T00:00:00Z',
         ),
       );
-  // Working, unmarked -- counted in setCount, excluded from tonnage.
+  // Unmarked -- counted in setCount, excluded from tonnage.
   await db
       .into(db.exerciseSets)
       .insert(
@@ -162,7 +161,7 @@ void main() {
     expect(find.text('45:12'), findsOneWidget); // duration
     expect(find.text('1'), findsOneWidget); // exerciseCount
     expect(find.text('3'), findsOneWidget); // setCount (all 3 sets)
-    expect(find.text('500.0 kg'), findsOneWidget); // tonnage: 100 x 5 only
+    expect(find.text('900.0 kg'), findsOneWidget); // tonnage: 400 + 500
 
     await _unmountAndFlush(tester);
   });

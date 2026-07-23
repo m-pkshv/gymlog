@@ -30,7 +30,7 @@ List<ExerciseProgressPoint> _series(
   final points = <ExerciseProgressPoint>[];
   for (final entry in history.reversed) {
     final workingSets = entry.sets
-        .where((s) => !s.isWarmup && s.isCompleted)
+        .where((s) => s.isCompleted)
         .toList();
     final value = metric(workingSets);
     if (value != null) {

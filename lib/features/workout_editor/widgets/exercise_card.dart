@@ -33,7 +33,6 @@ class ExerciseCard extends ConsumerWidget {
     required this.canMoveDown,
     required this.onFieldChanged,
     required this.onFieldCommit,
-    required this.onWarmupChanged,
     required this.onCompletedChanged,
     required this.onAddSet,
     required this.onCopyLastPerformance,
@@ -61,7 +60,6 @@ class ExerciseCard extends ConsumerWidget {
   onFieldChanged;
   final void Function(String setId, SetFieldSpec field, bool actual)
   onFieldCommit;
-  final void Function(String setId, bool value) onWarmupChanged;
   final void Function(String setId, bool value) onCompletedChanged;
   final VoidCallback onAddSet;
   final VoidCallback onCopyLastPerformance;
@@ -163,7 +161,6 @@ class ExerciseCard extends ConsumerWidget {
                     onFieldChanged(set.id, field, actual, value),
                 onFieldCommit: (field, actual) =>
                     onFieldCommit(set.id, field, actual),
-                onWarmupChanged: (value) => onWarmupChanged(set.id, value),
                 onCompletedChanged: (value) =>
                     onCompletedChanged(set.id, value),
                 onCommentSaved: (comment) =>

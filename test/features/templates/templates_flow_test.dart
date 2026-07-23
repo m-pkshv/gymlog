@@ -210,30 +210,6 @@ void main() {
     },
   );
 
-  testWidgets('the warmup checkbox writes immediately, no debounce', (
-    tester,
-  ) async {
-    await _seedExercise(db);
-    await tester.pumpWidget(_appUnderTest(db));
-    await tester.pumpAndSettle();
-
-    await _createTemplateViaFab(tester);
-    await tester.tap(find.text('Add exercise'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Squat'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Add set'));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byType(Checkbox).first);
-    await tester.pump();
-
-    final sets = await db.select(db.templateSets).get();
-    expect(sets.single.isWarmup, isTrue);
-
-    await _unmountAndFlush(tester);
-  });
-
   testWidgets('editing the template name debounces the write, then autosaves', (
     tester,
   ) async {

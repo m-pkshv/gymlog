@@ -135,14 +135,13 @@
 | createdAt / updatedAt / isDeleted | | | | |
 
 ### 6.7. `ExerciseSet`
-Одна таблица с nullable-колонками под все типы (D-14). Приложение показывает/валидирует только колонки, соответствующие `exerciseType` упражнения.
+Одна таблица с nullable-колонками под все типы (D-14). Приложение показывает/валидирует только колонки, соответствующие `exerciseType` упражнения. Понятие «разминочный подход» (`isWarmup`) удалено из приложения (Этап 10, 2026-07-23, решение владельца) — все подходы равноценны и учитываются в статистике/рекордах/прогрессии/тоннаже одинаково; колонка удалена схемной миграцией v1→v2 (раздел 11.1).
 
 | Поле | Тип | Обяз. | Умолч. | Единицы / валидация |
 |---|---|---|---|---|
 | id | TEXT PK | да | UUID | |
 | workoutExerciseId | TEXT FK→WorkoutExercise | да | — | |
 | setNumber | INTEGER | да | max+1 | ≥ 1; перенумерация при удалении — на уровне сервиса |
-| isWarmup | INTEGER | да | 0 | |
 | isCompleted | INTEGER | да | 0 | Отметка выполнения |
 | plannedWeightKg | REAL | нет | NULL | 0–1000; шаг ввода 0.25 кг / 0.5 lb |
 | plannedReps | INTEGER | нет | NULL | 0–1000 |
@@ -164,7 +163,7 @@
 ### 6.8. Шаблоны (D-16)
 **`WorkoutTemplate`**: `id`, `name` (обяз., 1–80), `comment` (≤2000), `isArchived` (def 0), служебные поля.
 **`TemplateExercise`**: `id`, `templateId FK`, `exerciseId FK`, `orderIndex`, `comment`, служебные.
-**`TemplateSet`**: `id`, `templateExerciseId FK`, `setNumber`, `isWarmup`, только плановые метрики (`plannedWeightKg`, `plannedReps`, `plannedDurationSec`, `plannedDistanceM`, `side`), служебные.
+**`TemplateSet`**: `id`, `templateExerciseId FK`, `setNumber`, только плановые метрики (`plannedWeightKg`, `plannedReps`, `plannedDurationSec`, `plannedDistanceM`, `side`), служебные.
 Создание тренировки из шаблона копирует структуру в `Workout/WorkoutExercise/ExerciseSet` (плановые поля), связь с шаблоном не хранится (предположение; при необходимости аналитики «сколько раз использован шаблон» добавить `sourceTemplateId` в `Workout` — решение владельца).
 
 ### 6.9. `BodyMeasurement`
@@ -275,6 +274,7 @@ Exercise 1─* PersonalRecord (кэш)           Exercise 1─1 ExerciseProgress
 | Версия | Дата | Изменения |
 |---|---|---|
 | 1 | Этап 0 | Начальная схема: все таблицы разделов 5–6 |
+| 2 | Этап 10, 2026-07-23 | Удалены `ExerciseSets.isWarmup`/`TemplateSets.isWarmup` (понятие разминки убрано из приложения, решение владельца) — `Migrator.dropColumn` для обеих таблиц, покрыто тестом `test/data/database_migration_v1_to_v2_test.dart` |
 
 ## 12. Начальные данные (сиды)
 - Загружаются при первом запуске в транзакции; факт загрузки — по наличию строк, версия сида хранится в `AppSettings`-подобной служебной таблице `SeedInfo(seedVersion INTEGER)`.

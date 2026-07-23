@@ -11,8 +11,8 @@ import 'workout_tag_chip.dart';
 
 /// "Теги" bottom sheet (S-03, DM 6.3/6.5): every non-deleted tag as a
 /// togglable `FilterChip` — tapping immediately assigns/unassigns it to
-/// [workoutId] (no separate "Apply" button, same as the warmup/completed
-/// checkboxes elsewhere in the editor) — plus a "+ Создать тег" action.
+/// [workoutId] (no separate "Apply" button, same as the completed
+/// checkbox elsewhere in the editor) — plus a "+ Создать тег" action.
 /// Reads the current assignment from the live controller state (not a
 /// snapshot passed in) so chips reflect a toggle immediately.
 class TagPickerSheet extends ConsumerWidget {

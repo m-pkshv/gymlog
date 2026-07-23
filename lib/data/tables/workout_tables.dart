@@ -109,8 +109,6 @@ class ExerciseSets extends Table with SoftDeleteColumns {
 
   IntColumn get setNumber => integer()();
 
-  BoolColumn get isWarmup => boolean().withDefault(const Constant(false))();
-
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
 
   RealColumn get plannedWeightKg => real().nullable()();

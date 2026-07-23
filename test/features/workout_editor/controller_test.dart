@@ -82,7 +82,6 @@ void main() {
       );
       final set = await workouts.addSet(
         workoutExerciseId: workoutExercise.id,
-        isWarmup: false,
       );
 
       final controller = WorkoutEditorController(
@@ -131,7 +130,6 @@ void main() {
     );
     final set = await workouts.addSet(
       workoutExerciseId: workoutExercise.id,
-      isWarmup: false,
     );
 
     final controller = WorkoutEditorController(
@@ -210,7 +208,6 @@ void main() {
         for (final (weight, reps) in pastValues) {
           final set = await workouts.addSet(
             workoutExerciseId: pastWorkoutExercise.id,
-            isWarmup: false,
           );
           await workouts.updateSet(
             set.copyWith(actualWeightKg: weight, actualReps: reps),
@@ -233,11 +230,9 @@ void main() {
         );
         final set1 = await workouts.addSet(
           workoutExerciseId: workoutExercise.id,
-          isWarmup: false,
         );
         final set2 = await workouts.addSet(
           workoutExerciseId: workoutExercise.id,
-          isWarmup: false,
         );
 
         final controller = WorkoutEditorController(
@@ -296,7 +291,6 @@ void main() {
         );
         final pastSet = await workouts.addSet(
           workoutExerciseId: pastWorkoutExercise.id,
-          isWarmup: false,
         );
         await workouts.updateSet(
           pastSet.copyWith(actualWeightKg: 50.0, actualReps: 10),
@@ -316,11 +310,9 @@ void main() {
         );
         final set1 = await workouts.addSet(
           workoutExerciseId: workoutExercise.id,
-          isWarmup: false,
         );
         final set2 = await workouts.addSet(
           workoutExerciseId: workoutExercise.id,
-          isWarmup: false,
         );
         await workouts.updateSet(set2.copyWith(plannedWeightKg: 99.0));
 
@@ -806,7 +798,6 @@ void main() {
         );
         final olderSet = await workouts.addSet(
           workoutExerciseId: olderWe.id,
-          isWarmup: false,
         );
         await workouts.updateSet(
           olderSet.copyWith(
@@ -828,7 +819,6 @@ void main() {
         );
         final set = await workouts.addSet(
           workoutExerciseId: we.id,
-          isWarmup: false,
         );
         await workouts.updateSet(
           set.copyWith(isCompleted: true, actualWeightKg: 60, actualReps: 8),
@@ -894,7 +884,6 @@ void main() {
       );
       final set = await workouts.addSet(
         workoutExerciseId: we.id,
-        isWarmup: false,
       );
       final controller = WorkoutEditorController(
         workout.id,
@@ -934,7 +923,6 @@ void main() {
         );
         final set = await workouts.addSet(
           workoutExerciseId: we.id,
-          isWarmup: false,
         );
         await service.changeStatus(
           workout: workout,
@@ -976,7 +964,6 @@ void main() {
       );
       final set = await workouts.addSet(
         workoutExerciseId: we.id,
-        isWarmup: false,
       );
       await service.changeStatus(
         workout: workout,
@@ -1023,7 +1010,6 @@ void main() {
         );
         final set = await workouts.addSet(
           workoutExerciseId: we.id,
-          isWarmup: false,
         );
         await service.changeStatus(
           workout: workout,
@@ -1066,7 +1052,6 @@ void main() {
         );
         final set = await workouts.addSet(
           workoutExerciseId: we.id,
-          isWarmup: false,
         );
         await service.changeStatus(
           workout: workout,

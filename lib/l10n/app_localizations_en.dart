@@ -163,9 +163,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get setColumnNumber => '#';
 
   @override
-  String get setColumnWarmup => 'Warm-up';
-
-  @override
   String get setColumnPlan => 'Plan';
 
   @override

@@ -17,7 +17,6 @@ class TemplateSetRow extends StatelessWidget {
     required this.fields,
     required this.onFieldChanged,
     required this.onFieldCommit,
-    required this.onWarmupChanged,
   });
 
   final TemplateSet set;
@@ -25,7 +24,6 @@ class TemplateSetRow extends StatelessWidget {
   final void Function(TemplateSetFieldSpec field, double? value)
   onFieldChanged;
   final void Function(TemplateSetFieldSpec field) onFieldCommit;
-  final ValueChanged<bool> onWarmupChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -38,15 +36,6 @@ class TemplateSetRow extends StatelessWidget {
           SizedBox(
             width: 24,
             child: Text('${set.setNumber}', textAlign: TextAlign.center),
-          ),
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: Checkbox(
-              value: set.isWarmup,
-              onChanged: (value) => onWarmupChanged(value ?? false),
-              semanticLabel: l10n.setColumnWarmup,
-            ),
           ),
           Expanded(
             child: Column(
