@@ -49,6 +49,13 @@ class _MeasurementsScreenState extends ConsumerState<MeasurementsScreen>
     return context.push('/more/measurements/new', extra: initialTypeId);
   }
 
+  /// "Замеры" tab (Stage 10, owner-reported): "+" opens the bulk-entry
+  /// screen (every girth type at once) instead of the single-entry form
+  /// preselected to whichever girth the dropdown happened to have selected.
+  Future<void> _addGirthEntries() {
+    return context.push('/more/measurements/girths');
+  }
+
   Future<void> _addCustomType() async {
     final service = ref.read(measurementTypeServiceProvider);
     await showDialog<bool>(
@@ -180,12 +187,13 @@ class _MeasurementsScreenState extends ConsumerState<MeasurementsScreen>
       floatingActionButton: _tabController.index == 3
           ? null
           : FloatingActionButton(
-              onPressed: () => _addEntry(switch (_tabController.index) {
-                0 => _weightTypeId,
-                1 => _bodyFatTypeId,
-                2 => _selectedGirthId,
-                _ => null,
-              }),
+              onPressed: _tabController.index == 2
+                  ? _addGirthEntries
+                  : () => _addEntry(switch (_tabController.index) {
+                      0 => _weightTypeId,
+                      1 => _bodyFatTypeId,
+                      _ => null,
+                    }),
               tooltip: l10n.addMeasurementEntryAction,
               child: const Icon(Icons.add),
             ),

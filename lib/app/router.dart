@@ -13,6 +13,7 @@ import '../features/history/screen.dart';
 import '../features/history/template_picker_screen.dart';
 import '../features/measurements/custom_measurement_type_screen.dart';
 import '../features/measurements/measurement_form_screen.dart';
+import '../features/measurements/measurement_girths_bulk_entry_screen.dart';
 import '../features/measurements/screen.dart';
 import '../features/more/screen.dart';
 import '../features/settings/screen.dart';
@@ -249,6 +250,16 @@ final GoRouter appRouter = GoRouter(
                       path: 'custom/:typeId',
                       builder: (_, state) => CustomMeasurementTypeScreen(
                         typeId: state.pathParameters['typeId']!,
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'girths',
+                      // S-14 "Замеры" bulk entry (Stage 10, owner-reported)
+                      // — a full-screen modal like the single-entry form.
+                      pageBuilder: (_, state) => MaterialPage(
+                        key: state.pageKey,
+                        fullscreenDialog: true,
+                        child: const MeasurementGirthsBulkEntryScreen(),
                       ),
                     ),
                   ],

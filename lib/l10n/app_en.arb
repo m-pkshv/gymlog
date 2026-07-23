@@ -1003,6 +1003,10 @@
   "@measurementsTitle": {
     "description": "AppBar title of the S-14 measurements screen, and its entry on the 'More' menu (S-11, Stage 6)."
   },
+  "measurementGirthsBulkEntryTitle": "Quick measurement entry",
+  "@measurementGirthsBulkEntryTitle": {
+    "description": "AppBar title of the girths bulk-entry screen (Stage 10, owner-reported), opened from the \"Замеры\" tab's \"+\"."
+  },
   "measurementTypeBodyWeight": "Body weight",
   "@measurementTypeBodyWeight": {
     "description": "Display label for the built-in 'body_weight' MeasurementType (06_DATA_MODEL.md, section 5.3)."

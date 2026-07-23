@@ -1706,6 +1706,12 @@ abstract class AppLocalizations {
   /// **'Measurements'**
   String get measurementsTitle;
 
+  /// AppBar title of the girths bulk-entry screen (Stage 10, owner-reported), opened from the "Замеры" tab's "+".
+  ///
+  /// In en, this message translates to:
+  /// **'Quick measurement entry'**
+  String get measurementGirthsBulkEntryTitle;
+
   /// Display label for the built-in 'body_weight' MeasurementType (06_DATA_MODEL.md, section 5.3).
   ///
   /// In en, this message translates to:

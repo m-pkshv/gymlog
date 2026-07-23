@@ -853,6 +853,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get measurementsTitle => 'Measurements';
 
   @override
+  String get measurementGirthsBulkEntryTitle => 'Quick measurement entry';
+
+  @override
   String get measurementTypeBodyWeight => 'Body weight';
 
   @override

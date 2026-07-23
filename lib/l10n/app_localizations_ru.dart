@@ -862,6 +862,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get measurementsTitle => 'Измерения';
 
   @override
+  String get measurementGirthsBulkEntryTitle => 'Быстрый ввод замеров';
+
+  @override
   String get measurementTypeBodyWeight => 'Вес тела';
 
   @override

@@ -12,6 +12,7 @@ import 'package:gymlog/data/repositories_impl/body_measurement_repository_impl.d
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/features/measurements/custom_measurement_type_screen.dart';
 import 'package:gymlog/features/measurements/measurement_form_screen.dart';
+import 'package:gymlog/features/measurements/measurement_girths_bulk_entry_screen.dart';
 import 'package:gymlog/features/measurements/measurement_value_format.dart';
 import 'package:gymlog/features/measurements/screen.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
@@ -37,6 +38,10 @@ Widget _appUnderTest(AppDatabase db) {
             builder: (_, state) => CustomMeasurementTypeScreen(
               typeId: state.pathParameters['typeId']!,
             ),
+          ),
+          GoRoute(
+            path: 'girths',
+            builder: (_, _) => const MeasurementGirthsBulkEntryScreen(),
           ),
         ],
       ),
@@ -78,6 +83,9 @@ Future<void> _seedType(
       );
 }
 
+Finder _measurementsTab() =>
+    find.widgetWithText(Tab, 'Measurements');
+
 void main() {
   late AppDatabase db;
 
@@ -86,6 +94,8 @@ void main() {
     await AppSettingsRepositoryImpl(db).ensureInitialized();
     await _seedType(db, id: 'body_weight', unitKind: 'mass', sortOrder: 0);
     await _seedType(db, id: 'body_fat', unitKind: 'percent', sortOrder: 1);
+    await _seedType(db, id: 'neck', unitKind: 'length', sortOrder: 0);
+    await _seedType(db, id: 'waist', unitKind: 'length', sortOrder: 1);
   });
 
   tearDown(() async {
@@ -329,4 +339,71 @@ void main() {
       await _unmountAndFlush(tester);
     },
   );
+
+  group('girths bulk entry (Stage 10, owner-reported)', () {
+    testWidgets(
+      'the "Замеры" tab\'s "+" opens the bulk-entry screen, not the '
+      'single-entry form',
+      (tester) async {
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+
+        await tester.tap(_measurementsTab());
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(FloatingActionButton));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(MeasurementGirthsBulkEntryScreen), findsOneWidget);
+        expect(find.byType(MeasurementFormScreen), findsNothing);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'lists every girth with its existing value prefilled, and saving a '
+      'newly filled field persists it without touching the others',
+      (tester) async {
+        final measurements = BodyMeasurementRepositoryImpl(db);
+        await measurements.create(
+          measurementTypeId: 'neck',
+          date: DateTime.now(),
+          valueMetric: 38,
+        );
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await tester.tap(_measurementsTab());
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(FloatingActionButton));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Neck'), findsOneWidget);
+        expect(find.text('Waist'), findsOneWidget);
+        final neckField = tester.widget<TextField>(
+          find.widgetWithText(TextField, '38.0'),
+        );
+        expect(neckField.controller!.text, '38.0');
+
+        // Rows are sorted by sortOrder: neck (0) then waist (1).
+        await tester.enterText(find.byType(TextField).at(1), '82');
+        await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+        await tester.pumpAndSettle();
+
+        final waist = await measurements.getByTypeAndDate(
+          measurementTypeId: 'waist',
+          date: DateTime.now(),
+        );
+        expect(waist, isNotNull);
+        expect(waist!.valueMetric, 82);
+        final neck = await measurements.getByTypeAndDate(
+          measurementTypeId: 'neck',
+          date: DateTime.now(),
+        );
+        expect(neck!.valueMetric, 38, reason: 'untouched field stays as-is');
+
+        await _unmountAndFlush(tester);
+      },
+    );
+  });
 }
