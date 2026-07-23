@@ -267,7 +267,8 @@ void main() {
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
 
-      expect(find.text('Workout 20.07.2026'), findsOneWidget);
+      expect(find.text('Workout'), findsOneWidget);
+      expect(find.textContaining('20.07.2026'), findsOneWidget);
       expect(find.textContaining('2 exercises'), findsOneWidget);
       expect(find.textContaining('125 min'), findsOneWidget);
       expect(find.text('Completed'), findsOneWidget);
@@ -295,17 +296,27 @@ void main() {
   });
 
   testWidgets('most recent workout is listed first', (tester) async {
-    await _insertCompletedWorkout(db, id: 'older', date: '2026-07-01');
-    await _insertCompletedWorkout(db, id: 'newer', date: '2026-07-19');
+    await _insertCompletedWorkout(
+      db,
+      id: 'older',
+      date: '2026-07-01',
+      name: 'Older session',
+    );
+    await _insertCompletedWorkout(
+      db,
+      id: 'newer',
+      date: '2026-07-19',
+      name: 'Newer session',
+    );
 
     await tester.pumpWidget(_appUnderTest(db));
     await tester.pumpAndSettle();
 
     final titles = tester
-        .widgetList<Text>(find.textContaining('Workout '))
+        .widgetList<Text>(find.textContaining(' session'))
         .map((t) => t.data)
         .toList();
-    expect(titles, ['Workout 19.07.2026', 'Workout 01.07.2026']);
+    expect(titles, ['Newer session', 'Older session']);
 
     await _unmountAndFlush(tester);
   });

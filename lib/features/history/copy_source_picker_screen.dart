@@ -37,9 +37,7 @@ class CopySourcePickerScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final entry = entries[index];
               final workout = entry.workout;
-              final name =
-                  workout.name ??
-                  '${l10n.workoutDefaultNamePrefix} ${formatShortDate(workout.date)}';
+              final name = workout.name ?? l10n.workoutDefaultNamePrefix;
               return ListTile(
                 title: Text(name),
                 subtitle: Text(

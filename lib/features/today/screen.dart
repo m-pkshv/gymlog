@@ -105,8 +105,7 @@ class _UpcomingWorkoutCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final workout = entry.workout;
-    final name =
-        workout.name ?? '${l10n.workoutDefaultNamePrefix} ${formatShortDate(workout.date)}';
+    final name = workout.name ?? l10n.workoutDefaultNamePrefix;
     return Card(
       child: ListTile(
         title: Text(name),

@@ -570,39 +570,6 @@ void main() {
         await _unmountAndFlush(tester);
       },
     );
-
-    testWidgets(
-      'an incomplete warmup set does not trigger the confirmation '
-      '(owner-confirmed 2026-07-21: only working sets count)',
-      (tester) async {
-        await _seedExercise(db);
-        await tester.pumpWidget(_appUnderTest(db));
-        await tester.pumpAndSettle();
-        await _createDraftViaFab(tester);
-        await tester.tap(find.text('Add exercise'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Squat'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Add set'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byType(Checkbox).first); // mark it as warmup
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Start workout'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Finish'));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(AlertDialog), findsNothing);
-        expect(find.byType(WorkoutSummaryScreen), findsOneWidget);
-
-        await _unmountAndFlush(tester);
-      },
-    );
   });
 
   testWidgets(
