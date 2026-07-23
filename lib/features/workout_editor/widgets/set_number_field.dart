@@ -80,7 +80,9 @@ class _SetNumberFieldState extends State<SetNumberField> {
           controller: _controller,
           focusNode: _focusNode,
           textAlign: TextAlign.center,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          keyboardType: TextInputType.numberWithOptions(
+            decimal: widget.decimals > 0,
+          ),
           textInputAction: TextInputAction.done,
           decoration: const InputDecoration(
             isDense: true,
