@@ -386,6 +386,46 @@ void main() {
   });
 
   testWidgets(
+    'the duplicate-set button appears only once the last set has a planned '
+    'value, and copies it into a new set (Stage 10, owner-reported)',
+    (tester) async {
+      await _seedExercise(db);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add set'));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.content_copy), findsNothing);
+
+      // Weight, kg then Reps: the strength exercise's two plan fields.
+      await tester.enterText(_setFieldTextFields().at(0), '100');
+      await tester.pump();
+      await tester.enterText(_setFieldTextFields().at(2), '5');
+      await tester.pump();
+
+      expect(find.byIcon(Icons.content_copy), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.content_copy));
+      await tester.pumpAndSettle();
+
+      final sets = await db.select(db.exerciseSets).get()
+        ..sort((a, b) => a.setNumber.compareTo(b.setNumber));
+      expect(sets, hasLength(2));
+      expect(sets[0].plannedWeightKg, 100.0, reason: 'the typed value survived the reload');
+      expect(sets[0].plannedReps, 5);
+      expect(sets[1].plannedWeightKg, 100.0);
+      expect(sets[1].plannedReps, 5);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
     'editing a plan field debounces the write, then autosaves (TS 5)',
     (tester) async {
       await _seedExercise(db);

@@ -157,6 +157,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get addSetAction => 'Добавить подход';
 
   @override
+  String get duplicateSetAction => 'Дублировать подход';
+
+  @override
   String get workoutExercisesEmpty => 'Пока нет упражнений';
 
   @override

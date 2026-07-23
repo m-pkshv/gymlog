@@ -9,6 +9,7 @@ import '../../domain/models/template_details.dart';
 import '../../domain/models/template_exercise.dart';
 import '../../domain/models/template_set.dart';
 import '../../domain/repositories/workout_template_repository.dart';
+import 'template_set_field_config.dart';
 
 /// Controller for the template editor (S-13) -- the template counterpart
 /// of `workout_editor/controller.dart`'s `WorkoutEditorController`, trimmed
@@ -176,6 +177,45 @@ class TemplateEditorController
     } catch (error, stackTrace) {
       _logger.error(
         'Failed to add set to $templateExerciseId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  /// "Дублировать подход" (S-13, Stage 10) — the template counterpart of
+  /// `WorkoutEditorController.duplicateLastSet`: appends a new set and
+  /// copies the last existing set's planned values into it. A no-op if the
+  /// exercise has no sets yet. Flushes pending debounced edits first (see
+  /// that method's doc comment for why).
+  Future<void> duplicateLastSet(String templateExerciseId) async {
+    await flushAll();
+    final details = _details;
+    if (details == null) return;
+    TemplateExerciseDetails? target;
+    for (final exercise in details.exercises) {
+      if (exercise.templateExercise.id == templateExerciseId) {
+        target = exercise;
+        break;
+      }
+    }
+    if (target == null || target.sets.isEmpty) return;
+
+    try {
+      final source = target.sets.last;
+      final created = await _repository.addSet(
+        templateExerciseId: templateExerciseId,
+      );
+      final updated = copyTemplatePlannedToPlanned(
+        source,
+        created,
+        target.exercise.exerciseType,
+      ).copyWith(updatedAt: DateTime.now().toUtc());
+      await _repository.updateTemplateSet(updated);
+      await _load();
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to duplicate last set for $templateExerciseId',
         error: error,
         stackTrace: stackTrace,
       );

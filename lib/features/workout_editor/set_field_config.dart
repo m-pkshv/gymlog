@@ -150,3 +150,50 @@ ExerciseSet copyActualsToPlanned(
       return into.copyWith(plannedDurationSec: from.actualDurationSec);
   }
 }
+
+/// "Дублировать подход" (S-03, Stage 10, owner-reported: filling every set
+/// from scratch is tedious): [from]'s *planned* values (and `side`) copied
+/// into [into]'s *planned* values, for whichever fields [type] uses (same
+/// mapping as [setFieldsFor]).
+ExerciseSet copyPlannedToPlanned(
+  ExerciseSet from,
+  ExerciseSet into,
+  ExerciseType type,
+) {
+  final withSide = into.copyWith(side: from.side);
+  switch (type) {
+    case ExerciseType.strength:
+      return withSide.copyWith(
+        plannedWeightKg: from.plannedWeightKg,
+        plannedReps: from.plannedReps,
+      );
+    case ExerciseType.reps:
+      return withSide.copyWith(plannedReps: from.plannedReps);
+    case ExerciseType.cardio:
+      return withSide.copyWith(
+        plannedDistanceM: from.plannedDistanceM,
+        plannedDurationSec: from.plannedDurationSec,
+      );
+    case ExerciseType.time:
+    case ExerciseType.stretch:
+      return withSide.copyWith(plannedDurationSec: from.plannedDurationSec);
+  }
+}
+
+/// Whether [set] has at least one of [type]'s planned fields filled in —
+/// "Дублировать подход" is only offered when there's something worth
+/// copying (Stage 10, owner-confirmed: duplicating a still-blank set would
+/// just add another blank one).
+bool hasPlannedValues(ExerciseSet set, ExerciseType type) {
+  switch (type) {
+    case ExerciseType.strength:
+      return set.plannedWeightKg != null || set.plannedReps != null;
+    case ExerciseType.reps:
+      return set.plannedReps != null;
+    case ExerciseType.cardio:
+      return set.plannedDistanceM != null || set.plannedDurationSec != null;
+    case ExerciseType.time:
+    case ExerciseType.stretch:
+      return set.plannedDurationSec != null;
+  }
+}

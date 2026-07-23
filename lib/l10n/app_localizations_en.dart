@@ -157,6 +157,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addSetAction => 'Add set';
 
   @override
+  String get duplicateSetAction => 'Duplicate set';
+
+  @override
   String get workoutExercisesEmpty => 'No exercises added yet';
 
   @override

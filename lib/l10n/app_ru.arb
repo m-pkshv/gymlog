@@ -49,6 +49,7 @@
   "finishWorkoutAction": "Завершить",
   "addExerciseAction": "Добавить упражнение",
   "addSetAction": "Добавить подход",
+  "duplicateSetAction": "Дублировать подход",
   "workoutExercisesEmpty": "Пока нет упражнений",
   "setColumnNumber": "№",
   "setColumnPlan": "План",

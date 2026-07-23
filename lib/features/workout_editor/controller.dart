@@ -323,6 +323,49 @@ class WorkoutEditorController
     }
   }
 
+  /// "Дублировать подход" (S-03, Stage 10, owner-reported: filling every set
+  /// from scratch by hand is tedious): appends a new set to
+  /// [workoutExerciseId] and copies the last existing set's planned values
+  /// into it. A no-op if the exercise has no sets yet — the UI only offers
+  /// this button once there's something to copy from, but this doesn't
+  /// re-check that itself. Flushes pending debounced edits first (like
+  /// [changeStatus]) — otherwise the `_load()` below would refresh from a
+  /// database that hasn't caught up with a just-typed value yet, silently
+  /// reverting it in local state before its own debounce timer fires.
+  Future<void> duplicateLastSet(String workoutExerciseId) async {
+    await flushAll();
+    final details = _details;
+    if (details == null) return;
+    WorkoutExerciseDetails? target;
+    for (final workoutExercise in details.exercises) {
+      if (workoutExercise.workoutExercise.id == workoutExerciseId) {
+        target = workoutExercise;
+        break;
+      }
+    }
+    if (target == null || target.sets.isEmpty) return;
+
+    try {
+      final source = target.sets.last;
+      final created = await _workoutRepository.addSet(
+        workoutExerciseId: workoutExerciseId,
+      );
+      final updated = copyPlannedToPlanned(
+        source,
+        created,
+        target.exercise.exerciseType,
+      ).copyWith(updatedAt: DateTime.now().toUtc());
+      await _workoutRepository.updateSet(updated);
+      await _load();
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to duplicate last set for $workoutExerciseId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
   /// "Копировать показатели прошлого выполнения" (S-03, TS 8): the actual
   /// values of this exercise's most recent *completed* occurrence become
   /// the *planned* values of the current sets, matched by `setNumber`

@@ -35,6 +35,7 @@ class ExerciseCard extends ConsumerWidget {
     required this.onFieldCommit,
     required this.onCompletedChanged,
     required this.onAddSet,
+    required this.onDuplicateLastSet,
     required this.onCopyLastPerformance,
     required this.onMoveUp,
     required this.onMoveDown,
@@ -62,6 +63,7 @@ class ExerciseCard extends ConsumerWidget {
   onFieldCommit;
   final void Function(String setId, bool value) onCompletedChanged;
   final VoidCallback onAddSet;
+  final VoidCallback onDuplicateLastSet;
   final VoidCallback onCopyLastPerformance;
   final VoidCallback onMoveUp;
   final VoidCallback onMoveDown;
@@ -74,6 +76,9 @@ class ExerciseCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final fields = setFieldsFor(details.exercise.exerciseType, l10n);
+    final canDuplicateLastSet =
+        details.sets.isNotEmpty &&
+        hasPlannedValues(details.sets.last, details.exercise.exerciseType);
     final stagnationCount = ref
         .watch(progressionStateProvider(details.exercise.id))
         .value
@@ -166,13 +171,21 @@ class ExerciseCard extends ConsumerWidget {
                 onCommentSaved: (comment) =>
                     onSetCommentSaved(set.id, comment),
               ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: onAddSet,
-                icon: const Icon(Icons.add),
-                label: Text(l10n.addSetAction),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                TextButton.icon(
+                  onPressed: onAddSet,
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.addSetAction),
+                ),
+                if (canDuplicateLastSet)
+                  IconButton(
+                    onPressed: onDuplicateLastSet,
+                    icon: const Icon(Icons.content_copy),
+                    tooltip: l10n.duplicateSetAction,
+                  ),
+              ],
             ),
             CommentField(
               key: ValueKey('exercise-comment-${details.workoutExercise.id}'),

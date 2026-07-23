@@ -173,6 +173,8 @@ class _EditorBody extends StatelessWidget {
                         controller.flushSet(setId);
                       },
                       onAddSet: () => controller.addSet(templateExerciseId),
+                      onDuplicateLastSet: () =>
+                          controller.duplicateLastSet(templateExerciseId),
                       onMoveUp: () =>
                           controller.moveExercise(templateExerciseId, up: true),
                       onMoveDown: () => controller.moveExercise(

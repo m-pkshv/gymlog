@@ -89,3 +89,46 @@ List<TemplateSetFieldSpec> templateSetFieldsFor(
       return [durationSec];
   }
 }
+
+/// "Дублировать подход" (S-13, Stage 10) — the template counterpart of
+/// `workout_editor/set_field_config.dart`'s `copyPlannedToPlanned`: [from]'s
+/// planned values (and `side`) copied into [into].
+TemplateSet copyTemplatePlannedToPlanned(
+  TemplateSet from,
+  TemplateSet into,
+  ExerciseType type,
+) {
+  final withSide = into.copyWith(side: from.side);
+  switch (type) {
+    case ExerciseType.strength:
+      return withSide.copyWith(
+        plannedWeightKg: from.plannedWeightKg,
+        plannedReps: from.plannedReps,
+      );
+    case ExerciseType.reps:
+      return withSide.copyWith(plannedReps: from.plannedReps);
+    case ExerciseType.cardio:
+      return withSide.copyWith(
+        plannedDistanceM: from.plannedDistanceM,
+        plannedDurationSec: from.plannedDurationSec,
+      );
+    case ExerciseType.time:
+    case ExerciseType.stretch:
+      return withSide.copyWith(plannedDurationSec: from.plannedDurationSec);
+  }
+}
+
+/// The template counterpart of `set_field_config.dart`'s `hasPlannedValues`.
+bool hasTemplatePlannedValues(TemplateSet set, ExerciseType type) {
+  switch (type) {
+    case ExerciseType.strength:
+      return set.plannedWeightKg != null || set.plannedReps != null;
+    case ExerciseType.reps:
+      return set.plannedReps != null;
+    case ExerciseType.cardio:
+      return set.plannedDistanceM != null || set.plannedDurationSec != null;
+    case ExerciseType.time:
+    case ExerciseType.stretch:
+      return set.plannedDurationSec != null;
+  }
+}

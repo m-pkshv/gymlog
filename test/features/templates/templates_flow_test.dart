@@ -10,6 +10,7 @@ import 'package:gymlog/data/database.dart';
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/features/exercises/create_exercise_screen.dart';
 import 'package:gymlog/features/template_editor/screen.dart';
+import 'package:gymlog/features/template_editor/widgets/template_set_row.dart';
 import 'package:gymlog/features/templates/screen.dart';
 import 'package:gymlog/features/workout_editor/add_exercise_screen.dart';
 import 'package:gymlog/features/workout_editor/screen.dart';
@@ -109,6 +110,14 @@ Future<void> _createTemplateViaFab(WidgetTester tester, {String name = 'Leg day'
   await tester.pumpAndSettle();
 }
 
+/// Every planned-field `TextField` across every `TemplateSetRow` on screen,
+/// in order -- mirrors `workout_editor_flow_test.dart`'s
+/// `_setFieldTextFields`.
+Finder _templateSetFieldTextFields() => find.descendant(
+  of: find.byType(TemplateSetRow),
+  matching: find.byType(TextField),
+);
+
 /// The [index]-th `CommentField`'s underlying `TextField` -- index 0 is the
 /// template name field, index 1 the template comment field, 2+ each
 /// exercise card's comment field in list order (same convention as
@@ -205,6 +214,46 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       sets = await db.select(db.templateSets).get();
       expect(sets.single.plannedWeightKg, 100);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'the duplicate-set button appears only once the last set has a planned '
+    'value, and copies it into a new set (Stage 10, owner-reported)',
+    (tester) async {
+      await _seedExercise(db);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await _createTemplateViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add set'));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.content_copy), findsNothing);
+
+      await tester.enterText(_templateSetFieldTextFields().at(0), '100');
+      await tester.pump();
+      await tester.enterText(_templateSetFieldTextFields().at(1), '5');
+      await tester.pump();
+
+      expect(find.byIcon(Icons.content_copy), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.content_copy));
+      await tester.pumpAndSettle();
+
+      final sets = await db.select(db.templateSets).get()
+        ..sort((a, b) => a.setNumber.compareTo(b.setNumber));
+      expect(sets, hasLength(2));
+      expect(sets[0].plannedWeightKg, 100.0, reason: 'the typed value survived the reload');
+      expect(sets[0].plannedReps, 5);
+      expect(sets[1].plannedWeightKg, 100.0);
+      expect(sets[1].plannedReps, 5);
 
       await _unmountAndFlush(tester);
     },

@@ -442,6 +442,8 @@ class _EditorBody extends StatelessWidget {
                       },
                       onCompletedChanged: onSetCompletedChanged,
                       onAddSet: () => controller.addSet(workoutExerciseId),
+                      onDuplicateLastSet: () =>
+                          controller.duplicateLastSet(workoutExerciseId),
                       onCopyLastPerformance: () =>
                           onCopyLastPerformance(workoutExerciseId),
                       onMoveUp: () => controller.moveExercise(

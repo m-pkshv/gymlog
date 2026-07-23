@@ -27,6 +27,7 @@ class TemplateExerciseCard extends StatelessWidget {
     required this.onFieldChanged,
     required this.onFieldCommit,
     required this.onAddSet,
+    required this.onDuplicateLastSet,
     required this.onMoveUp,
     required this.onMoveDown,
     required this.onCommentChanged,
@@ -44,6 +45,7 @@ class TemplateExerciseCard extends StatelessWidget {
   onFieldChanged;
   final void Function(String setId, TemplateSetFieldSpec field) onFieldCommit;
   final VoidCallback onAddSet;
+  final VoidCallback onDuplicateLastSet;
   final VoidCallback onMoveUp;
   final VoidCallback onMoveDown;
   final ValueChanged<String> onCommentChanged;
@@ -53,6 +55,9 @@ class TemplateExerciseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final fields = templateSetFieldsFor(details.exercise.exerciseType, l10n);
+    final canDuplicateLastSet =
+        details.sets.isNotEmpty &&
+        hasTemplatePlannedValues(details.sets.last, details.exercise.exerciseType);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -122,13 +127,21 @@ class TemplateExerciseCard extends StatelessWidget {
                     onFieldChanged(set.id, field, value),
                 onFieldCommit: (field) => onFieldCommit(set.id, field),
               ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: onAddSet,
-                icon: const Icon(Icons.add),
-                label: Text(l10n.addSetAction),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                TextButton.icon(
+                  onPressed: onAddSet,
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.addSetAction),
+                ),
+                if (canDuplicateLastSet)
+                  IconButton(
+                    onPressed: onDuplicateLastSet,
+                    icon: const Icon(Icons.content_copy),
+                    tooltip: l10n.duplicateSetAction,
+                  ),
+              ],
             ),
             CommentField(
               key: ValueKey(

@@ -196,6 +196,10 @@
   "@addSetAction": {
     "description": "Button on an exercise card in the workout editor (S-03) that adds a working set."
   },
+  "duplicateSetAction": "Duplicate set",
+  "@duplicateSetAction": {
+    "description": "Icon-only button tooltip (S-03/S-13) that adds a new set by copying the last set's planned values. Shown only when the last set has something to copy."
+  },
   "workoutExercisesEmpty": "No exercises added yet",
   "@workoutExercisesEmpty": {
     "description": "Empty state on the workout editor (S-03) before any exercise is added."

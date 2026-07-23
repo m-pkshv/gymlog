@@ -392,6 +392,12 @@ abstract class AppLocalizations {
   /// **'Add set'**
   String get addSetAction;
 
+  /// Icon-only button tooltip (S-03/S-13) that adds a new set by copying the last set's planned values. Shown only when the last set has something to copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate set'**
+  String get duplicateSetAction;
+
   /// Empty state on the workout editor (S-03) before any exercise is added.
   ///
   /// In en, this message translates to:
