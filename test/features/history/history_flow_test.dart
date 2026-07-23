@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:gymlog/app/providers.dart';
 import 'package:gymlog/core/date_format.dart';
 import 'package:gymlog/data/database.dart';
+import 'package:gymlog/data/mappers/workout_mapper.dart' show dateOnlyString;
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/features/history/copy_source_picker_screen.dart';
 import 'package:gymlog/features/history/screen.dart';
@@ -1134,8 +1135,9 @@ void main() {
     () {
       testWidgets(
         'copying a completed workout, moving its date, then running it '
-        'through start -> finish leaves the copy completed on the new date '
-        'and the source untouched',
+        'through start -> finish leaves the copy completed on the actual '
+        'finish day (Stage 10: date syncs to completion, overriding a '
+        'manually-moved date) with the source untouched',
         (tester) async {
           await _insertCompletedWorkout(
             db,
@@ -1203,7 +1205,11 @@ void main() {
           expect(source.date, '2026-07-01');
           final copy = workouts.firstWhere((w) => w.id != 'w1');
           expect(copy.status, 'completed');
-          expect(copy.date, '2026-08-15');
+          // Stage 10 (owner-reported): "Finish" syncs the date to the actual
+          // completion day, so the manually-moved-to-the-future 2026-08-15
+          // does not stick -- it's overridden back to today, the real day
+          // the workout was performed.
+          expect(copy.date, dateOnlyString(DateTime.now()));
 
           await _unmountAndFlush(tester);
         },

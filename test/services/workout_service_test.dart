@@ -262,6 +262,55 @@ void main() {
     );
 
     test(
+      'inProgress -> completed syncs date to the actual (local) finish day, '
+      'even when it differs from the originally planned date',
+      () async {
+        final workout = _workout(status: WorkoutStatus.inProgress).copyWith(
+          date: DateTime(2020, 1, 1),
+        );
+
+        final result = await service.changeStatus(
+          workout: workout,
+          newStatus: WorkoutStatus.completed,
+        );
+
+        final updated = result.getOrNull();
+        expect(updated, isNotNull);
+        final today = DateTime.now();
+        expect(updated!.date, DateTime(today.year, today.month, today.day));
+      },
+    );
+
+    test(
+      'completed -> inProgress (resume) does not touch the date already '
+      'set by the original finish',
+      () async {
+        when(
+          () => repository.getInProgressWorkout(),
+        ).thenAnswer((_) async => null);
+        final recentlyFinished = DateTime.now().toUtc().subtract(
+          const Duration(hours: 1),
+        );
+        final originalDate = DateTime(2020, 1, 1);
+        final workout = _workout(
+          status: WorkoutStatus.completed,
+          startedAt: recentlyFinished.subtract(const Duration(minutes: 30)),
+          finishedAt: recentlyFinished,
+          actualDurationSec: 1800,
+        ).copyWith(date: originalDate);
+
+        final result = await service.changeStatus(
+          workout: workout,
+          newStatus: WorkoutStatus.inProgress,
+        );
+
+        final updated = result.getOrNull();
+        expect(updated, isNotNull);
+        expect(updated!.date, originalDate);
+      },
+    );
+
+    test(
       'inProgress -> cancelled cleans up the timer but does not set '
       'actualDurationSec',
       () async {

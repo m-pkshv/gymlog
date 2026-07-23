@@ -117,7 +117,19 @@ class WorkoutService {
       // elapsed active time -- it excludes any paused stretches.
       final elapsedSec = await _activeWorkoutTimerService.finish(workout.id);
       if (newStatus == WorkoutStatus.completed) {
-        updated = updated.copyWith(finishedAt: now, actualDurationSec: elapsedSec);
+        // Stage 10 (owner-reported): a workout planned for one day but
+        // actually performed on another (plans changed) must show the real
+        // day in History, not the stale planned one -- so `date` syncs to
+        // the local calendar day of completion. Owner-confirmed this
+        // happens only on the actual "Finish" transition, not on resuming a
+        // completed workout (completed -> inProgress) within the 24h
+        // window, which keeps the date from the original session.
+        final today = DateTime.now();
+        updated = updated.copyWith(
+          date: DateTime(today.year, today.month, today.day),
+          finishedAt: now,
+          actualDurationSec: elapsedSec,
+        );
       }
     }
 
