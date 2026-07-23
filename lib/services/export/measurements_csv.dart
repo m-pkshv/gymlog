@@ -10,7 +10,6 @@ const measurementsCsvHeader = [
   'value',
   'unit',
   'source',
-  'comment',
 ];
 
 String _unitFor(MeasurementUnitKind kind) => switch (kind) {
@@ -48,7 +47,6 @@ String buildMeasurementsCsv(
         formatCsvDecimal(measurement.valueMetric),
         _unitFor(type.unitKind),
         measurement.source.name,
-        measurement.comment ?? '',
       ]),
     );
   }

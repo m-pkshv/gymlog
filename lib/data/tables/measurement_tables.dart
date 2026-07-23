@@ -29,8 +29,6 @@ class BodyMeasurements extends Table with SoftDeleteColumns {
       )
       .withDefault(const Constant('manual'))();
 
-  TextColumn get comment => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {id};
 }

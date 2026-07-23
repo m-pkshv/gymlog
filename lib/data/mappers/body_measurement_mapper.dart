@@ -13,7 +13,6 @@ extension BodyMeasurementRowMapper on drift.BodyMeasurement {
       date: DateTime.parse(date),
       valueMetric: valueMetric,
       source: MeasurementSource.values.byName(source),
-      comment: comment,
       createdAt: DateTime.parse(createdAt),
       updatedAt: DateTime.parse(updatedAt),
       isDeleted: isDeleted,
@@ -29,7 +28,6 @@ extension BodyMeasurementCompanionMapper on BodyMeasurement {
       date: dateOnlyString(date),
       valueMetric: valueMetric,
       source: Value(source.name),
-      comment: Value(comment),
       createdAt: createdAt.toUtc().toIso8601String(),
       updatedAt: updatedAt.toUtc().toIso8601String(),
     );
@@ -40,7 +38,6 @@ extension BodyMeasurementCompanionMapper on BodyMeasurement {
       id: Value(id),
       date: Value(dateOnlyString(date)),
       valueMetric: Value(valueMetric),
-      comment: Value(comment),
       updatedAt: Value(updatedAt.toUtc().toIso8601String()),
       isDeleted: Value(isDeleted),
     );

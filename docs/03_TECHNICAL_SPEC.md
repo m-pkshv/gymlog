@@ -142,10 +142,10 @@ test/ (unit), integration_test/
 - Операция журналируется в `ImportExportOperation`; сборка — во временный каталог, ZIP формируется полностью и только затем передаётся в шаринг (частичный файл наружу не попадает).
 
 ### 10.2. `manifest.json`
-`formatVersion` v2 (Этап 10, 2026-07-23): убрана колонка `is_warmup` из `workouts.csv` (10.3) — понятие разминки удалено из приложения.
+`formatVersion` v2 (Этап 10, 2026-07-23): убрана колонка `is_warmup` из `workouts.csv` (10.3) — понятие разминки удалено из приложения. v3 (Этап 10, 2026-07-23): убрана колонка `comment` из `measurements.csv` (10.4) — комментарий к замеру удалён из приложения.
 ```json
 {
-  "formatVersion": 2,
+  "formatVersion": 3,
   "appVersion": "1.0.0",
   "exportedAtUtc": "2026-07-19T14:00:00Z",
   "files": {
@@ -164,7 +164,7 @@ test/ (unit), integration_test/
 - Булевы — `true`/`false`. Тренировка без упражнений — одна строка с пустыми полями подхода. Сортировка строк: `workout_date`, `workout_id`, `exercise_order`, `set_number`.
 
 ### 10.4. `measurements.csv`
-`date, type, custom_type_name, value, unit, source, comment` — `type` — слаг встроенного либо `custom`; `unit` ∈ `kg|percent|cm`; значения всегда метрические.
+`date, type, custom_type_name, value, unit, source` — `type` — слаг встроенного либо `custom`; `unit` ∈ `kg|percent|cm`; значения всегда метрические.
 
 ### 10.5. `exercises.csv`
 `exercise_id, name, type, is_built_in, is_archived, primary_muscle, secondary_muscles, equipment, description, youtube_url` — `secondary_muscles` через `;`.

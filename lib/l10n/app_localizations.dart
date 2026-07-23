@@ -1994,12 +1994,6 @@ abstract class AppLocalizations {
   /// **'Value'**
   String get measurementValueFieldLabel;
 
-  /// Label for the optional comment field on the S-15 form (DM 6.9, 500 chars).
-  ///
-  /// In en, this message translates to:
-  /// **'Comment'**
-  String get measurementCommentFieldLabel;
-
   /// Shown on the S-15 form when the value field is empty or unparseable.
   ///
   /// In en, this message translates to:

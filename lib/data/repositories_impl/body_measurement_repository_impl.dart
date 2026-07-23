@@ -59,7 +59,6 @@ class BodyMeasurementRepositoryImpl implements BodyMeasurementRepository {
     required String measurementTypeId,
     required DateTime date,
     required double valueMetric,
-    String? comment,
   }) async {
     final now = DateTime.now().toUtc();
     final measurement = BodyMeasurement(
@@ -68,7 +67,6 @@ class BodyMeasurementRepositoryImpl implements BodyMeasurementRepository {
       date: date,
       valueMetric: valueMetric,
       source: MeasurementSource.manual,
-      comment: comment,
       createdAt: now,
       updatedAt: now,
       isDeleted: false,

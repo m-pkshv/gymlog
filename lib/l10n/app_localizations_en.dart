@@ -1001,9 +1001,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get measurementValueFieldLabel => 'Value';
 
   @override
-  String get measurementCommentFieldLabel => 'Comment';
-
-  @override
   String get measurementValueRequiredError => 'Enter a value';
 
   @override

@@ -42,7 +42,6 @@ class BodyMeasurementService {
     required String measurementTypeId,
     required DateTime date,
     required double valueMetric,
-    String? comment,
   }) async {
     final rangeError = await _validateRange(measurementTypeId, valueMetric);
     if (rangeError != null) return Err(rangeError);
@@ -50,7 +49,6 @@ class BodyMeasurementService {
       measurementTypeId: measurementTypeId,
       date: date,
       valueMetric: valueMetric,
-      comment: comment,
     );
     return Ok(created);
   }
@@ -62,18 +60,13 @@ class BodyMeasurementService {
     required BodyMeasurement existing,
     DateTime? date,
     required double valueMetric,
-    String? comment,
   }) async {
     final rangeError = await _validateRange(
       existing.measurementTypeId,
       valueMetric,
     );
     if (rangeError != null) return Err(rangeError);
-    final updated = existing.copyWith(
-      date: date,
-      valueMetric: valueMetric,
-      comment: comment,
-    );
+    final updated = existing.copyWith(date: date, valueMetric: valueMetric);
     await _repository.update(updated);
     return Ok(updated);
   }

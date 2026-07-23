@@ -316,7 +316,6 @@
   "measurementTypeFieldLabel": "Тип",
   "measurementDateFieldLabel": "Дата",
   "measurementValueFieldLabel": "Значение",
-  "measurementCommentFieldLabel": "Комментарий",
   "measurementValueRequiredError": "Введите значение",
   "saveMeasurementError": "Не удалось сохранить измерение",
   "replaceMeasurementConfirmTitle": "Заменить существующее значение?",

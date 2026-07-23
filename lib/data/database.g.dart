@@ -7303,17 +7303,6 @@ class $BodyMeasurementsTable extends BodyMeasurements
         'NOT NULL DEFAULT \'manual\' CHECK (source IN (\'manual\', \'import\', \'health\'))',
     defaultValue: const CustomExpression('\'manual\''),
   );
-  static const VerificationMeta _commentMeta = const VerificationMeta(
-    'comment',
-  );
-  @override
-  late final GeneratedColumn<String> comment = GeneratedColumn<String>(
-    'comment',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
   @override
   List<GeneratedColumn> get $columns => [
     createdAt,
@@ -7324,7 +7313,6 @@ class $BodyMeasurementsTable extends BodyMeasurements
     date,
     valueMetric,
     source,
-    comment,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -7401,12 +7389,6 @@ class $BodyMeasurementsTable extends BodyMeasurements
         source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
       );
     }
-    if (data.containsKey('comment')) {
-      context.handle(
-        _commentMeta,
-        comment.isAcceptableOrUnknown(data['comment']!, _commentMeta),
-      );
-    }
     return context;
   }
 
@@ -7448,10 +7430,6 @@ class $BodyMeasurementsTable extends BodyMeasurements
         DriftSqlType.string,
         data['${effectivePrefix}source'],
       )!,
-      comment: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}comment'],
-      ),
     );
   }
 
@@ -7472,7 +7450,6 @@ class BodyMeasurement extends DataClass implements Insertable<BodyMeasurement> {
   final String date;
   final double valueMetric;
   final String source;
-  final String? comment;
   const BodyMeasurement({
     required this.createdAt,
     required this.updatedAt,
@@ -7482,7 +7459,6 @@ class BodyMeasurement extends DataClass implements Insertable<BodyMeasurement> {
     required this.date,
     required this.valueMetric,
     required this.source,
-    this.comment,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -7495,9 +7471,6 @@ class BodyMeasurement extends DataClass implements Insertable<BodyMeasurement> {
     map['date'] = Variable<String>(date);
     map['valueMetric'] = Variable<double>(valueMetric);
     map['source'] = Variable<String>(source);
-    if (!nullToAbsent || comment != null) {
-      map['comment'] = Variable<String>(comment);
-    }
     return map;
   }
 
@@ -7511,9 +7484,6 @@ class BodyMeasurement extends DataClass implements Insertable<BodyMeasurement> {
       date: Value(date),
       valueMetric: Value(valueMetric),
       source: Value(source),
-      comment: comment == null && nullToAbsent
-          ? const Value.absent()
-          : Value(comment),
     );
   }
 
@@ -7531,7 +7501,6 @@ class BodyMeasurement extends DataClass implements Insertable<BodyMeasurement> {
       date: serializer.fromJson<String>(json['date']),
       valueMetric: serializer.fromJson<double>(json['valueMetric']),
       source: serializer.fromJson<String>(json['source']),
-      comment: serializer.fromJson<String?>(json['comment']),
     );
   }
   @override
@@ -7546,7 +7515,6 @@ class BodyMeasurement extends DataClass implements Insertable<BodyMeasurement> {
       'date': serializer.toJson<String>(date),
       'valueMetric': serializer.toJson<double>(valueMetric),
       'source': serializer.toJson<String>(source),
-      'comment': serializer.toJson<String?>(comment),
     };
   }
 
@@ -7559,7 +7527,6 @@ class BodyMeasurement extends DataClass implements Insertable<BodyMeasurement> {
     String? date,
     double? valueMetric,
     String? source,
-    Value<String?> comment = const Value.absent(),
   }) => BodyMeasurement(
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -7569,7 +7536,6 @@ class BodyMeasurement extends DataClass implements Insertable<BodyMeasurement> {
     date: date ?? this.date,
     valueMetric: valueMetric ?? this.valueMetric,
     source: source ?? this.source,
-    comment: comment.present ? comment.value : this.comment,
   );
   BodyMeasurement copyWithCompanion(BodyMeasurementsCompanion data) {
     return BodyMeasurement(
@@ -7585,7 +7551,6 @@ class BodyMeasurement extends DataClass implements Insertable<BodyMeasurement> {
           ? data.valueMetric.value
           : this.valueMetric,
       source: data.source.present ? data.source.value : this.source,
-      comment: data.comment.present ? data.comment.value : this.comment,
     );
   }
 
@@ -7599,8 +7564,7 @@ class BodyMeasurement extends DataClass implements Insertable<BodyMeasurement> {
           ..write('measurementTypeId: $measurementTypeId, ')
           ..write('date: $date, ')
           ..write('valueMetric: $valueMetric, ')
-          ..write('source: $source, ')
-          ..write('comment: $comment')
+          ..write('source: $source')
           ..write(')'))
         .toString();
   }
@@ -7615,7 +7579,6 @@ class BodyMeasurement extends DataClass implements Insertable<BodyMeasurement> {
     date,
     valueMetric,
     source,
-    comment,
   );
   @override
   bool operator ==(Object other) =>
@@ -7628,8 +7591,7 @@ class BodyMeasurement extends DataClass implements Insertable<BodyMeasurement> {
           other.measurementTypeId == this.measurementTypeId &&
           other.date == this.date &&
           other.valueMetric == this.valueMetric &&
-          other.source == this.source &&
-          other.comment == this.comment);
+          other.source == this.source);
 }
 
 class BodyMeasurementsCompanion extends UpdateCompanion<BodyMeasurement> {
@@ -7641,7 +7603,6 @@ class BodyMeasurementsCompanion extends UpdateCompanion<BodyMeasurement> {
   final Value<String> date;
   final Value<double> valueMetric;
   final Value<String> source;
-  final Value<String?> comment;
   final Value<int> rowid;
   const BodyMeasurementsCompanion({
     this.createdAt = const Value.absent(),
@@ -7652,7 +7613,6 @@ class BodyMeasurementsCompanion extends UpdateCompanion<BodyMeasurement> {
     this.date = const Value.absent(),
     this.valueMetric = const Value.absent(),
     this.source = const Value.absent(),
-    this.comment = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   BodyMeasurementsCompanion.insert({
@@ -7664,7 +7624,6 @@ class BodyMeasurementsCompanion extends UpdateCompanion<BodyMeasurement> {
     required String date,
     required double valueMetric,
     this.source = const Value.absent(),
-    this.comment = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : createdAt = Value(createdAt),
        updatedAt = Value(updatedAt),
@@ -7681,7 +7640,6 @@ class BodyMeasurementsCompanion extends UpdateCompanion<BodyMeasurement> {
     Expression<String>? date,
     Expression<double>? valueMetric,
     Expression<String>? source,
-    Expression<String>? comment,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -7693,7 +7651,6 @@ class BodyMeasurementsCompanion extends UpdateCompanion<BodyMeasurement> {
       if (date != null) 'date': date,
       if (valueMetric != null) 'valueMetric': valueMetric,
       if (source != null) 'source': source,
-      if (comment != null) 'comment': comment,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -7707,7 +7664,6 @@ class BodyMeasurementsCompanion extends UpdateCompanion<BodyMeasurement> {
     Value<String>? date,
     Value<double>? valueMetric,
     Value<String>? source,
-    Value<String?>? comment,
     Value<int>? rowid,
   }) {
     return BodyMeasurementsCompanion(
@@ -7719,7 +7675,6 @@ class BodyMeasurementsCompanion extends UpdateCompanion<BodyMeasurement> {
       date: date ?? this.date,
       valueMetric: valueMetric ?? this.valueMetric,
       source: source ?? this.source,
-      comment: comment ?? this.comment,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -7751,9 +7706,6 @@ class BodyMeasurementsCompanion extends UpdateCompanion<BodyMeasurement> {
     if (source.present) {
       map['source'] = Variable<String>(source.value);
     }
-    if (comment.present) {
-      map['comment'] = Variable<String>(comment.value);
-    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -7771,7 +7723,6 @@ class BodyMeasurementsCompanion extends UpdateCompanion<BodyMeasurement> {
           ..write('date: $date, ')
           ..write('valueMetric: $valueMetric, ')
           ..write('source: $source, ')
-          ..write('comment: $comment, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -17765,7 +17716,6 @@ typedef $$BodyMeasurementsTableCreateCompanionBuilder =
       required String date,
       required double valueMetric,
       Value<String> source,
-      Value<String?> comment,
       Value<int> rowid,
     });
 typedef $$BodyMeasurementsTableUpdateCompanionBuilder =
@@ -17778,7 +17728,6 @@ typedef $$BodyMeasurementsTableUpdateCompanionBuilder =
       Value<String> date,
       Value<double> valueMetric,
       Value<String> source,
-      Value<String?> comment,
       Value<int> rowid,
     });
 
@@ -17854,11 +17803,6 @@ class $$BodyMeasurementsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get comment => $composableBuilder(
-    column: $table.comment,
-    builder: (column) => ColumnFilters(column),
-  );
-
   $$MeasurementTypesTableFilterComposer get measurementTypeId {
     final $$MeasurementTypesTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -17927,11 +17871,6 @@ class $$BodyMeasurementsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get comment => $composableBuilder(
-    column: $table.comment,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   $$MeasurementTypesTableOrderingComposer get measurementTypeId {
     final $$MeasurementTypesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -17987,9 +17926,6 @@ class $$BodyMeasurementsTableAnnotationComposer
 
   GeneratedColumn<String> get source =>
       $composableBuilder(column: $table.source, builder: (column) => column);
-
-  GeneratedColumn<String> get comment =>
-      $composableBuilder(column: $table.comment, builder: (column) => column);
 
   $$MeasurementTypesTableAnnotationComposer get measurementTypeId {
     final $$MeasurementTypesTableAnnotationComposer composer = $composerBuilder(
@@ -18053,7 +17989,6 @@ class $$BodyMeasurementsTableTableManager
                 Value<String> date = const Value.absent(),
                 Value<double> valueMetric = const Value.absent(),
                 Value<String> source = const Value.absent(),
-                Value<String?> comment = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => BodyMeasurementsCompanion(
                 createdAt: createdAt,
@@ -18064,7 +17999,6 @@ class $$BodyMeasurementsTableTableManager
                 date: date,
                 valueMetric: valueMetric,
                 source: source,
-                comment: comment,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -18077,7 +18011,6 @@ class $$BodyMeasurementsTableTableManager
                 required String date,
                 required double valueMetric,
                 Value<String> source = const Value.absent(),
-                Value<String?> comment = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => BodyMeasurementsCompanion.insert(
                 createdAt: createdAt,
@@ -18088,7 +18021,6 @@ class $$BodyMeasurementsTableTableManager
                 date: date,
                 valueMetric: valueMetric,
                 source: source,
-                comment: comment,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

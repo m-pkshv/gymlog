@@ -1007,9 +1007,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get measurementValueFieldLabel => 'Значение';
 
   @override
-  String get measurementCommentFieldLabel => 'Комментарий';
-
-  @override
   String get measurementValueRequiredError => 'Введите значение';
 
   @override

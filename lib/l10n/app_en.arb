@@ -1195,10 +1195,6 @@
   "@measurementValueFieldLabel": {
     "description": "Label for the value field on the S-15 form."
   },
-  "measurementCommentFieldLabel": "Comment",
-  "@measurementCommentFieldLabel": {
-    "description": "Label for the optional comment field on the S-15 form (DM 6.9, 500 chars)."
-  },
   "measurementValueRequiredError": "Enter a value",
   "@measurementValueRequiredError": {
     "description": "Shown on the S-15 form when the value field is empty or unparseable."

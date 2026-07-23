@@ -167,6 +167,7 @@
 Создание тренировки из шаблона копирует структуру в `Workout/WorkoutExercise/ExerciseSet` (плановые поля), связь с шаблоном не хранится (предположение; при необходимости аналитики «сколько раз использован шаблон» добавить `sourceTemplateId` в `Workout` — решение владельца).
 
 ### 6.9. `BodyMeasurement`
+Комментарий к записи (`comment`) удалён из схемы (Этап 10, 2026-07-23, решение владельца) в пользу более быстрого экрана массового ввода — см. раздел 11.1.
 | Поле | Тип | Обяз. | Умолч. | Валидация |
 |---|---|---|---|---|
 | id | TEXT PK | да | UUID | |
@@ -174,7 +175,6 @@
 | date | TEXT `YYYY-MM-DD` | да | сегодня | Не более одной записи на тип в день: при совпадении — предложение заменить |
 | valueMetric | REAL | да | — | mass: 20–400 кг; percent: 1–75; length: 1–300 см |
 | source | TEXT enum | да | `manual` | |
-| comment | TEXT | нет | NULL | ≤ 500 симв. |
 | createdAt / updatedAt / isDeleted | | | | |
 
 ### 6.10. `PersonalRecord` (кэш, D-8)
@@ -274,7 +274,8 @@ Exercise 1─* PersonalRecord (кэш)           Exercise 1─1 ExerciseProgress
 | Версия | Дата | Изменения |
 |---|---|---|
 | 1 | Этап 0 | Начальная схема: все таблицы разделов 5–6 |
-| 2 | Этап 10, 2026-07-23 | Удалены `ExerciseSets.isWarmup`/`TemplateSets.isWarmup` (понятие разминки убрано из приложения, решение владельца) — `Migrator.dropColumn` для обеих таблиц, покрыто тестом `test/data/database_migration_v1_to_v2_test.dart` |
+| 2 | Этап 10, 2026-07-23 | Удалены `ExerciseSets.isWarmup`/`TemplateSets.isWarmup` (понятие разминки убрано из приложения, решение владельца) — `Migrator.dropColumn` для обеих таблиц |
+| 3 | Этап 10, 2026-07-23 | Удалён `BodyMeasurements.comment` (комментарий к замеру убран, решение владельца) — `Migrator.dropColumn`; обе миграции покрыты одним тестом `test/data/database_migration_v1_to_current_test.dart` (v1-фикстура, реалистичный путь апгрейда) |
 
 ## 12. Начальные данные (сиды)
 - Загружаются при первом запуске в транзакции; факт загрузки — по наличию строк, версия сида хранится в `AppSettings`-подобной служебной таблице `SeedInfo(seedVersion INTEGER)`.

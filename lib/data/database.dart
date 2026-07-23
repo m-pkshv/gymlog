@@ -20,7 +20,9 @@ part 'database.g.dart';
 /// Stage 0). Version 2 (Stage 10, owner-confirmed 2026-07-23) drops
 /// `ExerciseSets.isWarmup`/`TemplateSets.isWarmup` — the "warm-up set"
 /// concept was removed from the app entirely; every set now counts toward
-/// statistics, so the column would only ever read `false`.
+/// statistics, so the column would only ever read `false`. Version 3 (Stage
+/// 10, owner-confirmed 2026-07-23) drops `BodyMeasurements.comment` — the
+/// per-entry comment was removed in favor of a faster bulk-entry flow.
 @DriftDatabase(
   tables: [
     MuscleGroups,
@@ -50,7 +52,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
@@ -67,6 +69,11 @@ class AppDatabase extends _$AppDatabase {
           // by another table/view/trigger.
           await m.dropColumn(exerciseSets, 'isWarmup');
           await m.dropColumn(templateSets, 'isWarmup');
+        }
+        if (from < 3) {
+          // v2 -> v3 (Stage 10, 2026-07-23): per-entry measurement comments
+          // removed in favor of a faster bulk-entry flow (S-14 "Замеры").
+          await m.dropColumn(bodyMeasurements, 'comment');
         }
       },
       beforeOpen: (details) async {

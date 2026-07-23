@@ -78,11 +78,7 @@ class MeasurementTypeDetail extends ConsumerWidget {
                     final value = display(entry);
                     return ListTile(
                       title: Text('${value.toStringAsFixed(1)} $unit'),
-                      subtitle: Text(
-                        entry.comment == null
-                            ? formatShortDate(entry.date)
-                            : '${formatShortDate(entry.date)} — ${entry.comment}',
-                      ),
+                      subtitle: Text(formatShortDate(entry.date)),
                       trailing: IconButton(
                         icon: const Icon(Icons.delete_outline),
                         tooltip: l10n.deleteMeasurementEntryAction,

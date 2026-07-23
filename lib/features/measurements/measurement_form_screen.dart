@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../core/app_error.dart';
-import '../../core/constants.dart';
 import '../../core/date_format.dart';
 import '../../core/result.dart';
 import '../../core/units/unit_converter.dart';
@@ -18,10 +17,10 @@ import 'measurement_value_format.dart';
 
 const _unitConverter = UnitConverter();
 
-/// S-15 modal form: type, date (default today), value (display unit, D-5),
-/// comment. On a same-day duplicate for the chosen type (DM 6.9), prompts
-/// "Заменить существующее значение?" before overwriting instead of creating
-/// a second entry.
+/// S-15 modal form: type, date (default today), value (display unit, D-5).
+/// On a same-day duplicate for the chosen type (DM 6.9), prompts "Заменить
+/// существующее значение?" before overwriting instead of creating a second
+/// entry.
 class MeasurementFormScreen extends ConsumerStatefulWidget {
   const MeasurementFormScreen({super.key, this.initialTypeId});
 
@@ -37,7 +36,6 @@ class MeasurementFormScreen extends ConsumerStatefulWidget {
 
 class _MeasurementFormScreenState extends ConsumerState<MeasurementFormScreen> {
   final _valueController = TextEditingController();
-  final _commentController = TextEditingController();
   String? _selectedTypeId;
   DateTime _selectedDate = DateTime.now();
   bool _isSubmitting = false;
@@ -58,7 +56,6 @@ class _MeasurementFormScreenState extends ConsumerState<MeasurementFormScreen> {
   @override
   void dispose() {
     _valueController.dispose();
-    _commentController.dispose();
     super.dispose();
   }
 
@@ -106,7 +103,6 @@ class _MeasurementFormScreenState extends ConsumerState<MeasurementFormScreen> {
       type.unitKind,
       ref.read(appSettingsProvider).value?.unitSystem ?? UnitSystem.metric,
     );
-    final comment = _commentController.text.trim();
     final service = ref.read(bodyMeasurementServiceProvider);
 
     try {
@@ -126,16 +122,11 @@ class _MeasurementFormScreenState extends ConsumerState<MeasurementFormScreen> {
       if (mounted) setState(() => _isSubmitting = true);
 
       final result = existing != null
-          ? await service.update(
-              existing: existing,
-              valueMetric: valueMetric,
-              comment: comment.isEmpty ? null : comment,
-            )
+          ? await service.update(existing: existing, valueMetric: valueMetric)
           : await service.create(
               measurementTypeId: type.id,
               date: _selectedDate,
               valueMetric: valueMetric,
-              comment: comment.isEmpty ? null : comment,
             );
       _handleResult(result, l10n);
     } catch (error, stackTrace) {
@@ -275,16 +266,6 @@ class _MeasurementFormScreenState extends ConsumerState<MeasurementFormScreen> {
                             setState(() => _valueError = null);
                           }
                         },
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _commentController,
-                        maxLines: 3,
-                        maxLength: CommentLengthLimits.bodyMeasurement,
-                        decoration: InputDecoration(
-                          labelText: l10n.measurementCommentFieldLabel,
-                          alignLabelWithHint: true,
-                        ),
                       ),
                     ],
                   ),

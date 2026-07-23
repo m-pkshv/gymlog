@@ -30,12 +30,10 @@ void main() {
       measurementTypeId: weightTypeId,
       date: DateTime(2026, 7, 21),
       valueMetric: 82.5,
-      comment: 'After breakfast',
     );
 
     expect(entry.measurementTypeId, weightTypeId);
     expect(entry.valueMetric, 82.5);
-    expect(entry.comment, 'After breakfast');
     expect(entry.source, MeasurementSource.manual);
     expect(entry.isDeleted, isFalse);
   });
@@ -79,7 +77,7 @@ void main() {
     expect(notFound, isNull);
   });
 
-  test('update overwrites value, date and comment', () async {
+  test('update overwrites value and date', () async {
     final entry = await measurements.create(
       measurementTypeId: weightTypeId,
       date: DateTime(2026, 7, 21),
@@ -87,11 +85,7 @@ void main() {
     );
 
     await measurements.update(
-      entry.copyWith(
-        date: DateTime(2026, 7, 22),
-        valueMetric: 81.5,
-        comment: 'Replaced',
-      ),
+      entry.copyWith(date: DateTime(2026, 7, 22), valueMetric: 81.5),
     );
 
     final reloaded = await measurements.getByTypeAndDate(
@@ -100,7 +94,6 @@ void main() {
     );
     expect(reloaded, isNotNull);
     expect(reloaded!.valueMetric, 81.5);
-    expect(reloaded.comment, 'Replaced');
   });
 
   test('delete soft-deletes; restore reverses it within the Undo window', () async {

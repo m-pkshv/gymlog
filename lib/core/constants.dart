@@ -53,7 +53,6 @@ class CommentLengthLimits {
   static const int workoutExercise = 1000;
   static const int exerciseSet = 500;
   static const int workoutTemplate = 2000;
-  static const int bodyMeasurement = 500;
 }
 
 /// Soft-delete Undo window (06_DATA_MODEL.md, section 10, D-19): how long
@@ -106,7 +105,9 @@ class ExportFormat {
 
   /// v2 (Stage 10, 2026-07-23, owner-confirmed): `workouts.csv` dropped the
   /// `is_warmup` column -- the warm-up concept was removed from the app.
-  static const int formatVersion = 2;
+  /// v3 (Stage 10, 2026-07-23, owner-confirmed): `measurements.csv` dropped
+  /// the `comment` column -- per-entry measurement comments were removed.
+  static const int formatVersion = 3;
 
   /// Mirrors `pubspec.yaml`'s semantic version (currently `1.0.0+1`) --
   /// there's no `package_info_plus` dependency (not in TS 3) to read it at

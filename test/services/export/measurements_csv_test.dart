@@ -11,7 +11,6 @@ BodyMeasurement _measurement({
   required String measurementTypeId,
   required DateTime date,
   required double valueMetric,
-  String? comment,
 }) {
   return BodyMeasurement(
     id: id,
@@ -19,7 +18,6 @@ BodyMeasurement _measurement({
     date: date,
     valueMetric: valueMetric,
     source: MeasurementSource.manual,
-    comment: comment,
     createdAt: _epoch,
     updatedAt: _epoch,
     isDeleted: false,
@@ -54,7 +52,6 @@ void main() {
             measurementTypeId: 'body_weight',
             date: DateTime(2026, 7, 2),
             valueMetric: 82.4,
-            comment: 'after breakfast',
           ),
           _measurement(
             id: 'm2',
@@ -68,9 +65,9 @@ void main() {
 
       expect(
         csv,
-        'date,type,custom_type_name,value,unit,source,comment\r\n'
-        '2026-07-01,custom,"Wrist, left",15.2,cm,manual,\r\n'
-        '2026-07-02,body_weight,,82.4,kg,manual,after breakfast\r\n',
+        'date,type,custom_type_name,value,unit,source\r\n'
+        '2026-07-01,custom,"Wrist, left",15.2,cm,manual\r\n'
+        '2026-07-02,body_weight,,82.4,kg,manual\r\n',
       );
     },
   );

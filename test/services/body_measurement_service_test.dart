@@ -164,11 +164,7 @@ void main() {
       valueMetric: 80,
     )).getOrNull()!;
 
-    final result = await service.update(
-      existing: created,
-      valueMetric: 81.2,
-      comment: 'Replaced',
-    );
+    final result = await service.update(existing: created, valueMetric: 81.2);
 
     expect(result.isOk, isTrue);
     final reloaded = await service.findExistingForDay(
@@ -176,7 +172,6 @@ void main() {
       date: DateTime(2026, 7, 21),
     );
     expect(reloaded!.valueMetric, 81.2);
-    expect(reloaded.comment, 'Replaced');
   });
 
   test('update rejects a value outside the range for the entry\'s type', () async {

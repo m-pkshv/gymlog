@@ -6,13 +6,21 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/domain/enums.dart';
 
-/// Stage 10 (2026-07-23, owner-confirmed): the first *real* schema
-/// migration in this project -- `ExerciseSets.isWarmup`/
-/// `TemplateSets.isWarmup` dropped (v1 -> v2) now that the warm-up concept
-/// was removed from the app entirely. Every other v1 table is byte-identical
-/// to v2, so a realistic v1 fixture is built by taking the current (v2)
-/// schema and re-adding just those two columns via raw SQL, rather than
+/// Stage 10: real schema migrations, exercised against a fixture shaped
+/// like a v1 install upgrading directly to whatever's current -- the only
+/// migration path that will ever really happen, since this app has no
+/// release yet (no phone was ever on an intermediate version). Every v1
+/// table is otherwise byte-identical to the current schema, so the v1
+/// fixture is built by taking the current schema (`createAll`) and
+/// re-adding the columns removed since v1 via raw SQL, rather than
 /// hand-writing all 20 `CREATE TABLE` statements from scratch.
+///
+/// v1 -> v2 (2026-07-23, owner-confirmed): `ExerciseSets.isWarmup`/
+/// `TemplateSets.isWarmup` dropped -- the warm-up concept was removed from
+/// the app entirely.
+/// v2 -> v3 (2026-07-23, owner-confirmed): `BodyMeasurements.comment`
+/// dropped -- per-entry measurement comments were removed in favor of a
+/// faster bulk-entry flow.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -21,7 +29,7 @@ void main() {
 
   setUp(() async {
     tempDir = await Directory.systemTemp.createTemp(
-      'gymlog_migration_v1_v2_test_',
+      'gymlog_migration_v1_current_test_',
     );
     dbFile = File('${tempDir.path}/gymlog.sqlite');
   });
@@ -40,11 +48,11 @@ void main() {
   });
 
   test(
-    'v1 (with isWarmup) upgrades to v2 (without isWarmup), preserving other '
-    'data and re-enabling foreign keys',
+    'a v1 install upgrades to the current schema, preserving data and '
+    're-enabling foreign keys',
     () async {
-      // Build a v1-shaped file: current schema (createAll) plus the two
-      // columns v1 still had, with user_version forced back to 1.
+      // Build a v1-shaped file: current schema (createAll) plus every
+      // column removed since v1, with user_version forced back to 1.
       final firstRun = AppDatabase(NativeDatabase(dbFile));
       final exercise = await firstRun
           .into(firstRun.exercises)
@@ -93,6 +101,28 @@ void main() {
               updatedAt: '2026-07-01T00:00:00.000Z',
             ),
           );
+      final massType = await firstRun
+          .into(firstRun.measurementTypes)
+          .insertReturning(
+            MeasurementTypesCompanion.insert(
+              id: 'body_weight_test',
+              unitKind: MeasurementUnitKind.mass.name,
+              isBuiltIn: false,
+              sortOrder: 0,
+            ),
+          );
+      await firstRun
+          .into(firstRun.bodyMeasurements)
+          .insert(
+            BodyMeasurementsCompanion.insert(
+              id: 'm1',
+              measurementTypeId: massType.id,
+              date: '2026-07-01',
+              valueMetric: 82.5,
+              createdAt: '2026-07-01T00:00:00.000Z',
+              updatedAt: '2026-07-01T00:00:00.000Z',
+            ),
+          );
 
       await firstRun.customStatement(
         'ALTER TABLE "ExerciseSets" ADD COLUMN "isWarmup" INTEGER NOT NULL DEFAULT 0',
@@ -100,10 +130,13 @@ void main() {
       await firstRun.customStatement(
         'ALTER TABLE "TemplateSets" ADD COLUMN "isWarmup" INTEGER NOT NULL DEFAULT 0',
       );
+      await firstRun.customStatement(
+        'ALTER TABLE "BodyMeasurements" ADD COLUMN "comment" TEXT',
+      );
       await firstRun.customStatement('PRAGMA user_version = 1');
       await firstRun.close();
 
-      // Reopen with the current (v2) app code -- this must run onUpgrade.
+      // Reopen with the current app code -- this must run onUpgrade.
       final secondRun = AppDatabase(NativeDatabase(dbFile));
       addTearDown(secondRun.close);
 
@@ -121,20 +154,33 @@ void main() {
         templateSetColumns.map((r) => r.data['name']),
         isNot(contains('isWarmup')),
       );
+      final bodyMeasurementColumns = await secondRun
+          .customSelect('PRAGMA table_info("BodyMeasurements")')
+          .get();
+      expect(
+        bodyMeasurementColumns.map((r) => r.data['name']),
+        isNot(contains('comment')),
+      );
 
       final versionRow = await secondRun
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(versionRow.data['user_version'], 2);
+      expect(versionRow.data['user_version'], 3);
 
       final fkRows = await secondRun.customSelect('PRAGMA foreign_keys').get();
       expect(fkRows.single.data['foreign_keys'], 1);
 
-      // The pre-migration data survived, untouched apart from the column.
+      // The pre-migration data survived, untouched apart from the columns.
       final storedSets = await secondRun.select(secondRun.exerciseSets).get();
       expect(storedSets.single.id, 's1');
       expect(storedSets.single.actualWeightKg, 100.0);
       expect(storedSets.single.actualReps, 5);
+
+      final storedMeasurements = await secondRun
+          .select(secondRun.bodyMeasurements)
+          .get();
+      expect(storedMeasurements.single.id, 'm1');
+      expect(storedMeasurements.single.valueMetric, 82.5);
     },
   );
 }

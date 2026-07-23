@@ -28,12 +28,11 @@ abstract class BodyMeasurementRepository {
     required String measurementTypeId,
     required DateTime date,
     required double valueMetric,
-    String? comment,
   });
 
-  /// Overwrites [measurement]'s mutable fields (date, value, comment) —
-  /// the caller (S-15 "replace existing?", or an edit) always submits the
-  /// complete new state, mirroring `WorkoutTemplateRepository.update`.
+  /// Overwrites [measurement]'s mutable fields (date, value) — the caller
+  /// (S-15 "replace existing?", or an edit) always submits the complete new
+  /// state, mirroring `WorkoutTemplateRepository.update`.
   Future<void> update(BodyMeasurement measurement);
 
   /// Soft-deletes [id] (DM 10: "Измерение — мягкое удаление + Undo").
