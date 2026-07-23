@@ -14,6 +14,7 @@ import '../../domain/models/workout_template.dart';
 import '../../l10n/app_localizations.dart';
 import '../templates/widgets/create_template_dialog.dart';
 import '../workout_editor/status_labels.dart';
+import '../workout_editor/widgets/workout_tag_chip.dart';
 import 'calendar/history_calendar_view.dart';
 import 'copy_workout_flow.dart';
 import 'new_workout_menu.dart';
@@ -531,7 +532,7 @@ class _HistoryFilterSheetState extends ConsumerState<_HistoryFilterSheet> {
                           children: [
                             for (final WorkoutTag tag in tags)
                               FilterChip(
-                                label: Text(tag.name),
+                                label: Text(workoutTagLabel(l10n, tag)),
                                 selected: _tagIds.contains(tag.id),
                                 onSelected: (selected) => setState(() {
                                   if (selected) {

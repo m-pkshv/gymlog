@@ -49,6 +49,47 @@ class TagPickerSheet extends ConsumerWidget {
     await controller.setTags(updated.toList());
   }
 
+  /// "Удалить тег" (Stage 10, owner-reported/DM 10): confirms with the
+  /// count of non-deleted workouts that will lose this tag before deleting
+  /// it — no Undo afterward, unlike workouts/templates/measurements
+  /// (owner-confirmed: matches DM 10's already-documented rule for tags).
+  /// Reloads the *current* workout's own state afterward in case this tag
+  /// happened to be assigned here -- `workoutTagsListProvider` (the picker's
+  /// own chip list) updates on its own since it's a live stream, but
+  /// `WorkoutEditorController`'s `details.tags` is a snapshot taken at load
+  /// time, not a live join.
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    WorkoutEditorController controller,
+    WorkoutTag tag,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final repository = ref.read(workoutTagRepositoryProvider);
+    final count = await repository.countWorkoutsUsingTag(tag.id);
+    if (!context.mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.deleteTagConfirmTitle),
+        content: Text(l10n.deleteTagConfirmMessage(count)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.actionCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.deleteTagAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await repository.delete(tag.id);
+    await controller.reload();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
@@ -89,10 +130,13 @@ class TagPickerSheet extends ConsumerWidget {
                               backgroundColor: tagColor(tag.colorHex),
                               radius: 8,
                             ),
-                            label: Text(tag.name),
+                            label: Text(workoutTagLabel(l10n, tag)),
                             selected: assignedIds.contains(tag.id),
                             onSelected: (selected) =>
                                 _toggle(controller, assignedIds, tag, selected),
+                            deleteIcon: const Icon(Icons.close, size: 18),
+                            onDeleted: () =>
+                                _confirmDelete(context, ref, controller, tag),
                           ),
                       ],
                     ),

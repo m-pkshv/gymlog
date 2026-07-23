@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../database.dart';
 import 'exercise_seed.dart';
 import 'reference_data_seed.dart';
+import 'workout_tag_seed.dart';
 
 /// Current seed content version (06_DATA_MODEL.md, section 12). Bump this
 /// when the seed data itself changes; `SeedRunner` re-applies the seed for
@@ -18,7 +19,9 @@ import 'reference_data_seed.dart';
 /// Q-1) — supersedes the v2 batch of 9 (several of those were renamed/
 /// refined in the full list; matched by the same generated id where the
 /// exercise carried over unchanged, e.g. `barbell_back_squat`).
-const int currentSeedVersion = 3;
+/// v4 (2026-07-23, Stage 10, owner-reported): 17 built-in workout tags, one
+/// per muscle group (`workout_tag_seed.dart`).
+const int currentSeedVersion = 4;
 
 /// Loads built-in reference data and the placeholder exercise catalog
 /// (06_DATA_MODEL.md, section 12) on first run, tracked by
@@ -43,6 +46,7 @@ class SeedRunner {
     await _db.transaction(() async {
       await insertReferenceDataSeed(_db);
       await insertExerciseSeed(_db);
+      await insertWorkoutTagSeed(_db);
       await _db
           .into(_db.seedInfoTable)
           .insertOnConflictUpdate(

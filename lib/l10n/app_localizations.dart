@@ -998,6 +998,24 @@ abstract class AppLocalizations {
   /// **'Name'**
   String get tagNameLabel;
 
+  /// Confirm button in the delete-tag dialog (S-03, DM 10) -- deletes even a built-in muscle-group tag (Stage 10, owner-confirmed).
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteTagAction;
+
+  /// Title of the delete-tag confirmation dialog (S-03, DM 10).
+  ///
+  /// In en, this message translates to:
+  /// **'Delete tag?'**
+  String get deleteTagConfirmTitle;
+
+  /// Body of the delete-tag confirmation dialog (S-03, DM 10: "Тег будет снят с N тренировок"), before deleting -- no Undo afterward (owner-confirmed, unlike workouts/templates/measurements).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{This tag isn\'t used by any workout.} one{This tag will be removed from {count} workout.} other{This tag will be removed from {count} workouts.}}'**
+  String deleteTagConfirmMessage(int count);
+
   /// S-17 settings screen title (AppBar) and its entry point label on the "More" screen.
   ///
   /// In en, this message translates to:

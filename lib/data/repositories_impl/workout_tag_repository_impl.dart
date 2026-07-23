@@ -48,4 +48,37 @@ class WorkoutTagRepositoryImpl implements WorkoutTagRepository {
     await _db.into(_db.workoutTags).insert(tag.toInsertCompanion());
     return tag;
   }
+
+  @override
+  Future<int> countWorkoutsUsingTag(String tagId) async {
+    final query = _db.select(_db.workoutTagLinks).join([
+      innerJoin(
+        _db.workouts,
+        _db.workouts.id.equalsExp(_db.workoutTagLinks.workoutId),
+      ),
+    ])..where(
+      _db.workoutTagLinks.tagId.equals(tagId) &
+          _db.workouts.isDeleted.equals(false),
+    );
+    final rows = await query.get();
+    return rows.length;
+  }
+
+  @override
+  Future<void> delete(String tagId) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await _db.transaction(() async {
+      await (_db.delete(
+        _db.workoutTagLinks,
+      )..where((l) => l.tagId.equals(tagId))).go();
+      await (_db.update(
+        _db.workoutTags,
+      )..where((t) => t.id.equals(tagId))).write(
+        drift.WorkoutTagsCompanion(
+          isDeleted: const Value(true),
+          updatedAt: Value(now),
+        ),
+      );
+    });
+  }
 }

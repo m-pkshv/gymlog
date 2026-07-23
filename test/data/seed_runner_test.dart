@@ -5,6 +5,7 @@ import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/seed/exercise_seed.dart';
 import 'package:gymlog/data/seed/reference_data_seed.dart';
 import 'package:gymlog/data/seed/seed_runner.dart';
+import 'package:gymlog/data/seed/workout_tag_seed.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +33,7 @@ void main() {
           .select(db.exerciseSecondaryMuscles)
           .get();
       final l10n = await db.select(db.exerciseL10n).get();
+      final workoutTags = await db.select(db.workoutTags).get();
       final seedInfo = await db.select(db.seedInfoTable).getSingle();
 
       // 17 groups: the original 13 (DM 5.1) plus rear_delts/obliques/
@@ -40,6 +42,13 @@ void main() {
       expect(muscleGroups, hasLength(17));
       expect(equipments, hasLength(9));
       expect(measurementTypes, hasLength(15));
+      // Stage 10, owner-reported: one built-in tag per muscle group.
+      expect(workoutTags, hasLength(17));
+      expect(
+        workoutTags.map((t) => t.id).toSet(),
+        muscleGroups.map((m) => m.id).toSet(),
+      );
+      expect(workoutTags.every((t) => !t.isDeleted), isTrue);
 
       // Q-1: the owner's full base list (199 exercises, 2026-07-20).
       expect(exercises, hasLength(199));
@@ -63,11 +72,41 @@ void main() {
     final muscleGroups = await db.select(db.muscleGroups).get();
     final exercises = await db.select(db.exercises).get();
     final l10n = await db.select(db.exerciseL10n).get();
+    final workoutTags = await db.select(db.workoutTags).get();
 
     expect(muscleGroups, hasLength(17));
     expect(exercises, hasLength(199));
     expect(l10n, hasLength(398));
+    expect(workoutTags, hasLength(17));
   });
+
+  test(
+    'insertWorkoutTagSeed can re-run against an already-seeded DB without '
+    'erroring, preserving a tag the owner already deleted',
+    () async {
+      await insertWorkoutTagSeed(db);
+
+      // Simulate the owner having deleted one of the built-in tags.
+      await (db.update(
+        db.workoutTags,
+      )..where((t) => t.id.equals('chest'))).write(
+        const WorkoutTagsCompanion(isDeleted: Value(true)),
+      );
+
+      // Re-running the seed (e.g. a future content update bumping the
+      // version on an install that already has this tag) must not
+      // un-delete it, and must not error on the primary-key conflict.
+      await insertWorkoutTagSeed(db);
+
+      final chest = await (db.select(
+        db.workoutTags,
+      )..where((t) => t.id.equals('chest'))).getSingle();
+      expect(chest.isDeleted, isTrue);
+
+      final tags = await db.select(db.workoutTags).get();
+      expect(tags, hasLength(17));
+    },
+  );
 
   test(
     'insertExerciseSeed can re-run against an already-seeded DB without '

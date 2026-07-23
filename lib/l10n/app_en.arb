@@ -519,6 +519,23 @@
   "@tagNameLabel": {
     "description": "Text field label in the create-tag dialog (S-03, DM 6.3: 1-30 chars)."
   },
+  "deleteTagAction": "Delete",
+  "@deleteTagAction": {
+    "description": "Confirm button in the delete-tag dialog (S-03, DM 10) -- deletes even a built-in muscle-group tag (Stage 10, owner-confirmed)."
+  },
+  "deleteTagConfirmTitle": "Delete tag?",
+  "@deleteTagConfirmTitle": {
+    "description": "Title of the delete-tag confirmation dialog (S-03, DM 10)."
+  },
+  "deleteTagConfirmMessage": "{count, plural, =0{This tag isn't used by any workout.} one{This tag will be removed from {count} workout.} other{This tag will be removed from {count} workouts.}}",
+  "@deleteTagConfirmMessage": {
+    "description": "Body of the delete-tag confirmation dialog (S-03, DM 10: \"Тег будет снят с N тренировок\"), before deleting -- no Undo afterward (owner-confirmed, unlike workouts/templates/measurements).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsTitle": "Settings",
   "@settingsTitle": {
     "description": "S-17 settings screen title (AppBar) and its entry point label on the \"More\" screen."

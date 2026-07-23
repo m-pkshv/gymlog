@@ -1370,6 +1370,80 @@ void main() {
         await _unmountAndFlush(tester);
       },
     );
+
+    testWidgets(
+      'the delete icon on a tag chip asks for confirmation with the '
+      'assigned-workout count, and confirming removes it for good '
+      '(Stage 10, owner-reported; DM 10 -- no Undo)',
+      (tester) async {
+        await _seedTag(db);
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+
+        await tester.tap(find.text('Add tag'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilterChip, 'Leg day'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(
+          find.descendant(
+            of: find.widgetWithText(FilterChip, 'Leg day'),
+            matching: find.byIcon(Icons.close),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Delete tag?'), findsOneWidget);
+        expect(
+          find.text('This tag will be removed from 1 workout.'),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+        await tester.pumpAndSettle();
+
+        expect(find.widgetWithText(FilterChip, 'Leg day'), findsNothing);
+        expect(find.text('No tags yet'), findsOneWidget);
+        final tags = await db.select(db.workoutTags).get();
+        expect(tags.single.isDeleted, isTrue, reason: 'soft-deleted, not gone');
+        final links = await db.select(db.workoutTagLinks).get();
+        expect(links, isEmpty);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'cancelling the delete confirmation leaves the tag and its '
+      'assignment untouched',
+      (tester) async {
+        await _seedTag(db);
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+
+        await tester.tap(find.text('Add tag'));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.descendant(
+            of: find.widgetWithText(FilterChip, 'Leg day'),
+            matching: find.byIcon(Icons.close),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+        await tester.pumpAndSettle();
+
+        expect(find.widgetWithText(FilterChip, 'Leg day'), findsOneWidget);
+        final tags = await db.select(db.workoutTags).get();
+        expect(tags, hasLength(1));
+        expect(tags.single.isDeleted, isFalse);
+
+        await _unmountAndFlush(tester);
+      },
+    );
   });
 
   group('reorder exercises (Stage 3, S-03 drag handle + "⋮ → Вверх/Вниз")', () {

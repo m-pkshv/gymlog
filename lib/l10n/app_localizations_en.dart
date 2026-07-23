@@ -474,6 +474,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tagNameLabel => 'Name';
 
   @override
+  String get deleteTagAction => 'Delete';
+
+  @override
+  String get deleteTagConfirmTitle => 'Delete tag?';
+
+  @override
+  String deleteTagConfirmMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'This tag will be removed from $count workouts.',
+      one: 'This tag will be removed from $count workout.',
+      zero: 'This tag isn\'t used by any workout.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

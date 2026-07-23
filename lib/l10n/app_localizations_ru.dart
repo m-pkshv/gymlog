@@ -478,6 +478,26 @@ class AppLocalizationsRu extends AppLocalizations {
   String get tagNameLabel => 'Название';
 
   @override
+  String get deleteTagAction => 'Удалить';
+
+  @override
+  String get deleteTagConfirmTitle => 'Удалить тег?';
+
+  @override
+  String deleteTagConfirmMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Тег будет снят с $count тренировок.',
+      many: 'Тег будет снят с $count тренировок.',
+      few: 'Тег будет снят с $count тренировок.',
+      one: 'Тег будет снят с $count тренировки.',
+      zero: 'Тег не используется ни в одной тренировке.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsTitle => 'Настройки';
 
   @override
