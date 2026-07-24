@@ -358,7 +358,12 @@ class _MainTabScaffold extends ConsumerWidget {
 /// ticking every second — this is a passive reminder, not a live clock, so
 /// per-minute staleness between those events is an acceptable simplification
 /// that avoids yet another `Timer.periodic` alongside the ones already
-/// living inside the workout editor.
+/// living inside the workout editor. "Продолжить" uses `context.go`, not
+/// `push` (Stage 10, owner-reported) -- this banner is shown from *any*
+/// tab, and `push`ing a route that belongs to the History branch from a
+/// different branch's own Navigator leaves it stuck there even after later
+/// navigation moves the visible branch elsewhere (see
+/// `today/screen.dart`'s doc comment for the full explanation).
 class _ResumeWorkoutBanner extends ConsumerWidget {
   const _ResumeWorkoutBanner();
 
@@ -382,7 +387,7 @@ class _ResumeWorkoutBanner extends ConsumerWidget {
       content: Text(l10n.workoutContinuingBannerMessage(minutes)),
       actions: [
         TextButton(
-          onPressed: () => context.push('/history/workout/${workout.id}'),
+          onPressed: () => context.go('/history/workout/${workout.id}'),
           child: Text(l10n.continueWorkoutAction),
         ),
       ],

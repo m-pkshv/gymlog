@@ -1189,11 +1189,10 @@ void main() {
           await tester.tap(find.text('Finish'));
           await tester.pumpAndSettle();
           // TS 7.2 step 6: finishing replaces the editor with the S-05
-          // summary; system back from there returns to History, same as
-          // it did from the editor.
+          // summary; "Готово" returns to History, same as it did before.
           expect(find.byType(WorkoutSummaryScreen), findsOneWidget);
 
-          await tester.pageBack();
+          await tester.tap(find.text('Done'));
           await tester.pumpAndSettle();
 
           // The source is untouched; the copy shows up completed, dated.
@@ -1265,7 +1264,13 @@ void main() {
           final templates = await db.select(db.workoutTemplates).get();
           expect(templates.single.name, 'Leg day');
 
-          await tester.pageBack();
+          // Stage 10 (owner-reported): "Create template" now correctly
+          // navigates into the "More" branch (`context.go`, not `push` --
+          // see `history/screen.dart`'s doc comment), so "back" from here
+          // returns to the Templates list, not History. Simulate switching
+          // back to the History tab the same way the owner's fix does --
+          // a fresh navigation to `/history`, same `db` underneath.
+          await tester.pumpWidget(_appUnderTest(db));
           await tester.pumpAndSettle();
 
           // "Из шаблона" -> pick the template just created -> new draft.

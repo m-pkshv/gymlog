@@ -21,6 +21,18 @@ import '../workout_editor/status_labels.dart';
 /// (owner-confirmed) — DM 6.4.1 guarantees there's at most one. Below
 /// everything: the "Новая тренировка"/"Из шаблона"/"Скопировать прошлую"
 /// quick actions, always visible.
+///
+/// Every navigation out of this screen into `/history/...` uses
+/// `context.go`, never `context.push` (Stage 10, owner-reported bug: after
+/// "Завершить" -> "Готово" on the summary screen, returning to "Сегодня"
+/// still showed the finished workout's summary with the same "Готово"
+/// button). `push` attaches the pushed route to the *calling* branch's own
+/// Navigator in a `StatefulShellRoute` — since `/history/workout/:id` etc.
+/// belong to the History branch, not Today's, a `push` from here left the
+/// editor/summary stuck at the top of Today's own (offstage) stack even
+/// after `go('/history')` moved the visible branch elsewhere; switching
+/// back to "Сегодня" then showed that stale leftover. `go` re-resolves the
+/// full location and correctly attaches it to History's branch instead.
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
 
@@ -88,10 +100,10 @@ class _ContinueWorkoutCard extends StatelessWidget {
         title: Text(name),
         subtitle: Text(workoutStatusLabel(l10n, workout.status)),
         trailing: FilledButton(
-          onPressed: () => context.push('/history/workout/${workout.id}'),
+          onPressed: () => context.go('/history/workout/${workout.id}'),
           child: Text(l10n.continueWorkoutAction),
         ),
-        onTap: () => context.push('/history/workout/${workout.id}'),
+        onTap: () => context.go('/history/workout/${workout.id}'),
       ),
     );
   }
@@ -133,7 +145,7 @@ class _WorkoutListCard extends ConsumerWidget {
                 child: Text(l10n.todayStartAction),
               )
             : null,
-        onTap: () => context.push('/history/workout/${workout.id}'),
+        onTap: () => context.go('/history/workout/${workout.id}'),
       ),
     );
   }
@@ -189,12 +201,12 @@ class _QuickActions extends ConsumerWidget {
           label: Text(l10n.newWorkoutFromScratchAction),
         ),
         OutlinedButton.icon(
-          onPressed: () => context.push('/history/template-source'),
+          onPressed: () => context.go('/history/template-source'),
           icon: const Icon(Icons.description_outlined),
           label: Text(l10n.newWorkoutFromTemplateAction),
         ),
         OutlinedButton.icon(
-          onPressed: () => context.push('/history/copy-source'),
+          onPressed: () => context.go('/history/copy-source'),
           icon: const Icon(Icons.copy_outlined),
           label: Text(l10n.newWorkoutFromCopyAction),
         ),

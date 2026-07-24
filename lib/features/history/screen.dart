@@ -116,7 +116,13 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   /// "Создать шаблон" (S-02 "⋮" menu, TS 8 section 8): prompts for the
   /// template's name (defaulting to the workout's own display name) and
   /// opens the result for review, same "create then open" pattern as
-  /// [showNewWorkoutMenu]'s "From scratch" and `copyWorkoutFlow`.
+  /// [showNewWorkoutMenu]'s "From scratch" and `copyWorkoutFlow`. Uses
+  /// `go`, not `push` (Stage 10, owner-reported): this screen is History's
+  /// branch, and `/more/templates/:id` belongs to the "More" branch --
+  /// `push`ing it here would attach the template editor to History's own
+  /// Navigator instead of More's (see `today/screen.dart`'s doc comment for
+  /// the general explanation of why that's wrong for a
+  /// `StatefulShellRoute`).
   Future<void> _createTemplateFromWorkout(Workout source) async {
     final l10n = AppLocalizations.of(context)!;
     final service = ref.read(workoutTemplateServiceProvider);
@@ -131,7 +137,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       ),
     );
     if (created != null && mounted) {
-      context.push('/more/templates/${created.id}');
+      context.go('/more/templates/${created.id}');
     }
   }
 

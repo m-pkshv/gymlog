@@ -10,7 +10,12 @@ import '../../l10n/app_localizations.dart';
 /// creation option, TS 8 section 8): prompts for the new workout's date,
 /// calls `WorkoutRepository.createFromTemplate`, and opens the result in
 /// the editor. Shared so both entry points behave identically, same
-/// pattern as `copyWorkoutFlow` (Stage 3).
+/// pattern as `copyWorkoutFlow` (Stage 3). Uses `go`, not `push` (Stage
+/// 10, owner-reported) -- the S-12 template card's "Create workout" is
+/// called from the "More" branch and S-01's "Из шаблона" quick action
+/// pushes into a picker outside `/history`, so `push` would attach the
+/// editor to the wrong branch's own Navigator (see `copyWorkoutFlow`'s
+/// doc comment).
 Future<void> createWorkoutFromTemplateFlow(
   BuildContext context,
   WidgetRef ref,
@@ -29,7 +34,7 @@ Future<void> createWorkoutFromTemplateFlow(
     final workout = await ref
         .read(workoutRepositoryProvider)
         .createFromTemplate(templateId: template.id, date: picked);
-    if (context.mounted) context.push('/history/workout/${workout.id}');
+    if (context.mounted) context.go('/history/workout/${workout.id}');
   } catch (error, stackTrace) {
     ref
         .read(loggerProvider)

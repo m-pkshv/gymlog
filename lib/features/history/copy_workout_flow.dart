@@ -9,7 +9,13 @@ import '../../l10n/app_localizations.dart';
 /// "Скопировать" (S-02 card menu and the "Копией" creation option, TS 8
 /// section 8): prompts for the copy's date, calls
 /// `WorkoutRepository.copyWorkout`, and opens the result in the editor.
-/// Shared so both entry points behave identically.
+/// Shared so both entry points behave identically. Uses `go`, not `push`
+/// (Stage 10, owner-reported): this is reachable from outside the
+/// `/history` branch (S-01 "Сегодня"'s "Скопировать прошлую" quick action
+/// pushes into the `/history/copy-source` picker that calls this) --
+/// `push` would attach the editor to the *calling* branch's own Navigator
+/// instead of History's, leaving a stale screen behind when the owner
+/// switched tabs and came back.
 Future<void> copyWorkoutFlow(
   BuildContext context,
   WidgetRef ref,
@@ -29,7 +35,7 @@ Future<void> copyWorkoutFlow(
     final copy = await ref
         .read(workoutRepositoryProvider)
         .copyWorkout(sourceWorkoutId: source.id, date: picked);
-    if (context.mounted) context.push('/history/workout/${copy.id}');
+    if (context.mounted) context.go('/history/workout/${copy.id}');
   } catch (error, stackTrace) {
     ref
         .read(loggerProvider)
