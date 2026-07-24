@@ -34,7 +34,7 @@
   },
   "todayLoadError": "Couldn't load today's workout",
   "@todayLoadError": {
-    "description": "S-01 error state when inProgressWorkoutProvider or nextUpcomingWorkoutProvider fails to load."
+    "description": "S-01 error state when inProgressWorkoutProvider or todayAndUpcomingWorkoutsProvider fails to load."
   },
   "exercisesEmptyTitle": "No exercises yet",
   "@exercisesEmptyTitle": {

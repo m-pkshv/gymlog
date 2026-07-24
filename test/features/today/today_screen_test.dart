@@ -56,7 +56,7 @@ Future<void> _unmountAndFlush(WidgetTester tester) async {
 }
 
 // Always in the future relative to whenever this suite actually runs, so
-// `nextUpcomingWorkoutProvider`'s real `DateTime.now()` boundary never
+// `todayAndUpcomingWorkoutsProvider`'s real `DateTime.now()` boundary never
 // makes the test flaky around a real day-of-run edge case.
 final _farFutureDate = DateTime(2099, 1, 1);
 
@@ -90,7 +90,7 @@ void main() {
   );
 
   testWidgets(
-    'shows the upcoming-workout card for the nearest draft/planned workout',
+    'shows a card for a future draft/planned workout, with a Start button',
     (tester) async {
       await workouts.createDraft(date: _farFutureDate);
 
@@ -99,6 +99,35 @@ void main() {
 
       expect(find.text('Start'), findsOneWidget);
       expect(find.textContaining('0 exercises'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'lists every workout dated today or later, including today\'s in a '
+    'terminal status (Stage 10, owner-reported), sorted by date',
+    (tester) async {
+      final today = DateTime.now();
+      final completedToday = await workouts.createDraft(date: today);
+      await workouts.updateWorkout(
+        completedToday.copyWith(
+          status: WorkoutStatus.completed,
+          name: 'Leg day',
+        ),
+      );
+      await workouts.createDraft(date: _farFutureDate).then(
+        (w) => workouts.updateWorkout(w.copyWith(name: 'Future session')),
+      );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Leg day'), findsOneWidget);
+      expect(find.text('Future session'), findsOneWidget);
+      // "Leg day" (today, completed) has no Start button; the future draft
+      // does.
+      expect(find.text('Start'), findsOneWidget);
 
       await _unmountAndFlush(tester);
     },

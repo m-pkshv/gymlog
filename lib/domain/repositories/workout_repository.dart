@@ -23,16 +23,16 @@ abstract class WorkoutRepository {
   /// start with a workout already `inProgress`).
   Stream<Workout?> watchInProgressWorkout();
 
-  /// The nearest non-deleted `draft`/`planned` workout dated [notBefore] or
-  /// later, with its exercise count (S-01: "ближайшая тренировка (сегодня/
-  /// будущая ближайшая)"), or `null` if there is none. `inProgress` is
-  /// deliberately excluded — that's [watchInProgressWorkout]'s "Продолжить"
-  /// card instead, a separate case per 04_UI_UX_SPEC.md section 5.
-  /// ASSUMPTION(next-workout-statuses): both `draft` and `planned` count as
-  /// "upcoming" -- the spec doesn't distinguish, and both represent "not
-  /// yet performed", unlike the terminal statuses.
-  Stream<WorkoutHistoryEntry?> watchNextUpcomingWorkout({
-    required DateTime notBefore,
+  /// Every non-deleted workout dated [today] or later, any status, with its
+  /// exercise count (S-01 "Сегодня", Stage 10, owner-reported: the screen
+  /// used to show only the single nearest `draft`/`planned` workout, which
+  /// hid same-day workouts in other statuses and every workout beyond the
+  /// very next one — misleading). Sorted by date, earliest first.
+  /// `inProgress` is deliberately excluded — that's
+  /// [watchInProgressWorkout]'s "Продолжить" card instead, shown separately
+  /// so it's never duplicated in this list.
+  Stream<List<WorkoutHistoryEntry>> watchTodayAndUpcomingWorkouts({
+    required DateTime today,
   });
 
   /// [locale] (`'ru'`/`'en'`, from `resolvedLocaleCode`) resolves each

@@ -146,7 +146,7 @@ abstract class AppLocalizations {
   /// **'No workout planned today'**
   String get todayEmptyTitle;
 
-  /// S-01 error state when inProgressWorkoutProvider or nextUpcomingWorkoutProvider fails to load.
+  /// S-01 error state when inProgressWorkoutProvider or todayAndUpcomingWorkoutsProvider fails to load.
   ///
   /// In en, this message translates to:
   /// **'Couldn\'t load today\'s workout'**

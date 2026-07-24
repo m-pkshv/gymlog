@@ -108,15 +108,15 @@ final inProgressWorkoutProvider = StreamProvider<Workout?>((ref) {
   return ref.watch(workoutRepositoryProvider).watchInProgressWorkout();
 });
 
-/// The nearest upcoming `draft`/`planned` workout (S-01 "Сегодня" card,
-/// Stage 9) — `DateTime.now()` is read once per provider rebuild, which is
+/// Every workout dated today or later, any status (S-01 "Сегодня" list,
+/// Stage 10) — `DateTime.now()` is read once per provider rebuild, which is
 /// fine since "today" doesn't change while the app stays open.
-final nextUpcomingWorkoutProvider = StreamProvider<WorkoutHistoryEntry?>((
+final todayAndUpcomingWorkoutsProvider = StreamProvider<List<WorkoutHistoryEntry>>((
   ref,
 ) {
   return ref
       .watch(workoutRepositoryProvider)
-      .watchNextUpcomingWorkout(notBefore: DateTime.now());
+      .watchTodayAndUpcomingWorkouts(today: DateTime.now());
 });
 
 /// One exercise's completed-workout history (S-07 "История" tab, Stage 9) —

@@ -228,66 +228,78 @@ void main() {
     });
   });
 
-  group('watchNextUpcomingWorkout (Stage 9, S-01)', () {
-    test('null when there is no draft/planned workout at all', () async {
+  group('watchTodayAndUpcomingWorkouts (Stage 10, S-01, owner-reported)', () {
+    test('empty when there is no workout dated today or later', () async {
       expect(
-        await workouts.watchNextUpcomingWorkout(notBefore: DateTime(2026, 7, 19)).first,
-        isNull,
+        await workouts
+            .watchTodayAndUpcomingWorkouts(today: DateTime(2026, 7, 19))
+            .first,
+        isEmpty,
       );
     });
 
     test(
-      'picks the closest-dated draft/planned workout on or after notBefore',
+      'returns every workout dated today or later, earliest first',
       () async {
         final farther = await workouts.createDraft(date: DateTime(2026, 7, 25));
         final closer = await workouts.createDraft(date: DateTime(2026, 7, 20));
 
-        final next = await workouts
-            .watchNextUpcomingWorkout(notBefore: DateTime(2026, 7, 19))
+        final entries = await workouts
+            .watchTodayAndUpcomingWorkouts(today: DateTime(2026, 7, 19))
             .first;
 
-        expect(next, isNotNull);
-        expect(next!.workout.id, closer.id);
-        expect(next.workout.id, isNot(farther.id));
+        expect(entries.map((e) => e.workout.id).toList(), [
+          closer.id,
+          farther.id,
+        ]);
       },
     );
 
-    test('excludes workouts dated before notBefore', () async {
+    test('excludes workouts dated before today', () async {
       await workouts.createDraft(date: DateTime(2026, 7, 18));
 
-      final next = await workouts
-          .watchNextUpcomingWorkout(notBefore: DateTime(2026, 7, 19))
+      final entries = await workouts
+          .watchTodayAndUpcomingWorkouts(today: DateTime(2026, 7, 19))
           .first;
 
-      expect(next, isNull);
+      expect(entries, isEmpty);
     });
 
     test(
-      'excludes inProgress/completed/skipped/cancelled workouts (only draft/planned qualify)',
+      'includes today\'s workouts in any status (completed/cancelled/skipped '
+      'too, not just draft/planned) but never the inProgress one -- that\'s '
+      'the separate "Continue" card instead',
       () async {
-        final inProgress = await workouts.createDraft(
-          date: DateTime(2026, 7, 19),
-        );
+        final active = await workouts.createDraft(date: DateTime(2026, 7, 19));
         await workouts.updateWorkout(
-          inProgress.copyWith(status: WorkoutStatus.inProgress),
+          active.copyWith(status: WorkoutStatus.inProgress),
         );
         final completed = await workouts.createDraft(
-          date: DateTime(2026, 7, 20),
+          date: DateTime(2026, 7, 19),
         );
         await workouts.updateWorkout(
           completed.copyWith(status: WorkoutStatus.completed),
         );
-        final planned = await workouts.createDraft(date: DateTime(2026, 7, 21));
+        final cancelled = await workouts.createDraft(
+          date: DateTime(2026, 7, 19),
+        );
+        await workouts.updateWorkout(
+          cancelled.copyWith(status: WorkoutStatus.cancelled),
+        );
+        final planned = await workouts.createDraft(date: DateTime(2026, 7, 20));
         await workouts.updateWorkout(
           planned.copyWith(status: WorkoutStatus.planned),
         );
 
-        final next = await workouts
-            .watchNextUpcomingWorkout(notBefore: DateTime(2026, 7, 19))
+        final entries = await workouts
+            .watchTodayAndUpcomingWorkouts(today: DateTime(2026, 7, 19))
             .first;
 
-        expect(next, isNotNull);
-        expect(next!.workout.id, planned.id);
+        expect(entries.map((e) => e.workout.id).toSet(), {
+          completed.id,
+          cancelled.id,
+          planned.id,
+        });
       },
     );
 
@@ -299,22 +311,22 @@ void main() {
       final workout = await workouts.createDraft(date: DateTime(2026, 7, 19));
       await workouts.addExercise(workoutId: workout.id, exerciseId: exercise.id);
 
-      final next = await workouts
-          .watchNextUpcomingWorkout(notBefore: DateTime(2026, 7, 19))
+      final entries = await workouts
+          .watchTodayAndUpcomingWorkouts(today: DateTime(2026, 7, 19))
           .first;
 
-      expect(next!.exerciseCount, 1);
+      expect(entries.single.exerciseCount, 1);
     });
 
     test('excludes soft-deleted workouts', () async {
       final workout = await workouts.createDraft(date: DateTime(2026, 7, 19));
       await workouts.deleteWorkout(workout.id);
 
-      final next = await workouts
-          .watchNextUpcomingWorkout(notBefore: DateTime(2026, 7, 19))
+      final entries = await workouts
+          .watchTodayAndUpcomingWorkouts(today: DateTime(2026, 7, 19))
           .first;
 
-      expect(next, isNull);
+      expect(entries, isEmpty);
     });
   });
 

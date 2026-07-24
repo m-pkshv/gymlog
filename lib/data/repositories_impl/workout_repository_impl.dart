@@ -47,8 +47,8 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
   }
 
   @override
-  Stream<WorkoutHistoryEntry?> watchNextUpcomingWorkout({
-    required DateTime notBefore,
+  Stream<List<WorkoutHistoryEntry>> watchTodayAndUpcomingWorkouts({
+    required DateTime today,
   }) {
     final exerciseCount = _db.workoutExercises.id.count();
     final query =
@@ -61,26 +61,27 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
             ])
             ..addColumns([exerciseCount])
             ..where(
-              _db.workouts.status.isIn([
-                    WorkoutStatus.draft.name,
-                    WorkoutStatus.planned.name,
-                  ]) &
+              _db.workouts.status.equals(WorkoutStatus.inProgress.name).not() &
                   _db.workouts.isDeleted.equals(false) &
                   _db.workouts.date.isBiggerOrEqualValue(
-                    dateOnlyString(notBefore),
+                    dateOnlyString(today),
                   ),
             )
             ..groupBy([_db.workouts.id])
-            ..orderBy([OrderingTerm.asc(_db.workouts.date)])
-            ..limit(1);
+            ..orderBy([
+              OrderingTerm.asc(_db.workouts.date),
+              OrderingTerm.asc(_db.workouts.createdAt),
+            ]);
 
-    return query.watchSingleOrNull().map((row) {
-      if (row == null) return null;
-      return WorkoutHistoryEntry(
-        workout: row.readTable(_db.workouts).toDomain(),
-        exerciseCount: row.read(exerciseCount) ?? 0,
-      );
-    });
+    return query.watch().map(
+      (rows) => [
+        for (final row in rows)
+          WorkoutHistoryEntry(
+            workout: row.readTable(_db.workouts).toDomain(),
+            exerciseCount: row.read(exerciseCount) ?? 0,
+          ),
+      ],
+    );
   }
 
   @override

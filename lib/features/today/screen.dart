@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/providers.dart';
 import '../../core/date_format.dart';
 import '../../core/widgets/error_retry_state.dart';
+import '../../domain/enums.dart';
 import '../../domain/models/workout.dart';
 import '../../domain/models/workout_history_entry.dart';
 import '../../l10n/app_localizations.dart';
@@ -12,11 +13,14 @@ import '../history/new_workout_menu.dart';
 import '../history/start_workout_flow.dart';
 import '../workout_editor/status_labels.dart';
 
-/// S-01 "Сегодня" (04_UI_UX_SPEC.md, section 5, Stage 9): the nearest
-/// upcoming workout (or, if one is already `inProgress`, a "Продолжить"
-/// card instead -- a separate case per the spec) plus the "Новая
-/// тренировка"/"Из шаблона"/"Скопировать прошлую" quick actions, always
-/// visible below the card (or the greeting, when there's neither).
+/// S-01 "Сегодня" (04_UI_UX_SPEC.md, section 5; Stage 10, owner-reported):
+/// every workout dated today (any status — it already happened, is
+/// happening, or will happen later today) or in the future (any status),
+/// sorted by date. The active (`inProgress`) workout, if any, gets its own
+/// pinned "Продолжить" card above the list instead of appearing twice
+/// (owner-confirmed) — DM 6.4.1 guarantees there's at most one. Below
+/// everything: the "Новая тренировка"/"Из шаблона"/"Скопировать прошлую"
+/// quick actions, always visible.
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
 
@@ -24,47 +28,51 @@ class TodayScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final activeAsync = ref.watch(inProgressWorkoutProvider);
-    final upcomingAsync = ref.watch(nextUpcomingWorkoutProvider);
+    final upcomingAsync = ref.watch(todayAndUpcomingWorkoutsProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.tabToday)),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            activeAsync.when(
-              data: (active) {
-                if (active != null) return _ContinueWorkoutCard(workout: active);
-                return upcomingAsync.when(
-                  data: (entry) => entry != null
-                      ? _UpcomingWorkoutCard(entry: entry)
-                      : const _EmptyTodayState(),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (error, stackTrace) => ErrorRetryState(
-                    message: l10n.todayLoadError,
-                    onRetry: () => ref.invalidate(nextUpcomingWorkoutProvider),
-                  ),
+        child: activeAsync.when(
+          data: (active) => upcomingAsync.when(
+            data: (entries) {
+              if (active == null && entries.isEmpty) {
+                return ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: const [_EmptyTodayState(), SizedBox(height: 24), _QuickActions()],
                 );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stackTrace) => ErrorRetryState(
-                message: l10n.todayLoadError,
-                onRetry: () => ref.invalidate(inProgressWorkoutProvider),
-              ),
+              }
+              return ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  if (active != null) _ContinueWorkoutCard(workout: active),
+                  for (final entry in entries) _WorkoutListCard(entry: entry),
+                  const SizedBox(height: 24),
+                  const _QuickActions(),
+                ],
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, stackTrace) => ErrorRetryState(
+              message: l10n.todayLoadError,
+              onRetry: () => ref.invalidate(todayAndUpcomingWorkoutsProvider),
             ),
-            const SizedBox(height: 24),
-            const _QuickActions(),
-          ],
+          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stackTrace) => ErrorRetryState(
+            message: l10n.todayLoadError,
+            onRetry: () => ref.invalidate(inProgressWorkoutProvider),
+          ),
         ),
       ),
     );
   }
 }
 
-/// "При активной — карточка «Продолжить»" — shown instead of the upcoming-
-/// workout card whenever `inProgressWorkoutProvider` has a value (DM 6.4.1:
-/// at most one, so there's never a choice between several).
+/// "При активной — карточка «Продолжить»" — pinned above the list whenever
+/// `inProgressWorkoutProvider` has a value (DM 6.4.1: at most one, so
+/// there's never a choice between several, and it's never duplicated
+/// inside the list below — the list query excludes `inProgress`).
 class _ContinueWorkoutCard extends StatelessWidget {
   const _ContinueWorkoutCard({required this.workout});
 
@@ -89,15 +97,17 @@ class _ContinueWorkoutCard extends StatelessWidget {
   }
 }
 
-/// "Ближайшая тренировка (сегодня/будущая ближайшая): карточка со статусом,
-/// упражнениями, кнопки «Начать» / «Открыть»". ASSUMPTION(today-card-
-/// actions): the button starts it directly (`startWorkoutFlow`, DM 6.4.1);
-/// tapping the card body opens the editor without changing status --
-/// 04_UI_UX_SPEC.md doesn't spell out which control does which, but this
-/// is the same "primary button vs. tap-to-open" shape already used
-/// elsewhere in the app (e.g. History's cards), so it's low-risk.
-class _UpcomingWorkoutCard extends ConsumerWidget {
-  const _UpcomingWorkoutCard({required this.entry});
+/// One row of the "Сегодня" list (Stage 10): every status is possible here
+/// (today's workouts can already be `completed`/`cancelled`/`skipped`, not
+/// just `draft`/`planned`), so the "Start" button only makes sense — and
+/// only appears — for the two not-yet-performed statuses. Every card is
+/// still tappable to open the workout, regardless of status (same
+/// tap-to-open shape as History's cards). ASSUMPTION(today-card-actions,
+/// carried over from the original single-card version): the button starts
+/// it directly (`startWorkoutFlow`, DM 6.4.1); tapping the card body opens
+/// the editor without changing status.
+class _WorkoutListCard extends ConsumerWidget {
+  const _WorkoutListCard({required this.entry});
 
   final WorkoutHistoryEntry entry;
 
@@ -106,6 +116,9 @@ class _UpcomingWorkoutCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final workout = entry.workout;
     final name = workout.name ?? l10n.workoutDefaultNamePrefix;
+    final canStart =
+        workout.status == WorkoutStatus.draft ||
+        workout.status == WorkoutStatus.planned;
     return Card(
       child: ListTile(
         title: Text(name),
@@ -114,10 +127,12 @@ class _UpcomingWorkoutCard extends ConsumerWidget {
           '${workoutStatusLabel(l10n, workout.status)} · '
           '${l10n.workoutExerciseCount(entry.exerciseCount)}',
         ),
-        trailing: FilledButton(
-          onPressed: () => startWorkoutFlow(context, ref, workout),
-          child: Text(l10n.todayStartAction),
-        ),
+        trailing: canStart
+            ? FilledButton(
+                onPressed: () => startWorkoutFlow(context, ref, workout),
+                child: Text(l10n.todayStartAction),
+              )
+            : null,
         onTap: () => context.push('/history/workout/${workout.id}'),
       ),
     );
