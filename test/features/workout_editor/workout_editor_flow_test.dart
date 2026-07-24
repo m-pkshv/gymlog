@@ -1272,15 +1272,16 @@ void main() {
 
   group('workout tags (Stage 3, S-03, DM 6.3/6.5)', () {
     testWidgets(
-      'the tag row shows an "Add tag" action and no chip for an unassigned '
-      'tag',
+      'the tag row shows an icon-only "Add tag" trigger and no chip for an '
+      'unassigned tag (Stage 10, owner-reported: icon instead of a labelled '
+      'chip)',
       (tester) async {
         await _seedTag(db);
         await tester.pumpWidget(_appUnderTest(db));
         await tester.pumpAndSettle();
         await _createDraftViaFab(tester);
 
-        expect(find.text('Add tag'), findsOneWidget);
+        expect(find.byTooltip('Add tag'), findsOneWidget);
         expect(find.text('Leg day'), findsNothing);
 
         await _unmountAndFlush(tester);
@@ -1295,7 +1296,7 @@ void main() {
         await tester.pumpAndSettle();
         await _createDraftViaFab(tester);
 
-        await tester.tap(find.text('Add tag'));
+        await tester.tap(find.byTooltip('Add tag'));
         await tester.pumpAndSettle();
 
         await tester.tap(find.widgetWithText(FilterChip, 'Leg day'));
@@ -1314,34 +1315,48 @@ void main() {
     );
 
     testWidgets(
-      'creating a new tag from the picker sheet assigns it immediately',
+      'the picker sheet has no "Create tag" button and its empty state '
+      'points at the management screen (Stage 10, owner-reported: creating '
+      'a tag moved to Ещё → Теги)',
       (tester) async {
         await tester.pumpWidget(_appUnderTest(db));
         await tester.pumpAndSettle();
         await _createDraftViaFab(tester);
 
-        await tester.tap(find.text('Add tag'));
+        await tester.tap(find.byTooltip('Add tag'));
         await tester.pumpAndSettle();
-        expect(find.text('No tags yet'), findsOneWidget);
 
-        await tester.tap(find.text('Create tag'));
-        await tester.pumpAndSettle();
-        await tester.enterText(
-          find.descendant(
-            of: find.byType(AlertDialog),
-            matching: find.byType(TextField),
-          ),
-          'Push',
+        expect(
+          find.text('No tags yet. Add some from More → Tags.'),
+          findsOneWidget,
         );
-        await tester.pump();
-        await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+        expect(find.text('Create tag'), findsNothing);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'a tag chip in the picker sheet has no delete "x" of its own (Stage '
+      '10, owner-reported: it used to be confused with unassigning the tag '
+      'from this workout) -- deleting a tag now only happens from Ещё → '
+      'Теги',
+      (tester) async {
+        await _seedTag(db);
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+
+        await tester.tap(find.byTooltip('Add tag'));
         await tester.pumpAndSettle();
 
-        final tags = await db.select(db.workoutTags).get();
-        expect(tags.single.name, 'Push');
-        final links = await db.select(db.workoutTagLinks).get();
-        expect(links.single.tagId, tags.single.id);
-        expect(find.widgetWithText(FilterChip, 'Push'), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.widgetWithText(FilterChip, 'Leg day'),
+            matching: find.byIcon(Icons.close),
+          ),
+          findsNothing,
+        );
 
         await _unmountAndFlush(tester);
       },
@@ -1365,81 +1380,7 @@ void main() {
         await tester.pumpAndSettle();
         await _createDraftViaFab(tester);
 
-        expect(find.text('Add tag'), findsNothing);
-
-        await _unmountAndFlush(tester);
-      },
-    );
-
-    testWidgets(
-      'the delete icon on a tag chip asks for confirmation with the '
-      'assigned-workout count, and confirming removes it for good '
-      '(Stage 10, owner-reported; DM 10 -- no Undo)',
-      (tester) async {
-        await _seedTag(db);
-        await tester.pumpWidget(_appUnderTest(db));
-        await tester.pumpAndSettle();
-        await _createDraftViaFab(tester);
-
-        await tester.tap(find.text('Add tag'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.widgetWithText(FilterChip, 'Leg day'));
-        await tester.pumpAndSettle();
-
-        await tester.tap(
-          find.descendant(
-            of: find.widgetWithText(FilterChip, 'Leg day'),
-            matching: find.byIcon(Icons.close),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        expect(find.text('Delete tag?'), findsOneWidget);
-        expect(
-          find.text('This tag will be removed from 1 workout.'),
-          findsOneWidget,
-        );
-
-        await tester.tap(find.widgetWithText(TextButton, 'Delete'));
-        await tester.pumpAndSettle();
-
-        expect(find.widgetWithText(FilterChip, 'Leg day'), findsNothing);
-        expect(find.text('No tags yet'), findsOneWidget);
-        final tags = await db.select(db.workoutTags).get();
-        expect(tags.single.isDeleted, isTrue, reason: 'soft-deleted, not gone');
-        final links = await db.select(db.workoutTagLinks).get();
-        expect(links, isEmpty);
-
-        await _unmountAndFlush(tester);
-      },
-    );
-
-    testWidgets(
-      'cancelling the delete confirmation leaves the tag and its '
-      'assignment untouched',
-      (tester) async {
-        await _seedTag(db);
-        await tester.pumpWidget(_appUnderTest(db));
-        await tester.pumpAndSettle();
-        await _createDraftViaFab(tester);
-
-        await tester.tap(find.text('Add tag'));
-        await tester.pumpAndSettle();
-        await tester.tap(
-          find.descendant(
-            of: find.widgetWithText(FilterChip, 'Leg day'),
-            matching: find.byIcon(Icons.close),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
-        await tester.pumpAndSettle();
-
-        expect(find.widgetWithText(FilterChip, 'Leg day'), findsOneWidget);
-        final tags = await db.select(db.workoutTags).get();
-        expect(tags, hasLength(1));
-        expect(tags.single.isDeleted, isFalse);
+        expect(find.byTooltip('Add tag'), findsNothing);
 
         await _unmountAndFlush(tester);
       },

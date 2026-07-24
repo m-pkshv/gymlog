@@ -20,6 +20,7 @@ import '../features/settings/screen.dart';
 import '../features/stats/exercise_progress_picker_screen.dart';
 import '../features/stats/exercise_progress_screen.dart';
 import '../features/stats/screen.dart';
+import '../features/tags/screen.dart';
 import '../features/template_editor/screen.dart';
 import '../features/templates/screen.dart';
 import '../features/today/screen.dart';
@@ -229,6 +230,10 @@ final GoRouter appRouter = GoRouter(
                       ],
                     ),
                   ],
+                ),
+                GoRoute(
+                  path: 'tags',
+                  builder: (_, _) => const TagListScreen(),
                 ),
                 GoRoute(
                   path: 'measurements',

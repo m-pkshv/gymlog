@@ -489,43 +489,51 @@
   },
   "workoutTagsAddAction": "Add tag",
   "@workoutTagsAddAction": {
-    "description": "Trailing chip in the workout editor's tag row (S-03) that opens the tag picker sheet."
+    "description": "Tooltip on the trailing icon-only button (Icons.label_outline, Stage 10, owner-reported) in the workout editor's tag row (S-03) that opens the tag picker sheet."
   },
   "workoutTagsSheetTitle": "Workout tags",
   "@workoutTagsSheetTitle": {
     "description": "Title of the tag picker bottom sheet (S-03, DM 6.3/6.5)."
   },
-  "workoutTagsEmpty": "No tags yet",
+  "workoutTagsEmpty": "No tags yet. Add some from More → Tags.",
   "@workoutTagsEmpty": {
-    "description": "Empty state inside the tag picker sheet (S-03) before any tag has been created."
+    "description": "Empty state inside the tag picker sheet (S-03) when no tag exists yet -- points at the app-wide tag management screen (Stage 10, owner-reported), since this sheet can no longer create tags itself."
   },
   "workoutTagsLoadError": "Couldn't load tags",
   "@workoutTagsLoadError": {
-    "description": "Error state inside the tag picker sheet (S-03)."
+    "description": "Error state inside the tag picker sheet (S-03), and reused for the tag management screen's error state."
+  },
+  "tagsMenuTitle": "Tags",
+  "@tagsMenuTitle": {
+    "description": "\"Ещё\" menu item and AppBar title for the app-wide tag management screen (Stage 10, owner-reported) -- create/delete tags, separate from assigning them to a workout."
+  },
+  "tagsEmptyTitle": "No tags yet",
+  "@tagsEmptyTitle": {
+    "description": "Full-screen empty state headline on the tag management screen (Stage 10, owner-reported), before any tag has been created."
   },
   "createTagAction": "Create tag",
   "@createTagAction": {
-    "description": "Button in the tag picker sheet (S-03) that opens the create-tag dialog."
+    "description": "FAB tooltip and empty-state button on the tag management screen (Ещё → Теги, Stage 10, owner-reported) that opens the create-tag dialog -- the only place tags are created now."
   },
   "createTagTitle": "New tag",
   "@createTagTitle": {
-    "description": "Title of the create-tag dialog (S-03, DM 6.3)."
+    "description": "Title of the create-tag dialog (Ещё → Теги, DM 6.3)."
   },
   "createTagError": "Couldn't create the tag",
   "@createTagError": {
-    "description": "Error shown in the create-tag dialog (S-03) when WorkoutTagService.create rejects the name (empty, too long, or a duplicate)."
+    "description": "Error shown in the create-tag dialog when WorkoutTagService.create rejects the name (empty, too long, or a duplicate)."
   },
   "tagNameLabel": "Name",
   "@tagNameLabel": {
-    "description": "Text field label in the create-tag dialog (S-03, DM 6.3: 1-30 chars)."
+    "description": "Text field label in the create-tag dialog (DM 6.3: 1-30 chars)."
   },
   "deleteTagAction": "Delete",
   "@deleteTagAction": {
-    "description": "Confirm button in the delete-tag dialog (S-03, DM 10) -- deletes even a built-in muscle-group tag (Stage 10, owner-confirmed)."
+    "description": "Confirm button in the delete-tag dialog, and the delete icon button's tooltip on the tag management screen (Ещё → Теги, DM 10) -- deletes even a built-in muscle-group tag (Stage 10, owner-confirmed)."
   },
   "deleteTagConfirmTitle": "Delete tag?",
   "@deleteTagConfirmTitle": {
-    "description": "Title of the delete-tag confirmation dialog (S-03, DM 10)."
+    "description": "Title of the delete-tag confirmation dialog (Ещё → Теги, DM 10)."
   },
   "deleteTagConfirmMessage": "{count, plural, =0{This tag isn't used by any workout.} one{This tag will be removed from {count} workout.} other{This tag will be removed from {count} workouts.}}",
   "@deleteTagConfirmMessage": {

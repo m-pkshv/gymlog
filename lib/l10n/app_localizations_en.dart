@@ -456,10 +456,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get workoutTagsSheetTitle => 'Workout tags';
 
   @override
-  String get workoutTagsEmpty => 'No tags yet';
+  String get workoutTagsEmpty => 'No tags yet. Add some from More → Tags.';
 
   @override
   String get workoutTagsLoadError => 'Couldn\'t load tags';
+
+  @override
+  String get tagsMenuTitle => 'Tags';
+
+  @override
+  String get tagsEmptyTitle => 'No tags yet';
 
   @override
   String get createTagAction => 'Create tag';

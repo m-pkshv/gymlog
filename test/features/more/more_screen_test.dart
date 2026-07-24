@@ -8,6 +8,7 @@ import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
 import 'package:gymlog/features/more/screen.dart';
 import 'package:gymlog/features/settings/screen.dart';
+import 'package:gymlog/features/tags/screen.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
 Widget _appUnderTest(AppDatabase db) {
@@ -19,6 +20,7 @@ Widget _appUnderTest(AppDatabase db) {
         builder: (_, _) => const MoreScreen(),
         routes: [
           GoRoute(path: 'settings', builder: (_, _) => const SettingsScreen()),
+          GoRoute(path: 'tags', builder: (_, _) => const TagListScreen()),
         ],
       ),
     ],
@@ -51,10 +53,30 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Templates'), findsOneWidget);
+    expect(find.text('Tags'), findsOneWidget);
     expect(find.text('Measurements'), findsOneWidget);
     expect(find.text('Import/Export'), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);
   });
+
+  testWidgets(
+    'tapping "Tags" opens the tag management screen (Stage 10, '
+    'owner-reported)',
+    (tester) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Tags'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TagListScreen), findsOneWidget);
+
+      // Let drift's watch-stream unsubscribe timer fire before flutter_test's
+      // pending-timer check runs (documented CLAUDE.md finding).
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    },
+  );
 
   testWidgets('tapping "Settings" opens the S-17 settings screen', (
     tester,

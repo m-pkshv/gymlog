@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 
 /// S-11 "Ещё" placeholder (04_UI_UX_SPEC.md, section 5) — menu to
-/// templates/measurements/import-export/settings. All four destinations
-/// exist now (Stages 5, 6, 8, 9); this screen itself stays a plain menu, as
-/// 04 describes S-11.
+/// templates/tags/measurements/import-export/settings. All destinations
+/// exist now (Stages 5, 6, 8, 9, 10); this screen itself stays a plain
+/// menu, as 04 describes S-11.
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
 
@@ -21,6 +21,11 @@ class MoreScreen extends StatelessWidget {
             leading: const Icon(Icons.copy_all_outlined),
             title: Text(l10n.templatesTitle),
             onTap: () => context.push('/more/templates'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.label_outline),
+            title: Text(l10n.tagsMenuTitle),
+            onTap: () => context.push('/more/tags'),
           ),
           ListTile(
             leading: const Icon(Icons.monitor_weight_outlined),

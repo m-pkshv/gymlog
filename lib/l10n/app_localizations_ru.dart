@@ -460,10 +460,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get workoutTagsSheetTitle => 'Теги тренировки';
 
   @override
-  String get workoutTagsEmpty => 'Тегов пока нет';
+  String get workoutTagsEmpty => 'Тегов пока нет. Добавьте их в «Ещё → Теги».';
 
   @override
   String get workoutTagsLoadError => 'Не удалось загрузить теги';
+
+  @override
+  String get tagsMenuTitle => 'Теги';
+
+  @override
+  String get tagsEmptyTitle => 'Тегов пока нет';
 
   @override
   String get createTagAction => 'Создать тег';

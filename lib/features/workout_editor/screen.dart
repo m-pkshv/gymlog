@@ -759,10 +759,15 @@ class _RestTimerBar extends ConsumerWidget {
 }
 
 /// Assigned-tags row (S-03: "теги (чипы + «+»)") — read-only chips for each
-/// tag plus a trailing "+" that opens [TagPickerSheet]. Hidden entirely
-/// when `AppSettings.showTags` is off (S-17: "выключение скрывает чипы и
-/// фильтр тегов, данные не меняются") — this only affects visibility, the
-/// workout's tag links are untouched.
+/// tag plus a trailing icon button that opens [TagPickerSheet]. Hidden
+/// entirely when `AppSettings.showTags` is off (S-17: "выключение скрывает
+/// чипы и фильтр тегов, данные не меняются") — this only affects
+/// visibility, the workout's tag links are untouched.
+///
+/// Stage 10, owner-reported: the trailing trigger is icon-only
+/// (`Icons.label_outline`, the conventional "tag" glyph) instead of a
+/// labelled "+ Добавить тег" chip — shorter, and reads clearly next to the
+/// assigned-tag chips it sits among.
 class _TagsRow extends ConsumerWidget {
   const _TagsRow({required this.workoutId, required this.tags});
 
@@ -783,9 +788,9 @@ class _TagsRow extends ConsumerWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           for (final tag in tags) WorkoutTagChip(tag: tag),
-          ActionChip(
-            avatar: const Icon(Icons.add, size: 18),
-            label: Text(l10n.workoutTagsAddAction),
+          IconButton(
+            icon: const Icon(Icons.label_outline),
+            tooltip: l10n.workoutTagsAddAction,
             visualDensity: VisualDensity.compact,
             onPressed: () => showModalBottomSheet<void>(
               context: context,

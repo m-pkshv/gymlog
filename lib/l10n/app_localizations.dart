@@ -950,7 +950,7 @@ abstract class AppLocalizations {
   /// **'No past results to copy yet'**
   String get copyLastPerformanceEmpty;
 
-  /// Trailing chip in the workout editor's tag row (S-03) that opens the tag picker sheet.
+  /// Tooltip on the trailing icon-only button (Icons.label_outline, Stage 10, owner-reported) in the workout editor's tag row (S-03) that opens the tag picker sheet.
   ///
   /// In en, this message translates to:
   /// **'Add tag'**
@@ -962,49 +962,61 @@ abstract class AppLocalizations {
   /// **'Workout tags'**
   String get workoutTagsSheetTitle;
 
-  /// Empty state inside the tag picker sheet (S-03) before any tag has been created.
+  /// Empty state inside the tag picker sheet (S-03) when no tag exists yet -- points at the app-wide tag management screen (Stage 10, owner-reported), since this sheet can no longer create tags itself.
   ///
   /// In en, this message translates to:
-  /// **'No tags yet'**
+  /// **'No tags yet. Add some from More → Tags.'**
   String get workoutTagsEmpty;
 
-  /// Error state inside the tag picker sheet (S-03).
+  /// Error state inside the tag picker sheet (S-03), and reused for the tag management screen's error state.
   ///
   /// In en, this message translates to:
   /// **'Couldn\'t load tags'**
   String get workoutTagsLoadError;
 
-  /// Button in the tag picker sheet (S-03) that opens the create-tag dialog.
+  /// "Ещё" menu item and AppBar title for the app-wide tag management screen (Stage 10, owner-reported) -- create/delete tags, separate from assigning them to a workout.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get tagsMenuTitle;
+
+  /// Full-screen empty state headline on the tag management screen (Stage 10, owner-reported), before any tag has been created.
+  ///
+  /// In en, this message translates to:
+  /// **'No tags yet'**
+  String get tagsEmptyTitle;
+
+  /// FAB tooltip and empty-state button on the tag management screen (Ещё → Теги, Stage 10, owner-reported) that opens the create-tag dialog -- the only place tags are created now.
   ///
   /// In en, this message translates to:
   /// **'Create tag'**
   String get createTagAction;
 
-  /// Title of the create-tag dialog (S-03, DM 6.3).
+  /// Title of the create-tag dialog (Ещё → Теги, DM 6.3).
   ///
   /// In en, this message translates to:
   /// **'New tag'**
   String get createTagTitle;
 
-  /// Error shown in the create-tag dialog (S-03) when WorkoutTagService.create rejects the name (empty, too long, or a duplicate).
+  /// Error shown in the create-tag dialog when WorkoutTagService.create rejects the name (empty, too long, or a duplicate).
   ///
   /// In en, this message translates to:
   /// **'Couldn\'t create the tag'**
   String get createTagError;
 
-  /// Text field label in the create-tag dialog (S-03, DM 6.3: 1-30 chars).
+  /// Text field label in the create-tag dialog (DM 6.3: 1-30 chars).
   ///
   /// In en, this message translates to:
   /// **'Name'**
   String get tagNameLabel;
 
-  /// Confirm button in the delete-tag dialog (S-03, DM 10) -- deletes even a built-in muscle-group tag (Stage 10, owner-confirmed).
+  /// Confirm button in the delete-tag dialog, and the delete icon button's tooltip on the tag management screen (Ещё → Теги, DM 10) -- deletes even a built-in muscle-group tag (Stage 10, owner-confirmed).
   ///
   /// In en, this message translates to:
   /// **'Delete'**
   String get deleteTagAction;
 
-  /// Title of the delete-tag confirmation dialog (S-03, DM 10).
+  /// Title of the delete-tag confirmation dialog (Ещё → Теги, DM 10).
   ///
   /// In en, this message translates to:
   /// **'Delete tag?'**
