@@ -124,7 +124,6 @@ extension ExerciseSetRowMapper on drift.ExerciseSet {
       inclinePercent: inclinePercent,
       avgHeartRate: avgHeartRate,
       side: BodySide.values.byName(side),
-      comment: comment,
       createdAt: DateTime.parse(createdAt),
       updatedAt: DateTime.parse(updatedAt),
       isDeleted: isDeleted,
@@ -153,7 +152,6 @@ extension ExerciseSetCompanionMapper on ExerciseSet {
       inclinePercent: Value(inclinePercent),
       avgHeartRate: Value(avgHeartRate),
       side: Value(side.name),
-      comment: Value(comment),
       createdAt: createdAt.toUtc().toIso8601String(),
       updatedAt: updatedAt.toUtc().toIso8601String(),
     );
@@ -176,7 +174,6 @@ extension ExerciseSetCompanionMapper on ExerciseSet {
       inclinePercent: Value(inclinePercent),
       avgHeartRate: Value(avgHeartRate),
       side: Value(side.name),
-      comment: Value(comment),
       updatedAt: Value(updatedAt.toUtc().toIso8601String()),
     );
   }

@@ -51,7 +51,6 @@ class CommentLengthLimits {
 
   static const int workout = 2000;
   static const int workoutExercise = 1000;
-  static const int exerciseSet = 500;
   static const int workoutTemplate = 2000;
 }
 
@@ -107,7 +106,10 @@ class ExportFormat {
   /// `is_warmup` column -- the warm-up concept was removed from the app.
   /// v3 (Stage 10, 2026-07-23, owner-confirmed): `measurements.csv` dropped
   /// the `comment` column -- per-entry measurement comments were removed.
-  static const int formatVersion = 3;
+  /// v4 (Stage 10, 2026-07-24, owner-confirmed): `workouts.csv` dropped the
+  /// `set_comment` column -- per-set comments were removed in favor of a
+  /// "delete set" action.
+  static const int formatVersion = 4;
 
   /// Mirrors `pubspec.yaml`'s semantic version (currently `1.0.0+1`) --
   /// there's no `package_info_plus` dependency (not in TS 3) to read it at

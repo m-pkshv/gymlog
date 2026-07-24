@@ -26,7 +26,6 @@ class ExerciseSet {
     this.resistance,
     this.inclinePercent,
     this.avgHeartRate,
-    this.comment,
   });
 
   final String id;
@@ -47,7 +46,6 @@ class ExerciseSet {
   final double? inclinePercent;
   final int? avgHeartRate;
   final BodySide side;
-  final String? comment;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isDeleted;
@@ -65,7 +63,7 @@ class ExerciseSet {
     );
   }
 
-  /// Sentinel default for the nullable numeric/comment params of [copyWith]:
+  /// Sentinel default for the nullable numeric params of [copyWith]:
   /// distinguishes "not passed, keep the current value" from "explicitly
   /// passed `null`, clear the field" — the editor (S-03) needs to be able to
   /// clear a field the user backspaced to empty, which a plain `?? this.x`
@@ -88,7 +86,6 @@ class ExerciseSet {
     Object? inclinePercent = _unset,
     Object? avgHeartRate = _unset,
     BodySide? side,
-    Object? comment = _unset,
     DateTime? updatedAt,
     bool? isDeleted,
   }) {
@@ -133,7 +130,6 @@ class ExerciseSet {
           ? this.avgHeartRate
           : avgHeartRate as int?,
       side: side ?? this.side,
-      comment: identical(comment, _unset) ? this.comment : comment as String?,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,

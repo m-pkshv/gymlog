@@ -74,6 +74,80 @@ void main() {
     },
   );
 
+  group(
+    'deleteTemplateSet / restoreTemplateSet (Stage 10, owner-reported)',
+    () {
+      test(
+        'deleteTemplateSet soft-deletes the set and renumbers the '
+        'remaining ones contiguously',
+        () async {
+          final exercise = await exercises.create(
+            name: 'Squat',
+            exerciseType: ExerciseType.strength,
+          );
+          final template = await templates.create(name: 'Leg day');
+          final templateExercise = await templates.addExercise(
+            templateId: template.id,
+            exerciseId: exercise.id,
+          );
+          final first = await templates.addSet(
+            templateExerciseId: templateExercise.id,
+          );
+          final second = await templates.addSet(
+            templateExerciseId: templateExercise.id,
+          );
+          final third = await templates.addSet(
+            templateExerciseId: templateExercise.id,
+          );
+
+          await templates.deleteTemplateSet(second.id);
+
+          final details = await templates.getDetails(template.id);
+          final sets = details!.exercises.single.sets;
+          expect(sets.map((s) => s.id).toList(), [first.id, third.id]);
+          expect(sets.map((s) => s.setNumber).toList(), [1, 2]);
+        },
+      );
+
+      test(
+        'restoreTemplateSet un-deletes the set and renumbers back to the '
+        'original order',
+        () async {
+          final exercise = await exercises.create(
+            name: 'Squat',
+            exerciseType: ExerciseType.strength,
+          );
+          final template = await templates.create(name: 'Leg day');
+          final templateExercise = await templates.addExercise(
+            templateId: template.id,
+            exerciseId: exercise.id,
+          );
+          final first = await templates.addSet(
+            templateExerciseId: templateExercise.id,
+          );
+          final second = await templates.addSet(
+            templateExerciseId: templateExercise.id,
+          );
+          final third = await templates.addSet(
+            templateExerciseId: templateExercise.id,
+          );
+
+          await templates.deleteTemplateSet(second.id);
+          await templates.restoreTemplateSet(second.id);
+
+          final details = await templates.getDetails(template.id);
+          final sets = details!.exercises.single.sets;
+          expect(sets.map((s) => s.id).toList(), [
+            first.id,
+            second.id,
+            third.id,
+          ]);
+          expect(sets.map((s) => s.setNumber).toList(), [1, 2, 3]);
+        },
+      );
+    },
+  );
+
   group('getDetails locale (Stage 10, DM 12)', () {
     test('resolves the embedded exercise name against ExerciseL10n when a locale is given', () async {
       final exercise = await exercises.create(

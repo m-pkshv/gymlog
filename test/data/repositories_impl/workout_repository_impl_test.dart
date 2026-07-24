@@ -122,6 +122,73 @@ void main() {
     },
   );
 
+  group('deleteSet / restoreSet (Stage 10, owner-reported, DM 10)', () {
+    test(
+      'deleteSet soft-deletes the set and renumbers the remaining ones '
+      'contiguously',
+      () async {
+        final exercise = await exercises.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+        final workout = await workouts.createDraft(date: DateTime(2026, 7, 19));
+        final workoutExercise = await workouts.addExercise(
+          workoutId: workout.id,
+          exerciseId: exercise.id,
+        );
+        final first = await workouts.addSet(
+          workoutExerciseId: workoutExercise.id,
+        );
+        final second = await workouts.addSet(
+          workoutExerciseId: workoutExercise.id,
+        );
+        final third = await workouts.addSet(
+          workoutExerciseId: workoutExercise.id,
+        );
+
+        await workouts.deleteSet(second.id);
+
+        final details = await workouts.getDetails(workout.id);
+        final sets = details!.exercises.single.sets;
+        expect(sets.map((s) => s.id).toList(), [first.id, third.id]);
+        expect(sets.map((s) => s.setNumber).toList(), [1, 2]);
+      },
+    );
+
+    test(
+      'restoreSet un-deletes the set and renumbers the exercise\'s sets '
+      'back to their original order',
+      () async {
+        final exercise = await exercises.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+        final workout = await workouts.createDraft(date: DateTime(2026, 7, 19));
+        final workoutExercise = await workouts.addExercise(
+          workoutId: workout.id,
+          exerciseId: exercise.id,
+        );
+        final first = await workouts.addSet(
+          workoutExerciseId: workoutExercise.id,
+        );
+        final second = await workouts.addSet(
+          workoutExerciseId: workoutExercise.id,
+        );
+        final third = await workouts.addSet(
+          workoutExerciseId: workoutExercise.id,
+        );
+
+        await workouts.deleteSet(second.id);
+        await workouts.restoreSet(second.id);
+
+        final details = await workouts.getDetails(workout.id);
+        final sets = details!.exercises.single.sets;
+        expect(sets.map((s) => s.id).toList(), [first.id, second.id, third.id]);
+        expect(sets.map((s) => s.setNumber).toList(), [1, 2, 3]);
+      },
+    );
+  });
+
   group('getDetails locale (Stage 10, DM 12)', () {
     test('resolves the embedded exercise name against ExerciseL10n when a locale is given', () async {
       final exercise = await exercises.create(

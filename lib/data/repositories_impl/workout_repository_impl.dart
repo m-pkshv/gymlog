@@ -405,6 +405,77 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
   }
 
   @override
+  Future<void> deleteSet(String setId) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await _db.transaction(() async {
+      final target = await (_db.select(
+        _db.exerciseSets,
+      )..where((s) => s.id.equals(setId))).getSingleOrNull();
+      if (target == null) return;
+
+      await (_db.update(
+        _db.exerciseSets,
+      )..where((s) => s.id.equals(setId))).write(
+        drift.ExerciseSetsCompanion(
+          isDeleted: const Value(true),
+          updatedAt: Value(now),
+        ),
+      );
+      await _renumberSets(target.workoutExerciseId, now);
+    });
+  }
+
+  @override
+  Future<void> restoreSet(String setId) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await _db.transaction(() async {
+      final target = await (_db.select(
+        _db.exerciseSets,
+      )..where((s) => s.id.equals(setId))).getSingleOrNull();
+      if (target == null) return;
+
+      await (_db.update(
+        _db.exerciseSets,
+      )..where((s) => s.id.equals(setId))).write(
+        drift.ExerciseSetsCompanion(
+          isDeleted: const Value(false),
+          updatedAt: Value(now),
+        ),
+      );
+      await _renumberSets(target.workoutExerciseId, now);
+    });
+  }
+
+  /// Renumbers every non-deleted set of [workoutExerciseId] contiguously
+  /// from 1, ordered by `createdAt` (sets are only ever appended, never
+  /// reordered, so creation order is original order) -- shared by
+  /// [deleteSet] and [restoreSet] so both reconstruct the same numbering
+  /// regardless of how many deletes/restores happened in between.
+  Future<void> _renumberSets(String workoutExerciseId, String now) async {
+    final rows =
+        await (_db.select(_db.exerciseSets)
+              ..where(
+                (s) =>
+                    s.workoutExerciseId.equals(workoutExerciseId) &
+                    s.isDeleted.equals(false),
+              )
+              ..orderBy([(s) => OrderingTerm.asc(s.createdAt)]))
+            .get();
+    for (var i = 0; i < rows.length; i++) {
+      final desired = i + 1;
+      if (rows[i].setNumber == desired) continue;
+      await (_db.update(
+        _db.exerciseSets,
+      )..where((s) => s.id.equals(rows[i].id))).write(
+        drift.ExerciseSetsCompanion(
+          setNumber: Value(desired),
+          updatedAt: Value(now),
+        ),
+      );
+    }
+  }
+
+  @override
   Future<List<ExerciseHistoryEntry>> getExerciseHistory(
     String exerciseId,
   ) async {

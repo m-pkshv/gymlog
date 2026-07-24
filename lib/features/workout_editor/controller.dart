@@ -323,6 +323,44 @@ class WorkoutEditorController
     }
   }
 
+  /// "Удалить" a set (S-03 set menu, Stage 10, owner-reported: there was no
+  /// way to remove a planned set once added). Soft-deletes and renumbers
+  /// remaining sets (`06_DATA_MODEL.md`, section 10) via the repository,
+  /// then reloads. Flushes pending debounced edits first, like
+  /// [duplicateLastSet] — otherwise the reload below could silently revert
+  /// an edit that hasn't been written yet. Returns whether the delete
+  /// succeeded, so the screen only offers "Undo" when there's actually
+  /// something to undo.
+  Future<bool> deleteSet(String setId) async {
+    await flushAll();
+    try {
+      await _workoutRepository.deleteSet(setId);
+      await _load();
+      return true;
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to delete set $setId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return false;
+    }
+  }
+
+  /// Reverses [deleteSet] within the Undo window.
+  Future<void> restoreSet(String setId) async {
+    try {
+      await _workoutRepository.restoreSet(setId);
+      await _load();
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to restore set $setId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
   /// "Дублировать подход" (S-03, Stage 10, owner-reported: filling every set
   /// from scratch by hand is tedious): appends a new set to
   /// [workoutExerciseId] and copies the last existing set's planned values

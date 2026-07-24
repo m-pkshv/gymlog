@@ -64,6 +64,29 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen>
         .addExercise(exercise.id);
   }
 
+  /// "Удалить" a set (S-13 set menu, Stage 10, owner-reported): mirrors
+  /// `WorkoutEditorScreen._deleteSet` — soft-delete + 5s Undo snackbar,
+  /// no confirmation dialog (DM 10, same pattern as workout/measurement
+  /// deletion).
+  Future<void> _deleteSet(String setId) async {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = ref.read(
+      templateEditorControllerProvider(widget.templateId).notifier,
+    );
+    final deleted = await controller.deleteSet(setId);
+    if (!mounted || !deleted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.setDeletedMessage),
+        duration: undoSnackbarDuration,
+        action: SnackBarAction(
+          label: l10n.undoAction,
+          onPressed: () => controller.restoreSet(setId),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -81,6 +104,7 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen>
           details: details,
           controller: controller,
           onAddExercise: _addExercise,
+          onSetDeleted: _deleteSet,
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => ErrorRetryState(
@@ -99,11 +123,13 @@ class _EditorBody extends StatelessWidget {
     required this.details,
     required this.controller,
     required this.onAddExercise,
+    required this.onSetDeleted,
   });
 
   final TemplateDetails details;
   final TemplateEditorController controller;
   final VoidCallback onAddExercise;
+  final ValueChanged<String> onSetDeleted;
 
   @override
   Widget build(BuildContext context) {
@@ -188,6 +214,7 @@ class _EditorBody extends StatelessWidget {
                           ),
                       onCommentCommit: () =>
                           controller.flushExerciseComment(templateExerciseId),
+                      onSetDeleted: onSetDeleted,
                     );
                   },
                 ),

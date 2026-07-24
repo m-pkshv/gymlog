@@ -143,8 +143,6 @@ class ExerciseSets extends Table with SoftDeleteColumns {
       )
       .withDefault(const Constant('none'))();
 
-  TextColumn get comment => text().nullable()();
-
   @override
   Set<Column> get primaryKey => {id};
 }

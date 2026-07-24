@@ -4493,17 +4493,6 @@ class $ExerciseSetsTable extends ExerciseSets
         'NOT NULL DEFAULT \'none\' CHECK (side IN (\'none\', \'left\', \'right\', \'both\'))',
     defaultValue: const CustomExpression('\'none\''),
   );
-  static const VerificationMeta _commentMeta = const VerificationMeta(
-    'comment',
-  );
-  @override
-  late final GeneratedColumn<String> comment = GeneratedColumn<String>(
-    'comment',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
   @override
   List<GeneratedColumn> get $columns => [
     createdAt,
@@ -4527,7 +4516,6 @@ class $ExerciseSetsTable extends ExerciseSets
     inclinePercent,
     avgHeartRate,
     side,
-    comment,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4707,12 +4695,6 @@ class $ExerciseSetsTable extends ExerciseSets
         side.isAcceptableOrUnknown(data['side']!, _sideMeta),
       );
     }
-    if (data.containsKey('comment')) {
-      context.handle(
-        _commentMeta,
-        comment.isAcceptableOrUnknown(data['comment']!, _commentMeta),
-      );
-    }
     return context;
   }
 
@@ -4806,10 +4788,6 @@ class $ExerciseSetsTable extends ExerciseSets
         DriftSqlType.string,
         data['${effectivePrefix}side'],
       )!,
-      comment: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}comment'],
-      ),
     );
   }
 
@@ -4841,7 +4819,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
   final double? inclinePercent;
   final int? avgHeartRate;
   final String side;
-  final String? comment;
   const ExerciseSet({
     required this.createdAt,
     required this.updatedAt,
@@ -4864,7 +4841,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
     this.inclinePercent,
     this.avgHeartRate,
     required this.side,
-    this.comment,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4916,9 +4892,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
       map['avgHeartRate'] = Variable<int>(avgHeartRate);
     }
     map['side'] = Variable<String>(side);
-    if (!nullToAbsent || comment != null) {
-      map['comment'] = Variable<String>(comment);
-    }
     return map;
   }
 
@@ -4967,9 +4940,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
           ? const Value.absent()
           : Value(avgHeartRate),
       side: Value(side),
-      comment: comment == null && nullToAbsent
-          ? const Value.absent()
-          : Value(comment),
     );
   }
 
@@ -5000,7 +4970,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
       inclinePercent: serializer.fromJson<double?>(json['inclinePercent']),
       avgHeartRate: serializer.fromJson<int?>(json['avgHeartRate']),
       side: serializer.fromJson<String>(json['side']),
-      comment: serializer.fromJson<String?>(json['comment']),
     );
   }
   @override
@@ -5028,7 +4997,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
       'inclinePercent': serializer.toJson<double?>(inclinePercent),
       'avgHeartRate': serializer.toJson<int?>(avgHeartRate),
       'side': serializer.toJson<String>(side),
-      'comment': serializer.toJson<String?>(comment),
     };
   }
 
@@ -5054,7 +5022,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
     Value<double?> inclinePercent = const Value.absent(),
     Value<int?> avgHeartRate = const Value.absent(),
     String? side,
-    Value<String?> comment = const Value.absent(),
   }) => ExerciseSet(
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -5091,7 +5058,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
         : this.inclinePercent,
     avgHeartRate: avgHeartRate.present ? avgHeartRate.value : this.avgHeartRate,
     side: side ?? this.side,
-    comment: comment.present ? comment.value : this.comment,
   );
   ExerciseSet copyWithCompanion(ExerciseSetsCompanion data) {
     return ExerciseSet(
@@ -5142,7 +5108,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
           ? data.avgHeartRate.value
           : this.avgHeartRate,
       side: data.side.present ? data.side.value : this.side,
-      comment: data.comment.present ? data.comment.value : this.comment,
     );
   }
 
@@ -5169,8 +5134,7 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
           ..write('resistance: $resistance, ')
           ..write('inclinePercent: $inclinePercent, ')
           ..write('avgHeartRate: $avgHeartRate, ')
-          ..write('side: $side, ')
-          ..write('comment: $comment')
+          ..write('side: $side')
           ..write(')'))
         .toString();
   }
@@ -5198,7 +5162,6 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
     inclinePercent,
     avgHeartRate,
     side,
-    comment,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -5224,8 +5187,7 @@ class ExerciseSet extends DataClass implements Insertable<ExerciseSet> {
           other.resistance == this.resistance &&
           other.inclinePercent == this.inclinePercent &&
           other.avgHeartRate == this.avgHeartRate &&
-          other.side == this.side &&
-          other.comment == this.comment);
+          other.side == this.side);
 }
 
 class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
@@ -5250,7 +5212,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
   final Value<double?> inclinePercent;
   final Value<int?> avgHeartRate;
   final Value<String> side;
-  final Value<String?> comment;
   final Value<int> rowid;
   const ExerciseSetsCompanion({
     this.createdAt = const Value.absent(),
@@ -5274,7 +5235,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
     this.inclinePercent = const Value.absent(),
     this.avgHeartRate = const Value.absent(),
     this.side = const Value.absent(),
-    this.comment = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ExerciseSetsCompanion.insert({
@@ -5299,7 +5259,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
     this.inclinePercent = const Value.absent(),
     this.avgHeartRate = const Value.absent(),
     this.side = const Value.absent(),
-    this.comment = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : createdAt = Value(createdAt),
        updatedAt = Value(updatedAt),
@@ -5328,7 +5287,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
     Expression<double>? inclinePercent,
     Expression<int>? avgHeartRate,
     Expression<String>? side,
-    Expression<String>? comment,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5353,7 +5311,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
       if (inclinePercent != null) 'inclinePercent': inclinePercent,
       if (avgHeartRate != null) 'avgHeartRate': avgHeartRate,
       if (side != null) 'side': side,
-      if (comment != null) 'comment': comment,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5380,7 +5337,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
     Value<double?>? inclinePercent,
     Value<int?>? avgHeartRate,
     Value<String>? side,
-    Value<String?>? comment,
     Value<int>? rowid,
   }) {
     return ExerciseSetsCompanion(
@@ -5405,7 +5361,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
       inclinePercent: inclinePercent ?? this.inclinePercent,
       avgHeartRate: avgHeartRate ?? this.avgHeartRate,
       side: side ?? this.side,
-      comment: comment ?? this.comment,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5476,9 +5431,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
     if (side.present) {
       map['side'] = Variable<String>(side.value);
     }
-    if (comment.present) {
-      map['comment'] = Variable<String>(comment.value);
-    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5509,7 +5461,6 @@ class ExerciseSetsCompanion extends UpdateCompanion<ExerciseSet> {
           ..write('inclinePercent: $inclinePercent, ')
           ..write('avgHeartRate: $avgHeartRate, ')
           ..write('side: $side, ')
-          ..write('comment: $comment, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -15582,7 +15533,6 @@ typedef $$ExerciseSetsTableCreateCompanionBuilder =
       Value<double?> inclinePercent,
       Value<int?> avgHeartRate,
       Value<String> side,
-      Value<String?> comment,
       Value<int> rowid,
     });
 typedef $$ExerciseSetsTableUpdateCompanionBuilder =
@@ -15608,7 +15558,6 @@ typedef $$ExerciseSetsTableUpdateCompanionBuilder =
       Value<double?> inclinePercent,
       Value<int?> avgHeartRate,
       Value<String> side,
-      Value<String?> comment,
       Value<int> rowid,
     });
 
@@ -15761,11 +15710,6 @@ class $$ExerciseSetsTableFilterComposer
 
   ColumnFilters<String> get side => $composableBuilder(
     column: $table.side,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get comment => $composableBuilder(
-    column: $table.comment,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -15927,11 +15871,6 @@ class $$ExerciseSetsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get comment => $composableBuilder(
-    column: $table.comment,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   $$WorkoutExercisesTableOrderingComposer get workoutExerciseId {
     final $$WorkoutExercisesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -16049,9 +15988,6 @@ class $$ExerciseSetsTableAnnotationComposer
   GeneratedColumn<String> get side =>
       $composableBuilder(column: $table.side, builder: (column) => column);
 
-  GeneratedColumn<String> get comment =>
-      $composableBuilder(column: $table.comment, builder: (column) => column);
-
   $$WorkoutExercisesTableAnnotationComposer get workoutExerciseId {
     final $$WorkoutExercisesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -16153,7 +16089,6 @@ class $$ExerciseSetsTableTableManager
                 Value<double?> inclinePercent = const Value.absent(),
                 Value<int?> avgHeartRate = const Value.absent(),
                 Value<String> side = const Value.absent(),
-                Value<String?> comment = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExerciseSetsCompanion(
                 createdAt: createdAt,
@@ -16177,7 +16112,6 @@ class $$ExerciseSetsTableTableManager
                 inclinePercent: inclinePercent,
                 avgHeartRate: avgHeartRate,
                 side: side,
-                comment: comment,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -16203,7 +16137,6 @@ class $$ExerciseSetsTableTableManager
                 Value<double?> inclinePercent = const Value.absent(),
                 Value<int?> avgHeartRate = const Value.absent(),
                 Value<String> side = const Value.absent(),
-                Value<String?> comment = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExerciseSetsCompanion.insert(
                 createdAt: createdAt,
@@ -16227,7 +16160,6 @@ class $$ExerciseSetsTableTableManager
                 inclinePercent: inclinePercent,
                 avgHeartRate: avgHeartRate,
                 side: side,
-                comment: comment,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

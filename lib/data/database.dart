@@ -52,7 +52,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration {
@@ -74,6 +74,13 @@ class AppDatabase extends _$AppDatabase {
           // v2 -> v3 (Stage 10, 2026-07-23): per-entry measurement comments
           // removed in favor of a faster bulk-entry flow (S-14 "Замеры").
           await m.dropColumn(bodyMeasurements, 'comment');
+        }
+        if (from < 4) {
+          // v3 -> v4 (Stage 10, 2026-07-24): per-set comments removed in
+          // favor of a "delete set" action in the same screen spot (DM 10
+          // already specified soft-delete + renumbering for sets; this is
+          // the first time it's wired up to UI).
+          await m.dropColumn(exerciseSets, 'comment');
         }
       },
       beforeOpen: (details) async {

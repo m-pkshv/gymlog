@@ -635,13 +635,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exerciseCommentLabel => 'Comment';
 
   @override
-  String get setCommentAction => 'Comment';
+  String get deleteSetAction => 'Delete set';
 
   @override
-  String get setCommentTitle => 'Set comment';
-
-  @override
-  String get setCommentLabel => 'Comment';
+  String get setDeletedMessage => 'Set deleted';
 
   @override
   String get deleteWorkoutAction => 'Delete';

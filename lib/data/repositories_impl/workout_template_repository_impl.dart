@@ -379,6 +379,78 @@ class WorkoutTemplateRepositoryImpl implements WorkoutTemplateRepository {
   }
 
   @override
+  Future<void> deleteTemplateSet(String setId) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await _db.transaction(() async {
+      final target = await (_db.select(
+        _db.templateSets,
+      )..where((s) => s.id.equals(setId))).getSingleOrNull();
+      if (target == null) return;
+
+      await (_db.update(
+        _db.templateSets,
+      )..where((s) => s.id.equals(setId))).write(
+        drift.TemplateSetsCompanion(
+          isDeleted: const Value(true),
+          updatedAt: Value(now),
+        ),
+      );
+      await _renumberTemplateSets(target.templateExerciseId, now);
+    });
+  }
+
+  @override
+  Future<void> restoreTemplateSet(String setId) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await _db.transaction(() async {
+      final target = await (_db.select(
+        _db.templateSets,
+      )..where((s) => s.id.equals(setId))).getSingleOrNull();
+      if (target == null) return;
+
+      await (_db.update(
+        _db.templateSets,
+      )..where((s) => s.id.equals(setId))).write(
+        drift.TemplateSetsCompanion(
+          isDeleted: const Value(false),
+          updatedAt: Value(now),
+        ),
+      );
+      await _renumberTemplateSets(target.templateExerciseId, now);
+    });
+  }
+
+  /// Mirrors `WorkoutRepositoryImpl._renumberSets`: renumbers every
+  /// non-deleted set of [templateExerciseId] contiguously from 1, ordered
+  /// by `createdAt`.
+  Future<void> _renumberTemplateSets(
+    String templateExerciseId,
+    String now,
+  ) async {
+    final rows =
+        await (_db.select(_db.templateSets)
+              ..where(
+                (s) =>
+                    s.templateExerciseId.equals(templateExerciseId) &
+                    s.isDeleted.equals(false),
+              )
+              ..orderBy([(s) => OrderingTerm.asc(s.createdAt)]))
+            .get();
+    for (var i = 0; i < rows.length; i++) {
+      final desired = i + 1;
+      if (rows[i].setNumber == desired) continue;
+      await (_db.update(
+        _db.templateSets,
+      )..where((s) => s.id.equals(rows[i].id))).write(
+        drift.TemplateSetsCompanion(
+          setNumber: Value(desired),
+          updatedAt: Value(now),
+        ),
+      );
+    }
+  }
+
+  @override
   Future<void> reorderExercises({
     required String templateId,
     required List<String> orderedTemplateExerciseIds,

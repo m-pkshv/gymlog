@@ -183,6 +183,41 @@ class TemplateEditorController
     }
   }
 
+  /// "Удалить" a set (S-13 set menu, Stage 10, owner-reported) — the
+  /// template counterpart of `WorkoutEditorController.deleteSet`: soft-
+  /// deletes and renumbers remaining sets, then reloads. Flushes pending
+  /// debounced edits first for the same reason as [duplicateLastSet].
+  /// Returns whether the delete succeeded.
+  Future<bool> deleteSet(String setId) async {
+    await flushAll();
+    try {
+      await _repository.deleteTemplateSet(setId);
+      await _load();
+      return true;
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to delete template set $setId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return false;
+    }
+  }
+
+  /// Reverses [deleteSet] within the Undo window.
+  Future<void> restoreSet(String setId) async {
+    try {
+      await _repository.restoreTemplateSet(setId);
+      await _load();
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to restore template set $setId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
   /// "Дублировать подход" (S-13, Stage 10) — the template counterpart of
   /// `WorkoutEditorController.duplicateLastSet`: appends a new set and
   /// copies the last existing set's planned values into it. A no-op if the

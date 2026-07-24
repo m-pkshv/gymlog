@@ -69,6 +69,20 @@ abstract class WorkoutRepository {
   /// Persists set field changes — the autosave write (TS 5).
   Future<void> updateSet(ExerciseSet set);
 
+  /// Soft-deletes [setId] (S-03 set menu "Удалить", 06_DATA_MODEL.md
+  /// section 10: "WorkoutExercise / ExerciseSet — мягкое удаление + Undo;
+  /// перенумерация setNumber... в той же транзакции"): marks the row
+  /// `isDeleted = true`, then renumbers the exercise's remaining
+  /// non-deleted sets to stay contiguous starting at 1 (ordered by
+  /// `createdAt`, since sets are only ever appended, never reordered).
+  Future<void> deleteSet(String setId);
+
+  /// Reverses [deleteSet] within the Undo window: un-marks `isDeleted` on
+  /// [setId], then renumbers every non-deleted set of that exercise
+  /// (including the restored one) the same way [deleteSet] does, so the
+  /// original order is reconstructed.
+  Future<void> restoreSet(String setId);
+
   /// Past occurrences of [exerciseId] in completed, non-deleted workouts,
   /// most recent date first — the exercise card's "История" tab (S-07,
   /// Stage 2).

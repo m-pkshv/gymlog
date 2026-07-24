@@ -1298,23 +1298,17 @@ abstract class AppLocalizations {
   /// **'Comment'**
   String get exerciseCommentLabel;
 
-  /// Tooltip on the per-set comment icon button in the sets table (S-03, Stage 3) that opens the comment dialog.
+  /// Tooltip on the per-set delete icon button in the sets table (S-03/S-13, Stage 10) that soft-deletes the set with a 5s Undo snackbar. Replaced the per-set comment icon (removed, Stage 10).
   ///
   /// In en, this message translates to:
-  /// **'Comment'**
-  String get setCommentAction;
+  /// **'Delete set'**
+  String get deleteSetAction;
 
-  /// Title of the per-set comment dialog (S-03, Stage 3, DM 6.7, max 500 chars).
+  /// Snackbar message shown after deleting a set (S-03/S-13, Stage 10, DM 10), with an Undo action.
   ///
   /// In en, this message translates to:
-  /// **'Set comment'**
-  String get setCommentTitle;
-
-  /// Text field label inside the per-set comment dialog (S-03, Stage 3).
-  ///
-  /// In en, this message translates to:
-  /// **'Comment'**
-  String get setCommentLabel;
+  /// **'Set deleted'**
+  String get setDeletedMessage;
 
   /// "⋮" menu action on a History card (S-02, Stage 3, DM 10) that soft-deletes the workout with a 5s Undo snackbar.
   ///

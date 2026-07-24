@@ -116,6 +116,30 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
     ).showSnackBar(SnackBar(content: Text(l10n.copyLastPerformanceEmpty)));
   }
 
+  /// "Удалить" a set (S-03 set menu, Stage 10, owner-reported): soft-delete
+  /// + 5s Undo snackbar, same pattern as workout/measurement deletion
+  /// (DM 10) — the confirmation dialog other deletions use (tags) doesn't
+  /// apply here, since a set is trivially cheap to re-add if the Undo
+  /// window is missed.
+  Future<void> _deleteSet(String setId) async {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = ref.read(
+      workoutEditorControllerProvider(widget.workoutId).notifier,
+    );
+    final deleted = await controller.deleteSet(setId);
+    if (!mounted || !deleted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.setDeletedMessage),
+        duration: undoSnackbarDuration,
+        action: SnackBarAction(
+          label: l10n.undoAction,
+          onPressed: () => controller.restoreSet(setId),
+        ),
+      ),
+    );
+  }
+
   Future<void> _changeStatus(WorkoutStatus newStatus) async {
     final l10n = AppLocalizations.of(context)!;
 
@@ -323,6 +347,7 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
           onCopyLastPerformance: _copyLastPerformance,
           onMoveDate: _moveDate,
           onSetCompletedChanged: _onSetCompletedChanged,
+          onSetDeleted: _deleteSet,
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => ErrorRetryState(
@@ -345,6 +370,7 @@ class _EditorBody extends StatelessWidget {
     required this.onCopyLastPerformance,
     required this.onMoveDate,
     required this.onSetCompletedChanged,
+    required this.onSetDeleted,
   });
 
   final WorkoutDetails details;
@@ -354,6 +380,7 @@ class _EditorBody extends StatelessWidget {
   final void Function(String workoutExerciseId) onCopyLastPerformance;
   final void Function(DateTime currentDate) onMoveDate;
   final void Function(String setId, bool value) onSetCompletedChanged;
+  final ValueChanged<String> onSetDeleted;
 
   @override
   Widget build(BuildContext context) {
@@ -461,13 +488,7 @@ class _EditorBody extends StatelessWidget {
                           ),
                       onCommentCommit: () =>
                           controller.flushExerciseComment(workoutExerciseId),
-                      onSetCommentSaved: (setId, comment) {
-                        controller.editSet(
-                          setId,
-                          (set) => set.copyWith(comment: comment),
-                        );
-                        controller.flushSet(setId);
-                      },
+                      onSetDeleted: onSetDeleted,
                       onProgressionDecisionChanged: (decision) => controller
                           .setProgressionDecision(workoutExerciseId, decision),
                     );

@@ -32,6 +32,7 @@ class TemplateExerciseCard extends StatelessWidget {
     required this.onMoveDown,
     required this.onCommentChanged,
     required this.onCommentCommit,
+    required this.onSetDeleted,
   });
 
   final TemplateExerciseDetails details;
@@ -50,6 +51,7 @@ class TemplateExerciseCard extends StatelessWidget {
   final VoidCallback onMoveDown;
   final ValueChanged<String> onCommentChanged;
   final VoidCallback onCommentCommit;
+  final ValueChanged<String> onSetDeleted;
 
   @override
   Widget build(BuildContext context) {
@@ -126,6 +128,7 @@ class TemplateExerciseCard extends StatelessWidget {
                 onFieldChanged: (field, value) =>
                     onFieldChanged(set.id, field, value),
                 onFieldCommit: (field) => onFieldCommit(set.id, field),
+                onDelete: () => onSetDeleted(set.id),
               ),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,

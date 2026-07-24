@@ -41,7 +41,7 @@ class ExerciseCard extends ConsumerWidget {
     required this.onMoveDown,
     required this.onCommentChanged,
     required this.onCommentCommit,
-    required this.onSetCommentSaved,
+    required this.onSetDeleted,
     required this.onProgressionDecisionChanged,
   });
 
@@ -69,7 +69,7 @@ class ExerciseCard extends ConsumerWidget {
   final VoidCallback onMoveDown;
   final ValueChanged<String> onCommentChanged;
   final VoidCallback onCommentCommit;
-  final void Function(String setId, String comment) onSetCommentSaved;
+  final ValueChanged<String> onSetDeleted;
   final ValueChanged<ProgressionDecision> onProgressionDecisionChanged;
 
   @override
@@ -168,8 +168,7 @@ class ExerciseCard extends ConsumerWidget {
                     onFieldCommit(set.id, field, actual),
                 onCompletedChanged: (value) =>
                     onCompletedChanged(set.id, value),
-                onCommentSaved: (comment) =>
-                    onSetCommentSaved(set.id, comment),
+                onDelete: () => onSetDeleted(set.id),
               ),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,

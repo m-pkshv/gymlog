@@ -21,6 +21,9 @@ import 'package:gymlog/domain/enums.dart';
 /// v2 -> v3 (2026-07-23, owner-confirmed): `BodyMeasurements.comment`
 /// dropped -- per-entry measurement comments were removed in favor of a
 /// faster bulk-entry flow.
+/// v3 -> v4 (2026-07-24, owner-confirmed): `ExerciseSets.comment` dropped --
+/// per-set comments were removed in favor of a "delete set" action in the
+/// same screen spot.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -133,6 +136,12 @@ void main() {
       await firstRun.customStatement(
         'ALTER TABLE "BodyMeasurements" ADD COLUMN "comment" TEXT',
       );
+      await firstRun.customStatement(
+        'ALTER TABLE "ExerciseSets" ADD COLUMN "comment" TEXT',
+      );
+      await firstRun.customStatement(
+        'UPDATE "ExerciseSets" SET "comment" = \'felt heavy\' WHERE "id" = \'s1\'',
+      );
       await firstRun.customStatement('PRAGMA user_version = 1');
       await firstRun.close();
 
@@ -161,11 +170,15 @@ void main() {
         bodyMeasurementColumns.map((r) => r.data['name']),
         isNot(contains('comment')),
       );
+      expect(
+        exerciseSetColumns.map((r) => r.data['name']),
+        isNot(contains('comment')),
+      );
 
       final versionRow = await secondRun
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(versionRow.data['user_version'], 3);
+      expect(versionRow.data['user_version'], 4);
 
       final fkRows = await secondRun.customSelect('PRAGMA foreign_keys').get();
       expect(fkRows.single.data['foreign_keys'], 1);

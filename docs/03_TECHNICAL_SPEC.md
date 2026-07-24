@@ -158,7 +158,9 @@ test/ (unit), integration_test/
 ```
 
 ### 10.3. `workouts.csv` — строка = подход (порядок колонок фиксирован)
-`exercise_name, exercise_id, exercise_type, workout_id, workout_date, workout_name, workout_status, workout_tags, workout_comment, workout_duration_sec, exercise_order, exercise_comment, progression_decision, set_number, is_completed, planned_weight_kg, planned_reps, actual_weight_kg, actual_reps, rpe, rir, planned_duration_sec, actual_duration_sec, planned_distance_m, actual_distance_m, resistance, incline_percent, avg_heart_rate, side, set_comment`
+`exercise_name, exercise_id, exercise_type, workout_id, workout_date, workout_name, workout_status, workout_tags, workout_comment, workout_duration_sec, exercise_order, exercise_comment, progression_decision, set_number, is_completed, planned_weight_kg, planned_reps, actual_weight_kg, actual_reps, rpe, rir, planned_duration_sec, actual_duration_sec, planned_distance_m, actual_distance_m, resistance, incline_percent, avg_heart_rate, side`
+
+(колонка `set_comment` убрана в v4 формата экспорта — комментарий подхода удалён из приложения, Этап 10, 2026-07-24, решение владельца)
 - `exercise_name` — первая колонка (требование D-9); для встроенных — каноническое английское имя (`06`, раздел 12).
 - `workout_tags` — имена тегов через `;` внутри одной ячейки.
 - Булевы — `true`/`false`. Тренировка без упражнений — одна строка с пустыми полями подхода. Сортировка строк: `workout_date`, `workout_id`, `exercise_order`, `set_number`.

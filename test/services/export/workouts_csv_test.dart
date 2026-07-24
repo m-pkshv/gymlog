@@ -40,7 +40,6 @@ ExerciseSet _set({
   int? actualReps,
   double? rpe,
   int? rir,
-  String? comment,
 }) {
   return ExerciseSet(
     id: id,
@@ -57,7 +56,6 @@ ExerciseSet _set({
     actualReps: actualReps,
     rpe: rpe,
     rir: rir,
-    comment: comment,
   );
 }
 
@@ -134,7 +132,6 @@ void main() {
                 actualReps: 5,
                 rpe: 8.5,
                 rir: 2,
-                comment: 'New PR!\nFelt easy',
               ),
             ],
           ),
@@ -241,7 +238,6 @@ void main() {
               'rpe': '8.5',
               'rir': '2',
               'side': 'none',
-              'set_comment': 'New PR!\nFelt easy',
             }),
           ),
         )

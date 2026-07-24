@@ -1599,35 +1599,73 @@ void main() {
       await _unmountAndFlush(tester);
     });
 
-    testWidgets('the set comment dialog saves a comment', (tester) async {
-      await _seedExercise(db);
-      await tester.pumpWidget(_appUnderTest(db));
-      await tester.pumpAndSettle();
-      await _createDraftViaFab(tester);
-      await tester.tap(find.text('Add exercise'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Squat'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Add set'));
-      await tester.pumpAndSettle();
+  });
 
-      await tester.tap(find.byTooltip('Comment'));
-      await tester.pumpAndSettle();
-      await tester.enterText(
-        find.descendant(
-          of: find.byType(AlertDialog),
-          matching: find.byType(TextField),
-        ),
-        'Left knee twinge',
-      );
-      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
-      await tester.pumpAndSettle();
+  group('delete set (Stage 10, owner-reported: replaced the set comment '
+      'icon with a way to remove a planned set)', () {
+    testWidgets(
+      'tapping the delete icon on a set soft-deletes it, renumbers the '
+      'remaining ones, and shows an Undo snackbar',
+      (tester) async {
+        await _seedExercise(db);
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Add set'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Add set'));
+        await tester.pumpAndSettle();
 
-      final sets = await db.select(db.exerciseSets).get();
-      expect(sets.single.comment, 'Left knee twinge');
+        await tester.tap(find.byTooltip('Delete set').first);
+        await tester.pumpAndSettle();
 
-      await _unmountAndFlush(tester);
-    });
+        expect(find.text('Set deleted'), findsOneWidget);
+        expect(find.text('Undo'), findsOneWidget);
+
+        final sets = await db.select(db.exerciseSets).get();
+        expect(sets, hasLength(2));
+        final active = sets.where((s) => !s.isDeleted).toList();
+        expect(active, hasLength(1));
+        expect(active.single.setNumber, 1, reason: 'renumbered contiguously');
+
+        await tester.pump(const Duration(seconds: 6));
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      '"Undo" restores the deleted set with the original numbering',
+      (tester) async {
+        await _seedExercise(db);
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Add set'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Add set'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byTooltip('Delete set').first);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Undo'));
+        await tester.pumpAndSettle();
+
+        final sets = await db.select(db.exerciseSets).get();
+        expect(sets.where((s) => !s.isDeleted), hasLength(2));
+        final numbers = sets.map((s) => s.setNumber).toList()..sort();
+        expect(numbers, [1, 2]);
+
+        await _unmountAndFlush(tester);
+      },
+    );
   });
 
   group('progression decision + stagnation hint (Stage 3, D-7, TS 9.4)', () {

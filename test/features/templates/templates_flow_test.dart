@@ -300,6 +300,47 @@ void main() {
   });
 
   testWidgets(
+    'delete set (Stage 10, owner-reported): the delete icon soft-deletes a '
+    'set, renumbers the rest, and "Undo" restores it',
+    (tester) async {
+      await _seedExercise(db);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await _createTemplateViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add set'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add set'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Delete set').first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Set deleted'), findsOneWidget);
+      var sets = await db.select(db.templateSets).get();
+      expect(sets, hasLength(2));
+      var active = sets.where((s) => !s.isDeleted).toList();
+      expect(active, hasLength(1));
+      expect(active.single.setNumber, 1, reason: 'renumbered contiguously');
+
+      await tester.tap(find.text('Undo'));
+      await tester.pumpAndSettle();
+
+      sets = await db.select(db.templateSets).get();
+      active = sets.where((s) => !s.isDeleted).toList();
+      expect(active, hasLength(2));
+      final numbers = active.map((s) => s.setNumber).toList()..sort();
+      expect(numbers, [1, 2]);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
     'reorder: "Move up" in the second exercise card swaps it with the first',
     (tester) async {
       await _seedExercise(db, id: 'squat', name: 'Squat');

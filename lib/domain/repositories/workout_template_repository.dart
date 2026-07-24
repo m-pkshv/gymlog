@@ -74,6 +74,19 @@ abstract class WorkoutTemplateRepository {
   /// Persists set field changes — the autosave write (S-13, TS 5).
   Future<void> updateTemplateSet(TemplateSet set);
 
+  /// Soft-deletes [setId] (S-13 set menu "Удалить", mirrors
+  /// `WorkoutRepository.deleteSet`, 06_DATA_MODEL.md section 10): marks the
+  /// row `isDeleted = true`, then renumbers the exercise's remaining
+  /// non-deleted sets to stay contiguous starting at 1 (ordered by
+  /// `createdAt`).
+  Future<void> deleteTemplateSet(String setId);
+
+  /// Reverses [deleteTemplateSet] within the Undo window: un-marks
+  /// `isDeleted` on [setId], then renumbers every non-deleted set of that
+  /// exercise (including the restored one) the same way, reconstructing
+  /// the original order.
+  Future<void> restoreTemplateSet(String setId);
+
   /// Reorder (S-13, same drag handle + "⋮ → Вверх/Вниз" as S-03): rewrites
   /// `orderIndex` so it matches each id's position in
   /// [orderedTemplateExerciseIds].

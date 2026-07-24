@@ -36,7 +36,6 @@ const workoutsCsvHeader = [
   'incline_percent',
   'avg_heart_rate',
   'side',
-  'set_comment',
 ];
 
 /// `workouts.csv` (03_TECHNICAL_SPEC.md, section 10.3): one row per set.
@@ -136,6 +135,5 @@ List<String> _row({
     formatCsvDecimal(set?.inclinePercent),
     formatCsvInt(set?.avgHeartRate),
     set?.side.name ?? '',
-    set?.comment ?? '',
   ];
 }
