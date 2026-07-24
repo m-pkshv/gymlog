@@ -63,6 +63,36 @@ void main() {
     await _unmountAndFlush(tester);
   });
 
+  testWidgets(
+    'tapping the already-active tab resets its stack to the root (Stage '
+    '10, owner-reported)',
+    (tester) async {
+      await tester.pumpWidget(appUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('More'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Templates'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Measurements'),
+        findsNothing,
+        reason: 'should be pushed into Templates, off the More root',
+      );
+
+      await tester.tap(find.text('More'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Measurements'),
+        findsOneWidget,
+        reason: 'tapping the active tab again should pop back to its root',
+      );
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
   testWidgets('no recovery banner when nothing is inProgress', (
     tester,
   ) async {

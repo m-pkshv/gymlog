@@ -316,7 +316,14 @@ class _MainTabScaffold extends ConsumerWidget {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: navigationShell.goBranch,
+        onDestinationSelected: (index) => navigationShell.goBranch(
+          index,
+          // Stage 10, owner-reported: tapping the already-active tab while
+          // deeper in its stack (e.g. "Ещё" -> "Шаблоны" -> tap "Ещё"
+          // again) resets that branch back to its root instead of doing
+          // nothing.
+          initialLocation: index == navigationShell.currentIndex,
+        ),
         destinations: [
           NavigationDestination(
             icon: const Icon(Icons.today_outlined),
