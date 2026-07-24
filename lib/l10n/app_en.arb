@@ -716,6 +716,14 @@
   "@reorderDragHandleLabel": {
     "description": "UX 11 accessibility: Semantics label for the icon-only drag handle on an exercise card (workout editor S-03 and template editor S-13) -- the handle itself has no visible text; the \"Move up\"/\"Move down\" menu items are its gesture-free alternative."
   },
+  "collapseExerciseAction": "Collapse exercise",
+  "@collapseExerciseAction": {
+    "description": "Semantics label for the tappable exercise-card header (type icon + name + chevron) when the card is expanded -- tapping it collapses the card to just its name (S-03/S-13, Stage 10, owner-reported: long lists of sets were hard to scan)."
+  },
+  "expandExerciseAction": "Expand exercise",
+  "@expandExerciseAction": {
+    "description": "Semantics label for the tappable exercise-card header when the card is collapsed -- tapping it expands the card again (S-03/S-13, Stage 10)."
+  },
   "workoutCommentLabel": "Comment",
   "@workoutCommentLabel": {
     "description": "Label of the workout-level comment field in the editor header (S-03, Stage 3, DM 6.4, max 2000 chars)."

@@ -629,6 +629,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reorderDragHandleLabel => 'Drag to reorder';
 
   @override
+  String get collapseExerciseAction => 'Collapse exercise';
+
+  @override
+  String get expandExerciseAction => 'Expand exercise';
+
+  @override
   String get workoutCommentLabel => 'Comment';
 
   @override

@@ -341,6 +341,41 @@ void main() {
   );
 
   testWidgets(
+    'collapse exercise (Stage 10, owner-reported): tapping the header hides '
+    'sets and the comment field, keeping the name; tapping again expands it',
+    (tester) async {
+      await _seedExercise(db, id: 'squat', name: 'Squat');
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createTemplateViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add set'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TemplateSetRow), findsOneWidget);
+      expect(find.text('Add set'), findsOneWidget);
+
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Squat'), findsOneWidget, reason: 'name stays visible');
+      expect(find.byType(TemplateSetRow), findsNothing);
+      expect(find.text('Add set'), findsNothing);
+
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TemplateSetRow), findsOneWidget);
+      expect(find.text('Add set'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
     'reorder: "Move up" in the second exercise card swaps it with the first',
     (tester) async {
       await _seedExercise(db, id: 'squat', name: 'Squat');

@@ -17,7 +17,13 @@ enum _TemplateExerciseCardAction { moveUp, moveDown }
 /// прошлого выполнения" (those read from *workout* history, which
 /// templates never have, D-16), no progression segment (there is nothing
 /// to have progressed on a plan that was never performed).
-class TemplateExerciseCard extends StatelessWidget {
+///
+/// Collapsible (Stage 10, owner-reported), mirroring `ExerciseCard` --
+/// tapping the header (type icon + name) collapses everything below it
+/// down to just the name. Same purely-local, non-persisted `_expanded`
+/// state, preserved across incidental data reloads by this widget's key
+/// (`templateExercise.id`) in the list above it.
+class TemplateExerciseCard extends StatefulWidget {
   const TemplateExerciseCard({
     super.key,
     required this.details,
@@ -54,8 +60,16 @@ class TemplateExerciseCard extends StatelessWidget {
   final ValueChanged<String> onSetDeleted;
 
   @override
+  State<TemplateExerciseCard> createState() => _TemplateExerciseCardState();
+}
+
+class _TemplateExerciseCardState extends State<TemplateExerciseCard> {
+  bool _expanded = true;
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final details = widget.details;
     final fields = templateSetFieldsFor(details.exercise.exerciseType, l10n);
     final canDuplicateLastSet =
         details.sets.isNotEmpty &&
@@ -77,41 +91,61 @@ class TemplateExerciseCard extends StatelessWidget {
                 Semantics(
                   label: l10n.reorderDragHandleLabel,
                   child: ReorderableDragStartListener(
-                    index: index,
+                    index: widget.index,
                     child: const Padding(
                       padding: EdgeInsets.all(12),
                       child: Icon(Icons.drag_handle),
                     ),
                   ),
                 ),
-                Icon(exerciseTypeIcon(details.exercise.exerciseType)),
-                const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    details.exercise.name,
-                    style: Theme.of(context).textTheme.titleMedium,
+                  child: Semantics(
+                    label: _expanded
+                        ? l10n.collapseExerciseAction
+                        : l10n.expandExerciseAction,
+                    child: InkWell(
+                      onTap: () => setState(() => _expanded = !_expanded),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Row(
+                          children: [
+                            Icon(exerciseTypeIcon(details.exercise.exerciseType)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                details.exercise.name,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ),
+                            Icon(
+                              _expanded ? Icons.expand_less : Icons.expand_more,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 // Hidden entirely rather than shown with an empty menu when
                 // this is the only exercise (unlike `ExerciseCard`, whose
                 // menu always has other, unconditional items).
-                if (canMoveUp || canMoveDown)
+                if (widget.canMoveUp || widget.canMoveDown)
                   PopupMenuButton<_TemplateExerciseCardAction>(
                     onSelected: (action) {
                       switch (action) {
                         case _TemplateExerciseCardAction.moveUp:
-                          onMoveUp();
+                          widget.onMoveUp();
                         case _TemplateExerciseCardAction.moveDown:
-                          onMoveDown();
+                          widget.onMoveDown();
                       }
                     },
                     itemBuilder: (context) => [
-                      if (canMoveUp)
+                      if (widget.canMoveUp)
                         PopupMenuItem(
                           value: _TemplateExerciseCardAction.moveUp,
                           child: Text(l10n.moveExerciseUpAction),
                         ),
-                      if (canMoveDown)
+                      if (widget.canMoveDown)
                         PopupMenuItem(
                           value: _TemplateExerciseCardAction.moveDown,
                           child: Text(l10n.moveExerciseDownAction),
@@ -120,42 +154,44 @@ class TemplateExerciseCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 8),
-            for (final set in details.sets)
-              TemplateSetRow(
-                set: set,
-                fields: fields,
-                onFieldChanged: (field, value) =>
-                    onFieldChanged(set.id, field, value),
-                onFieldCommit: (field) => onFieldCommit(set.id, field),
-                onDelete: () => onSetDeleted(set.id),
-              ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                TextButton.icon(
-                  onPressed: onAddSet,
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.addSetAction),
+            if (_expanded) ...[
+              const SizedBox(height: 8),
+              for (final set in details.sets)
+                TemplateSetRow(
+                  set: set,
+                  fields: fields,
+                  onFieldChanged: (field, value) =>
+                      widget.onFieldChanged(set.id, field, value),
+                  onFieldCommit: (field) => widget.onFieldCommit(set.id, field),
+                  onDelete: () => widget.onSetDeleted(set.id),
                 ),
-                if (canDuplicateLastSet)
-                  IconButton(
-                    onPressed: onDuplicateLastSet,
-                    icon: const Icon(Icons.content_copy),
-                    tooltip: l10n.duplicateSetAction,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  TextButton.icon(
+                    onPressed: widget.onAddSet,
+                    icon: const Icon(Icons.add),
+                    label: Text(l10n.addSetAction),
                   ),
-              ],
-            ),
-            CommentField(
-              key: ValueKey(
-                'template-exercise-comment-${details.templateExercise.id}',
+                  if (canDuplicateLastSet)
+                    IconButton(
+                      onPressed: widget.onDuplicateLastSet,
+                      icon: const Icon(Icons.content_copy),
+                      tooltip: l10n.duplicateSetAction,
+                    ),
+                ],
               ),
-              value: details.templateExercise.comment,
-              label: l10n.exerciseCommentLabel,
-              maxLength: CommentLengthLimits.workoutExercise,
-              onChanged: onCommentChanged,
-              onCommit: onCommentCommit,
-            ),
+              CommentField(
+                key: ValueKey(
+                  'template-exercise-comment-${details.templateExercise.id}',
+                ),
+                value: details.templateExercise.comment,
+                label: l10n.exerciseCommentLabel,
+                maxLength: CommentLengthLimits.workoutExercise,
+                onChanged: widget.onCommentChanged,
+                onCommit: widget.onCommentCommit,
+              ),
+            ],
           ],
         ),
       ),

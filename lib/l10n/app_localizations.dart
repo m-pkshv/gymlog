@@ -1286,6 +1286,18 @@ abstract class AppLocalizations {
   /// **'Drag to reorder'**
   String get reorderDragHandleLabel;
 
+  /// Semantics label for the tappable exercise-card header (type icon + name + chevron) when the card is expanded -- tapping it collapses the card to just its name (S-03/S-13, Stage 10, owner-reported: long lists of sets were hard to scan).
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse exercise'**
+  String get collapseExerciseAction;
+
+  /// Semantics label for the tappable exercise-card header when the card is collapsed -- tapping it expands the card again (S-03/S-13, Stage 10).
+  ///
+  /// In en, this message translates to:
+  /// **'Expand exercise'**
+  String get expandExerciseAction;
+
   /// Label of the workout-level comment field in the editor header (S-03, Stage 3, DM 6.4, max 2000 chars).
   ///
   /// In en, this message translates to:

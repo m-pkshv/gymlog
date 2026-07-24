@@ -1446,6 +1446,73 @@ void main() {
     );
   });
 
+  group('collapse exercise (Stage 10, owner-reported)', () {
+    testWidgets(
+      'tapping the header collapses the card to just its name, hiding sets '
+      'and the comment/progression controls; tapping again expands it',
+      (tester) async {
+        await _seedExercise(db, id: 'squat', name: 'Squat');
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Add set'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(SetRow), findsOneWidget);
+        expect(find.text('Add set'), findsOneWidget);
+
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Squat'), findsOneWidget, reason: 'name stays visible');
+        expect(find.byType(SetRow), findsNothing);
+        expect(find.text('Add set'), findsNothing);
+
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(SetRow), findsOneWidget);
+        expect(find.text('Add set'), findsOneWidget);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'collapsing one card does not affect the drag handle or "⋮" menu of '
+      'the same card',
+      (tester) async {
+        await _seedExercise(db, id: 'squat', name: 'Squat');
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is Semantics &&
+                widget.properties.label == 'Drag to reorder',
+          ),
+          findsOneWidget,
+        );
+        expect(_exerciseCardMenuButton('Squat'), findsOneWidget);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+  });
+
   group('reorder exercises (Stage 3, S-03 drag handle + "⋮ → Вверх/Вниз")', () {
     testWidgets(
       '"Move up" in the exercise card menu swaps it with the previous card',

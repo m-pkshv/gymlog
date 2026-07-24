@@ -636,6 +636,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get reorderDragHandleLabel => 'Перетащить, чтобы изменить порядок';
 
   @override
+  String get collapseExerciseAction => 'Свернуть упражнение';
+
+  @override
+  String get expandExerciseAction => 'Развернуть упражнение';
+
+  @override
   String get workoutCommentLabel => 'Комментарий';
 
   @override

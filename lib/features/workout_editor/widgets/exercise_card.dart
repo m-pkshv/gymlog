@@ -24,7 +24,18 @@ enum _ExerciseCardAction { pastResults, copyLastPerformance, moveUp, moveDown }
 /// segment (—/↑/=/↓, DM 6.11 "ручная отметка") with the D-7 stagnation hint
 /// ("N без роста", read from `progressionStateProvider` — a cache the
 /// manual decision itself never influences).
-class ExerciseCard extends ConsumerWidget {
+///
+/// Collapsible (Stage 10, owner-reported): a long workout's sets table
+/// becomes one hard-to-scan wall of rows; tapping the header (type icon +
+/// name, not the drag handle or "⋮" menu, which keep their own gestures)
+/// collapses everything below it down to just the name. Purely local UI
+/// state (`_expanded`, defaulting to `true`) -- nothing is written to the
+/// database, and it isn't meant to survive leaving/reopening the editor.
+/// It does survive incidental data reloads (`_load()` after every add/edit)
+/// within the same screen instance, because `ExerciseCard` is keyed by
+/// `workoutExercise.id` in the list above it, so Flutter reuses this
+/// State object rather than recreating it.
+class ExerciseCard extends ConsumerStatefulWidget {
   const ExerciseCard({
     super.key,
     required this.details,
@@ -73,8 +84,16 @@ class ExerciseCard extends ConsumerWidget {
   final ValueChanged<ProgressionDecision> onProgressionDecisionChanged;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ExerciseCard> createState() => _ExerciseCardState();
+}
+
+class _ExerciseCardState extends ConsumerState<ExerciseCard> {
+  bool _expanded = true;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final details = widget.details;
     final fields = setFieldsFor(details.exercise.exerciseType, l10n);
     final canDuplicateLastSet =
         details.sets.isNotEmpty &&
@@ -100,19 +119,39 @@ class ExerciseCard extends ConsumerWidget {
                 Semantics(
                   label: l10n.reorderDragHandleLabel,
                   child: ReorderableDragStartListener(
-                    index: index,
+                    index: widget.index,
                     child: const Padding(
                       padding: EdgeInsets.all(12),
                       child: Icon(Icons.drag_handle),
                     ),
                   ),
                 ),
-                Icon(exerciseTypeIcon(details.exercise.exerciseType)),
-                const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    details.exercise.name,
-                    style: Theme.of(context).textTheme.titleMedium,
+                  child: Semantics(
+                    label: _expanded
+                        ? l10n.collapseExerciseAction
+                        : l10n.expandExerciseAction,
+                    child: InkWell(
+                      onTap: () => setState(() => _expanded = !_expanded),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Row(
+                          children: [
+                            Icon(exerciseTypeIcon(details.exercise.exerciseType)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                details.exercise.name,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ),
+                            Icon(
+                              _expanded ? Icons.expand_less : Icons.expand_more,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 PopupMenuButton<_ExerciseCardAction>(
@@ -127,11 +166,11 @@ class ExerciseCard extends ConsumerWidget {
                               PastResultsSheet(exercise: details.exercise),
                         );
                       case _ExerciseCardAction.copyLastPerformance:
-                        onCopyLastPerformance();
+                        widget.onCopyLastPerformance();
                       case _ExerciseCardAction.moveUp:
-                        onMoveUp();
+                        widget.onMoveUp();
                       case _ExerciseCardAction.moveDown:
-                        onMoveDown();
+                        widget.onMoveDown();
                     }
                   },
                   itemBuilder: (context) => [
@@ -143,12 +182,12 @@ class ExerciseCard extends ConsumerWidget {
                       value: _ExerciseCardAction.copyLastPerformance,
                       child: Text(l10n.copyLastPerformanceAction),
                     ),
-                    if (canMoveUp)
+                    if (widget.canMoveUp)
                       PopupMenuItem(
                         value: _ExerciseCardAction.moveUp,
                         child: Text(l10n.moveExerciseUpAction),
                       ),
-                    if (canMoveDown)
+                    if (widget.canMoveDown)
                       PopupMenuItem(
                         value: _ExerciseCardAction.moveDown,
                         child: Text(l10n.moveExerciseDownAction),
@@ -157,65 +196,67 @@ class ExerciseCard extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            for (final set in details.sets)
-              SetRow(
-                set: set,
-                fields: fields,
-                onFieldChanged: (field, actual, value) =>
-                    onFieldChanged(set.id, field, actual, value),
-                onFieldCommit: (field, actual) =>
-                    onFieldCommit(set.id, field, actual),
-                onCompletedChanged: (value) =>
-                    onCompletedChanged(set.id, value),
-                onDelete: () => onSetDeleted(set.id),
-              ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                TextButton.icon(
-                  onPressed: onAddSet,
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.addSetAction),
+            if (_expanded) ...[
+              const SizedBox(height: 8),
+              for (final set in details.sets)
+                SetRow(
+                  set: set,
+                  fields: fields,
+                  onFieldChanged: (field, actual, value) =>
+                      widget.onFieldChanged(set.id, field, actual, value),
+                  onFieldCommit: (field, actual) =>
+                      widget.onFieldCommit(set.id, field, actual),
+                  onCompletedChanged: (value) =>
+                      widget.onCompletedChanged(set.id, value),
+                  onDelete: () => widget.onSetDeleted(set.id),
                 ),
-                if (canDuplicateLastSet)
-                  IconButton(
-                    onPressed: onDuplicateLastSet,
-                    icon: const Icon(Icons.content_copy),
-                    tooltip: l10n.duplicateSetAction,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  TextButton.icon(
+                    onPressed: widget.onAddSet,
+                    icon: const Icon(Icons.add),
+                    label: Text(l10n.addSetAction),
                   ),
-              ],
-            ),
-            CommentField(
-              key: ValueKey('exercise-comment-${details.workoutExercise.id}'),
-              value: details.workoutExercise.comment,
-              label: l10n.exerciseCommentLabel,
-              maxLength: CommentLengthLimits.workoutExercise,
-              onChanged: onCommentChanged,
-              onCommit: onCommentCommit,
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Text(
-                  l10n.progressionDecisionLabel,
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                const SizedBox(width: 8),
-                ProgressionSegmentedButton(
-                  selected: details.workoutExercise.progressionDecision,
-                  onChanged: onProgressionDecisionChanged,
-                ),
-              ],
-            ),
-            if (stagnationCount != null && stagnationCount > 0)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  l10n.stagnationHint(stagnationCount),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                  if (canDuplicateLastSet)
+                    IconButton(
+                      onPressed: widget.onDuplicateLastSet,
+                      icon: const Icon(Icons.content_copy),
+                      tooltip: l10n.duplicateSetAction,
+                    ),
+                ],
               ),
+              CommentField(
+                key: ValueKey('exercise-comment-${details.workoutExercise.id}'),
+                value: details.workoutExercise.comment,
+                label: l10n.exerciseCommentLabel,
+                maxLength: CommentLengthLimits.workoutExercise,
+                onChanged: widget.onCommentChanged,
+                onCommit: widget.onCommentCommit,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Text(
+                    l10n.progressionDecisionLabel,
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                  const SizedBox(width: 8),
+                  ProgressionSegmentedButton(
+                    selected: details.workoutExercise.progressionDecision,
+                    onChanged: widget.onProgressionDecisionChanged,
+                  ),
+                ],
+              ),
+              if (stagnationCount != null && stagnationCount > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    l10n.stagnationHint(stagnationCount),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+            ],
           ],
         ),
       ),
