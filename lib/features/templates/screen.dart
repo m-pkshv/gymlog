@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
 import '../../core/constants.dart';
 import '../../core/widgets/error_retry_state.dart';
@@ -184,46 +185,53 @@ class _TemplateListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final template = entry.template;
-    return ListTile(
-      title: Text(template.name),
-      subtitle: Text(l10n.templateExerciseCount(entry.exerciseCount)),
-      trailing: PopupMenuButton<_TemplateCardAction>(
-        onSelected: (action) {
-          switch (action) {
-            case _TemplateCardAction.createWorkout:
-              onCreateWorkout();
-            case _TemplateCardAction.duplicate:
-              onDuplicate();
-            case _TemplateCardAction.archive:
-              onArchiveToggle();
-            case _TemplateCardAction.delete:
-              onDelete();
-          }
-        },
-        itemBuilder: (context) => [
-          PopupMenuItem(
-            value: _TemplateCardAction.createWorkout,
-            child: Text(l10n.createWorkoutFromTemplateAction),
-          ),
-          PopupMenuItem(
-            value: _TemplateCardAction.duplicate,
-            child: Text(l10n.duplicateTemplateAction),
-          ),
-          PopupMenuItem(
-            value: _TemplateCardAction.archive,
-            child: Text(
-              template.isArchived
-                  ? l10n.unarchiveTemplateAction
-                  : l10n.archiveTemplateAction,
-            ),
-          ),
-          PopupMenuItem(
-            value: _TemplateCardAction.delete,
-            child: Text(l10n.deleteTemplateAction),
-          ),
-        ],
+    return Card(
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
       ),
-      onTap: () => context.push('/more/templates/${template.id}'),
+      clipBehavior: Clip.antiAlias,
+      child: ListTile(
+        title: Text(template.name),
+        subtitle: Text(l10n.templateExerciseCount(entry.exerciseCount)),
+        trailing: PopupMenuButton<_TemplateCardAction>(
+          onSelected: (action) {
+            switch (action) {
+              case _TemplateCardAction.createWorkout:
+                onCreateWorkout();
+              case _TemplateCardAction.duplicate:
+                onDuplicate();
+              case _TemplateCardAction.archive:
+                onArchiveToggle();
+              case _TemplateCardAction.delete:
+                onDelete();
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: _TemplateCardAction.createWorkout,
+              child: Text(l10n.createWorkoutFromTemplateAction),
+            ),
+            PopupMenuItem(
+              value: _TemplateCardAction.duplicate,
+              child: Text(l10n.duplicateTemplateAction),
+            ),
+            PopupMenuItem(
+              value: _TemplateCardAction.archive,
+              child: Text(
+                template.isArchived
+                    ? l10n.unarchiveTemplateAction
+                    : l10n.archiveTemplateAction,
+              ),
+            ),
+            PopupMenuItem(
+              value: _TemplateCardAction.delete,
+              child: Text(l10n.deleteTemplateAction),
+            ),
+          ],
+        ),
+        onTap: () => context.push('/more/templates/${template.id}'),
+      ),
     );
   }
 }

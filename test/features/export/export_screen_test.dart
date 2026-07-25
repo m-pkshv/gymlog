@@ -7,6 +7,7 @@ import 'package:gymlog/app/providers.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/repositories_impl/import_export_operation_repository_impl.dart';
 import 'package:gymlog/domain/models/import_export_operation.dart';
+import 'package:gymlog/core/widgets/grouped_section.dart';
 import 'package:gymlog/features/export/export_format_help_screen.dart';
 import 'package:gymlog/features/export/export_screen.dart';
 import 'package:gymlog/app/theme.dart';
@@ -72,6 +73,19 @@ void main() {
       );
       expect(importTile.enabled, isFalse);
       expect(find.text('Coming in future versions'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'groups the format-help/import rows and the journal into GroupedSections '
+    '(Stage 10 redesign)',
+    (tester) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(GroupedSection), findsNWidgets(2));
 
       await _unmountAndFlush(tester);
     },

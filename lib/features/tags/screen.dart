@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
 import '../../core/widgets/error_retry_state.dart';
 import '../../domain/models/workout_tag.dart';
@@ -72,16 +73,23 @@ class TagListScreen extends ConsumerWidget {
                 itemCount: tags.length,
                 itemBuilder: (context, index) {
                   final tag = tags[index];
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: tagColor(tag.colorHex),
-                      radius: 10,
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.xs,
                     ),
-                    title: Text(workoutTagLabel(l10n, tag)),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete_outline),
-                      tooltip: l10n.deleteTagAction,
-                      onPressed: () => _delete(context, ref, tag),
+                    clipBehavior: Clip.antiAlias,
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: tagColor(tag.colorHex),
+                        radius: 10,
+                      ),
+                      title: Text(workoutTagLabel(l10n, tag)),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete_outline),
+                        tooltip: l10n.deleteTagAction,
+                        onPressed: () => _delete(context, ref, tag),
+                      ),
                     ),
                   );
                 },

@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
 import '../../core/date_format.dart';
 import '../../core/widgets/error_retry_state.dart';
+import '../../core/widgets/grouped_section.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/import_export_operation.dart';
 import '../../l10n/app_localizations.dart';
@@ -55,59 +57,68 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.exportScreenTitle)),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
-          FilledButton.icon(
-            onPressed: _isExporting ? null : _export,
-            icon: _isExporting
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.ios_share),
-            label: Text(l10n.exportAction),
-          ),
-          const SizedBox(height: 8),
-          ListTile(
-            leading: const Icon(Icons.description_outlined),
-            title: Text(l10n.exportFormatHelpAction),
-            onTap: () => context.push('/more/export/format'),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            enabled: false,
-            leading: const Icon(Icons.file_download_outlined),
-            title: Text(l10n.importAction),
-            subtitle: Text(l10n.importComingSoonLabel),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            l10n.exportJournalTitle,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
-          journalAsync.when(
-            data: (entries) {
-              if (entries.isEmpty) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(l10n.exportJournalEmpty),
-                );
-              }
-              return Card(
-                child: Column(
-                  children: [
-                    for (final entry in entries) _JournalRow(entry: entry),
-                  ],
-                ),
-              );
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stackTrace) => ErrorRetryState(
-              message: l10n.exportJournalLoadError,
-              onRetry: () => ref.invalidate(importExportOperationsProvider),
+          // Full-width: this screen's one primary action, same weight as
+          // other screens' single dominant CTA (Stage 10 redesign).
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: _isExporting ? null : _export,
+              icon: _isExporting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.ios_share),
+              label: Text(l10n.exportAction),
             ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          GroupedSection(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.description_outlined),
+                title: Text(l10n.exportFormatHelpAction),
+                onTap: () => context.push('/more/export/format'),
+              ),
+              const Divider(height: 1, indent: 16, endIndent: 16),
+              ListTile(
+                enabled: false,
+                leading: const Icon(Icons.file_download_outlined),
+                title: Text(l10n.importAction),
+                subtitle: Text(l10n.importComingSoonLabel),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          GroupedSection(
+            title: l10n.exportJournalTitle,
+            children: [
+              journalAsync.when(
+                data: (entries) {
+                  if (entries.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Text(l10n.exportJournalEmpty),
+                    );
+                  }
+                  return Column(
+                    children: [
+                      for (final entry in entries) _JournalRow(entry: entry),
+                    ],
+                  );
+                },
+                loading: () =>
+                    const Center(child: CircularProgressIndicator()),
+                error: (error, stackTrace) => ErrorRetryState(
+                  message: l10n.exportJournalLoadError,
+                  onRetry: () =>
+                      ref.invalidate(importExportOperationsProvider),
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -27,6 +27,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String get tabMore => 'Ещё';
 
   @override
+  String get moreSectionData => 'Данные';
+
+  @override
+  String get moreSectionConfiguration => 'Конфигурация';
+
+  @override
+  String get moreTemplatesSubtitle => 'Готовые сценарии тренировок';
+
+  @override
+  String get moreTagsSubtitle => 'Управление тегами тренировок';
+
+  @override
+  String get moreMeasurementsSubtitle => 'Вес, % жира и обхваты тела';
+
+  @override
+  String get moreExportSubtitle => 'Экспорт данных в CSV';
+
+  @override
+  String get moreSettingsSubtitle => 'Тема, язык, единицы измерения';
+
+  @override
   String get todayStartAction => 'Начать';
 
   @override
@@ -508,6 +529,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsTitle => 'Настройки';
+
+  @override
+  String get settingsSectionAppearance => 'Внешний вид';
+
+  @override
+  String get settingsSectionDisplay => 'Отображение';
+
+  @override
+  String get settingsSectionRestTimer => 'Таймер отдыха';
 
   @override
   String get settingsShowTagsLabel => 'Показывать теги';

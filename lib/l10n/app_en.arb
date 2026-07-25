@@ -24,6 +24,34 @@
   "@tabMore": {
     "description": "Bottom navigation label for the More tab (S-11)."
   },
+  "moreSectionData": "Data",
+  "@moreSectionData": {
+    "description": "S-11 \"More\" screen (Stage 10 redesign): section header grouping the data-management menu items (Templates/Tags/Measurements/Export), AUDIT.md section 1.5's suggested split between data and configuration."
+  },
+  "moreSectionConfiguration": "Configuration",
+  "@moreSectionConfiguration": {
+    "description": "S-11 \"More\" screen (Stage 10 redesign): section header grouping configuration menu items (Settings)."
+  },
+  "moreTemplatesSubtitle": "Reusable workout blueprints",
+  "@moreTemplatesSubtitle": {
+    "description": "S-11 \"More\" screen (Stage 10 redesign): one-line description under \"Templates\"."
+  },
+  "moreTagsSubtitle": "Manage workout tags",
+  "@moreTagsSubtitle": {
+    "description": "S-11 \"More\" screen (Stage 10 redesign): one-line description under \"Tags\"."
+  },
+  "moreMeasurementsSubtitle": "Weight, body fat, and body measurements",
+  "@moreMeasurementsSubtitle": {
+    "description": "S-11 \"More\" screen (Stage 10 redesign): one-line description under \"Measurements\"."
+  },
+  "moreExportSubtitle": "Export your data as CSV",
+  "@moreExportSubtitle": {
+    "description": "S-11 \"More\" screen (Stage 10 redesign): one-line description under \"Import/Export\"."
+  },
+  "moreSettingsSubtitle": "Theme, language, units",
+  "@moreSettingsSubtitle": {
+    "description": "S-11 \"More\" screen (Stage 10 redesign): one-line description under \"Settings\"."
+  },
   "todayStartAction": "Start",
   "@todayStartAction": {
     "description": "S-01 upcoming-workout card button: starts it directly (draft/planned -> inProgress, DM 6.4.1) via startWorkoutFlow."
@@ -551,6 +579,18 @@
   "settingsTitle": "Settings",
   "@settingsTitle": {
     "description": "S-17 settings screen title (AppBar) and its entry point label on the \"More\" screen."
+  },
+  "settingsSectionAppearance": "Appearance",
+  "@settingsSectionAppearance": {
+    "description": "S-17 settings screen (Stage 10 redesign): group card header over the theme + language segmented buttons."
+  },
+  "settingsSectionDisplay": "Display",
+  "@settingsSectionDisplay": {
+    "description": "S-17 settings screen (Stage 10 redesign): group card header over the show-tags + unit-system switches."
+  },
+  "settingsSectionRestTimer": "Rest timer",
+  "@settingsSectionRestTimer": {
+    "description": "S-17 settings screen (Stage 10 redesign): group card header over the default rest-timer-seconds field + auto-start switch."
   },
   "settingsShowTagsLabel": "Show tags",
   "@settingsShowTagsLabel": {

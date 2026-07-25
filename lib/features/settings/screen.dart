@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
 import '../../core/constants.dart';
 import '../../core/units/unit_converter.dart';
 import '../../core/widgets/error_retry_state.dart';
+import '../../core/widgets/grouped_section.dart';
 import '../../domain/enums.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -26,63 +28,83 @@ class SettingsScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: settingsAsync.when(
         data: (settings) => ListView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
-            _SegmentedSection<AppTheme>(
-              label: l10n.settingsThemeLabel,
-              segments: {
-                AppTheme.system: l10n.settingsThemeSystem,
-                AppTheme.light: l10n.settingsThemeLight,
-                AppTheme.dark: l10n.settingsThemeDark,
-              },
-              selected: settings.theme,
-              onChanged: (value) =>
-                  ref.read(appSettingsRepositoryProvider).setTheme(value),
+            GroupedSection(
+              title: l10n.settingsSectionAppearance,
+              children: [
+                _SegmentedSection<AppTheme>(
+                  label: l10n.settingsThemeLabel,
+                  segments: {
+                    AppTheme.system: l10n.settingsThemeSystem,
+                    AppTheme.light: l10n.settingsThemeLight,
+                    AppTheme.dark: l10n.settingsThemeDark,
+                  },
+                  selected: settings.theme,
+                  onChanged: (value) =>
+                      ref.read(appSettingsRepositoryProvider).setTheme(value),
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                _SegmentedSection<AppLocale>(
+                  label: l10n.settingsLanguageLabel,
+                  segments: {
+                    AppLocale.system: l10n.settingsLanguageSystem,
+                    AppLocale.ru: l10n.settingsLanguageRu,
+                    AppLocale.en: l10n.settingsLanguageEn,
+                  },
+                  selected: settings.locale,
+                  onChanged: (value) =>
+                      ref.read(appSettingsRepositoryProvider).setLocale(value),
+                ),
+              ],
             ),
-            _SegmentedSection<AppLocale>(
-              label: l10n.settingsLanguageLabel,
-              segments: {
-                AppLocale.system: l10n.settingsLanguageSystem,
-                AppLocale.ru: l10n.settingsLanguageRu,
-                AppLocale.en: l10n.settingsLanguageEn,
-              },
-              selected: settings.locale,
-              onChanged: (value) =>
-                  ref.read(appSettingsRepositoryProvider).setLocale(value),
-            ),
-            const Divider(height: 33),
-            SwitchListTile(
-              title: Text(l10n.settingsShowTagsLabel),
-              value: settings.showTags,
-              onChanged: (value) =>
-                  ref.read(appSettingsRepositoryProvider).setShowTags(value),
-            ),
-            SwitchListTile(
-              title: Text(l10n.settingsUnitSystemLabel),
-              subtitle: Text(
-                settings.unitSystem == UnitSystem.imperial
-                    ? l10n.settingsUnitSystemImperial
-                    : l10n.settingsUnitSystemMetric,
-              ),
-              value: settings.unitSystem == UnitSystem.imperial,
-              onChanged: (imperial) => ref
-                  .read(appSettingsRepositoryProvider)
-                  .setUnitSystem(
-                    imperial ? UnitSystem.imperial : UnitSystem.metric,
+            const SizedBox(height: AppSpacing.lg),
+            GroupedSection(
+              title: l10n.settingsSectionDisplay,
+              children: [
+                SwitchListTile(
+                  title: Text(l10n.settingsShowTagsLabel),
+                  value: settings.showTags,
+                  onChanged: (value) => ref
+                      .read(appSettingsRepositoryProvider)
+                      .setShowTags(value),
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                SwitchListTile(
+                  title: Text(l10n.settingsUnitSystemLabel),
+                  subtitle: Text(
+                    settings.unitSystem == UnitSystem.imperial
+                        ? l10n.settingsUnitSystemImperial
+                        : l10n.settingsUnitSystemMetric,
                   ),
+                  value: settings.unitSystem == UnitSystem.imperial,
+                  onChanged: (imperial) => ref
+                      .read(appSettingsRepositoryProvider)
+                      .setUnitSystem(
+                        imperial ? UnitSystem.imperial : UnitSystem.metric,
+                      ),
+                ),
+              ],
             ),
-            const Divider(height: 33),
-            _RestTimerSecondsField(value: settings.defaultRestTimerSec),
-            SwitchListTile(
-              title: Text(l10n.settingsRestTimerAutoStartLabel),
-              value: settings.restTimerAutoStart,
-              onChanged: (value) => ref
-                  .read(appSettingsRepositoryProvider)
-                  .setRestTimerAutoStart(value),
+            const SizedBox(height: AppSpacing.lg),
+            GroupedSection(
+              title: l10n.settingsSectionRestTimer,
+              children: [
+                _RestTimerSecondsField(value: settings.defaultRestTimerSec),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                SwitchListTile(
+                  title: Text(l10n.settingsRestTimerAutoStartLabel),
+                  value: settings.restTimerAutoStart,
+                  onChanged: (value) => ref
+                      .read(appSettingsRepositoryProvider)
+                      .setRestTimerAutoStart(value),
+                ),
+              ],
             ),
-            const Divider(height: 33),
-            const _NotificationsSection(),
-            const Divider(height: 33),
-            const _AboutSection(),
+            const SizedBox(height: AppSpacing.lg),
+            const GroupedSection(children: [_NotificationsSection()]),
+            const SizedBox(height: AppSpacing.lg),
+            const GroupedSection(children: [_AboutSection()]),
           ],
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -117,11 +139,21 @@ class _SegmentedSection<T extends Object> extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.sm,
+          ),
           child: Text(label, style: Theme.of(context).textTheme.labelLarge),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            0,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
           child: SegmentedButton<T>(
             segments: [
               for (final entry in segments.entries)

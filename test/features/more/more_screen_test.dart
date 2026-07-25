@@ -62,6 +62,23 @@ void main() {
   });
 
   testWidgets(
+    'groups the menu into "Data"/"Configuration" sections with a subtitle '
+    'under each item (Stage 10 redesign, AUDIT.md 1.5)',
+    (tester) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Data'), findsOneWidget);
+      expect(find.text('Configuration'), findsOneWidget);
+      expect(find.text('Reusable workout blueprints'), findsOneWidget);
+      expect(find.text('Manage workout tags'), findsOneWidget);
+      expect(find.text('Weight, body fat, and body measurements'), findsOneWidget);
+      expect(find.text('Export your data as CSV'), findsOneWidget);
+      expect(find.text('Theme, language, units'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'tapping "Tags" opens the tag management screen (Stage 10, '
     'owner-reported)',
     (tester) async {

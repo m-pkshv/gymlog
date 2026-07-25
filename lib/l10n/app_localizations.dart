@@ -134,6 +134,48 @@ abstract class AppLocalizations {
   /// **'More'**
   String get tabMore;
 
+  /// S-11 "More" screen (Stage 10 redesign): section header grouping the data-management menu items (Templates/Tags/Measurements/Export), AUDIT.md section 1.5's suggested split between data and configuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get moreSectionData;
+
+  /// S-11 "More" screen (Stage 10 redesign): section header grouping configuration menu items (Settings).
+  ///
+  /// In en, this message translates to:
+  /// **'Configuration'**
+  String get moreSectionConfiguration;
+
+  /// S-11 "More" screen (Stage 10 redesign): one-line description under "Templates".
+  ///
+  /// In en, this message translates to:
+  /// **'Reusable workout blueprints'**
+  String get moreTemplatesSubtitle;
+
+  /// S-11 "More" screen (Stage 10 redesign): one-line description under "Tags".
+  ///
+  /// In en, this message translates to:
+  /// **'Manage workout tags'**
+  String get moreTagsSubtitle;
+
+  /// S-11 "More" screen (Stage 10 redesign): one-line description under "Measurements".
+  ///
+  /// In en, this message translates to:
+  /// **'Weight, body fat, and body measurements'**
+  String get moreMeasurementsSubtitle;
+
+  /// S-11 "More" screen (Stage 10 redesign): one-line description under "Import/Export".
+  ///
+  /// In en, this message translates to:
+  /// **'Export your data as CSV'**
+  String get moreExportSubtitle;
+
+  /// S-11 "More" screen (Stage 10 redesign): one-line description under "Settings".
+  ///
+  /// In en, this message translates to:
+  /// **'Theme, language, units'**
+  String get moreSettingsSubtitle;
+
   /// S-01 upcoming-workout card button: starts it directly (draft/planned -> inProgress, DM 6.4.1) via startWorkoutFlow.
   ///
   /// In en, this message translates to:
@@ -1039,6 +1081,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings'**
   String get settingsTitle;
+
+  /// S-17 settings screen (Stage 10 redesign): group card header over the theme + language segmented buttons.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingsSectionAppearance;
+
+  /// S-17 settings screen (Stage 10 redesign): group card header over the show-tags + unit-system switches.
+  ///
+  /// In en, this message translates to:
+  /// **'Display'**
+  String get settingsSectionDisplay;
+
+  /// S-17 settings screen (Stage 10 redesign): group card header over the default rest-timer-seconds field + auto-start switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest timer'**
+  String get settingsSectionRestTimer;
 
   /// Switch on the S-17 settings screen that toggles AppSettings.showTags (DM 6.12).
   ///

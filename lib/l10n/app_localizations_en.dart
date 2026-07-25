@@ -27,6 +27,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tabMore => 'More';
 
   @override
+  String get moreSectionData => 'Data';
+
+  @override
+  String get moreSectionConfiguration => 'Configuration';
+
+  @override
+  String get moreTemplatesSubtitle => 'Reusable workout blueprints';
+
+  @override
+  String get moreTagsSubtitle => 'Manage workout tags';
+
+  @override
+  String get moreMeasurementsSubtitle =>
+      'Weight, body fat, and body measurements';
+
+  @override
+  String get moreExportSubtitle => 'Export your data as CSV';
+
+  @override
+  String get moreSettingsSubtitle => 'Theme, language, units';
+
+  @override
   String get todayStartAction => 'Start';
 
   @override
@@ -502,6 +524,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsTitle => 'Settings';
+
+  @override
+  String get settingsSectionAppearance => 'Appearance';
+
+  @override
+  String get settingsSectionDisplay => 'Display';
+
+  @override
+  String get settingsSectionRestTimer => 'Rest timer';
 
   @override
   String get settingsShowTagsLabel => 'Show tags';

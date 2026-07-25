@@ -130,6 +130,14 @@ void main() {
 
     expect(find.byType(MeasurementFormScreen), findsNothing);
     expect(find.textContaining('82.5 kg'), findsOneWidget);
+    // Stage 10 redesign: entry rows are wrapped in a Card.
+    expect(
+      find.ancestor(
+        of: find.textContaining('82.5 kg'),
+        matching: find.byType(Card),
+      ),
+      findsOneWidget,
+    );
     await _unmountAndFlush(tester);
   });
 

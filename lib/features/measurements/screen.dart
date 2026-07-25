@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
 import '../../core/widgets/error_retry_state.dart';
 import '../../domain/enums.dart';
@@ -128,7 +129,7 @@ class _MeasurementsScreenState extends ConsumerState<MeasurementsScreen>
                 children: [
                   if (girths.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       child: DropdownButtonFormField<String>(
                         isExpanded: true,
                         initialValue: selectedGirth?.id,
@@ -151,27 +152,43 @@ class _MeasurementsScreenState extends ConsumerState<MeasurementsScreen>
                 ],
               ),
               ListView(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
                 children: [
-                  ListTile(
-                    leading: const Icon(Icons.add),
-                    title: Text(l10n.addCustomMeasurementTypeAction),
-                    onTap: _addCustomType,
+                  Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.xs,
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: ListTile(
+                      leading: const Icon(Icons.add),
+                      title: Text(l10n.addCustomMeasurementTypeAction),
+                      onTap: _addCustomType,
+                    ),
                   ),
                   if (customTypes.isEmpty)
                     Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(AppSpacing.xl),
                       child: Center(
                         child: Text(l10n.measurementsCustomEmptyState),
                       ),
                     ),
                   for (final type in customTypes)
-                    ListTile(
-                      title: Text(measurementTypeLabel(l10n, type)),
-                      subtitle: Text(
-                        measurementUnitKindLabel(l10n, type.unitKind),
+                    Card(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.xs,
                       ),
-                      onTap: () =>
-                          context.push('/more/measurements/custom/${type.id}'),
+                      clipBehavior: Clip.antiAlias,
+                      child: ListTile(
+                        title: Text(measurementTypeLabel(l10n, type)),
+                        subtitle: Text(
+                          measurementUnitKindLabel(l10n, type.unitKind),
+                        ),
+                        onTap: () => context.push(
+                          '/more/measurements/custom/${type.id}',
+                        ),
+                      ),
                     ),
                 ],
               ),

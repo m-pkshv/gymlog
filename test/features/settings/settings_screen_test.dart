@@ -70,6 +70,21 @@ void main() {
     await _unmountAndFlush(tester);
   });
 
+  testWidgets(
+    'groups related settings into titled cards (Stage 10 redesign)',
+    (tester) async {
+      await AppSettingsRepositoryImpl(db).ensureInitialized();
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Appearance'), findsOneWidget);
+      expect(find.text('Display'), findsOneWidget);
+      expect(find.text('Rest timer'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
   testWidgets('tapping the "Dark" segment persists theme = dark', (
     tester,
   ) async {
@@ -259,6 +274,12 @@ void main() {
   testWidgets('toggling auto-start persists restTimerAutoStart = false', (
     tester,
   ) async {
+    // The redesigned grouped-card layout (Stage 10) pushed this switch
+    // below the default 800x600 test viewport's fold.
+    tester.view.physicalSize = const Size(1080, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
     await AppSettingsRepositoryImpl(db).ensureInitialized();
     await tester.pumpWidget(_appUnderTest(db));
     await tester.pumpAndSettle();
@@ -284,6 +305,11 @@ void main() {
     testWidgets('shows "Enabled" when notifications are enabled', (
       tester,
     ) async {
+      // Same fold issue as the auto-start test above.
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
       when(
         () => notificationService.areNotificationsEnabled(),
       ).thenAnswer((_) async => true);
@@ -301,6 +327,11 @@ void main() {
     testWidgets('shows "Disabled" when notifications are disabled', (
       tester,
     ) async {
+      // Same fold issue as the auto-start test above.
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
       when(
         () => notificationService.areNotificationsEnabled(),
       ).thenAnswer((_) async => false);

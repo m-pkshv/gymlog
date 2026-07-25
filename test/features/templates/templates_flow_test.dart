@@ -225,6 +225,12 @@ void main() {
 
       expect(find.text('Leg day'), findsOneWidget);
       expect(find.text('1 exercise'), findsOneWidget);
+      // Stage 10 redesign: rows are wrapped in a Card, matching History/
+      // Today/Exercises.
+      expect(
+        find.ancestor(of: find.text('Leg day'), matching: find.byType(Card)),
+        findsOneWidget,
+      );
 
       await _unmountAndFlush(tester);
     },

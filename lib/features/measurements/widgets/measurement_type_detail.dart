@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/design_tokens.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants.dart';
 import '../../../core/date_format.dart';
@@ -76,13 +77,23 @@ class MeasurementTypeDetail extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final entry = entries[index];
                     final value = display(entry);
-                    return ListTile(
-                      title: Text('${value.toStringAsFixed(1)} $unit'),
-                      subtitle: Text(formatShortDate(entry.date)),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        tooltip: l10n.deleteMeasurementEntryAction,
-                        onPressed: () => _delete(context, ref, entry),
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.xs,
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: ListTile(
+                        title: Text(
+                          '${value.toStringAsFixed(1)} $unit',
+                          style: AppNumberTextStyles.setValue(context),
+                        ),
+                        subtitle: Text(formatShortDate(entry.date)),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          tooltip: l10n.deleteMeasurementEntryAction,
+                          onPressed: () => _delete(context, ref, entry),
+                        ),
                       ),
                     );
                   },
