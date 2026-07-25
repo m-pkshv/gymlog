@@ -663,6 +663,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get deleteWorkoutAction => 'Удалить';
 
   @override
+  String get workoutStatusMenuTooltip => 'Другие действия';
+
+  @override
+  String stepperDecreaseTooltip(String label) {
+    return 'Уменьшить: $label';
+  }
+
+  @override
+  String stepperIncreaseTooltip(String label) {
+    return 'Увеличить: $label';
+  }
+
+  @override
   String get workoutDeletedMessage => 'Тренировка удалена';
 
   @override

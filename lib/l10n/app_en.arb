@@ -752,6 +752,24 @@
   "@deleteWorkoutAction": {
     "description": "\"⋮\" menu action on a History card (S-02, Stage 3, DM 10) that soft-deletes the workout with a 5s Undo snackbar."
   },
+  "workoutStatusMenuTooltip": "More actions",
+  "@workoutStatusMenuTooltip": {
+    "description": "Tooltip on the workout editor's \"⋮\" status menu (S-03, Stage 10 redesign) that lists status transitions other than the primary CTA button, plus Delete."
+  },
+  "stepperDecreaseTooltip": "Decrease {label}",
+  "@stepperDecreaseTooltip": {
+    "description": "Tooltip/semantic label on a NumericStepperField's \"−\" button (Stage 10 redesign).",
+    "placeholders": {
+      "label": {"type": "String"}
+    }
+  },
+  "stepperIncreaseTooltip": "Increase {label}",
+  "@stepperIncreaseTooltip": {
+    "description": "Tooltip/semantic label on a NumericStepperField's \"+\" button (Stage 10 redesign).",
+    "placeholders": {
+      "label": {"type": "String"}
+    }
+  },
   "workoutDeletedMessage": "Workout deleted",
   "@workoutDeletedMessage": {
     "description": "Snackbar shown after deleting a workout from History (S-02, Stage 3), with an \"Undo\" action."

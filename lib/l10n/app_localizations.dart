@@ -1340,6 +1340,24 @@ abstract class AppLocalizations {
   /// **'Delete'**
   String get deleteWorkoutAction;
 
+  /// Tooltip on the workout editor's "⋮" status menu (S-03, Stage 10 redesign) that lists status transitions other than the primary CTA button, plus Delete.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get workoutStatusMenuTooltip;
+
+  /// Tooltip/semantic label on a NumericStepperField's "−" button (Stage 10 redesign).
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease {label}'**
+  String stepperDecreaseTooltip(String label);
+
+  /// Tooltip/semantic label on a NumericStepperField's "+" button (Stage 10 redesign).
+  ///
+  /// In en, this message translates to:
+  /// **'Increase {label}'**
+  String stepperIncreaseTooltip(String label);
+
   /// Snackbar shown after deleting a workout from History (S-02, Stage 3), with an "Undo" action.
   ///
   /// In en, this message translates to:
