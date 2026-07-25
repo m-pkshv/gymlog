@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
 import '../../core/date_format.dart';
 import '../../core/widgets/error_retry_state.dart';
+import '../../core/widgets/status_badge.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/workout.dart';
 import '../../domain/models/workout_history_entry.dart';
@@ -50,16 +52,20 @@ class TodayScreen extends ConsumerWidget {
             data: (entries) {
               if (active == null && entries.isEmpty) {
                 return ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: const [_EmptyTodayState(), SizedBox(height: 24), _QuickActions()],
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  children: const [
+                    _EmptyTodayState(),
+                    SizedBox(height: AppSpacing.xl),
+                    _QuickActions(),
+                  ],
                 );
               }
               return ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 children: [
                   if (active != null) _ContinueWorkoutCard(workout: active),
                   for (final entry in entries) _WorkoutListCard(entry: entry),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppSpacing.md),
                   const _QuickActions(),
                 ],
               );
@@ -85,6 +91,19 @@ class TodayScreen extends ConsumerWidget {
 /// `inProgressWorkoutProvider` has a value (DM 6.4.1: at most one, so
 /// there's never a choice between several, and it's never duplicated
 /// inside the list below — the list query excludes `inProgress`).
+///
+/// Stage 10 redesign, AUDIT.md section 1.1: "today's workout and a future
+/// one look identical, despite differing in importance" and "the Start
+/// button is the only color accent on the whole screen". An active workout
+/// is the single most actionable thing this screen can show — given the
+/// same accent treatment the rest timer/summary's hero number use, instead
+/// of the plain neutral `Card` every other row gets. [StatusBadge] isn't
+/// used here (unlike the rows below): this card only ever renders for
+/// `inProgress`, so a status badge would just repeat what "Продолжить"
+/// already says. ASSUMPTION(today-hero-card): no mockup reference was
+/// available for this screen; the accent treatment is a cosmetic call
+/// applying AUDIT's own critique with the already-established token, not a
+/// literal copy of a reference design.
 class _ContinueWorkoutCard extends StatelessWidget {
   const _ContinueWorkoutCard({required this.workout});
 
@@ -93,17 +112,57 @@ class _ContinueWorkoutCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final semantic = Theme.of(context).extension<AppSemanticColors>()!;
     final name =
         workout.name ?? '${l10n.workoutDefaultNamePrefix} ${formatShortDate(workout.date)}';
+
     return Card(
-      child: ListTile(
-        title: Text(name),
-        subtitle: Text(workoutStatusLabel(l10n, workout.status)),
-        trailing: FilledButton(
-          onPressed: () => context.go('/history/workout/${workout.id}'),
-          child: Text(l10n.continueWorkoutAction),
-        ),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      color: semantic.accentContainer,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
         onTap: () => context.go('/history/workout/${workout.id}'),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            children: [
+              Icon(
+                Icons.play_circle_fill,
+                color: semantic.onAccentContainer,
+                size: 36,
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: semantic.onAccentContainer,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      workoutStatusLabel(l10n, workout.status),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(
+                        color: semantic.onAccentContainer,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              FilledButton(
+                onPressed: () => context.go('/history/workout/${workout.id}'),
+                child: Text(l10n.continueWorkoutAction),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -118,6 +177,11 @@ class _ContinueWorkoutCard extends StatelessWidget {
 /// carried over from the original single-card version): the button starts
 /// it directly (`startWorkoutFlow`, DM 6.4.1); tapping the card body opens
 /// the editor without changing status.
+///
+/// Stage 10 redesign, AUDIT.md section 1.1: status used to be buried as
+/// plain text in the middle of a dense one-line subtitle -- moved to a
+/// color-coded [StatusBadge] (same one History's cards use), always
+/// visible regardless of whether "Start" applies.
 class _WorkoutListCard extends ConsumerWidget {
   const _WorkoutListCard({required this.entry});
 
@@ -132,19 +196,31 @@ class _WorkoutListCard extends ConsumerWidget {
         workout.status == WorkoutStatus.draft ||
         workout.status == WorkoutStatus.planned;
     return Card(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
       child: ListTile(
         title: Text(name),
         subtitle: Text(
           '${formatShortDate(workout.date)} · '
-          '${workoutStatusLabel(l10n, workout.status)} · '
           '${l10n.workoutExerciseCount(entry.exerciseCount)}',
         ),
-        trailing: canStart
-            ? FilledButton(
+        // Row, not a stacked Column (badge above button): `ListTile`
+        // reserves only ~56dp of height for `trailing` regardless of a
+        // two-line subtitle, so a taller stack overflows it (found while
+        // testing this redesign, not just a test-harness quirk -- the
+        // stacked version really did overflow on-device too).
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            StatusBadge(status: workout.status),
+            if (canStart) ...[
+              const SizedBox(width: AppSpacing.sm),
+              FilledButton(
                 onPressed: () => startWorkoutFlow(context, ref, workout),
                 child: Text(l10n.todayStartAction),
-              )
-            : null,
+              ),
+            ],
+          ],
+        ),
         onTap: () => context.go('/history/workout/${workout.id}'),
       ),
     );
@@ -161,7 +237,7 @@ class _EmptyTodayState extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 24),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
       child: Column(
         children: [
           Icon(
@@ -169,7 +245,7 @@ class _EmptyTodayState extends StatelessWidget {
             size: 48,
             color: Theme.of(context).colorScheme.outline,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             l10n.todayEmptyTitle,
             style: Theme.of(context).textTheme.titleMedium,
