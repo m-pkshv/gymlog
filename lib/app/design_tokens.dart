@@ -207,6 +207,18 @@ class AppNumberTextStyles {
     return _tabular(context, Theme.of(context).textTheme.headlineSmall);
   }
 
+  /// A smaller sibling of [timer] for inline placements that must not
+  /// dominate their surroundings -- the workout editor's AppBar timer chip
+  /// (Stage 10 redesign, owner-reported: the old full-size timer took a
+  /// whole row on its own).
+  static TextStyle compactTimer(BuildContext context) {
+    return _tabular(
+      context,
+      Theme.of(context).textTheme.titleMedium,
+      weight: FontWeight.w700,
+    );
+  }
+
   static TextStyle stepperValue(BuildContext context) {
     return _tabular(context, Theme.of(context).textTheme.titleLarge);
   }

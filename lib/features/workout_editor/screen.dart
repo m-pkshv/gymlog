@@ -377,22 +377,63 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
       workoutEditorControllerProvider(widget.workoutId).notifier,
     );
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.workoutEditorTitle)),
-      body: detailsAsync.when(
-        data: (details) => _EditorBody(
-          details: details,
-          controller: controller,
-          onAddExercise: _addExercise,
-          onChangeStatus: _changeStatus,
-          onCopyLastPerformance: _copyLastPerformance,
-          onMoveDate: _moveDate,
-          onSetCompletedChanged: _onSetCompletedChanged,
-          onSetDeleted: _deleteSet,
-          onDeleteWorkout: _deleteWorkout,
-        ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => ErrorRetryState(
+    // Stage 10 redesign, owner-reported: the AppBar used to show a generic
+    // "Тренировка" literal (l10n.workoutEditorTitle) for every workout
+    // regardless of its actual name, with the running timer in its own
+    // oversized row below and the tags row always present even with zero
+    // tags assigned -- together leaving barely two sets visible on screen.
+    // The mockup keeps the header to one compact line: the workout's own
+    // name plus a small tappable elapsed-time chip, so the AppBar itself
+    // now needs `details` and is built per-state instead of once outside
+    // `.when()`.
+    return detailsAsync.when(
+      data: (details) {
+        final workout = details.workout;
+        final isActive = workout.status == WorkoutStatus.inProgress;
+        final scaffold = Scaffold(
+          appBar: AppBar(
+            title: Tooltip(
+              message: workout.name ?? l10n.workoutDefaultNamePrefix,
+              child: Text(
+                workout.name ?? l10n.workoutDefaultNamePrefix,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            actions: [
+              if (isActive)
+                _WorkoutTimerAction(
+                  workoutId: widget.workoutId,
+                  controller: controller,
+                ),
+            ],
+          ),
+          body: _EditorBody(
+            details: details,
+            controller: controller,
+            onAddExercise: _addExercise,
+            onChangeStatus: _changeStatus,
+            onCopyLastPerformance: _copyLastPerformance,
+            onMoveDate: _moveDate,
+            onSetCompletedChanged: _onSetCompletedChanged,
+            onSetDeleted: _deleteSet,
+            onDeleteWorkout: _deleteWorkout,
+          ),
+        );
+        // A single shared ticker for both the AppBar timer chip and the
+        // rest-timer card below (S-03/S-04, Stage 4) -- two independent
+        // `Timer.periodic`s previously made `tester.pumpAndSettle()`
+        // pathologically slow in widget tests (it never found a quiet
+        // moment where neither was about to fire).
+        return isActive ? _ActiveWorkoutTicker(child: scaffold) : scaffold;
+      },
+      loading: () => Scaffold(
+        appBar: AppBar(title: Text(l10n.workoutEditorTitle)),
+        body: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stackTrace) => Scaffold(
+        appBar: AppBar(title: Text(l10n.workoutEditorTitle)),
+        body: ErrorRetryState(
           message: l10n.workoutLoadError,
           onRetry: () => ref.invalidate(
             workoutEditorControllerProvider(widget.workoutId),
@@ -456,6 +497,7 @@ class _EditorBody extends StatelessWidget {
               const SizedBox(width: 8),
               StatusBadge(status: workout.status),
               const Spacer(),
+              _TagAddButton(workoutId: workout.id),
               WorkoutStatusMenu(
                 key: const ValueKey('workout-status-menu'),
                 status: workout.status,
@@ -467,8 +509,8 @@ class _EditorBody extends StatelessWidget {
           ),
         ),
         if (workout.status == WorkoutStatus.inProgress)
-          _ActiveWorkoutTimers(workoutId: workout.id, controller: controller),
-        _TagsRow(workoutId: workout.id, tags: details.tags),
+          _RestTimerBar(workoutId: workout.id, controller: controller),
+        _AssignedTagsWrap(tags: details.tags),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: CommentField(
@@ -631,24 +673,26 @@ class _StatusCtaButton extends StatelessWidget {
   }
 }
 
-/// Wraps the workout timer row and rest timer bar (S-03/S-04, Stage 4)
-/// under a single once-a-second ticker, instead of each owning its own
-/// `Timer.periodic` — two independent periodic timers made
-/// `tester.pumpAndSettle()` pathologically slow in widget tests (it never
-/// found a quiet moment where neither was about to fire), and it's wasted
-/// work in production too. Both children stay plain `ConsumerWidget`s that
-/// just read the current anchors fresh on every rebuild this ticker causes.
-class _ActiveWorkoutTimers extends StatefulWidget {
-  const _ActiveWorkoutTimers({required this.workoutId, required this.controller});
+/// A single shared one-second ticker for [_WorkoutTimerAction] (the AppBar
+/// chip) and the [_RestTimerBar] below it (S-03/S-04, Stage 4), instead of
+/// each owning its own `Timer.periodic` — two independent periodic timers
+/// previously made `tester.pumpAndSettle()` pathologically slow in widget
+/// tests (it never found a quiet moment where neither was about to fire),
+/// and it's wasted work in production too. Wraps the whole `Scaffold`
+/// (Stage 10 redesign moved the timer into the AppBar, outside the body
+/// column the old version wrapped) rather than a specific subtree; both
+/// descendants stay plain `ConsumerWidget`s that just read the current
+/// anchors fresh on every rebuild this ticker causes.
+class _ActiveWorkoutTicker extends StatefulWidget {
+  const _ActiveWorkoutTicker({required this.child});
 
-  final String workoutId;
-  final WorkoutEditorController controller;
+  final Widget child;
 
   @override
-  State<_ActiveWorkoutTimers> createState() => _ActiveWorkoutTimersState();
+  State<_ActiveWorkoutTicker> createState() => _ActiveWorkoutTickerState();
 }
 
-class _ActiveWorkoutTimersState extends State<_ActiveWorkoutTimers> {
+class _ActiveWorkoutTickerState extends State<_ActiveWorkoutTicker> {
   Timer? _ticker;
 
   @override
@@ -666,26 +710,31 @@ class _ActiveWorkoutTimersState extends State<_ActiveWorkoutTimers> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _WorkoutTimerRow(workoutId: widget.workoutId),
-        _RestTimerBar(workoutId: widget.workoutId, controller: widget.controller),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => widget.child;
 }
 
-/// Workout timer (S-03, Stage 4, TS 7.1): shown only while `inProgress`
-/// (`ActiveWorkoutState` exists only then, DM 6.14). The elapsed value is
+/// Compact AppBar timer chip (S-03, Stage 4, TS 7.1; Stage 10 redesign,
+/// owner-reported: the old full-width row -- big digits plus a separate
+/// pause icon button -- ate an entire row on its own, leaving too little
+/// room for the sets list; the mockup keeps it inline next to the
+/// workout's name instead). Tapping the whole chip pauses/resumes, the
+/// same action the old dedicated icon offered; the icon swaps between a
+/// running/paused glyph so the state stays visible without reading the
+/// tooltip (`ASSUMPTION(timer-chip-icon)`: the mockup's static frame only
+/// shows a plain clock glyph, since it never captures a paused moment --
+/// keeping a state-reflecting icon here preserves the pause affordance the
+/// dedicated button used to make obvious). Shown only while `inProgress`
+/// (`ActiveWorkoutState` exists only then, DM 6.14); the elapsed value is
 /// always recomputed from UTC anchors, never accumulated in memory, so a
-/// missed tick (backgrounded app) never desyncs the displayed time. Pause
-/// is the only manual control (rest timer is a separate, independent
-/// countdown below).
-class _WorkoutTimerRow extends ConsumerWidget {
-  const _WorkoutTimerRow({required this.workoutId});
+/// missed tick (backgrounded app) never desyncs the displayed time.
+class _WorkoutTimerAction extends ConsumerWidget {
+  const _WorkoutTimerAction({
+    required this.workoutId,
+    required this.controller,
+  });
 
   final String workoutId;
+  final WorkoutEditorController controller;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -696,30 +745,42 @@ class _WorkoutTimerRow extends ConsumerWidget {
       data: (state) {
         if (state == null) return const SizedBox.shrink();
         final timerService = ref.read(activeWorkoutTimerServiceProvider);
-        final controller = ref.read(
-          workoutEditorControllerProvider(workoutId).notifier,
-        );
         final elapsed = timerService.elapsedSeconds(state);
 
         return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Row(
-            children: [
-              Text(
-                formatElapsedTime(elapsed),
-                style: AppNumberTextStyles.timer(context),
+          padding: const EdgeInsets.only(right: AppSpacing.sm),
+          child: Tooltip(
+            message: state.isPaused
+                ? l10n.workoutTimerResumeAction
+                : l10n.workoutTimerPauseAction,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(AppRadius.control),
+              onTap: state.isPaused
+                  ? controller.resumeTimer
+                  : controller.pauseTimer,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.sm,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      state.isPaused
+                          ? Icons.play_circle_outline
+                          : Icons.pause_circle_outline,
+                      size: 20,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      formatElapsedTime(elapsed),
+                      style: AppNumberTextStyles.compactTimer(context),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(width: 8),
-              IconButton(
-                tooltip: state.isPaused
-                    ? l10n.workoutTimerResumeAction
-                    : l10n.workoutTimerPauseAction,
-                icon: Icon(state.isPaused ? Icons.play_arrow : Icons.pause),
-                onPressed: state.isPaused
-                    ? controller.resumeTimer
-                    : controller.pauseTimer,
-              ),
-            ],
+            ),
           ),
         );
       },
@@ -828,21 +889,19 @@ class _RestTimerBar extends ConsumerWidget {
   }
 }
 
-/// Assigned-tags row (S-03: "теги (чипы + «+»)") — read-only chips for each
-/// tag plus a trailing icon button that opens [TagPickerSheet]. Hidden
-/// entirely when `AppSettings.showTags` is off (S-17: "выключение скрывает
-/// чипы и фильтр тегов, данные не меняются") — this only affects
-/// visibility, the workout's tag links are untouched.
-///
-/// Stage 10, owner-reported: the trailing trigger is icon-only
-/// (`Icons.label_outline`, the conventional "tag" glyph) instead of a
-/// labelled "+ Добавить тег" chip — shorter, and reads clearly next to the
-/// assigned-tag chips it sits among.
-class _TagsRow extends ConsumerWidget {
-  const _TagsRow({required this.workoutId, required this.tags});
+/// "+ Добавить тег" trigger (S-03), now folded into the date/status row
+/// instead of its own full-width row (Stage 10 redesign, owner-reported:
+/// that row was always present -- taking up space -- even with zero tags
+/// assigned, which both the pre- and post-redesign screenshots showed as
+/// the common case). Reads `AppSettings.showTags` itself (S-17:
+/// "выключение скрывает... фильтр тегов") so callers don't need to know
+/// about the setting. Icon-only (`Icons.label_outline`, the conventional
+/// "tag" glyph) rather than a labelled chip -- shorter, and reads clearly
+/// next to the status menu it now sits beside.
+class _TagAddButton extends ConsumerWidget {
+  const _TagAddButton({required this.workoutId});
 
   final String workoutId;
-  final List<WorkoutTag> tags;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -850,26 +909,41 @@ class _TagsRow extends ConsumerWidget {
     if (!showTags) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context)!;
 
+    return IconButton(
+      icon: const Icon(Icons.label_outline),
+      tooltip: l10n.workoutTagsAddAction,
+      visualDensity: VisualDensity.compact,
+      onPressed: () => showModalBottomSheet<void>(
+        context: context,
+        showDragHandle: true,
+        isScrollControlled: true,
+        builder: (context) => TagPickerSheet(workoutId: workoutId),
+      ),
+    );
+  }
+}
+
+/// Read-only chips for each assigned tag (S-03) -- wraps to a new line if
+/// there are several. Renders nothing when there are no tags (the common
+/// case the "+" trigger above now handles on its own, Stage 10 redesign)
+/// or `AppSettings.showTags` is off (S-17) -- this only affects
+/// visibility, the workout's tag links are untouched.
+class _AssignedTagsWrap extends ConsumerWidget {
+  const _AssignedTagsWrap({required this.tags});
+
+  final List<WorkoutTag> tags;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final showTags = ref.watch(appSettingsProvider).value?.showTags ?? true;
+    if (!showTags || tags.isEmpty) return const SizedBox.shrink();
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Wrap(
         spacing: 8,
         runSpacing: 4,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          for (final tag in tags) WorkoutTagChip(tag: tag),
-          IconButton(
-            icon: const Icon(Icons.label_outline),
-            tooltip: l10n.workoutTagsAddAction,
-            visualDensity: VisualDensity.compact,
-            onPressed: () => showModalBottomSheet<void>(
-              context: context,
-              showDragHandle: true,
-              isScrollControlled: true,
-              builder: (context) => TagPickerSheet(workoutId: workoutId),
-            ),
-          ),
-        ],
+        children: [for (final tag in tags) WorkoutTagChip(tag: tag)],
       ),
     );
   }

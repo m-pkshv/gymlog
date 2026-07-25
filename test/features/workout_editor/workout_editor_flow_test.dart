@@ -686,25 +686,25 @@ void main() {
       await tester.tap(_statusCta);
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.pause), findsOneWidget);
-      expect(find.byIcon(Icons.play_arrow), findsNothing);
+      expect(find.byIcon(Icons.pause_circle_outline), findsOneWidget);
+      expect(find.byIcon(Icons.play_circle_outline), findsNothing);
 
       final workoutId = (await db.select(db.workouts).get()).single.id;
 
-      await tester.tap(find.byIcon(Icons.pause));
+      await tester.tap(find.byIcon(Icons.pause_circle_outline));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.play_arrow), findsOneWidget);
-      expect(find.byIcon(Icons.pause), findsNothing);
+      expect(find.byIcon(Icons.play_circle_outline), findsOneWidget);
+      expect(find.byIcon(Icons.pause_circle_outline), findsNothing);
       var state = await (db.select(
         db.activeWorkoutStates,
       )..where((s) => s.workoutId.equals(workoutId))).getSingle();
       expect(state.isPaused, isTrue);
 
-      await tester.tap(find.byIcon(Icons.play_arrow));
+      await tester.tap(find.byIcon(Icons.play_circle_outline));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.pause), findsOneWidget);
+      expect(find.byIcon(Icons.pause_circle_outline), findsOneWidget);
       state = await (db.select(
         db.activeWorkoutStates,
       )..where((s) => s.workoutId.equals(workoutId))).getSingle();
