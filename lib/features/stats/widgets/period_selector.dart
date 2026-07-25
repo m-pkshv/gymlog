@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/design_tokens.dart';
 import '../../../core/stats_period.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -55,22 +56,60 @@ class PeriodSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    // Stage 10 redesign, AUDIT.md section 1.4: the previous default-sized
+    // chips wrapped onto two rows ("Нед/Мес/3М/Год" then "Всё/Свой"),
+    // "eating vertical space for navigation, not data". A compact density
+    // + tighter label padding shrinks each chip enough that all 6 stay on
+    // one row for the labels this app actually ships (RU: Нед/Мес/3М/Год/
+    // Всё/Свой; EN: Week/Month/3M/Year/All/Custom) -- kept as a `Wrap`
+    // rather than a horizontally scrollable row so every chip stays fully
+    // laid out and tappable (a scrolled-away chip would need
+    // `scrollUntilVisible` to reach both for a user and for tests) even in
+    // the rare case a very narrow screen still forces a second row.
     return Wrap(
-      spacing: 8,
-      runSpacing: 4,
+      spacing: AppSpacing.xs,
+      runSpacing: AppSpacing.xs,
       children: [
         for (final preset in _presets)
-          ChoiceChip(
-            label: Text(_label(l10n, preset)),
+          _PeriodChip(
+            label: _label(l10n, preset),
             selected: period.preset == preset,
-            onSelected: (_) => onChanged(StatsPeriod.preset(preset)),
+            onSelected: () => onChanged(StatsPeriod.preset(preset)),
           ),
-        ChoiceChip(
-          label: Text(_label(l10n, StatsPeriodPreset.custom)),
+        _PeriodChip(
+          label: _label(l10n, StatsPeriodPreset.custom),
           selected: period.preset == StatsPeriodPreset.custom,
-          onSelected: (_) => _pickCustomRange(context),
+          onSelected: () => _pickCustomRange(context),
         ),
       ],
+    );
+  }
+}
+
+class _PeriodChip extends StatelessWidget {
+  const _PeriodChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    // `VisualDensity.compact` only shrinks the chip's own padding, not the
+    // platform's minimum tap target (UX 11: every control stays >= 48dp)
+    // -- unlike `MaterialTapTargetSize.shrinkWrap`, which was deliberately
+    // not used here for that reason.
+    return ChoiceChip(
+      label: Text(label),
+      labelStyle: Theme.of(context).textTheme.labelSmall,
+      labelPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      visualDensity: VisualDensity.compact,
+      selected: selected,
+      onSelected: (_) => onSelected(),
     );
   }
 }

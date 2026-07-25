@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
 import '../../core/date_format.dart';
 import '../../core/widgets/error_retry_state.dart';
@@ -14,6 +15,7 @@ import 'exercise_progress_series.dart';
 import 'record_type_labels.dart';
 import 'record_value_format.dart';
 import 'widgets/exercise_progress_chart.dart';
+import 'widgets/stats_section_card.dart';
 
 /// S-10 "Прогресс по упражнению" (04_UI_UX_SPEC.md, section 5): period-
 /// filtered progress charts (max weight/1RM/tonnage for strength/reps, or
@@ -133,42 +135,35 @@ class _ProgressBody extends ConsumerWidget {
               ..sort((a, b) => a.keyValue!.compareTo(b.keyValue!));
 
         return ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
             ..._chartsFor(l10n, exercise.exerciseType, history),
             if (repsAtWeight.isNotEmpty) ...[
-              Text(
-                l10n.statsRepsAtWeightTableTitle,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-              Card(
+              StatsSectionCard(
+                title: l10n.statsRepsAtWeightTableTitle,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: _RepsAtWeightTable(l10n: l10n, records: repsAtWeight),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.lg),
             ],
-            Text(
-              l10n.statsRecordsSectionTitle,
-              style: Theme.of(context).textTheme.titleMedium,
+            StatsSectionCard(
+              title: l10n.statsRecordsSectionTitle,
+              child: generalRecords.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.sm,
+                      ),
+                      child: Text(l10n.statsRecordsEmptyState),
+                    )
+                  : Column(
+                      children: [
+                        for (final record in generalRecords)
+                          _RecordTile(l10n: l10n, record: record),
+                      ],
+                    ),
             ),
-            const SizedBox(height: 8),
-            if (generalRecords.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(l10n.statsRecordsEmptyState),
-              )
-            else
-              Card(
-                child: Column(
-                  children: [
-                    for (final record in generalRecords)
-                      _RecordTile(l10n: l10n, record: record),
-                  ],
-                ),
-              ),
           ],
         );
       },
@@ -200,20 +195,20 @@ class _ProgressBody extends ConsumerWidget {
             history: history,
             seriesBuilder: maxWeightSeries,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           ExerciseProgressChart(
             title: l10n.recordTypeMax1RM,
             history: history,
             seriesBuilder: oneRepMaxSeries,
             isEstimated: true,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           ExerciseProgressChart(
             title: l10n.recordTypeMaxVolumeWorkout,
             history: history,
             seriesBuilder: tonnageSeries,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
         ];
       case ExerciseType.cardio:
         return [
@@ -222,19 +217,19 @@ class _ProgressBody extends ConsumerWidget {
             history: history,
             seriesBuilder: maxDistanceSeries,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           ExerciseProgressChart(
             title: l10n.recordTypeBestPace,
             history: history,
             seriesBuilder: bestPaceSeries,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           ExerciseProgressChart(
             title: l10n.recordTypeLongestDuration,
             history: history,
             seriesBuilder: longestDurationSeries,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
         ];
       case ExerciseType.time:
       case ExerciseType.stretch:
@@ -266,7 +261,7 @@ class _RecordTile extends StatelessWidget {
         children: [
           Text(
             formatRecordValue(l10n, record.recordType, record.value),
-            style: Theme.of(context).textTheme.titleMedium,
+            style: AppNumberTextStyles.setValue(context),
           ),
           if (isEstimatedRecord(record.recordType))
             Text(

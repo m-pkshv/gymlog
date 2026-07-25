@@ -9,8 +9,10 @@ import 'package:gymlog/data/repositories_impl/body_measurement_repository_impl.d
 import 'package:gymlog/data/repositories_impl/exercise_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
+import 'package:gymlog/core/widgets/hero_stat_tile.dart';
 import 'package:gymlog/features/measurements/widgets/measurement_chart.dart';
 import 'package:gymlog/features/stats/screen.dart';
+import 'package:gymlog/features/stats/widgets/stats_section_card.dart';
 import 'package:gymlog/features/stats/widgets/workout_stats_card.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
@@ -77,6 +79,25 @@ void main() {
 
     await _unmountAndFlush(tester);
   });
+
+  testWidgets(
+    'every S-09 section uses the shared StatsSectionCard (Stage 10 '
+    'redesign, AUDIT.md 1.4: "no visual separation between cards")',
+    (tester) async {
+      // "Weight"/"Body fat"/"Measurements"/"Workouts"/exercise-progress
+      // entry -- 5 sections in total.
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(StatsSectionCard), findsNWidgets(5));
+
+      await _unmountAndFlush(tester);
+    },
+  );
 
   testWidgets('the Weight card defaults to the Month period', (tester) async {
     await tester.pumpWidget(_appUnderTest(db));
@@ -328,6 +349,13 @@ void main() {
         expect(
           find.descendant(of: card, matching: find.text('0.2 / wk')),
           findsOneWidget,
+        );
+        // Stage 10 redesign, AUDIT.md 1.4: "the numbers ... aren't
+        // visually emphasized" -- the three stats now render as
+        // HeroStatTiles, not the pre-redesign ad hoc plain-text tiles.
+        expect(
+          find.descendant(of: card, matching: find.byType(HeroStatTile)),
+          findsNWidgets(3),
         );
 
         await _unmountAndFlush(tester);

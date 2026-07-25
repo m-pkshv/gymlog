@@ -23,13 +23,24 @@ class MeasurementChart extends StatelessWidget {
         FlSpot(i.toDouble(), displayValue(entries[i])),
     ];
     final color = Theme.of(context).colorScheme.primary;
+    // Stage 10 redesign, AUDIT.md section 1.4: "the chart is small, cramped
+    // by padding". Taller (180 -> 220) with lighter side padding, and no
+    // horizontal grid lines -- AUDIT also flagged "an unlabeled dashed
+    // average line" on the pre-redesign screenshot, but no code here (or
+    // anywhere in `lib/`) ever drew one; the closest candidate is
+    // `FlGridData`'s default horizontal grid line, which this removes
+    // rather than trying to retroactively label something the app never
+    // actually rendered.
     return SizedBox(
-      height: 180,
+      height: 220,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 16, 16, 8),
+        padding: const EdgeInsets.fromLTRB(4, 16, 12, 4),
         child: LineChart(
           LineChartData(
-            gridData: const FlGridData(drawVerticalLine: false),
+            gridData: const FlGridData(
+              drawVerticalLine: false,
+              drawHorizontalLine: false,
+            ),
             borderData: FlBorderData(show: false),
             titlesData: const FlTitlesData(
               topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -48,7 +59,7 @@ class MeasurementChart extends StatelessWidget {
               LineChartBarData(
                 spots: spots,
                 color: color,
-                barWidth: 2,
+                barWidth: 3,
                 dotData: const FlDotData(),
                 belowBarData: BarAreaData(
                   show: true,
