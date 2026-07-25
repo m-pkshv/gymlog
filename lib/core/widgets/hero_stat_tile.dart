@@ -16,12 +16,18 @@ class HeroStatTile extends StatelessWidget {
     required this.label,
     this.icon,
     this.valueColor,
+    this.iconColor,
   });
 
   final String value;
   final String label;
   final IconData? icon;
   final Color? valueColor;
+
+  /// Defaults to [ColorScheme.primary] -- overridable for tiles placed on a
+  /// non-default background (e.g. an accent-tinted card), where the default
+  /// primary-blue icon would clash.
+  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +37,7 @@ class HeroStatTile extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (icon != null) ...[
-          Icon(icon, color: scheme.primary),
+          Icon(icon, color: iconColor ?? scheme.primary),
           const SizedBox(height: AppSpacing.xs),
         ],
         Text(

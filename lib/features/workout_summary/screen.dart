@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
 import '../../core/constants.dart';
 import '../../core/duration_format.dart';
 import '../../core/widgets/error_retry_state.dart';
+import '../../core/widgets/hero_stat_tile.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/personal_record.dart';
 import '../../domain/models/workout_details.dart';
@@ -111,40 +113,67 @@ class _SummaryBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final semantic = Theme.of(context).extension<AppSemanticColors>()!;
     final stats = computeWorkoutSummaryStats(details);
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
-        Wrap(
-          spacing: 24,
-          runSpacing: 16,
-          children: [
-            _StatTile(
+        // Duration is this screen's hero number (Stage 10 redesign,
+        // AUDIT.md section 1.7: "probably the most emotionally significant
+        // number right after finishing", but pre-redesign it carried the
+        // same visual weight as exercises/sets/tonnage). Given its own
+        // accent-tinted card, full width, above a plain row of the other
+        // three. ASSUMPTION(summary-hero-layout): no mockup reference was
+        // available for this screen specifically; this exact split (hero
+        // duration + a row of secondary tiles, replacing the audited 2x2
+        // grid) is a cosmetic call following AUDIT's explicit critique, not
+        // a literal copy of a reference design.
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: semantic.accentContainer,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: HeroStatTile(
               icon: Icons.timer_outlined,
+              iconColor: semantic.onAccentContainer,
               value: formatElapsedTime(details.workout.actualDurationSec ?? 0),
               label: l10n.workoutSummaryDurationLabel,
+              valueColor: semantic.onAccentContainer,
             ),
-            _StatTile(
-              icon: Icons.fitness_center,
-              value: stats.exerciseCount.toString(),
-              label: l10n.workoutSummaryExercisesLabel,
-            ),
-            _StatTile(
-              icon: Icons.checklist,
-              value: stats.setCount.toString(),
-              label: l10n.workoutSummarySetsLabel,
-            ),
-            _StatTile(
-              icon: Icons.scale_outlined,
-              value: l10n.workoutSummaryTonnageValue(
-                stats.tonnageKg.toStringAsFixed(1),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Row(
+          children: [
+            Expanded(
+              child: HeroStatTile(
+                icon: Icons.fitness_center,
+                value: stats.exerciseCount.toString(),
+                label: l10n.workoutSummaryExercisesLabel,
               ),
-              label: l10n.workoutSummaryTonnageLabel,
+            ),
+            Expanded(
+              child: HeroStatTile(
+                icon: Icons.checklist,
+                value: stats.setCount.toString(),
+                label: l10n.workoutSummarySetsLabel,
+              ),
+            ),
+            Expanded(
+              child: HeroStatTile(
+                icon: Icons.scale_outlined,
+                value: l10n.workoutSummaryTonnageValue(
+                  stats.tonnageKg.toStringAsFixed(1),
+                ),
+                label: l10n.workoutSummaryTonnageLabel,
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xl),
         _NewRecordsSection(
           workoutId: details.workout.id,
           exercises: details.exercises,
@@ -178,38 +207,6 @@ class _SummaryBody extends StatelessWidget {
           child: Text(l10n.workoutSummaryDoneAction),
         ),
       ],
-    );
-  }
-}
-
-class _StatTile extends StatelessWidget {
-  const _StatTile({
-    required this.icon,
-    required this.value,
-    required this.label,
-  });
-
-  final IconData icon;
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 130,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(height: 4),
-          Text(value, style: Theme.of(context).textTheme.titleLarge),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall,
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
     );
   }
 }
@@ -264,6 +261,18 @@ class _ExerciseProgressionRow extends ConsumerWidget {
 /// the section itself, including its own trailing spacing, is conditional,
 /// not just its content (the caller places this right after the stat tiles
 /// unconditionally).
+///
+/// Stage 10 redesign, AUDIT.md section 1.7: two named problems fixed here.
+/// (1) "the one moment meant to reward the user looked as neutral as a
+/// settings screen" -- given an accent-tinted card (the same family
+/// `RestTimerCard` uses for its own energetic-CTA role) instead of a plain
+/// `Card`. (2) "the exercise name repeats once per record instead of
+/// grouping" -- records are now grouped by exercise, one name heading
+/// followed by all of that exercise's new records, rather than one
+/// `ListTile` per record with a repeated title. ASSUMPTION(new-records-
+/// styling): no mockup reference was available for this screen; both fixes
+/// are cosmetic calls that apply the audit's own critique with the already-
+/// established accent token, not a literal copy of a reference design.
 class _NewRecordsSection extends ConsumerWidget {
   const _NewRecordsSection({required this.workoutId, required this.exercises});
 
@@ -273,49 +282,113 @@ class _NewRecordsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final rows = <Widget>[];
+    final semantic = Theme.of(context).extension<AppSemanticColors>()!;
+    final groups = <(String exerciseName, List<PersonalRecord> records)>[];
     for (final exerciseDetails in exercises) {
       final records =
           ref.watch(personalRecordsForExerciseProvider(exerciseDetails.exercise.id)).value ??
           const <PersonalRecord>[];
-      for (final record in records) {
-        if (record.workoutId != workoutId) continue;
-        rows.add(
-          _NewRecordRow(
-            l10n: l10n,
-            exerciseName: exerciseDetails.exercise.name,
-            record: record,
-          ),
-        );
+      final newRecords = records
+          .where((record) => record.workoutId == workoutId)
+          .toList();
+      if (newRecords.isNotEmpty) {
+        groups.add((exerciseDetails.exercise.name, newRecords));
       }
     }
-    if (rows.isEmpty) return const SizedBox.shrink();
+    if (groups.isEmpty) return const SizedBox.shrink();
 
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: semantic.accentContainer,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.emoji_events, color: semantic.onAccentContainer),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    l10n.workoutSummaryNewRecordsTitle,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: semantic.onAccentContainer,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              for (final group in groups)
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.md),
+                  child: _NewRecordExerciseGroup(
+                    l10n: l10n,
+                    exerciseName: group.$1,
+                    records: group.$2,
+                    onContainerColor: semantic.onAccentContainer,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NewRecordExerciseGroup extends StatelessWidget {
+  const _NewRecordExerciseGroup({
+    required this.l10n,
+    required this.exerciseName,
+    required this.records,
+    required this.onContainerColor,
+  });
+
+  final AppLocalizations l10n;
+  final String exerciseName;
+  final List<PersonalRecord> records;
+  final Color onContainerColor;
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l10n.workoutSummaryNewRecordsTitle,
-          style: Theme.of(context).textTheme.titleMedium,
+          exerciseName,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            color: onContainerColor,
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        const SizedBox(height: 8),
-        Card(child: Column(children: rows)),
-        const SizedBox(height: 24),
+        for (final record in records)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xs),
+            child: _NewRecordDetail(
+              l10n: l10n,
+              record: record,
+              onContainerColor: onContainerColor,
+            ),
+          ),
       ],
     );
   }
 }
 
-class _NewRecordRow extends StatelessWidget {
-  const _NewRecordRow({
+class _NewRecordDetail extends StatelessWidget {
+  const _NewRecordDetail({
     required this.l10n,
-    required this.exerciseName,
     required this.record,
+    required this.onContainerColor,
   });
 
   final AppLocalizations l10n;
-  final String exerciseName;
   final PersonalRecord record;
+  final Color onContainerColor;
 
   @override
   Widget build(BuildContext context) {
@@ -324,25 +397,34 @@ class _NewRecordRow extends StatelessWidget {
       if (record.recordType == RecordType.maxRepsAtWeight)
         l10n.statsKgValue(record.keyValue!.toStringAsFixed(1)),
     ];
-    return ListTile(
-      leading: const Icon(Icons.emoji_events_outlined),
-      title: Text(exerciseName),
-      subtitle: Text(subtitleParts.join(' · ')),
-      trailing: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            formatRecordValue(l10n, record.recordType, record.value),
-            style: Theme.of(context).textTheme.titleMedium,
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            subtitleParts.join(' · '),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: onContainerColor),
           ),
-          if (isEstimatedRecord(record.recordType))
-            Text(
+        ),
+        Text(
+          formatRecordValue(l10n, record.recordType, record.value),
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            color: onContainerColor,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        if (isEstimatedRecord(record.recordType))
+          Padding(
+            padding: const EdgeInsets.only(left: AppSpacing.xs),
+            child: Text(
               l10n.statsEstimatedBadge,
-              style: Theme.of(context).textTheme.bodySmall,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: onContainerColor.withValues(alpha: 0.75),
+              ),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
