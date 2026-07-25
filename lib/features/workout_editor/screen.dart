@@ -795,6 +795,7 @@ class _TagsRow extends ConsumerWidget {
             onPressed: () => showModalBottomSheet<void>(
               context: context,
               showDragHandle: true,
+              isScrollControlled: true,
               builder: (context) => TagPickerSheet(workoutId: workoutId),
             ),
           ),

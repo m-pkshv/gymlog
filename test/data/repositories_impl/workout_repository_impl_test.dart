@@ -363,6 +363,68 @@ void main() {
     },
   );
 
+  group('watchHistory reacts to tag changes (Stage 10, owner-reported)', () {
+    // Before this fix, `watchHistory`'s `.watch()` only reacted to the
+    // tables its own query touches (workouts/workoutExercises) --
+    // `workoutTagLinks` wasn't one of them, so an assignment or deletion
+    // never made the stream re-emit until something else happened to touch
+    // the workout row too (e.g. an app restart).
+    test('a tag assignment shows up without another change', () async {
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 19));
+      await workouts.updateWorkout(
+        workout.copyWith(status: WorkoutStatus.completed),
+      );
+      final tag = await tags.create(name: 'Leg day', colorHex: '#4C7BD9');
+
+      final emissions = <List<String>>[];
+      final subscription = workouts.watchHistory().listen(
+        (entries) => emissions.add(
+          entries
+              .firstWhere((e) => e.workout.id == workout.id)
+              .tags
+              .map((t) => t.id)
+              .toList(),
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(emissions.last, isEmpty);
+
+      await workouts.setWorkoutTags(workoutId: workout.id, tagIds: [tag.id]);
+      await Future<void>.delayed(Duration.zero);
+      expect(emissions.last, [tag.id]);
+
+      await subscription.cancel();
+    });
+
+    test('deleting a tag shows up without another change', () async {
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 19));
+      await workouts.updateWorkout(
+        workout.copyWith(status: WorkoutStatus.completed),
+      );
+      final tag = await tags.create(name: 'Leg day', colorHex: '#4C7BD9');
+      await workouts.setWorkoutTags(workoutId: workout.id, tagIds: [tag.id]);
+
+      final emissions = <List<String>>[];
+      final subscription = workouts.watchHistory().listen(
+        (entries) => emissions.add(
+          entries
+              .firstWhere((e) => e.workout.id == workout.id)
+              .tags
+              .map((t) => t.id)
+              .toList(),
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(emissions.last, [tag.id]);
+
+      await tags.delete(tag.id);
+      await Future<void>.delayed(Duration.zero);
+      expect(emissions.last, isEmpty);
+
+      await subscription.cancel();
+    });
+  });
+
   test('getDetails returns null for an unknown workout', () async {
     expect(await workouts.getDetails('does-not-exist'), isNull);
   });

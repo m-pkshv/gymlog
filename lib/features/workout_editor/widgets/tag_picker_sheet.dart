@@ -55,48 +55,60 @@ class TagPickerSheet extends ConsumerWidget {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.workoutTagsSheetTitle,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 12),
-            tagsAsync.when(
-              data: (tags) => tags.isEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Text(l10n.workoutTagsEmpty),
-                    )
-                  : Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        for (final tag in tags)
-                          FilterChip(
-                            avatar: CircleAvatar(
-                              backgroundColor: tagColor(tag.colorHex),
-                              radius: 8,
+        // Stage 10, owner-reported: with 17 seeded muscle-group tags plus
+        // whatever custom ones exist, the chip `Wrap` regularly grows
+        // taller than the sheet's available height and overflows past the
+        // bottom of the screen. Scrolling the content (same fix already
+        // used by the exercise/history filter sheets) instead of letting
+        // it overflow.
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.workoutTagsSheetTitle,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 12),
+              tagsAsync.when(
+                data: (tags) => tags.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Text(l10n.workoutTagsEmpty),
+                      )
+                    : Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final tag in tags)
+                            FilterChip(
+                              avatar: CircleAvatar(
+                                backgroundColor: tagColor(tag.colorHex),
+                                radius: 8,
+                              ),
+                              label: Text(workoutTagLabel(l10n, tag)),
+                              selected: assignedIds.contains(tag.id),
+                              onSelected: (selected) => _toggle(
+                                controller,
+                                assignedIds,
+                                tag,
+                                selected,
+                              ),
                             ),
-                            label: Text(workoutTagLabel(l10n, tag)),
-                            selected: assignedIds.contains(tag.id),
-                            onSelected: (selected) =>
-                                _toggle(controller, assignedIds, tag, selected),
-                          ),
-                      ],
-                    ),
-              loading: () => const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: Center(child: CircularProgressIndicator()),
+                        ],
+                      ),
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                error: (error, stackTrace) => ErrorRetryState(
+                  message: l10n.workoutTagsLoadError,
+                  onRetry: () => ref.invalidate(workoutTagsListProvider),
+                ),
               ),
-              error: (error, stackTrace) => ErrorRetryState(
-                message: l10n.workoutTagsLoadError,
-                onRetry: () => ref.invalidate(workoutTagsListProvider),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

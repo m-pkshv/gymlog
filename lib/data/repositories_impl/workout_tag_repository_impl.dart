@@ -68,6 +68,9 @@ class WorkoutTagRepositoryImpl implements WorkoutTagRepository {
   Future<void> delete(String tagId) async {
     final now = DateTime.now().toUtc().toIso8601String();
     await _db.transaction(() async {
+      final affectedWorkoutIds = await (_db.select(
+        _db.workoutTagLinks,
+      )..where((l) => l.tagId.equals(tagId))).map((l) => l.workoutId).get();
       await (_db.delete(
         _db.workoutTagLinks,
       )..where((l) => l.tagId.equals(tagId))).go();
@@ -79,6 +82,18 @@ class WorkoutTagRepositoryImpl implements WorkoutTagRepository {
           updatedAt: Value(now),
         ),
       );
+      // Same reactivity gap as `WorkoutRepositoryImpl.setWorkoutTags` (Stage
+      // 10, owner-reported): a workout's tag list is fetched separately from
+      // `watchHistory`'s watched query, which only reacts to
+      // `workouts`/`workoutExercises`. Touch every affected workout's row so
+      // History picks up the removal without an app restart.
+      if (affectedWorkoutIds.isNotEmpty) {
+        await (_db.update(
+          _db.workouts,
+        )..where((w) => w.id.isIn(affectedWorkoutIds))).write(
+          drift.WorkoutsCompanion(updatedAt: Value(now)),
+        );
+      }
     });
   }
 }

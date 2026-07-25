@@ -534,6 +534,7 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
     required String workoutId,
     required List<String> tagIds,
   }) async {
+    final now = DateTime.now().toUtc().toIso8601String();
     await _db.transaction(() async {
       await (_db.delete(
         _db.workoutTagLinks,
@@ -548,6 +549,18 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
               ),
             );
       }
+      // Stage 10, owner-reported: `watchHistory`'s `.watch()` only reacts to
+      // the tables its own query touches (`workouts`/`workoutExercises`) --
+      // `workoutTagLinks` isn't one of them, so a tag assignment never made
+      // the History list's stream re-emit until something else (e.g. an app
+      // restart) happened to touch the workout row too. Bumping `updatedAt`
+      // here closes that gap, the same way `deleteWorkout`/`restoreWorkout`
+      // already touch the parent row alongside their child-table writes.
+      await (_db.update(
+        _db.workouts,
+      )..where((w) => w.id.equals(workoutId))).write(
+        drift.WorkoutsCompanion(updatedAt: Value(now)),
+      );
     });
   }
 
