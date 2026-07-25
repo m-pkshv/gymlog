@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart' show Value;
+﻿import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +15,7 @@ import 'package:gymlog/domain/models/exercise_localization.dart';
 import 'package:gymlog/domain/repositories/exercise_repository.dart';
 import 'package:gymlog/features/exercises/create_exercise_screen.dart';
 import 'package:gymlog/features/exercises/screen.dart';
+import 'package:gymlog/app/theme.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
 Widget _appUnderTest(AppDatabase db, {ExerciseRepository? exerciseRepository}) {
@@ -36,6 +37,7 @@ Widget _appUnderTest(AppDatabase db, {ExerciseRepository? exerciseRepository}) {
         exerciseRepositoryProvider.overrideWithValue(exerciseRepository),
     ],
     child: MaterialApp.router(
+      theme: buildLightTheme(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: router,

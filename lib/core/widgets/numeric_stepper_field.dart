@@ -107,6 +107,7 @@ class NumericStepperField extends StatelessWidget {
                 ),
                 Expanded(
                   child: InkWell(
+                    key: const ValueKey('numeric-stepper-value'),
                     borderRadius: BorderRadius.circular(AppRadius.control),
                     onTap: () => _openPreciseEntry(context),
                     child: Padding(

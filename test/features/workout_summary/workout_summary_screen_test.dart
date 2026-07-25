@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart' hide isNull, isNotNull;
+﻿import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +8,7 @@ import 'package:gymlog/app/providers.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/features/workout_summary/screen.dart';
+import 'package:gymlog/app/theme.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
 /// Only the summary route plus a placeholder History root -- enough to
@@ -33,6 +34,7 @@ Widget _appUnderTest(AppDatabase db, {String workoutId = 'w1'}) {
   return ProviderScope(
     overrides: [appDatabaseProvider.overrideWithValue(db)],
     child: MaterialApp.router(
+      theme: buildLightTheme(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: router,

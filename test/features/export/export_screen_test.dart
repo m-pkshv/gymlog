@@ -1,4 +1,4 @@
-import 'package:drift/native.dart';
+﻿import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,6 +9,7 @@ import 'package:gymlog/data/repositories_impl/import_export_operation_repository
 import 'package:gymlog/domain/models/import_export_operation.dart';
 import 'package:gymlog/features/export/export_format_help_screen.dart';
 import 'package:gymlog/features/export/export_screen.dart';
+import 'package:gymlog/app/theme.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
 /// Mirrors the `/more/export` (+ `format`) slice of the real router (Stage
@@ -33,6 +34,7 @@ Widget _appUnderTest(AppDatabase db) {
   return ProviderScope(
     overrides: [appDatabaseProvider.overrideWithValue(db)],
     child: MaterialApp.router(
+      theme: buildLightTheme(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: router,

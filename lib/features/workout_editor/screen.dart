@@ -4,11 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
 import '../../core/constants.dart';
 import '../../core/date_format.dart';
 import '../../core/duration_format.dart';
 import '../../core/widgets/error_retry_state.dart';
+import '../../core/widgets/rest_timer_card.dart';
+import '../../core/widgets/status_badge.dart';
+import '../../core/widgets/workout_status_menu.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/exercise.dart';
 import '../../domain/models/workout_details.dart';
@@ -313,6 +317,43 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
     return confirmed ?? false;
   }
 
+  /// "⋮ → Удалить" in the redesigned status menu (Stage 10 redesign) --
+  /// the editor never had its own delete action before (only History did,
+  /// Stage 3/Step 9); reuses the exact same `WorkoutService.delete`/
+  /// `restore` + 5s Undo snackbar pattern, since the underlying rule (DM
+  /// 10: rejected while `inProgress`) is the service's job, not this
+  /// screen's -- the menu offers it unconditionally and surfaces the
+  /// service's rejection as an error snackbar, same as History does.
+  Future<void> _deleteWorkout() async {
+    final l10n = AppLocalizations.of(context)!;
+    final workout = ref
+        .read(workoutEditorControllerProvider(widget.workoutId))
+        .value
+        ?.workout;
+    if (workout == null) return;
+    final result = await ref.read(workoutServiceProvider).delete(workout);
+    if (!mounted) return;
+    result.fold(
+      (_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.workoutDeletedMessage),
+            duration: undoSnackbarDuration,
+            action: SnackBarAction(
+              label: l10n.undoAction,
+              onPressed: () =>
+                  ref.read(workoutServiceProvider).restore(workout.id),
+            ),
+          ),
+        );
+        context.go('/history');
+      },
+      (error) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.deleteWorkoutError))),
+    );
+  }
+
   Future<void> _moveDate(DateTime currentDate) async {
     final picked = await showDatePicker(
       context: context,
@@ -348,6 +389,7 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
           onMoveDate: _moveDate,
           onSetCompletedChanged: _onSetCompletedChanged,
           onSetDeleted: _deleteSet,
+          onDeleteWorkout: _deleteWorkout,
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => ErrorRetryState(
@@ -371,6 +413,7 @@ class _EditorBody extends StatelessWidget {
     required this.onMoveDate,
     required this.onSetCompletedChanged,
     required this.onSetDeleted,
+    required this.onDeleteWorkout,
   });
 
   final WorkoutDetails details;
@@ -381,6 +424,7 @@ class _EditorBody extends StatelessWidget {
   final void Function(DateTime currentDate) onMoveDate;
   final void Function(String setId, bool value) onSetCompletedChanged;
   final ValueChanged<String> onSetDeleted;
+  final VoidCallback onDeleteWorkout;
 
   @override
   Widget build(BuildContext context) {
@@ -410,8 +454,15 @@ class _EditorBody extends StatelessWidget {
                   ),
                 ),
               const SizedBox(width: 8),
-              _StatusMenu(status: workout.status, onSelected: onChangeStatus),
+              StatusBadge(status: workout.status),
               const Spacer(),
+              WorkoutStatusMenu(
+                key: const ValueKey('workout-status-menu'),
+                status: workout.status,
+                excludeStatus: primaryStatusCtaTransition(workout.status),
+                onSelectStatus: onChangeStatus,
+                onDelete: onDeleteWorkout,
+              ),
             ],
           ),
         ),
@@ -455,6 +506,7 @@ class _EditorBody extends StatelessWidget {
                       key: ValueKey(workoutExerciseId),
                       details: exerciseDetails,
                       index: index,
+                      isActive: workout.status == WorkoutStatus.inProgress,
                       canMoveUp: index > 0,
                       canMoveDown: index < details.exercises.length - 1,
                       onFieldChanged: (setId, field, actual, value) {
@@ -498,11 +550,22 @@ class _EditorBody extends StatelessWidget {
         SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: OutlinedButton.icon(
-              onPressed: onAddExercise,
-              icon: const Icon(Icons.add),
-              label: Text(l10n.addExerciseAction),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Column(
+              children: [
+                _StatusCtaButton(
+                  key: const ValueKey('workout-status-cta'),
+                  status: workout.status,
+                  onPressed: () =>
+                      onChangeStatus(primaryStatusCtaTransition(workout.status)),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: onAddExercise,
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.addExerciseAction),
+                ),
+              ],
             ),
           ),
         ),
@@ -511,31 +574,58 @@ class _EditorBody extends StatelessWidget {
   }
 }
 
-/// Status chip with a menu of the transitions currently allowed from
-/// [status] (S-03, DM 6.4.1 — "статус-чип с меню переходов (только
-/// разрешённые)"). Every status has at least one allowed transition, so the
-/// menu is never empty.
-class _StatusMenu extends StatelessWidget {
-  const _StatusMenu({required this.status, required this.onSelected});
+/// The one status transition [_StatusCtaButton] always offers as the big
+/// primary action (Stage 10 redesign, DESIGN.md section 6: "статус
+/// тренировки это отдельные кнопки, а не выпадающее меню") -- every status
+/// has an obvious single "next step" (DM 6.4.1), the remaining transitions
+/// live in [WorkoutStatusMenu] instead. Always non-null: DM 6.4.1
+/// guarantees every status has at least one allowed transition.
+WorkoutStatus primaryStatusCtaTransition(WorkoutStatus status) {
+  switch (status) {
+    case WorkoutStatus.draft:
+    case WorkoutStatus.planned:
+      return WorkoutStatus.inProgress;
+    case WorkoutStatus.inProgress:
+      return WorkoutStatus.completed;
+    case WorkoutStatus.completed:
+      return WorkoutStatus.inProgress;
+    case WorkoutStatus.skipped:
+    case WorkoutStatus.cancelled:
+      return WorkoutStatus.planned;
+  }
+}
+
+/// Big full-width CTA button for [primaryStatusCtaTransition] (DESIGN.md,
+/// section 1: "энергичный оранжевый акцент для... CTA" on finishing,
+/// primary blue on starting/resuming/scheduling -- matches the mockup's own
+/// color split between "Начать тренировку" and "Завершить тренировку").
+class _StatusCtaButton extends StatelessWidget {
+  const _StatusCtaButton({
+    super.key,
+    required this.status,
+    required this.onPressed,
+  });
 
   final WorkoutStatus status;
-  final void Function(WorkoutStatus newStatus) onSelected;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return PopupMenuButton<WorkoutStatus>(
-      onSelected: onSelected,
-      itemBuilder: (context) => [
-        for (final target in allowedNextStatuses(status))
-          PopupMenuItem(
-            value: target,
-            child: Text(workoutTransitionActionLabel(l10n, status, target)),
-          ),
-      ],
-      child: Chip(
-        label: Text(workoutStatusLabel(l10n, status)),
-        avatar: const Icon(Icons.arrow_drop_down, size: 18),
+    final target = primaryStatusCtaTransition(status);
+    final semantic = Theme.of(context).extension<AppSemanticColors>()!;
+    final isFinishing = target == WorkoutStatus.completed;
+
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton(
+        style: FilledButton.styleFrom(
+          backgroundColor: isFinishing ? semantic.accent : null,
+          foregroundColor: isFinishing ? semantic.onAccent : null,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+        ),
+        onPressed: onPressed,
+        child: Text(workoutTransitionActionLabel(l10n, status, target)),
       ),
     );
   }
@@ -617,7 +707,7 @@ class _WorkoutTimerRow extends ConsumerWidget {
             children: [
               Text(
                 formatElapsedTime(elapsed),
-                style: Theme.of(context).textTheme.titleMedium,
+                style: AppNumberTextStyles.timer(context),
               ),
               const SizedBox(width: 8),
               IconButton(
@@ -697,6 +787,10 @@ class _RestTimerBar extends ConsumerWidget {
         }
         final timerService = ref.read(activeWorkoutTimerServiceProvider);
         final remaining = timerService.remainingRestSeconds(state) ?? 0;
+        // `restTimerDurationSec` tracks the *current* total (the initial
+        // duration plus every ±15с adjustment since, TS 7.2 step 3) --
+        // exactly the denominator RestTimerCard's progress fill needs.
+        final totalSeconds = state.restTimerDurationSec ?? remaining;
         final notificationsEnabled = ref
             .watch(notificationsEnabledProvider)
             .maybeWhen(data: (enabled) => enabled, orElse: () => true);
@@ -706,42 +800,18 @@ class _RestTimerBar extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.timer_outlined,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(l10n.restTimerLabel),
-                  const Spacer(),
-                  IconButton(
-                    tooltip: l10n.restTimerMinus15Tooltip,
-                    icon: const Icon(Icons.remove_circle_outline),
-                    onPressed: () => _adjust(context, ref, -15),
-                  ),
-                  Text(
-                    formatElapsedTime(remaining),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  IconButton(
-                    tooltip: l10n.restTimerPlus15Tooltip,
-                    icon: const Icon(Icons.add_circle_outline),
-                    onPressed: () => _adjust(context, ref, 15),
-                  ),
-                  TextButton(
-                    onPressed: () => _skip(ref),
-                    child: Text(l10n.restTimerSkipAction),
-                  ),
-                ],
+              RestTimerCard(
+                remainingSeconds: remaining,
+                totalSeconds: totalSeconds,
+                onAdjust: (delta) => _adjust(context, ref, delta),
+                onSkip: () => _skip(ref),
               ),
               // TS 7.3: "ненавязчивая пометка «Уведомления выключены»" --
               // no settings deep-link (would need a new package beyond the
               // ones approved for this step), just an informational note.
               if (!notificationsEnabled)
                 Padding(
-                  padding: const EdgeInsets.only(left: 26),
+                  padding: const EdgeInsets.only(top: 4, left: 4),
                   child: Text(
                     l10n.notificationsOffHint,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(

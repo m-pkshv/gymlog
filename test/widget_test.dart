@@ -172,14 +172,13 @@ void main() {
       await tester.tap(find.byType(Card).first);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>).first);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Start workout'));
+      // Stage 10 redesign: both transitions are now the big primary CTA
+      // button, keyed unambiguously (`workout-status-cta`), not a status
+      // chip's dropdown menu.
+      await tester.tap(find.byKey(const ValueKey('workout-status-cta')));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>).first);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Finish'));
+      await tester.tap(find.byKey(const ValueKey('workout-status-cta')));
       await tester.pumpAndSettle();
       expect(find.byType(WorkoutSummaryScreen), findsOneWidget);
 

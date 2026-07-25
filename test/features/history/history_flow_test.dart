@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart' hide isNull, isNotNull;
+﻿import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +15,7 @@ import 'package:gymlog/features/history/template_picker_screen.dart';
 import 'package:gymlog/features/template_editor/screen.dart';
 import 'package:gymlog/features/workout_editor/screen.dart';
 import 'package:gymlog/features/workout_summary/screen.dart';
+import 'package:gymlog/app/theme.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
 /// Mirrors the `/history` + `/history/workout/:workoutId` +
@@ -66,6 +67,7 @@ Widget _appUnderTest(AppDatabase db) {
   return ProviderScope(
     overrides: [appDatabaseProvider.overrideWithValue(db)],
     child: MaterialApp.router(
+      theme: buildLightTheme(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: router,
@@ -1177,16 +1179,15 @@ void main() {
           await tester.pumpAndSettle();
           expect(find.text('15.08.2026'), findsOneWidget);
 
-          // "Провести": draft -> inProgress -> completed.
-          await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('Start workout'));
+          // "Провести": draft -> inProgress -> completed. Stage 10
+          // redesign: both are now the big primary CTA button, keyed
+          // unambiguously (`workout-status-cta`), not a status chip's
+          // dropdown menu.
+          await tester.tap(find.byKey(const ValueKey('workout-status-cta')));
           await tester.pumpAndSettle();
           expect(find.text('In progress'), findsOneWidget);
 
-          await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('Finish'));
+          await tester.tap(find.byKey(const ValueKey('workout-status-cta')));
           await tester.pumpAndSettle();
           // TS 7.2 step 6: finishing replaces the editor with the S-05
           // summary; "Готово" returns to History, same as it did before.

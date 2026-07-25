@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart' hide isNull, isNotNull;
+﻿import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:gymlog/app/providers.dart';
 import 'package:gymlog/core/constants.dart';
 import 'package:gymlog/core/date_format.dart';
+import 'package:gymlog/core/widgets/numeric_stepper_field.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
@@ -17,6 +18,7 @@ import 'package:gymlog/features/workout_editor/screen.dart';
 import 'package:gymlog/features/workout_editor/widgets/comment_field.dart';
 import 'package:gymlog/features/workout_editor/widgets/set_row.dart';
 import 'package:gymlog/features/workout_summary/screen.dart';
+import 'package:gymlog/app/theme.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 import 'package:gymlog/services/notification_service.dart';
 import 'package:mocktail/mocktail.dart';
@@ -69,6 +71,7 @@ Widget _appUnderTest(AppDatabase db, {NotificationService? notificationService})
         notificationServiceProvider.overrideWithValue(notificationService),
     ],
     child: MaterialApp.router(
+      theme: buildLightTheme(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: router,
@@ -160,11 +163,66 @@ Finder _exerciseCardMenuButton(String exerciseName) => find.descendant(
   matching: find.byIcon(Icons.more_vert),
 );
 
-/// The plan/fact `TextField`s of a set row, scoped past the workout- and
-/// exercise-level comment fields Stage 3 added elsewhere on this screen
-/// (otherwise a bare `find.byType(TextField)` is ambiguous).
-Finder _setFieldTextFields() =>
-    find.descendant(of: find.byType(SetRow), matching: find.byType(TextField));
+/// The redesigned status control's big primary CTA button (Stage 10:
+/// replaced the old status chip's dropdown menu) and its "⋮" menu of the
+/// *other* transitions (`WorkoutStatusMenu`) plus delete -- both keyed
+/// (`screen.dart`) so they're unambiguous regardless of what the CTA's
+/// label currently reads.
+Finder get _statusCta => find.byKey(const ValueKey('workout-status-cta'));
+Finder get _statusMenu => find.byKey(const ValueKey('workout-status-menu'));
+
+/// Taps set [setIndex] (0-based, in list order) to expand it, revealing its
+/// `NumericStepperField`s (Stage 10 redesign: replaced the old always-
+/// visible plan/fact `TextField` pair per field). A no-op if it's already
+/// expanded is fine for these tests -- each only expands a given set once.
+Future<void> _expandSet(WidgetTester tester, {int setIndex = 0}) async {
+  await tester.tap(
+    find
+        .descendant(
+          of: find.byType(SetRow).at(setIndex),
+          matching: find.byType(InkWell),
+        )
+        .first,
+  );
+  await tester.pumpAndSettle();
+}
+
+/// Types [text] into the [fieldIndex]-th `NumericStepperField` of set
+/// [setIndex] (already expanded via [_expandSet]) through its tap-to-edit
+/// precise-entry dialog -- the steppers' `+`/`-` alone can't reach an
+/// arbitrary value in a test without dozens of taps.
+Future<void> _enterStepperValue(
+  WidgetTester tester, {
+  required String text,
+  int setIndex = 0,
+  int fieldIndex = 0,
+}) async {
+  final stepper = find
+      .descendant(
+        of: find.byType(SetRow).at(setIndex),
+        matching: find.byType(NumericStepperField),
+      )
+      .at(fieldIndex);
+  await tester.tap(
+    find.descendant(
+      of: stepper,
+      matching: find.byKey(const ValueKey('numeric-stepper-value')),
+    ),
+  );
+  await tester.pumpAndSettle();
+  // Scoped to the dialog -- a bare `find.byType(TextField)` is ambiguous
+  // against the screen's own workout-/exercise-comment fields, still in
+  // the tree underneath the modal barrier.
+  await tester.enterText(
+    find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(TextField),
+    ),
+    text,
+  );
+  await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+  await tester.pumpAndSettle();
+}
 
 /// The [index]-th `CommentField`'s underlying `TextField` — index 0 is
 /// always the workout-level comment (it sits above the exercise list),
@@ -389,6 +447,14 @@ void main() {
     'the duplicate-set button appears only once the last set has a planned '
     'value, and copies it into a new set (Stage 10, owner-reported)',
     (tester) async {
+      // The expanded set row (steppers) pushes the duplicate-set button
+      // past a default-sized viewport's fold, and ReorderableListView's
+      // internal Overlay makes off-screen taps land on the wrong target
+      // rather than just failing outright.
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
       await _seedExercise(db);
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
@@ -402,11 +468,12 @@ void main() {
 
       expect(find.byIcon(Icons.content_copy), findsNothing);
 
-      // Weight, kg then Reps: the strength exercise's two plan fields.
-      await tester.enterText(_setFieldTextFields().at(0), '100');
-      await tester.pump();
-      await tester.enterText(_setFieldTextFields().at(2), '5');
-      await tester.pump();
+      // Weight, kg then Reps: the strength exercise's two plan steppers
+      // (the workout hasn't started yet, so these edit the *planned*
+      // value).
+      await _expandSet(tester);
+      await _enterStepperValue(tester, text: '100', fieldIndex: 0);
+      await _enterStepperValue(tester, text: '5', fieldIndex: 1);
 
       expect(find.byIcon(Icons.content_copy), findsOneWidget);
 
@@ -426,8 +493,16 @@ void main() {
   );
 
   testWidgets(
-    'editing a plan field debounces the write, then autosaves (TS 5)',
+    'entering a plan value through the stepper dialog commits immediately, '
+    'no debounce (Stage 10 redesign of TS 5)',
     (tester) async {
+      // TS 5's debounce/no-data-loss guarantee is about text-field typing;
+      // the redesigned stepper commits each discrete tap/dialog-save the
+      // moment it happens (there's no partial-keystroke phase to debounce)
+      // -- if anything a *stronger* guarantee than before, not a weaker
+      // one. This replaces the two pre-redesign tests that specifically
+      // exercised the debounce window on a set field's `TextField`, which
+      // no longer exists.
       await _seedExercise(db);
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
@@ -439,48 +514,13 @@ void main() {
       await tester.tap(find.text('Add set'));
       await tester.pumpAndSettle();
 
-      // Weight, kg: first plan field of a strength exercise.
-      await tester.enterText(_setFieldTextFields().first, '100');
-      await tester.pump();
+      await _expandSet(tester);
+      await _enterStepperValue(tester, text: '100', fieldIndex: 0);
 
-      var sets = await db.select(db.exerciseSets).get();
-      expect(sets.single.plannedWeightKg, isNull, reason: 'not flushed yet');
-
-      // Just under the debounce window: still unwritten.
-      await tester.pump(autosaveDebounce - const Duration(milliseconds: 50));
-      sets = await db.select(db.exerciseSets).get();
-      expect(sets.single.plannedWeightKg, isNull);
-
-      // Past the debounce window: the value lands in the database.
-      await tester.pump(const Duration(milliseconds: 100));
-      sets = await db.select(db.exerciseSets).get();
-      expect(sets.single.plannedWeightKg, 100.0);
-
-      await _unmountAndFlush(tester);
-    },
-  );
-
-  testWidgets(
-    'losing focus flushes immediately, without waiting for the debounce',
-    (tester) async {
-      await _seedExercise(db);
-      await tester.pumpWidget(_appUnderTest(db));
-      await tester.pumpAndSettle();
-      await _createDraftViaFab(tester);
-      await tester.tap(find.text('Add exercise'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Squat'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Add set'));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(_setFieldTextFields().first, '80');
-      await tester.pump();
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pump();
-
+      // No `pump(autosaveDebounce)` wait at all -- the value is already in
+      // the database right after the dialog closes.
       final sets = await db.select(db.exerciseSets).get();
-      expect(sets.single.plannedWeightKg, 80.0);
+      expect(sets.single.plannedWeightKg, 100.0);
 
       await _unmountAndFlush(tester);
     },
@@ -500,13 +540,17 @@ void main() {
     await tester.tap(find.text('Add set'));
     await tester.pumpAndSettle();
 
-    // Plan weight, then plan reps (the two TextFields of a strength row).
-    await tester.enterText(_setFieldTextFields().at(0), '60');
-    await tester.testTextInput.receiveAction(TextInputAction.done);
-    await tester.pump();
-    await tester.enterText(_setFieldTextFields().at(2), '10');
-    await tester.testTextInput.receiveAction(TextInputAction.done);
-    await tester.pump();
+    // Plan weight, then plan reps, while still a draft (the steppers edit
+    // *planned* values before the workout starts). The done checkbox only
+    // shows up once `inProgress` (Stage 10 redesign: no "done" concept
+    // before the workout has actually started) -- DM 6.7's "✓ copies plan
+    // into an empty fact" only makes sense at that point anyway.
+    await _expandSet(tester);
+    await _enterStepperValue(tester, text: '60', fieldIndex: 0);
+    await _enterStepperValue(tester, text: '10', fieldIndex: 1);
+
+    await tester.tap(_statusCta);
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byType(Checkbox).last);
     await tester.pumpAndSettle();
@@ -527,9 +571,7 @@ void main() {
       await _createDraftViaFab(tester);
 
       // Status chip -> menu -> "Start workout" (draft -> inProgress).
-      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Start workout'));
+      await tester.tap(_statusCta);
       await tester.pumpAndSettle();
       expect(find.text('In progress'), findsOneWidget);
 
@@ -538,9 +580,7 @@ void main() {
       expect(workouts.single.startedAt, isNotNull);
 
       // Status chip -> menu -> "Finish" (inProgress -> completed).
-      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Finish'));
+      await tester.tap(_statusCta);
       await tester.pumpAndSettle();
       // TS 7.2 step 6: finishing replaces the editor with the S-05 summary.
       expect(find.byType(WorkoutSummaryScreen), findsOneWidget);
@@ -567,15 +607,11 @@ void main() {
         await tester.tap(find.text('Add set'));
         await tester.pumpAndSettle();
 
-        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Start workout'));
-        await tester.pumpAndSettle();
+        await tester.tap(_statusCta);
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Finish'));
-        await tester.pumpAndSettle();
+        await tester.tap(_statusCta);
+      await tester.pumpAndSettle();
 
         expect(find.byType(AlertDialog), findsOneWidget);
         expect(find.text('Finish workout?'), findsOneWidget);
@@ -588,10 +624,8 @@ void main() {
           WorkoutStatus.inProgress.name,
         );
 
-        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Finish'));
-        await tester.pumpAndSettle();
+        await tester.tap(_statusCta);
+      await tester.pumpAndSettle();
         await tester.tap(
           find.descendant(
             of: find.byType(AlertDialog),
@@ -623,17 +657,15 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.text('Add set'));
         await tester.pumpAndSettle();
+
+        // The done checkbox only exists once inProgress (Stage 10
+        // redesign) -- start first, then mark it done.
+        await tester.tap(_statusCta);
+        await tester.pumpAndSettle();
         await tester.tap(find.byType(Checkbox).last); // mark the set done
         await tester.pumpAndSettle();
-
-        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Start workout'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Finish'));
-        await tester.pumpAndSettle();
+        await tester.tap(_statusCta);
+      await tester.pumpAndSettle();
 
         expect(find.byType(AlertDialog), findsNothing);
         expect(find.byType(WorkoutSummaryScreen), findsOneWidget);
@@ -651,9 +683,7 @@ void main() {
       await tester.pumpAndSettle();
       await _createDraftViaFab(tester);
 
-      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Start workout'));
+      await tester.tap(_statusCta);
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.pause), findsOneWidget);
@@ -710,17 +740,17 @@ void main() {
       await tester.tap(find.text('Add set'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Start workout'));
+      await tester.tap(_statusCta);
       await tester.pumpAndSettle();
 
-      expect(find.text('Rest'), findsNothing);
+      expect(find.text('REST'), findsNothing);
 
       await tester.tap(find.byType(Checkbox).last);
       await tester.pumpAndSettle();
 
-      expect(find.text('Rest'), findsOneWidget);
+      // Stage 10 redesign: RestTimerCard's label is uppercased ("REST",
+      // DESIGN.md section 1's emphasis treatment for time-sensitive text).
+      expect(find.text('REST'), findsOneWidget);
       final workoutId = (await db.select(db.workouts).get()).single.id;
       var state = await (db.select(
         db.activeWorkoutStates,
@@ -734,10 +764,12 @@ void main() {
       )..where((s) => s.workoutId.equals(workoutId))).getSingle();
       expect(state.restTimerDurationSec, 135);
 
-      await tester.tap(find.text('Skip'));
+      // Stage 10 redesign: "Skip" is now an icon-only button (Icons.
+      // skip_next), no visible text label.
+      await tester.tap(find.byTooltip('Skip'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Rest'), findsNothing);
+      expect(find.text('REST'), findsNothing);
       state = await (db.select(
         db.activeWorkoutStates,
       )..where((s) => s.workoutId.equals(workoutId))).getSingle();
@@ -776,9 +808,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Add set'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Start workout'));
+      await tester.tap(_statusCta);
       await tester.pumpAndSettle();
     }
 
@@ -891,7 +921,7 @@ void main() {
       await tester.tap(find.byType(Checkbox).last);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Skip'));
+      await tester.tap(find.byTooltip('Skip'));
       await tester.pumpAndSettle();
 
       verify(
@@ -908,9 +938,7 @@ void main() {
       await tester.tap(find.byType(Checkbox).last);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Finish'));
+      await tester.tap(_statusCta);
       await tester.pumpAndSettle();
 
       verify(
@@ -976,6 +1004,7 @@ void main() {
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],
         child: MaterialApp.router(
+          theme: buildLightTheme(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           routerConfig: router,
@@ -985,8 +1014,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Squat'), findsOneWidget);
-    expect(find.text('100.0'), findsOneWidget);
-    expect(find.text('5'), findsOneWidget);
+    // Stage 10 redesign: the collapsed row shows one combined value
+    // ("weight × reps"), not separate per-field text.
+    expect(find.text('100.0 × 5'), findsOneWidget);
 
     await _unmountAndFlush(tester);
   });
@@ -1005,7 +1035,7 @@ void main() {
     await tester.tap(find.text('Squat'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.tap(_exerciseCardMenuButton('Squat'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Past results'));
     await tester.pumpAndSettle();
@@ -1029,7 +1059,7 @@ void main() {
       await tester.tap(find.text('Squat'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.tap(_exerciseCardMenuButton('Squat'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Past results'));
       await tester.pumpAndSettle();
@@ -1058,7 +1088,7 @@ void main() {
       await tester.tap(find.text('Squat'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.tap(_exerciseCardMenuButton('Squat'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Copy last performance'));
       await tester.pumpAndSettle();
@@ -1067,8 +1097,8 @@ void main() {
       final newSet = sets.singleWhere((s) => s.workoutExerciseId != 'past_we');
       expect(newSet.plannedWeightKg, 60.0);
       expect(newSet.plannedReps, 8);
-      expect(find.text('60.0'), findsOneWidget);
-      expect(find.text('8'), findsOneWidget);
+      // Stage 10 redesign: one combined value per row ("weight × reps").
+      expect(find.text('60.0 × 8'), findsOneWidget);
 
       await _unmountAndFlush(tester);
     },
@@ -1087,7 +1117,7 @@ void main() {
       await tester.tap(find.text('Squat'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.tap(_exerciseCardMenuButton('Squat'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Copy last performance'));
       await tester.pumpAndSettle();
@@ -1105,12 +1135,17 @@ void main() {
       await tester.pumpAndSettle();
       await _createDraftViaFab(tester);
 
-      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+      // Stage 10 redesign: draft -> inProgress ("Start workout") is now the
+      // big primary CTA button, always visible outside any menu -- only
+      // the *other* allowed transition (draft -> planned, "Schedule") lives
+      // in the "⋮" menu (DM 6.4.1: draft -> {planned, inProgress}, nothing
+      // else).
+      expect(find.text('Start workout'), findsOneWidget);
+
+      await tester.tap(_statusMenu);
       await tester.pumpAndSettle();
 
-      // draft -> {planned, inProgress} only (WorkoutService.allowedTransitions).
       expect(find.text('Schedule'), findsOneWidget);
-      expect(find.text('Start workout'), findsOneWidget);
       expect(find.text('Finish'), findsNothing);
       expect(find.text('Cancel'), findsNothing);
       expect(find.text('Skip'), findsNothing);
@@ -1149,9 +1184,7 @@ void main() {
       await tester.pumpAndSettle();
       await _createDraftViaFab(tester);
 
-      await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Start workout'));
+      await tester.tap(_statusCta);
       await tester.pumpAndSettle();
 
       await tester.tap(find.text(formatShortDate(DateTime.now())));
@@ -1174,10 +1207,8 @@ void main() {
         await tester.pumpAndSettle();
         await _createDraftViaFab(tester);
 
-        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Start workout'));
-        await tester.pumpAndSettle();
+        await tester.tap(_statusCta);
+      await tester.pumpAndSettle();
 
         expect(find.text('A workout is already in progress'), findsOneWidget);
         expect(find.text('Finish it'), findsOneWidget);
@@ -1196,10 +1227,8 @@ void main() {
         await tester.pumpAndSettle();
         await _createDraftViaFab(tester);
 
-        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Start workout'));
-        await tester.pumpAndSettle();
+        await tester.tap(_statusCta);
+      await tester.pumpAndSettle();
 
         await tester.tap(find.text('Cancel'));
         await tester.pumpAndSettle();
@@ -1223,10 +1252,8 @@ void main() {
         await tester.pumpAndSettle();
         await _createDraftViaFab(tester);
 
-        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Start workout'));
-        await tester.pumpAndSettle();
+        await tester.tap(_statusCta);
+      await tester.pumpAndSettle();
 
         await tester.tap(find.text('Finish it'));
         await tester.pumpAndSettle();
@@ -1251,10 +1278,8 @@ void main() {
         await tester.pumpAndSettle();
         await _createDraftViaFab(tester);
 
-        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Start workout'));
-        await tester.pumpAndSettle();
+        await tester.tap(_statusCta);
+      await tester.pumpAndSettle();
 
         await tester.tap(find.text('Cancel it'));
         await tester.pumpAndSettle();
@@ -1735,27 +1760,28 @@ void main() {
         await tester.tap(find.text('Add set'));
         await tester.pumpAndSettle();
 
-        // Same weight/reps as the past occurrence (60 kg x 8) -- no growth.
-        await tester.enterText(_setFieldTextFields().at(1), '60');
-        await tester.testTextInput.receiveAction(TextInputAction.done);
-        await tester.pump();
-        await tester.enterText(_setFieldTextFields().at(3), '8');
-        await tester.testTextInput.receiveAction(TextInputAction.done);
-        await tester.pump();
+        await tester.tap(_statusCta); // draft -> inProgress
+        await tester.pumpAndSettle();
 
-        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
+        // Same weight/reps as the past occurrence (60 kg x 8) -- no growth.
+        // Now that the workout is inProgress, the steppers edit the
+        // *actual* value (Stage 10 redesign).
+        await _expandSet(tester);
+        await _enterStepperValue(tester, text: '60', fieldIndex: 0);
+        await _enterStepperValue(tester, text: '8', fieldIndex: 1);
+
+        await tester.tap(_statusCta); // attempt inProgress -> completed
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Start workout'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byType(PopupMenuButton<WorkoutStatus>));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Finish'));
-        await tester.pumpAndSettle();
-        // The set's actual values were typed directly without ticking "✓",
-        // so it's still unmarked -- Stage 4's finish-with-incomplete-sets
-        // confirmation (TS 7.2 step 6) is expected here.
+        // The set's actual values were entered directly without ticking
+        // "✓", so it's still unmarked -- Stage 4's finish-with-incomplete-
+        // sets confirmation (TS 7.2 step 6) is expected here.
         expect(find.byType(AlertDialog), findsOneWidget);
-        await tester.tap(find.text('Finish'));
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.text('Finish'),
+          ),
+        );
         await tester.pumpAndSettle();
 
         expect(find.text('1 workout without growth'), findsOneWidget);

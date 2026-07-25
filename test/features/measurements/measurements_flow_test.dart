@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart' show Value;
+﻿import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +15,7 @@ import 'package:gymlog/features/measurements/measurement_form_screen.dart';
 import 'package:gymlog/features/measurements/measurement_girths_bulk_entry_screen.dart';
 import 'package:gymlog/features/measurements/measurement_value_format.dart';
 import 'package:gymlog/features/measurements/screen.dart';
+import 'package:gymlog/app/theme.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
 /// Mirrors the `/more/measurements` slice of the real router (S-14/S-15,
@@ -51,6 +52,7 @@ Widget _appUnderTest(AppDatabase db) {
   return ProviderScope(
     overrides: [appDatabaseProvider.overrideWithValue(db)],
     child: MaterialApp.router(
+      theme: buildLightTheme(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: router,

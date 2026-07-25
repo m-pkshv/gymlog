@@ -1,21 +1,36 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/design_tokens.dart';
+import '../../../core/widgets/expandable_set_row.dart';
+import '../../../core/widgets/numeric_stepper_field.dart';
 import '../../../domain/models/exercise_set.dart';
 import '../../../l10n/app_localizations.dart';
 import '../set_field_config.dart';
-import 'set_number_field.dart';
 
-/// One row of the sets table (S-03): set number, plan/fact fields for the
-/// exercise's type, the "✓" completion checkbox that copies plan into
-/// empty facts (DM 6.7), and a delete-set action (Stage 10, owner-reported:
-/// took the place of the per-set comment icon, removed the same step —
-/// there was no way to remove a planned set, and the comment feature was
-/// judged less useful than that).
-class SetRow extends StatelessWidget {
+/// One row of the sets table (S-03, Stage 10 redesign): collapsed shows a
+/// status-colored bar, the set number, a labelled plan summary, and one big
+/// combined value ("82.5 × 8") -- the pre-redesign version showed plan and
+/// fact as two identical unlabelled text boxes per field (AUDIT.md, section
+/// 1.6: "план и факт визуально неразличимы"). Tapping the row expands
+/// [NumericStepperField]s for every field the exercise type uses (DESIGN.md,
+/// section 1: "тап... разворачивает степперы... для ввода или правки
+/// факта"), pre-filled from the value it edits.
+///
+/// While [isActive] (the workout is `inProgress`) the steppers edit the
+/// *actual* value and a checkbox toggles `isCompleted`, unchanged from
+/// before -- still a real `Checkbox` (just restyled into a filled circle
+/// via `shape`/`fillColor`), not a bespoke tap target, so nothing that
+/// already exercised "the checkbox" needs to change what widget type it
+/// looks for. Outside `inProgress` the steppers edit the *planned* value
+/// and there's no checkbox at all (matches the mockup's draft/plan-only
+/// rows -- marking a set "done" before the workout has even started isn't
+/// a real state).
+class SetRow extends StatefulWidget {
   const SetRow({
     super.key,
     required this.set,
     required this.fields,
+    required this.isActive,
     required this.onFieldChanged,
     required this.onFieldCommit,
     required this.onCompletedChanged,
@@ -24,6 +39,7 @@ class SetRow extends StatelessWidget {
 
   final ExerciseSet set;
   final List<SetFieldSpec> fields;
+  final bool isActive;
   final void Function(SetFieldSpec field, bool actual, double? value)
   onFieldChanged;
   final void Function(SetFieldSpec field, bool actual) onFieldCommit;
@@ -31,80 +47,94 @@ class SetRow extends StatelessWidget {
   final VoidCallback onDelete;
 
   @override
+  State<SetRow> createState() => _SetRowState();
+}
+
+class _SetRowState extends State<SetRow> {
+  bool _expanded = false;
+
+  void _updateField(SetFieldSpec field, double value) {
+    widget.onFieldChanged(field, widget.isActive, value);
+    widget.onFieldCommit(field, widget.isActive);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 24,
-            child: Text('${set.setNumber}', textAlign: TextAlign.center),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                for (final field in fields)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 76,
-                          child: Text(
-                            field.label,
-                            style: Theme.of(context).textTheme.labelSmall,
-                          ),
-                        ),
-                        Expanded(
-                          child: SetNumberField(
-                            value: field.getPlanned(set),
-                            decimals: field.decimals,
-                            semanticLabel: '${field.label} ${l10n.setColumnPlan}',
-                            onChanged: (value) =>
-                                onFieldChanged(field, false, value),
-                            onCommit: () => onFieldCommit(field, false),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: SetNumberField(
-                            value: field.getActual(set),
-                            decimals: field.decimals,
-                            semanticLabel: '${field.label} ${l10n.setColumnFact}',
-                            onChanged: (value) =>
-                                onFieldChanged(field, true, value),
-                            onCommit: () => onFieldCommit(field, true),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          SizedBox(
-            width: 36,
-            height: 48,
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              icon: const Icon(Icons.delete_outline, size: 18),
-              tooltip: l10n.deleteSetAction,
-              onPressed: onDelete,
-            ),
-          ),
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: Checkbox(
+    final scheme = Theme.of(context).colorScheme;
+    final semantic = Theme.of(context).extension<AppSemanticColors>()!;
+    final set = widget.set;
+    final isActive = widget.isActive;
+
+    final planSummary = formatFieldsSummary(set, widget.fields, actual: false);
+    final valueSummary = isActive
+        ? formatFieldsSummary(set, widget.fields, actual: true)
+        : planSummary;
+    final hasValue = widget.fields.any(
+      (field) =>
+          (isActive ? field.getActual(set) : field.getPlanned(set)) != null,
+    );
+
+    final statusBarColor = !isActive
+        ? scheme.outlineVariant
+        : (set.isCompleted ? semantic.success : scheme.primary);
+
+    return ExpandableSetRow(
+      key: ValueKey('set-row-${set.id}'),
+      setNumber: set.setNumber,
+      planLabel: '${l10n.setColumnPlan} $planSummary',
+      valueLabel: valueSummary,
+      valueTextColor: hasValue ? null : scheme.onSurfaceVariant,
+      statusBarColor: statusBarColor,
+      expanded: _expanded,
+      onToggleExpanded: () => setState(() => _expanded = !_expanded),
+      trailing: isActive
+          ? Checkbox(
               value: set.isCompleted,
-              onChanged: (value) => onCompletedChanged(value ?? false),
+              onChanged: (value) => widget.onCompletedChanged(value ?? false),
               semanticLabel: l10n.setColumnDone,
-            ),
-          ),
-        ],
+              shape: const CircleBorder(),
+              side: BorderSide(color: scheme.outline, width: 2),
+              fillColor: WidgetStateProperty.resolveWith(
+                (states) => states.contains(WidgetState.selected)
+                    ? semantic.success
+                    : Colors.transparent,
+              ),
+              checkColor: semantic.onSuccess,
+            )
+          : null,
+      expandedChild: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          0,
+          AppSpacing.md,
+          AppSpacing.md,
+        ),
+        child: Wrap(
+          spacing: AppSpacing.md,
+          runSpacing: AppSpacing.sm,
+          children: [
+            for (final field in widget.fields)
+              SizedBox(
+                width: 150,
+                child: NumericStepperField(
+                  label: field.label,
+                  value:
+                      (isActive
+                          ? field.getActual(set) ?? field.getPlanned(set)
+                          : field.getPlanned(set)) ??
+                      0,
+                  step: field.step,
+                  decimals: field.decimals,
+                  min: field.min,
+                  max: field.max,
+                  onChanged: (value) => _updateField(field, value),
+                ),
+              ),
+          ],
+        ),
       ),
+      onDelete: widget.onDelete,
     );
   }
 }

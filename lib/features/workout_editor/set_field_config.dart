@@ -30,6 +30,7 @@ class SetFieldSpec {
     required this.decimals,
     required this.min,
     required this.max,
+    required this.step,
     required this.getPlanned,
     required this.setPlanned,
     required this.getActual,
@@ -42,10 +43,40 @@ class SetFieldSpec {
   final int decimals;
   final double min;
   final double max;
+
+  /// Increment/decrement step for the redesigned [NumericStepperField]
+  /// (Stage 10 redesign) -- a plate-sized 2.5 kg for weight, whole units for
+  /// everything else, 15 s for durations (matches the rest timer's own
+  /// ±15 с increment, Stage 4).
+  final double step;
   final double? Function(ExerciseSet) getPlanned;
   final ExerciseSet Function(ExerciseSet, double?) setPlanned;
   final double? Function(ExerciseSet) getActual;
   final ExerciseSet Function(ExerciseSet, double?) setActual;
+}
+
+/// Combined `"80 × 8"`-style summary of every field [type] uses, in either
+/// plan or fact values (Stage 10 redesign: `ExpandableSetRow`'s collapsed
+/// line shows one combined value, not a per-field row like the pre-redesign
+/// `SetRow` did). Distinct from `exercise_set_format.dart`'s
+/// `formatSetSummary` -- that one is fact-only and used by read-only
+/// history views; this one needs both plan and fact, keyed off the same
+/// [SetFieldSpec] list the editable steppers use, not a hardcoded per-type
+/// switch.
+String formatFieldsSummary(
+  ExerciseSet set,
+  List<SetFieldSpec> fields, {
+  required bool actual,
+}) {
+  return fields
+      .map((field) {
+        final value = actual ? field.getActual(set) : field.getPlanned(set);
+        if (value == null) return '—';
+        return field.decimals == 0
+            ? value.round().toString()
+            : value.toStringAsFixed(field.decimals);
+      })
+      .join(' × ');
 }
 
 List<SetFieldSpec> setFieldsFor(ExerciseType type, AppLocalizations l10n) {
@@ -54,6 +85,7 @@ List<SetFieldSpec> setFieldsFor(ExerciseType type, AppLocalizations l10n) {
     decimals: 1,
     min: SetFieldRange.minWeightKg,
     max: SetFieldRange.maxWeightKg,
+    step: 2.5,
     getPlanned: (s) => s.plannedWeightKg,
     setPlanned: (s, v) => s.copyWith(plannedWeightKg: v),
     getActual: (s) => s.actualWeightKg,
@@ -64,6 +96,7 @@ List<SetFieldSpec> setFieldsFor(ExerciseType type, AppLocalizations l10n) {
     decimals: 0,
     min: SetFieldRange.minReps.toDouble(),
     max: SetFieldRange.maxReps.toDouble(),
+    step: 1,
     getPlanned: (s) => s.plannedReps?.toDouble(),
     setPlanned: (s, v) => s.copyWith(plannedReps: v?.round()),
     getActual: (s) => s.actualReps?.toDouble(),
@@ -74,6 +107,7 @@ List<SetFieldSpec> setFieldsFor(ExerciseType type, AppLocalizations l10n) {
     decimals: 2,
     min: SetFieldRange.minDistanceM / 1000,
     max: SetFieldRange.maxDistanceM / 1000,
+    step: 0.1,
     getPlanned: (s) => s.plannedDistanceM == null
         ? null
         : _unitConverter.distanceToDisplay(
@@ -102,6 +136,7 @@ List<SetFieldSpec> setFieldsFor(ExerciseType type, AppLocalizations l10n) {
     decimals: 0,
     min: SetFieldRange.minDurationSec.toDouble(),
     max: SetFieldRange.maxDurationSec.toDouble(),
+    step: 15,
     getPlanned: (s) => s.plannedDurationSec?.toDouble(),
     setPlanned: (s, v) => s.copyWith(plannedDurationSec: v?.round()),
     getActual: (s) => s.actualDurationSec?.toDouble(),

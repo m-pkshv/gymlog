@@ -40,6 +40,7 @@ class ExerciseCard extends ConsumerStatefulWidget {
     super.key,
     required this.details,
     required this.index,
+    required this.isActive,
     required this.canMoveUp,
     required this.canMoveDown,
     required this.onFieldChanged,
@@ -61,6 +62,11 @@ class ExerciseCard extends ConsumerStatefulWidget {
   /// This card's position in the exercise list — required by
   /// [ReorderableDragStartListener] to identify the drag handle's item.
   final int index;
+
+  /// Whether the workout is `inProgress` (DM 6.4.1) -- passed straight
+  /// through to each [SetRow] to decide whether its steppers edit the
+  /// planned or actual value, and whether the done checkbox shows at all.
+  final bool isActive;
   final bool canMoveUp;
   final bool canMoveDown;
   final void Function(
@@ -200,8 +206,10 @@ class _ExerciseCardState extends ConsumerState<ExerciseCard> {
               const SizedBox(height: 8),
               for (final set in details.sets)
                 SetRow(
+                  key: ValueKey('set-${set.id}'),
                   set: set,
                   fields: fields,
+                  isActive: widget.isActive,
                   onFieldChanged: (field, actual, value) =>
                       widget.onFieldChanged(set.id, field, actual, value),
                   onFieldCommit: (field, actual) =>
