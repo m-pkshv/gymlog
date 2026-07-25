@@ -363,6 +363,10 @@
   "@exerciseArchivedBadge": {
     "description": "Badge shown on the exercise card (S-07) when the exercise is archived."
   },
+  "exerciseNoMuscleGroupLabel": "No muscle group",
+  "@exerciseNoMuscleGroupLabel": {
+    "description": "Section header on the exercise catalog (S-06, Stage 10 redesign) for exercises with no primary muscle group set."
+  },
   "archiveExerciseAction": "Archive",
   "@archiveExerciseAction": {
     "description": "Menu action on the exercise card (S-07)."

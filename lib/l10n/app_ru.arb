@@ -111,6 +111,7 @@
   "exerciseHistoryTab": "История",
   "exerciseHistoryEmpty": "Пока нет завершённых тренировок с этим упражнением",
   "exerciseArchivedBadge": "В архиве",
+  "exerciseNoMuscleGroupLabel": "Без группы мышц",
   "archiveExerciseAction": "Архивировать",
   "unarchiveExerciseAction": "Разархивировать",
   "deleteExerciseAction": "Удалить",

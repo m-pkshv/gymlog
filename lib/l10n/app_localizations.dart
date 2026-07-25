@@ -764,6 +764,12 @@ abstract class AppLocalizations {
   /// **'Archived'**
   String get exerciseArchivedBadge;
 
+  /// Section header on the exercise catalog (S-06, Stage 10 redesign) for exercises with no primary muscle group set.
+  ///
+  /// In en, this message translates to:
+  /// **'No muscle group'**
+  String get exerciseNoMuscleGroupLabel;
+
   /// Menu action on the exercise card (S-07).
   ///
   /// In en, this message translates to:

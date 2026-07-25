@@ -357,6 +357,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get exerciseArchivedBadge => 'В архиве';
 
   @override
+  String get exerciseNoMuscleGroupLabel => 'Без группы мышц';
+
+  @override
   String get archiveExerciseAction => 'Архивировать';
 
   @override

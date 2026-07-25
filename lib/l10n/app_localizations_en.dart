@@ -355,6 +355,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exerciseArchivedBadge => 'Archived';
 
   @override
+  String get exerciseNoMuscleGroupLabel => 'No muscle group';
+
+  @override
   String get archiveExerciseAction => 'Archive';
 
   @override

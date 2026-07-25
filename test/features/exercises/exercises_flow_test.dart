@@ -257,6 +257,78 @@ void main() {
     await _unmountAndFlush(tester);
   });
 
+  testWidgets(
+    'groups exercises into muscle-group sections, in canonical order, with '
+    'a trailing "No muscle group" bucket (Stage 10 redesign, AUDIT.md 1.3)',
+    (tester) async {
+      // primaryMuscleGroupId is a real FK -- the referenced MuscleGroups
+      // rows have to exist too, same as the "secondary muscle group" test
+      // below.
+      await db
+          .into(db.muscleGroups)
+          .insert(MuscleGroupsCompanion.insert(id: 'chest', sortOrder: 0));
+      await db
+          .into(db.muscleGroups)
+          .insert(MuscleGroupsCompanion.insert(id: 'quads', sortOrder: 11));
+
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'squat',
+              name: 'Squat',
+              exerciseType: ExerciseType.strength.name,
+              primaryMuscleGroupId: const Value('quads'),
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'bench-press',
+              name: 'Bench Press',
+              exerciseType: ExerciseType.strength.name,
+              primaryMuscleGroupId: const Value('chest'),
+              createdAt: '2026-07-19T00:01:00Z',
+              updatedAt: '2026-07-19T00:01:00Z',
+            ),
+          );
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'mystery-move',
+              name: 'Mystery Move',
+              exerciseType: ExerciseType.reps.name,
+              createdAt: '2026-07-19T00:02:00Z',
+              updatedAt: '2026-07-19T00:02:00Z',
+            ),
+          );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      // "Chest" (index 0 in muscleGroupIds) sorts before "Quads" (index 11)
+      // regardless of insertion order.
+      final chestHeaderY = tester.getTopLeft(find.text('Chest')).dy;
+      final quadsHeaderY = tester.getTopLeft(find.text('Quads')).dy;
+      final noGroupHeaderY = tester
+          .getTopLeft(find.text('No muscle group'))
+          .dy;
+      expect(chestHeaderY, lessThan(quadsHeaderY));
+      expect(quadsHeaderY, lessThan(noGroupHeaderY));
+
+      expect(find.text('1 exercise'), findsNWidgets(3));
+      expect(find.text('Bench Press'), findsOneWidget);
+      expect(find.text('Squat'), findsOneWidget);
+      expect(find.text('Mystery Move'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
   testWidgets('Create button is disabled until a name is entered', (
     tester,
   ) async {

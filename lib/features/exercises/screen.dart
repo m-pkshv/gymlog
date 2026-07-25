@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
 import '../../core/reference_data_ids.dart';
 import '../../core/widgets/error_retry_state.dart';
@@ -142,10 +143,21 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                     onReset: _resetAll,
                   );
                 }
+                final rows = _groupByMuscleGroup(exercises);
                 return ListView.builder(
-                  itemCount: exercises.length,
-                  itemBuilder: (context, index) =>
-                      _ExerciseListTile(exercise: exercises[index]),
+                  itemCount: rows.length,
+                  itemBuilder: (context, index) {
+                    final row = rows[index];
+                    return switch (row) {
+                      _SectionHeaderRow() => _MuscleGroupSectionHeader(
+                        muscleGroupId: row.muscleGroupId,
+                        count: row.count,
+                      ),
+                      _ExerciseRow() => _ExerciseListTile(
+                        exercise: row.exercise,
+                      ),
+                    };
+                  },
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -166,6 +178,118 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
   }
 }
 
+/// A flattened "section header, then its exercises" row list, built once
+/// per [ExercisesScreen] build rather than kept as a nested structure --
+/// [ListView.builder] can then stay lazily virtualized (TS 11.6: the
+/// catalog holds ~200 rows, the same scale-sensitivity that motivated the
+/// project's own 1000-workout scroll profiling on Stage 10) instead of
+/// eagerly building every section's children up front.
+sealed class _ListRow {}
+
+class _SectionHeaderRow extends _ListRow {
+  _SectionHeaderRow(this.muscleGroupId, this.count);
+
+  /// `null` = the "no muscle group" bucket (user-created exercises that
+  /// never got one).
+  final String? muscleGroupId;
+  final int count;
+}
+
+class _ExerciseRow extends _ListRow {
+  _ExerciseRow(this.exercise);
+
+  final Exercise exercise;
+}
+
+/// Groups [exercises] by `primaryMuscleGroupId` (Stage 10 redesign,
+/// AUDIT.md section 1.3: "no grouping/sections at all -- just one flat
+/// list"). Section order follows [muscleGroupIds]' canonical order (the
+/// same fixed order the filter sheet's dropdown and the seeded per-
+/// muscle-group tags already use), not alphabetically -- alphabetical
+/// order would reshuffle by locale, this doesn't. The "no group" bucket,
+/// if non-empty, sorts last. Purely a display-layer regrouping of
+/// whatever order the (already filtered/searched) provider returned --
+/// doesn't change the query itself, so within each section exercises stay
+/// in that same order (Stage 2's existing `createdAt DESC`).
+List<_ListRow> _groupByMuscleGroup(List<Exercise> exercises) {
+  final byGroup = <String?, List<Exercise>>{};
+  for (final exercise in exercises) {
+    byGroup
+        .putIfAbsent(exercise.primaryMuscleGroupId, () => <Exercise>[])
+        .add(exercise);
+  }
+  final rows = <_ListRow>[];
+  for (final id in [...muscleGroupIds, null]) {
+    final group = byGroup[id];
+    if (group == null || group.isEmpty) continue;
+    rows.add(_SectionHeaderRow(id, group.length));
+    rows.addAll(group.map(_ExerciseRow.new));
+  }
+  return rows;
+}
+
+class _MuscleGroupSectionHeader extends StatelessWidget {
+  const _MuscleGroupSectionHeader({
+    required this.muscleGroupId,
+    required this.count,
+  });
+
+  final String? muscleGroupId;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    final label = muscleGroupId == null
+        ? l10n.exerciseNoMuscleGroupLabel
+        : muscleGroupLabel(l10n, muscleGroupId!);
+    final color = muscleGroupId == null
+        ? scheme.outline
+        : muscleGroupColor(muscleGroupId!);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.xs,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            l10n.workoutExerciseCount(count),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One exercise row (S-06). Stage 10 redesign, AUDIT.md section 1.3: the
+/// leading icon used to be the same neutral, uncolored glyph on nearly
+/// every row ("the catalog's icon carries no information") -- now a
+/// muscle-group-colored circle (white icon, the same "white against an
+/// arbitrary palette color, not the theme" precedent already used for the
+/// tag-color swatch's checkmark, Stage 9) instead of a plain gray `Icon`.
+/// Wrapped in a `Card` (same treatment History/Today's cards got) so rows
+/// no longer blend together on a fast scroll.
 class _ExerciseListTile extends StatelessWidget {
   const _ExerciseListTile({required this.exercise});
 
@@ -174,19 +298,38 @@ class _ExerciseListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
     final subtitleParts = [
       exerciseTypeLabel(l10n, exercise.exerciseType),
       if (exercise.primaryMuscleGroupId != null)
         muscleGroupLabel(l10n, exercise.primaryMuscleGroupId!),
     ];
-    return ListTile(
-      leading: Icon(exerciseTypeIcon(exercise.exerciseType)),
-      title: Text(exercise.name),
-      subtitle: Text(subtitleParts.join(' · ')),
-      trailing: exercise.isArchived
-          ? Chip(label: Text(l10n.exerciseArchivedBadge))
-          : null,
-      onTap: () => context.push('/exercises/${exercise.id}'),
+    final avatarColor = exercise.primaryMuscleGroupId == null
+        ? scheme.surfaceContainerHighest
+        : muscleGroupColor(exercise.primaryMuscleGroupId!);
+    final avatarForeground = exercise.primaryMuscleGroupId == null
+        ? scheme.onSurfaceVariant
+        : Colors.white;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: avatarColor,
+          foregroundColor: avatarForeground,
+          child: Icon(exerciseTypeIcon(exercise.exerciseType)),
+        ),
+        title: Text(exercise.name),
+        subtitle: Text(subtitleParts.join(' · ')),
+        trailing: exercise.isArchived
+            ? Chip(label: Text(l10n.exerciseArchivedBadge))
+            : null,
+        onTap: () => context.push('/exercises/${exercise.id}'),
+      ),
     );
   }
 }

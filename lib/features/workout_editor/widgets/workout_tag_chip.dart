@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/color_hex.dart';
 import '../../../core/reference_data_ids.dart';
 import '../../../domain/models/workout_tag.dart';
 import '../../../l10n/app_localizations.dart';
@@ -8,10 +9,7 @@ import '../../exercises/reference_data_labels.dart';
 /// Parses a `#RRGGBB` tag color (06_DATA_MODEL.md, section 6.3) into a
 /// `Color`. Tag colors always come from `workoutTagColorPalette`
 /// (core/constants.dart), so no alpha channel to handle.
-Color tagColor(String colorHex) {
-  final value = int.parse(colorHex.substring(1), radix: 16);
-  return Color(0xFF000000 | value);
-}
+Color tagColor(String colorHex) => colorFromHex(colorHex);
 
 /// Display label for a `WorkoutTag` (Stage 10, owner-confirmed): the
 /// built-in muscle-group tags (`tag.id` matching a `muscleGroupIds` entry,

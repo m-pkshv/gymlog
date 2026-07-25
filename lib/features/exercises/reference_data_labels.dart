@@ -1,5 +1,28 @@
+import 'package:flutter/material.dart';
+
+import '../../core/color_hex.dart';
+import '../../core/constants.dart';
+import '../../core/reference_data_ids.dart';
 import '../../domain/enums.dart';
 import '../../l10n/app_localizations.dart';
+
+/// Deterministic color for a muscle group id (Stage 10 redesign,
+/// AUDIT.md section 1.3: "the catalog's icon carries no information --
+/// the same icon for nearly every strength exercise"). Reuses the exact
+/// muscle-group -> palette-index mapping `data/seed/workout_tag_seed.dart`
+/// already uses for the built-in per-muscle-group tags, so a given muscle
+/// group reads as the same color everywhere in the app (tag chips, the
+/// tag filter, and now the catalog list), not a second independent color
+/// scheme. Unknown/missing ids fall back to the palette's first color
+/// rather than throwing -- the only caller passes either a real
+/// `muscleGroupIds` entry or short-circuits before calling this at all
+/// (see `_ExerciseListTile`'s null-group fallback in `screen.dart`).
+Color muscleGroupColor(String muscleGroupId) {
+  final index = muscleGroupIds.indexOf(muscleGroupId);
+  final hex =
+      workoutTagColorPalette[(index < 0 ? 0 : index) % workoutTagColorPalette.length];
+  return colorFromHex(hex);
+}
 
 /// Display label for a `MuscleGroup.id` (06_DATA_MODEL.md, section 5.1).
 String muscleGroupLabel(AppLocalizations l10n, String id) {
