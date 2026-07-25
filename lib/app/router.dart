@@ -315,7 +315,14 @@ class _MainTabScaffold extends ConsumerWidget {
     return Scaffold(
       body: Column(
         children: [
-          const _ResumeWorkoutBanner(),
+          // Stage 10 redesign, AUDIT.md section 1.6-доп: the banner used to
+          // sit flush against the physical top of the screen (this
+          // Scaffold has no AppBar of its own -- each tab supplies its
+          // own, nested inside `navigationShell`), colliding with the
+          // status bar. `SafeArea` gives it the same top inset an AppBar
+          // would; `bottom: false` because the bottom nav bar below
+          // handles the bottom inset itself.
+          const SafeArea(bottom: false, child: _ResumeWorkoutBanner()),
           Expanded(child: navigationShell),
         ],
       ),

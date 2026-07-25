@@ -182,6 +182,15 @@ class _ContinueWorkoutCard extends StatelessWidget {
 /// plain text in the middle of a dense one-line subtitle -- moved to a
 /// color-coded [StatusBadge] (same one History's cards use), always
 /// visible regardless of whether "Start" applies.
+///
+/// A custom `Column` layout, not `ListTile(trailing: ...)` -- found live
+/// on-device, not just in a test: a `ListTile`'s title column shares its
+/// row with `trailing`, so a wide `trailing` (a status badge whose RU text
+/// can run long, e.g. "Запланирована", plus a "Начать" button) squeezed
+/// the title down to almost nothing, wrapping a short single word like
+/// "Тренировка" mid-word instead of just being on its own line. Giving the
+/// title its own full-width row removes that squeeze regardless of how
+/// long the badge/button content gets.
 class _WorkoutListCard extends ConsumerWidget {
   const _WorkoutListCard({required this.entry});
 
@@ -197,31 +206,39 @@ class _WorkoutListCard extends ConsumerWidget {
         workout.status == WorkoutStatus.planned;
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: ListTile(
-        title: Text(name),
-        subtitle: Text(
-          '${formatShortDate(workout.date)} · '
-          '${l10n.workoutExerciseCount(entry.exerciseCount)}',
-        ),
-        // Row, not a stacked Column (badge above button): `ListTile`
-        // reserves only ~56dp of height for `trailing` regardless of a
-        // two-line subtitle, so a taller stack overflows it (found while
-        // testing this redesign, not just a test-harness quirk -- the
-        // stacked version really did overflow on-device too).
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            StatusBadge(status: workout.status),
-            if (canStart) ...[
-              const SizedBox(width: AppSpacing.sm),
-              FilledButton(
-                onPressed: () => startWorkoutFlow(context, ref, workout),
-                child: Text(l10n.todayStartAction),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.go('/history/workout/${workout.id}'),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(name, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                '${formatShortDate(workout.date)} · '
+                '${l10n.workoutExerciseCount(entry.exerciseCount)}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                children: [
+                  StatusBadge(status: workout.status),
+                  const Spacer(),
+                  if (canStart)
+                    FilledButton(
+                      onPressed: () =>
+                          startWorkoutFlow(context, ref, workout),
+                      child: Text(l10n.todayStartAction),
+                    ),
+                ],
               ),
             ],
-          ],
+          ),
         ),
-        onTap: () => context.go('/history/workout/${workout.id}'),
       ),
     );
   }
