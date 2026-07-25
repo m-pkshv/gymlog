@@ -19,6 +19,7 @@ class TemplateSetFieldSpec {
     required this.decimals,
     required this.min,
     required this.max,
+    required this.step,
     required this.getPlanned,
     required this.setPlanned,
   });
@@ -27,8 +28,31 @@ class TemplateSetFieldSpec {
   final int decimals;
   final double min;
   final double max;
+
+  /// Increment/decrement step for [NumericStepperField] (Stage 10 redesign)
+  /// -- mirrors `SetFieldSpec.step` exactly, same values (2.5 kg plate,
+  /// whole reps, 0.1 km, 15 s).
+  final double step;
   final double? Function(TemplateSet) getPlanned;
   final TemplateSet Function(TemplateSet, double?) setPlanned;
+}
+
+/// Combined `"80 × 8"`-style summary of every field [type] uses -- the
+/// template counterpart of `set_field_config.dart`'s `formatFieldsSummary`,
+/// minus the plan/fact split (a `TemplateSet` only ever has planned values).
+String formatTemplateFieldsSummary(
+  TemplateSet set,
+  List<TemplateSetFieldSpec> fields,
+) {
+  return fields
+      .map((field) {
+        final value = field.getPlanned(set);
+        if (value == null) return '—';
+        return field.decimals == 0
+            ? value.round().toString()
+            : value.toStringAsFixed(field.decimals);
+      })
+      .join(' × ');
 }
 
 List<TemplateSetFieldSpec> templateSetFieldsFor(
@@ -40,6 +64,7 @@ List<TemplateSetFieldSpec> templateSetFieldsFor(
     decimals: 1,
     min: SetFieldRange.minWeightKg,
     max: SetFieldRange.maxWeightKg,
+    step: 2.5,
     getPlanned: (s) => s.plannedWeightKg,
     setPlanned: (s, v) => s.copyWith(plannedWeightKg: v),
   );
@@ -48,6 +73,7 @@ List<TemplateSetFieldSpec> templateSetFieldsFor(
     decimals: 0,
     min: SetFieldRange.minReps.toDouble(),
     max: SetFieldRange.maxReps.toDouble(),
+    step: 1,
     getPlanned: (s) => s.plannedReps?.toDouble(),
     setPlanned: (s, v) => s.copyWith(plannedReps: v?.round()),
   );
@@ -56,6 +82,7 @@ List<TemplateSetFieldSpec> templateSetFieldsFor(
     decimals: 2,
     min: SetFieldRange.minDistanceM / 1000,
     max: SetFieldRange.maxDistanceM / 1000,
+    step: 0.1,
     getPlanned: (s) => s.plannedDistanceM == null
         ? null
         : _unitConverter.distanceToDisplay(
@@ -73,6 +100,7 @@ List<TemplateSetFieldSpec> templateSetFieldsFor(
     decimals: 0,
     min: SetFieldRange.minDurationSec.toDouble(),
     max: SetFieldRange.maxDurationSec.toDouble(),
+    step: 15,
     getPlanned: (s) => s.plannedDurationSec?.toDouble(),
     setPlanned: (s, v) => s.copyWith(plannedDurationSec: v?.round()),
   );

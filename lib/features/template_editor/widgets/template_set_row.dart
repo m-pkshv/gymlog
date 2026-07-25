@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/design_tokens.dart';
+import '../../../core/widgets/expandable_set_row.dart';
+import '../../../core/widgets/numeric_stepper_field.dart';
 import '../../../domain/models/template_set.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../workout_editor/widgets/set_number_field.dart';
 import '../template_set_field_config.dart';
 
-/// One row of the template sets table (S-13) -- the template counterpart
-/// of `workout_editor/widgets/set_row.dart`'s `SetRow`, trimmed to a single
-/// plan column: no facts, no "✓" (templates never carry facts,
-/// 06_DATA_MODEL.md section 6.8). A delete-set action was added alongside
-/// the workout editor's (Stage 10, owner-reported) even though there was
-/// no comment button here to make room for -- the same "no way to remove a
-/// planned set" gap existed in this screen too.
-class TemplateSetRow extends StatelessWidget {
+/// One row of the template sets table (S-13, Stage 10 redesign) -- the
+/// template counterpart of `workout_editor/widgets/set_row.dart`'s
+/// `SetRow`, trimmed to a single plan column: no facts, no "✓" (templates
+/// never carry facts, 06_DATA_MODEL.md section 6.8), so the status bar is
+/// always the same neutral color `SetRow` uses for its own not-yet-started
+/// (`!isActive`) case, and there's no `trailing` checkbox. Collapsed shows
+/// one combined plan value ("80 × 8"); tapping expands
+/// [NumericStepperField]s for every field the exercise type uses, same as
+/// the workout editor's row.
+class TemplateSetRow extends StatefulWidget {
   const TemplateSetRow({
     super.key,
     required this.set,
@@ -30,60 +34,65 @@ class TemplateSetRow extends StatelessWidget {
   final VoidCallback onDelete;
 
   @override
+  State<TemplateSetRow> createState() => _TemplateSetRowState();
+}
+
+class _TemplateSetRowState extends State<TemplateSetRow> {
+  bool _expanded = false;
+
+  void _updateField(TemplateSetFieldSpec field, double value) {
+    widget.onFieldChanged(field, value);
+    widget.onFieldCommit(field);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 24,
-            child: Text('${set.setNumber}', textAlign: TextAlign.center),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                for (final field in fields)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 76,
-                          child: Text(
-                            field.label,
-                            style: Theme.of(context).textTheme.labelSmall,
-                          ),
-                        ),
-                        Expanded(
-                          child: SetNumberField(
-                            value: field.getPlanned(set),
-                            decimals: field.decimals,
-                            semanticLabel:
-                                '${field.label} ${l10n.setColumnPlan}',
-                            onChanged: (value) => onFieldChanged(field, value),
-                            onCommit: () => onFieldCommit(field),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          SizedBox(
-            width: 36,
-            height: 48,
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              icon: const Icon(Icons.delete_outline, size: 18),
-              tooltip: l10n.deleteSetAction,
-              onPressed: onDelete,
-            ),
-          ),
-        ],
+    final scheme = Theme.of(context).colorScheme;
+    final set = widget.set;
+
+    final planSummary = formatTemplateFieldsSummary(set, widget.fields);
+    final hasValue = widget.fields.any(
+      (field) => field.getPlanned(set) != null,
+    );
+
+    return ExpandableSetRow(
+      key: ValueKey('template-set-row-${set.id}'),
+      setNumber: set.setNumber,
+      planLabel: l10n.setColumnPlan,
+      valueLabel: planSummary,
+      valueTextColor: hasValue ? null : scheme.onSurfaceVariant,
+      statusBarColor: scheme.outlineVariant,
+      expanded: _expanded,
+      onToggleExpanded: () => setState(() => _expanded = !_expanded),
+      expandedChild: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          0,
+          AppSpacing.md,
+          AppSpacing.md,
+        ),
+        child: Wrap(
+          spacing: AppSpacing.md,
+          runSpacing: AppSpacing.sm,
+          children: [
+            for (final field in widget.fields)
+              SizedBox(
+                width: 150,
+                child: NumericStepperField(
+                  label: field.label,
+                  value: field.getPlanned(set) ?? 0,
+                  step: field.step,
+                  decimals: field.decimals,
+                  min: field.min,
+                  max: field.max,
+                  onChanged: (value) => _updateField(field, value),
+                ),
+              ),
+          ],
+        ),
       ),
+      onDelete: widget.onDelete,
     );
   }
 }

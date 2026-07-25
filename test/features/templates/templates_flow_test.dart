@@ -15,6 +15,7 @@ import 'package:gymlog/features/templates/screen.dart';
 import 'package:gymlog/features/workout_editor/add_exercise_screen.dart';
 import 'package:gymlog/features/workout_editor/screen.dart';
 import 'package:gymlog/features/workout_editor/widgets/comment_field.dart';
+import 'package:gymlog/core/widgets/numeric_stepper_field.dart';
 import 'package:gymlog/app/theme.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
@@ -112,13 +113,54 @@ Future<void> _createTemplateViaFab(WidgetTester tester, {String name = 'Leg day'
   await tester.pumpAndSettle();
 }
 
-/// Every planned-field `TextField` across every `TemplateSetRow` on screen,
-/// in order -- mirrors `workout_editor_flow_test.dart`'s
-/// `_setFieldTextFields`.
-Finder _templateSetFieldTextFields() => find.descendant(
-  of: find.byType(TemplateSetRow),
-  matching: find.byType(TextField),
-);
+/// Taps set [setIndex] (0-based, in list order) to expand it, revealing its
+/// `NumericStepperField`s -- mirrors `workout_editor_flow_test.dart`'s
+/// `_expandSet`.
+Future<void> _expandTemplateSet(WidgetTester tester, {int setIndex = 0}) async {
+  await tester.tap(
+    find
+        .descendant(
+          of: find.byType(TemplateSetRow).at(setIndex),
+          matching: find.byType(InkWell),
+        )
+        .first,
+  );
+  await tester.pumpAndSettle();
+}
+
+/// Types [text] into the [fieldIndex]-th `NumericStepperField` of set
+/// [setIndex] (already expanded via [_expandTemplateSet]) through its
+/// tap-to-edit precise-entry dialog -- mirrors
+/// `workout_editor_flow_test.dart`'s `_enterStepperValue`.
+Future<void> _enterTemplateStepperValue(
+  WidgetTester tester, {
+  required String text,
+  int setIndex = 0,
+  int fieldIndex = 0,
+}) async {
+  final stepper = find
+      .descendant(
+        of: find.byType(TemplateSetRow).at(setIndex),
+        matching: find.byType(NumericStepperField),
+      )
+      .at(fieldIndex);
+  await tester.tap(
+    find.descendant(
+      of: stepper,
+      matching: find.byKey(const ValueKey('numeric-stepper-value')),
+    ),
+  );
+  await tester.pumpAndSettle();
+  await tester.enterText(
+    find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(TextField),
+    ),
+    text,
+  );
+  await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+  await tester.pumpAndSettle();
+}
 
 /// The [index]-th `CommentField`'s underlying `TextField` -- index 0 is the
 /// template name field, index 1 the template comment field, 2+ each
@@ -189,8 +231,14 @@ void main() {
   );
 
   testWidgets(
-    'adding a set and editing its planned fields autosaves after the debounce',
+    'entering a plan value through the stepper dialog commits immediately, '
+    'no debounce (Stage 10 redesign of TS 5)',
     (tester) async {
+      // Same rationale as the workout editor's identical test: the
+      // redesigned stepper commits on dialog-save, there's no partial-
+      // keystroke phase to debounce -- replaces the pre-redesign test that
+      // exercised the debounce window on a set field's `TextField`, which
+      // no longer exists in `TemplateSetRow`.
       await _seedExercise(db);
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
@@ -203,18 +251,10 @@ void main() {
       await tester.tap(find.text('Add set'));
       await tester.pumpAndSettle();
 
-      final planFields = find.descendant(
-        of: find.byType(Row),
-        matching: find.byType(TextField),
-      );
-      await tester.enterText(planFields.first, '100');
-      await tester.pump(const Duration(milliseconds: 200));
+      await _expandTemplateSet(tester);
+      await _enterTemplateStepperValue(tester, text: '100', fieldIndex: 0);
 
-      var sets = await db.select(db.templateSets).get();
-      expect(sets.single.plannedWeightKg, isNull, reason: 'still debouncing');
-
-      await tester.pump(const Duration(milliseconds: 400));
-      sets = await db.select(db.templateSets).get();
+      final sets = await db.select(db.templateSets).get();
       expect(sets.single.plannedWeightKg, 100);
 
       await _unmountAndFlush(tester);
@@ -239,10 +279,9 @@ void main() {
 
       expect(find.byIcon(Icons.content_copy), findsNothing);
 
-      await tester.enterText(_templateSetFieldTextFields().at(0), '100');
-      await tester.pump();
-      await tester.enterText(_templateSetFieldTextFields().at(1), '5');
-      await tester.pump();
+      await _expandTemplateSet(tester);
+      await _enterTemplateStepperValue(tester, text: '100', fieldIndex: 0);
+      await _enterTemplateStepperValue(tester, text: '5', fieldIndex: 1);
 
       expect(find.byIcon(Icons.content_copy), findsOneWidget);
 
