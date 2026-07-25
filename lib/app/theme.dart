@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../domain/enums.dart';
+import 'design_tokens.dart';
 
 /// Seed color for `ColorScheme.fromSeed` (04_UI_UX_SPEC.md, section 9,
 /// UX-1 — confirmed by the owner at Stage 9, no change).
@@ -26,6 +27,7 @@ ThemeData buildLightTheme() {
   return ThemeData(
     colorScheme: ColorScheme.fromSeed(seedColor: seedColor),
     useMaterial3: true,
+    extensions: const [AppSemanticColors.light],
   );
 }
 
@@ -38,5 +40,6 @@ ThemeData buildDarkTheme() {
       brightness: Brightness.dark,
     ),
     useMaterial3: true,
+    extensions: const [AppSemanticColors.dark],
   );
 }
