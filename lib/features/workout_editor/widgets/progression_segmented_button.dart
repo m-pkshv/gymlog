@@ -100,19 +100,28 @@ class _ProgressionSegment extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: _radius,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          margin: const EdgeInsets.symmetric(horizontal: 2),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? scheme.primary : Colors.transparent,
-            borderRadius: _radius,
-          ),
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: isSelected ? scheme.onPrimary : scheme.onSurfaceVariant,
+        // The tap target is the whole (wider) segment slot, but the
+        // highlight itself is a fixed-size square -- owner-reported: a
+        // highlight stretched to the segment's full width came out as a
+        // rectangle, not the mockup's rounded square.
+        child: Center(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isSelected ? scheme.primary : Colors.transparent,
+              borderRadius: _radius,
+            ),
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: isSelected
+                    ? scheme.onPrimary
+                    : scheme.onSurfaceVariant,
+              ),
             ),
           ),
         ),
