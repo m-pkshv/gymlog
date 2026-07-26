@@ -905,16 +905,9 @@
   "@restTimerSkipAction": {
     "description": "Button on the rest-timer bar (S-04, Stage 4) that cancels the running rest timer early."
   },
-  "workoutContinuingBannerMessage": "Workout in progress, {minutes} min",
-  "@workoutContinuingBannerMessage": {
-    "description": "Recovery banner (Stage 4, TS 7.2 step 5) shown on the tab shell whenever a workout is inProgress -- including right after a cold start with one already running.",
-    "placeholders": {
-      "minutes": {"type": "int"}
-    }
-  },
   "continueWorkoutAction": "Continue",
   "@continueWorkoutAction": {
-    "description": "Action button on the recovery banner (Stage 4) that opens the inProgress workout in the editor."
+    "description": "Action on the Today tab's active-workout card (S-01) that opens the inProgress workout in the editor."
   },
   "finishWithIncompleteSetsTitle": "Finish workout?",
   "@finishWithIncompleteSetsTitle": {

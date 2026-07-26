@@ -103,7 +103,7 @@ final workoutRepositoryProvider = Provider<WorkoutRepository>((ref) {
 });
 
 /// The workout currently `inProgress`, if any (TS 7.2 step 5) — drives the
-/// "Тренировка продолжается" recovery banner on the tab shell.
+/// "Продолжить" card on the Today tab (S-01).
 final inProgressWorkoutProvider = StreamProvider<Workout?>((ref) {
   return ref.watch(workoutRepositoryProvider).watchInProgressWorkout();
 });

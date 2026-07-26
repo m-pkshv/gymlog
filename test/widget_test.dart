@@ -4,14 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymlog/app/providers.dart';
 import 'package:gymlog/data/database.dart' as drift;
-import 'package:gymlog/data/repositories_impl/active_workout_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
-import 'package:gymlog/domain/models/active_workout_state.dart';
 import 'package:gymlog/features/history/screen.dart';
 import 'package:gymlog/features/today/screen.dart';
-import 'package:gymlog/features/workout_editor/screen.dart';
 import 'package:gymlog/features/workout_summary/screen.dart';
 
 import 'package:gymlog/app/router.dart';
@@ -100,59 +97,6 @@ void main() {
         findsOneWidget,
         reason: 'tapping the active tab again should pop back to its root',
       );
-
-      await _unmountAndFlush(tester);
-    },
-  );
-
-  testWidgets('no recovery banner when nothing is inProgress', (
-    tester,
-  ) async {
-    await tester.pumpWidget(appUnderTest());
-    await tester.pumpAndSettle();
-
-    expect(find.byType(MaterialBanner), findsNothing);
-
-    await _unmountAndFlush(tester);
-  });
-
-  testWidgets(
-    'shows a recovery banner when a workout is inProgress, and "Continue" '
-    'opens it (Stage 4, TS 7.2 step 5)',
-    (tester) async {
-      final workout = await WorkoutRepositoryImpl(
-        db,
-      ).createDraft(date: DateTime(2026, 7, 21));
-      await WorkoutRepositoryImpl(
-        db,
-      ).updateWorkout(workout.copyWith(status: WorkoutStatus.inProgress));
-      final startedAt = DateTime.now().toUtc();
-      await ActiveWorkoutRepositoryImpl(db).upsert(
-        ActiveWorkoutState(
-          workoutId: workout.id,
-          startedAtUtc: startedAt,
-          updatedAt: startedAt,
-        ),
-      );
-
-      await tester.pumpWidget(appUnderTest());
-      await tester.pumpAndSettle();
-
-      expect(find.byType(MaterialBanner), findsOneWidget);
-      expect(find.textContaining('Workout in progress'), findsOneWidget);
-
-      // Today's own "Продолжить" card for the same inProgress workout also
-      // reads "Continue" (Stage 10) -- scope the tap to the banner
-      // specifically, since that's what this test is about.
-      await tester.tap(
-        find.descendant(
-          of: find.byType(MaterialBanner),
-          matching: find.text('Continue'),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.byType(WorkoutEditorScreen), findsOneWidget);
 
       await _unmountAndFlush(tester);
     },

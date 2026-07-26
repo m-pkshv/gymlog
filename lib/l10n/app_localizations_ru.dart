@@ -785,11 +785,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get restTimerSkipAction => 'Пропустить';
 
   @override
-  String workoutContinuingBannerMessage(int minutes) {
-    return 'Тренировка продолжается, $minutes мин';
-  }
-
-  @override
   String get continueWorkoutAction => 'Продолжить';
 
   @override

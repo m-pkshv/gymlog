@@ -18,9 +18,9 @@ abstract class WorkoutRepository {
   Future<Workout?> getInProgressWorkout();
 
   /// Reactive version of [getInProgressWorkout] (TS 7.2 step 5: the
-  /// "Тренировка продолжается" recovery banner needs to appear/disappear
-  /// live as the workout starts/finishes, including right after a cold
-  /// start with a workout already `inProgress`).
+  /// Today tab's "Продолжить" card needs to appear/disappear live as the
+  /// workout starts/finishes, including right after a cold start with a
+  /// workout already `inProgress`).
   Stream<Workout?> watchInProgressWorkout();
 
   /// Every non-deleted workout dated [today] or later, any status, with its

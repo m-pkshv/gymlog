@@ -1556,13 +1556,7 @@ abstract class AppLocalizations {
   /// **'Skip'**
   String get restTimerSkipAction;
 
-  /// Recovery banner (Stage 4, TS 7.2 step 5) shown on the tab shell whenever a workout is inProgress -- including right after a cold start with one already running.
-  ///
-  /// In en, this message translates to:
-  /// **'Workout in progress, {minutes} min'**
-  String workoutContinuingBannerMessage(int minutes);
-
-  /// Action button on the recovery banner (Stage 4) that opens the inProgress workout in the editor.
+  /// Action on the Today tab's active-workout card (S-01) that opens the inProgress workout in the editor.
   ///
   /// In en, this message translates to:
   /// **'Continue'**

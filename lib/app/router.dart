@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../domain/models/exercise.dart';
@@ -28,7 +27,6 @@ import '../features/workout_editor/add_exercise_screen.dart';
 import '../features/workout_editor/screen.dart';
 import '../features/workout_summary/screen.dart';
 import '../l10n/app_localizations.dart';
-import 'providers.dart';
 
 /// App routes (04_UI_UX_SPEC.md, section 4). Stage 0 wired the 5 tab roots;
 /// `/history/workout/:workoutId` (S-03, Stage 1) and its nested
@@ -299,34 +297,26 @@ final GoRouter appRouter = GoRouter(
 /// Bottom navigation shell for the 5 tabs (04_UI_UX_SPEC.md, section 4).
 /// Android back on a tab root falls through to the system default (leave
 /// the app); `StatefulShellRoute` keeps each tab's own navigation stack.
-/// Also hosts the "Тренировка продолжается" recovery banner (Stage 4, TS
-/// 7.2 step 5) — visible on every tab, including right after a cold start
-/// with a workout already `inProgress` (the anchor-based timers need no
-/// extra recovery work of their own; this banner is purely about giving the
-/// owner a way back in).
-class _MainTabScaffold extends ConsumerWidget {
+///
+/// Used to also host a "Тренировка продолжается" recovery banner across
+/// every tab (Stage 4, TS 7.2 step 5); removed entirely (Stage 10,
+/// owner-reported) -- it reserved a status-bar-tall gap above every tab's
+/// own AppBar even while hidden (see the removed `_ResumeWorkoutBanner` in
+/// git history for the two rounds of fixing that before this), and the
+/// owner decided screen space matters more than the reminder. The Today
+/// tab's own "Continue" card (`today/screen.dart`) already covers the same
+/// "get back into the active workout" need from that tab; from elsewhere,
+/// History still reaches it too.
+class _MainTabScaffold extends StatelessWidget {
   const _MainTabScaffold({required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      body: Column(
-        children: [
-          // The top `SafeArea` inset for this banner lives *inside*
-          // `_ResumeWorkoutBanner` itself (Stage 10 redesign,
-          // owner-reported), wrapped only around its actual `MaterialBanner`
-          // -- a `Padding`-based `SafeArea` here would reserve that inset
-          // unconditionally, even while the banner renders `SizedBox.shrink()`
-          // (no active workout, or already viewing its own editor), leaving
-          // a status-bar-tall gap above every tab's own AppBar for no
-          // reason.
-          const _ResumeWorkoutBanner(),
-          Expanded(child: navigationShell),
-        ],
-      ),
+      body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: (index) => navigationShell.goBranch(
@@ -360,79 +350,6 @@ class _MainTabScaffold extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// "Тренировка продолжается, N мин" (Stage 4, TS 7.2 step 5) — shown
-/// whenever `inProgressWorkoutProvider` has a workout, on top of whichever
-/// tab is active. The elapsed minutes shown are computed once per rebuild
-/// (start/pause/resume of the workout, or a fresh app start) rather than
-/// ticking every second — this is a passive reminder, not a live clock, so
-/// per-minute staleness between those events is an acceptable simplification
-/// that avoids yet another `Timer.periodic` alongside the ones already
-/// living inside the workout editor. "Продолжить" uses `context.go`, not
-/// `push` (Stage 10, owner-reported) -- this banner is shown from *any*
-/// tab, and `push`ing a route that belongs to the History branch from a
-/// different branch's own Navigator leaves it stuck there even after later
-/// navigation moves the visible branch elsewhere (see
-/// `today/screen.dart`'s doc comment for the full explanation).
-class _ResumeWorkoutBanner extends ConsumerWidget {
-  const _ResumeWorkoutBanner();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final workoutAsync = ref.watch(inProgressWorkoutProvider);
-    final workout = workoutAsync.value;
-    if (workout == null) return const SizedBox.shrink();
-
-    final l10n = AppLocalizations.of(context)!;
-    final activeStateAsync = ref.watch(activeWorkoutStateProvider(workout.id));
-    final activeState = activeStateAsync.value;
-    final minutes = activeState == null
-        ? 0
-        : ref
-                  .read(activeWorkoutTimerServiceProvider)
-                  .elapsedSeconds(activeState) ~/
-              60;
-
-    // Stage 10 redesign, owner-reported: showing "Тренировка продолжается"
-    // on top of the very editor screen it points at is pure noise -- the
-    // owner is already looking at that workout, with its own back arrow,
-    // name and timer right below. `ListenableBuilder` on the router
-    // delegate (a `ChangeNotifier`) is required here, not just re-reading
-    // `currentConfiguration` inline: this widget only rebuilds when a
-    // *Riverpod* provider it watches changes, and `context.go` navigation
-    // doesn't touch any of those, so without an explicit listener the
-    // check below would keep evaluating the stale pre-navigation location
-    // until something else happened to trigger a rebuild.
-    final router = GoRouter.of(context);
-    return ListenableBuilder(
-      listenable: router.routerDelegate,
-      builder: (context, _) {
-        final location = router.routerDelegate.currentConfiguration.uri
-            .toString();
-        if (location.startsWith('/history/workout/${workout.id}')) {
-          return const SizedBox.shrink();
-        }
-        // `bottom: false` -- the bottom nav bar below handles the bottom
-        // inset itself; only applied here, around the actual banner, so it
-        // never reserves space when there's nothing to show (see the doc
-        // comment on `_MainTabScaffold`'s call site).
-        return SafeArea(
-          bottom: false,
-          child: MaterialBanner(
-            content: Text(l10n.workoutContinuingBannerMessage(minutes)),
-            actions: [
-              TextButton(
-                onPressed: () =>
-                    context.go('/history/workout/${workout.id}'),
-                child: Text(l10n.continueWorkoutAction),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }
