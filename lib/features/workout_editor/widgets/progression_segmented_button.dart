@@ -13,10 +13,12 @@ import '../../../l10n/app_localizations.dart';
 /// A hand-built pill-track control instead of Material's stock
 /// `SegmentedButton` (Stage 10 redesign, owner-reported: the stock
 /// widget's bordered-box segments and pale tinted selection didn't match
-/// the mockup's floating solid-color pill on a soft neutral track).
-/// Requires a bounded incoming width (the `Row` of `Expanded` segments
-/// needs one) -- callers with a `Row` sibling must wrap this in `Expanded`
-/// themselves, same as `ExerciseCard` does.
+/// the mockup's square segments on a soft neutral track). Compact by
+/// design -- each segment is a fixed-size square, and the track shrink-
+/// wraps to them (`mainAxisSize.min`), it does *not* stretch to fill
+/// whatever width its parent offers (owner-reported: an earlier version
+/// stretched the whole control across the row, which doesn't match the
+/// mockup either).
 class ProgressionSegmentedButton extends StatelessWidget {
   const ProgressionSegmentedButton({
     super.key,
@@ -53,22 +55,19 @@ class ProgressionSegmentedButton extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Container(
-      height: 40,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppRadius.control),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
           for (final value in _segments)
-            Expanded(
-              child: _ProgressionSegment(
-                label: _label(l10n, value),
-                isSelected: value == selected,
-                onTap: () => onChanged(value),
-              ),
+            _ProgressionSegment(
+              label: _label(l10n, value),
+              isSelected: value == selected,
+              onTap: () => onChanged(value),
             ),
         ],
       ),
@@ -87,6 +86,7 @@ class _ProgressionSegment extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
+  static const _size = 34.0;
   static final _radius = BorderRadius.circular(AppRadius.control - 3);
 
   @override
@@ -100,28 +100,20 @@ class _ProgressionSegment extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: _radius,
-        // The tap target is the whole (wider) segment slot, but the
-        // highlight itself is a fixed-size square -- owner-reported: a
-        // highlight stretched to the segment's full width came out as a
-        // rectangle, not the mockup's rounded square.
-        child: Center(
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            width: 34,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: isSelected ? scheme.primary : Colors.transparent,
-              borderRadius: _radius,
-            ),
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: isSelected
-                    ? scheme.onPrimary
-                    : scheme.onSurfaceVariant,
-              ),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: _size,
+          height: _size,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? scheme.primary : Colors.transparent,
+            borderRadius: _radius,
+          ),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: isSelected ? scheme.onPrimary : scheme.onSurfaceVariant,
             ),
           ),
         ),
