@@ -238,9 +238,11 @@ class _ExerciseCardState extends ConsumerState<ExerciseCard> {
                     style: Theme.of(context).textTheme.labelLarge,
                   ),
                   const SizedBox(width: 8),
-                  ProgressionSegmentedButton(
-                    selected: details.workoutExercise.progressionDecision,
-                    onChanged: widget.onProgressionDecisionChanged,
+                  Expanded(
+                    child: ProgressionSegmentedButton(
+                      selected: details.workoutExercise.progressionDecision,
+                      onChanged: widget.onProgressionDecisionChanged,
+                    ),
                   ),
                 ],
               ),
