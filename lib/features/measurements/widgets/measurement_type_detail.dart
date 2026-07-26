@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/design_tokens.dart';
 import '../../../app/providers.dart';
-import '../../../core/constants.dart';
 import '../../../core/date_format.dart';
 import '../../../core/widgets/error_retry_state.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../../domain/models/body_measurement.dart';
 import '../../../domain/models/measurement_type.dart';
 import '../../../l10n/app_localizations.dart';
@@ -30,15 +30,11 @@ class MeasurementTypeDetail extends ConsumerWidget {
     final repository = ref.read(bodyMeasurementRepositoryProvider);
     await repository.delete(entry.id);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.measurementEntryDeletedMessage),
-        duration: undoSnackbarDuration,
-        action: SnackBarAction(
-          label: l10n.undoAction,
-          onPressed: () => repository.restore(entry.id),
-        ),
-      ),
+    showUndoSnackbar(
+      context,
+      message: l10n.measurementEntryDeletedMessage,
+      actionLabel: l10n.undoAction,
+      onUndo: () => repository.restore(entry.id),
     );
   }
 

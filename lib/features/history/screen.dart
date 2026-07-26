@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
-import '../../core/constants.dart';
 import '../../core/widgets/error_retry_state.dart';
+import '../../core/widgets/undo_snackbar.dart';
 import '../../core/date_format.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/workout.dart';
@@ -147,16 +147,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     if (!mounted) return;
     result.fold(
       (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.workoutDeletedMessage),
-            duration: undoSnackbarDuration,
-            action: SnackBarAction(
-              label: l10n.undoAction,
-              onPressed: () =>
-                  ref.read(workoutServiceProvider).restore(workout.id),
-            ),
-          ),
+        showUndoSnackbar(
+          context,
+          message: l10n.workoutDeletedMessage,
+          actionLabel: l10n.undoAction,
+          onUndo: () => ref.read(workoutServiceProvider).restore(workout.id),
         );
       },
       (error) => ScaffoldMessenger.of(

@@ -12,6 +12,7 @@ import '../../core/duration_format.dart';
 import '../../core/widgets/error_retry_state.dart';
 import '../../core/widgets/rest_timer_card.dart';
 import '../../core/widgets/status_badge.dart';
+import '../../core/widgets/undo_snackbar.dart';
 import '../../core/widgets/workout_status_menu.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/exercise.dart';
@@ -132,15 +133,11 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
     );
     final deleted = await controller.deleteSet(setId);
     if (!mounted || !deleted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.setDeletedMessage),
-        duration: undoSnackbarDuration,
-        action: SnackBarAction(
-          label: l10n.undoAction,
-          onPressed: () => controller.restoreSet(setId),
-        ),
-      ),
+    showUndoSnackbar(
+      context,
+      message: l10n.setDeletedMessage,
+      actionLabel: l10n.undoAction,
+      onUndo: () => controller.restoreSet(setId),
     );
   }
 
@@ -335,16 +332,11 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
     if (!mounted) return;
     result.fold(
       (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.workoutDeletedMessage),
-            duration: undoSnackbarDuration,
-            action: SnackBarAction(
-              label: l10n.undoAction,
-              onPressed: () =>
-                  ref.read(workoutServiceProvider).restore(workout.id),
-            ),
-          ),
+        showUndoSnackbar(
+          context,
+          message: l10n.workoutDeletedMessage,
+          actionLabel: l10n.undoAction,
+          onUndo: () => ref.read(workoutServiceProvider).restore(workout.id),
         );
         context.go('/history');
       },

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/providers.dart';
 import '../../core/constants.dart';
 import '../../core/widgets/error_retry_state.dart';
+import '../../core/widgets/undo_snackbar.dart';
 import '../../domain/models/exercise.dart';
 import '../../domain/models/template_details.dart';
 import '../../l10n/app_localizations.dart';
@@ -75,15 +76,11 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen>
     );
     final deleted = await controller.deleteSet(setId);
     if (!mounted || !deleted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.setDeletedMessage),
-        duration: undoSnackbarDuration,
-        action: SnackBarAction(
-          label: l10n.undoAction,
-          onPressed: () => controller.restoreSet(setId),
-        ),
-      ),
+    showUndoSnackbar(
+      context,
+      message: l10n.setDeletedMessage,
+      actionLabel: l10n.undoAction,
+      onUndo: () => controller.restoreSet(setId),
     );
   }
 

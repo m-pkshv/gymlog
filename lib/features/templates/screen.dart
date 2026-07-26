@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
-import '../../core/constants.dart';
 import '../../core/widgets/error_retry_state.dart';
+import '../../core/widgets/undo_snackbar.dart';
 import '../../domain/models/template_list_entry.dart';
 import '../../domain/models/workout_template.dart';
 import '../../l10n/app_localizations.dart';
@@ -107,15 +107,11 @@ class TemplateListScreen extends ConsumerWidget {
       return;
     }
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.templateDeletedMessage),
-        duration: undoSnackbarDuration,
-        action: SnackBarAction(
-          label: l10n.undoAction,
-          onPressed: () => repository.restoreTemplate(template.id),
-        ),
-      ),
+    showUndoSnackbar(
+      context,
+      message: l10n.templateDeletedMessage,
+      actionLabel: l10n.undoAction,
+      onUndo: () => repository.restoreTemplate(template.id),
     );
   }
 
