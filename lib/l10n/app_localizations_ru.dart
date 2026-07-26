@@ -57,6 +57,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get todayLoadError => 'Не удалось загрузить тренировку';
 
   @override
+  String get todayRelativeDayLabel => 'Сегодня';
+
+  @override
+  String get tomorrowRelativeDayLabel => 'Завтра';
+
+  @override
   String get exercisesEmptyTitle => 'Упражнений пока нет';
 
   @override

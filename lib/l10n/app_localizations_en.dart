@@ -58,6 +58,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get todayLoadError => 'Couldn\'t load today\'s workout';
 
   @override
+  String get todayRelativeDayLabel => 'Today';
+
+  @override
+  String get tomorrowRelativeDayLabel => 'Tomorrow';
+
+  @override
   String get exercisesEmptyTitle => 'No exercises yet';
 
   @override

@@ -194,6 +194,18 @@ abstract class AppLocalizations {
   /// **'Couldn\'t load today\'s workout'**
   String get todayLoadError;
 
+  /// Relative-day label for a workout dated today, used in formatRelativeDay (S-01, Stage 10 redesign).
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get todayRelativeDayLabel;
+
+  /// Relative-day label for a workout dated tomorrow, used in formatRelativeDay (S-01, Stage 10 redesign).
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow'**
+  String get tomorrowRelativeDayLabel;
+
   /// Empty state title on the Exercises list (S-06) when the catalog has no entries.
   ///
   /// In en, this message translates to:

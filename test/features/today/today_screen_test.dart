@@ -84,8 +84,10 @@ void main() {
 
       expect(find.text('No workout planned today'), findsOneWidget);
       expect(find.text('From scratch'), findsOneWidget);
-      expect(find.text('From a template'), findsOneWidget);
-      expect(find.text('From a copy'), findsOneWidget);
+      // Stage 10 redesign: template/copy are icon-only buttons with a
+      // tooltip instead of a visible label.
+      expect(find.byTooltip('From a template'), findsOneWidget);
+      expect(find.byTooltip('From a copy'), findsOneWidget);
 
       await _unmountAndFlush(tester);
     },
@@ -236,7 +238,7 @@ void main() {
     await tester.pumpWidget(_appUnderTest(db));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('From a template'));
+    await tester.tap(find.byTooltip('From a template'));
     await tester.pumpAndSettle();
 
     expect(find.byType(TemplatePickerScreen), findsOneWidget);
@@ -248,7 +250,7 @@ void main() {
     await tester.pumpWidget(_appUnderTest(db));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('From a copy'));
+    await tester.tap(find.byTooltip('From a copy'));
     await tester.pumpAndSettle();
 
     expect(find.byType(CopySourcePickerScreen), findsOneWidget);

@@ -16,6 +16,8 @@
   "todayStartAction": "Начать",
   "todayEmptyTitle": "Тренировок пока не запланировано",
   "todayLoadError": "Не удалось загрузить тренировку",
+  "todayRelativeDayLabel": "Сегодня",
+  "tomorrowRelativeDayLabel": "Завтра",
   "exercisesEmptyTitle": "Упражнений пока нет",
   "exercisesLoadError": "Не удалось загрузить упражнения",
   "createExerciseAction": "Создать упражнение",

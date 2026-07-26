@@ -119,6 +119,9 @@ class _ContinueWorkoutCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       color: semantic.accentContainer,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => context.go('/history/workout/${workout.id}'),
@@ -191,6 +194,20 @@ class _ContinueWorkoutCard extends StatelessWidget {
 /// "Тренировка" mid-word instead of just being on its own line. Giving the
 /// title its own full-width row removes that squeeze regardless of how
 /// long the badge/button content gets.
+///
+/// Restyled per the Stage 10 mockup (owner-supplied screenshot): outlined
+/// card (`AppRadius.card` + `outlineVariant` border, matching
+/// `GroupedSection`/`StatsSectionCard`), "Начать" moved onto the title row
+/// (short pill button, no longer squeezes the title now that the badge
+/// lives on its own row below) with a chevron in its place for
+/// non-actionable statuses, and the date shown as a relative day label
+/// (`formatRelativeDay`) instead of the absolute `DD.MM.YYYY`. The mockup
+/// also shows a time-of-day next to the date ("Сегодня, 18:00") -- not
+/// reproduced, `Workout.date` has no time component (DM 6.4) and nothing
+/// here should show a fabricated value. The mockup's top "streak" widget
+/// (day-of-week checkmarks + badges) isn't ported: it's new functionality
+/// with no schema/business rules in this project (owner-confirmed,
+/// out of scope for this pass).
 class _WorkoutListCard extends ConsumerWidget {
   const _WorkoutListCard({required this.entry});
 
@@ -199,6 +216,7 @@ class _WorkoutListCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
     final workout = entry.workout;
     final name = workout.name ?? l10n.workoutDefaultNamePrefix;
     final canStart =
@@ -206,34 +224,52 @@ class _WorkoutListCard extends ConsumerWidget {
         workout.status == WorkoutStatus.planned;
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => context.go('/history/workout/${workout.id}'),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(name, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                '${formatShortDate(workout.date)} · '
-                '${l10n.workoutExerciseCount(entry.exerciseCount)}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
-                  StatusBadge(status: workout.status),
-                  const Spacer(),
+                  Expanded(
+                    child: Text(
+                      name,
+                      style: Theme.of(context).textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
                   if (canStart)
                     FilledButton(
                       onPressed: () =>
                           startWorkoutFlow(context, ref, workout),
                       child: Text(l10n.todayStartAction),
+                    )
+                  else
+                    Icon(Icons.chevron_right, color: scheme.outline),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${formatRelativeDay(context, workout.date)} · '
+                      '${l10n.workoutExerciseCount(entry.exerciseCount)}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  StatusBadge(status: workout.status),
                 ],
               ),
             ],
@@ -278,30 +314,42 @@ class _EmptyTodayState extends StatelessWidget {
 /// прошлую»" -- unlike History's FAB (which bundles the same three choices
 /// behind one bottom sheet, `showNewWorkoutMenu`), S-01 shows them as three
 /// separate, always-visible buttons.
+///
+/// Stage 10 redesign: restyled per the mockup's "+ Добавить" wide button
+/// plus two icon-only buttons, rather than three equal-weight labeled
+/// buttons in a row -- "from scratch" is the primary action (wide,
+/// leading), template/copy are secondary shortcuts (compact, icon +
+/// tooltip, same `UX 11` icon-only-needs-a-label convention used
+/// elsewhere in the app). The mockup's dashed border on the wide button
+/// isn't reproduced (a real dashed `BorderSide` needs a custom painter --
+/// no such helper exists in the project and one wasn't worth adding for a
+/// purely decorative detail); a regular outlined border is used instead.
 class _QuickActions extends ConsumerWidget {
   const _QuickActions();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+    return Row(
       children: [
-        OutlinedButton.icon(
-          onPressed: () => createWorkoutFromScratchFlow(context, ref),
-          icon: const Icon(Icons.add),
-          label: Text(l10n.newWorkoutFromScratchAction),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => createWorkoutFromScratchFlow(context, ref),
+            icon: const Icon(Icons.add),
+            label: Text(l10n.newWorkoutFromScratchAction),
+          ),
         ),
-        OutlinedButton.icon(
+        const SizedBox(width: AppSpacing.sm),
+        IconButton.outlined(
           onPressed: () => context.go('/history/template-source'),
           icon: const Icon(Icons.description_outlined),
-          label: Text(l10n.newWorkoutFromTemplateAction),
+          tooltip: l10n.newWorkoutFromTemplateAction,
         ),
-        OutlinedButton.icon(
+        const SizedBox(width: AppSpacing.sm),
+        IconButton.outlined(
           onPressed: () => context.go('/history/copy-source'),
           icon: const Icon(Icons.copy_outlined),
-          label: Text(l10n.newWorkoutFromCopyAction),
+          tooltip: l10n.newWorkoutFromCopyAction,
         ),
       ],
     );

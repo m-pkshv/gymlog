@@ -64,6 +64,14 @@
   "@todayLoadError": {
     "description": "S-01 error state when inProgressWorkoutProvider or todayAndUpcomingWorkoutsProvider fails to load."
   },
+  "todayRelativeDayLabel": "Today",
+  "@todayRelativeDayLabel": {
+    "description": "Relative-day label for a workout dated today, used in formatRelativeDay (S-01, Stage 10 redesign)."
+  },
+  "tomorrowRelativeDayLabel": "Tomorrow",
+  "@tomorrowRelativeDayLabel": {
+    "description": "Relative-day label for a workout dated tomorrow, used in formatRelativeDay (S-01, Stage 10 redesign)."
+  },
   "exercisesEmptyTitle": "No exercises yet",
   "@exercisesEmptyTitle": {
     "description": "Empty state title on the Exercises list (S-06) when the catalog has no entries."
