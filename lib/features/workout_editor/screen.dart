@@ -503,24 +503,22 @@ class _EditorBody extends StatelessWidget {
         if (workout.status == WorkoutStatus.inProgress)
           _RestTimerBar(workoutId: workout.id, controller: controller),
         _AssignedTagsWrap(tags: details.tags),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: CommentField(
-            key: ValueKey('workout-comment-${workout.id}'),
-            value: workout.comment,
-            label: l10n.workoutCommentLabel,
-            maxLength: CommentLengthLimits.workout,
-            onChanged: controller.editWorkoutComment,
-            onCommit: controller.flushWorkoutComment,
-          ),
-        ),
         Expanded(
-          child: details.exercises.isEmpty
-              ? Center(child: Text(l10n.workoutExercisesEmpty))
-              : ReorderableListView.builder(
+          child: CustomScrollView(
+            slivers: [
+              if (details.exercises.isEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+                    child: Center(child: Text(l10n.workoutExercisesEmpty)),
+                  ),
+                )
+              else
+                SliverReorderableList(
                   // ExerciseCard supplies its own drag handle (04_UI_UX_SPEC.md,
-                  // section 5), so the default trailing handle is redundant.
-                  buildDefaultDragHandles: false,
+                  // section 5), so the default trailing handle is redundant --
+                  // unlike `ReorderableListView`, a plain `SliverReorderableList`
+                  // never adds one on its own.
                   itemCount: details.exercises.length,
                   // `newIndex` here is already adjusted for the removed
                   // item at `oldIndex` (unlike the deprecated `onReorder`).
@@ -573,6 +571,28 @@ class _EditorBody extends StatelessWidget {
                     );
                   },
                 ),
+              // Owner-reported (Stage 10 redesign): the workout comment used
+              // to be pinned above the exercise list, staying on screen while
+              // scrolling; moved into this same scrollable, always after the
+              // last exercise, so it scrolls with them instead of pinning.
+              // A plain sliver (not part of `SliverReorderableList` above)
+              // -- it has no drag handle, so it can never be dragged out of
+              // last place the way a list item could.
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: CommentField(
+                    key: ValueKey('workout-comment-${workout.id}'),
+                    value: workout.comment,
+                    label: l10n.workoutCommentLabel,
+                    maxLength: CommentLengthLimits.workout,
+                    onChanged: controller.editWorkoutComment,
+                    onCommit: controller.flushWorkoutComment,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         SafeArea(
           top: false,
