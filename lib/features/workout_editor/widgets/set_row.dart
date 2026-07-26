@@ -89,18 +89,29 @@ class _SetRowState extends State<SetRow> {
       expanded: _expanded,
       onToggleExpanded: () => setState(() => _expanded = !_expanded),
       trailing: isActive
-          ? Checkbox(
-              value: set.isCompleted,
-              onChanged: (value) => widget.onCompletedChanged(value ?? false),
-              semanticLabel: l10n.setColumnDone,
-              shape: const CircleBorder(),
-              side: BorderSide(color: scheme.outline, width: 2),
-              fillColor: WidgetStateProperty.resolveWith(
-                (states) => states.contains(WidgetState.selected)
-                    ? semantic.success
-                    : Colors.transparent,
+          ? Transform.scale(
+              // The mockup's completion circle reads much larger than
+              // Checkbox's default ~18dp glyph (owner-reported, Stage 10
+              // redesign on-device check). Scaling the whole widget grows
+              // the painted circle within its existing ~48dp tap-target
+              // box (no overflow, no change to the tap area itself), so
+              // the type stays `Checkbox` and every existing
+              // `find.byType(Checkbox)` test keeps working unchanged.
+              scale: 1.8,
+              child: Checkbox(
+                value: set.isCompleted,
+                onChanged: (value) =>
+                    widget.onCompletedChanged(value ?? false),
+                semanticLabel: l10n.setColumnDone,
+                shape: const CircleBorder(),
+                side: BorderSide(color: scheme.outline, width: 2),
+                fillColor: WidgetStateProperty.resolveWith(
+                  (states) => states.contains(WidgetState.selected)
+                      ? semantic.success
+                      : Colors.transparent,
+                ),
+                checkColor: semantic.onSuccess,
               ),
-              checkColor: semantic.onSuccess,
             )
           : null,
       expandedChild: Padding(
