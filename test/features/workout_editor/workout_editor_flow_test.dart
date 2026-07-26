@@ -211,8 +211,8 @@ Future<void> _enterStepperValue(
   );
   await tester.pumpAndSettle();
   // Scoped to the dialog -- a bare `find.byType(TextField)` is ambiguous
-  // against the screen's own workout-/exercise-comment fields, still in
-  // the tree underneath the modal barrier.
+  // against the screen's own workout-comment field, still in the tree
+  // underneath the modal barrier.
   await tester.enterText(
     find.descendant(
       of: find.byType(AlertDialog),
@@ -224,9 +224,10 @@ Future<void> _enterStepperValue(
   await tester.pumpAndSettle();
 }
 
-/// The [index]-th `CommentField`'s underlying `TextField` — index 0 is
-/// always the workout-level comment (it sits above the exercise list),
-/// index 1+ are each exercise card's comment field in list order.
+/// The [index]-th `CommentField`'s underlying `TextField` — the workout
+/// editor only has one `CommentField` left (the workout-level comment,
+/// index 0) since exercise cards no longer have their own (Stage 10
+/// redesign, owner-reported: removed entirely).
 Finder _commentField(int index) => find.descendant(
   of: find.byType(CommentField).at(index),
   matching: find.byType(TextField),
@@ -1415,7 +1416,7 @@ void main() {
   group('collapse exercise (Stage 10, owner-reported)', () {
     testWidgets(
       'tapping the header collapses the card to just its name, hiding sets '
-      'and the comment/progression controls; tapping again expands it',
+      'and the progression controls; tapping again expands it',
       (tester) async {
         await _seedExercise(db, id: 'squat', name: 'Squat');
         await tester.pumpWidget(_appUnderTest(db));
@@ -1483,8 +1484,8 @@ void main() {
     testWidgets(
       '"Move up" in the exercise card menu swaps it with the previous card',
       (tester) async {
-        // Both cards (each taller now with the comment field + progression
-        // segment) must fit without scrolling, or ReorderableListView's
+        // Both cards (each taller now with the progression segment) must
+        // fit without scrolling, or ReorderableListView's
         // internal Overlay makes off-screen taps land on the wrong target.
         tester.view.physicalSize = const Size(1080, 5000);
         tester.view.devicePixelRatio = 1.0;
@@ -1611,26 +1612,6 @@ void main() {
         await _unmountAndFlush(tester);
       },
     );
-
-    testWidgets('editing an exercise comment autosaves', (tester) async {
-      await _seedExercise(db);
-      await tester.pumpWidget(_appUnderTest(db));
-      await tester.pumpAndSettle();
-      await _createDraftViaFab(tester);
-      await tester.tap(find.text('Add exercise'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Squat'));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(_commentField(1), 'Felt heavy');
-      await tester.pump();
-      await tester.pump(autosaveDebounce + const Duration(milliseconds: 50));
-
-      final workoutExercises = await db.select(db.workoutExercises).get();
-      expect(workoutExercises.single.comment, 'Felt heavy');
-
-      await _unmountAndFlush(tester);
-    });
 
   });
 

@@ -12,14 +12,12 @@ class WorkoutExercise {
     required this.createdAt,
     required this.updatedAt,
     required this.isDeleted,
-    this.comment,
   });
 
   final String id;
   final String workoutId;
   final String exerciseId;
   final int orderIndex;
-  final String? comment;
   final ProgressionDecision progressionDecision;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -27,7 +25,6 @@ class WorkoutExercise {
 
   WorkoutExercise copyWith({
     int? orderIndex,
-    String? comment,
     ProgressionDecision? progressionDecision,
     DateTime? updatedAt,
     bool? isDeleted,
@@ -37,7 +34,6 @@ class WorkoutExercise {
       workoutId: workoutId,
       exerciseId: exerciseId,
       orderIndex: orderIndex ?? this.orderIndex,
-      comment: comment ?? this.comment,
       progressionDecision: progressionDecision ?? this.progressionDecision,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

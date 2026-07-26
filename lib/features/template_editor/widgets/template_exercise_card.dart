@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/constants.dart';
 import '../../../domain/models/template_details.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/exercise_type_labels.dart';
-import '../../workout_editor/widgets/comment_field.dart';
 import '../template_set_field_config.dart';
 import 'template_set_row.dart';
 
@@ -36,8 +34,6 @@ class TemplateExerciseCard extends StatefulWidget {
     required this.onDuplicateLastSet,
     required this.onMoveUp,
     required this.onMoveDown,
-    required this.onCommentChanged,
-    required this.onCommentCommit,
     required this.onSetDeleted,
   });
 
@@ -55,8 +51,6 @@ class TemplateExerciseCard extends StatefulWidget {
   final VoidCallback onDuplicateLastSet;
   final VoidCallback onMoveUp;
   final VoidCallback onMoveDown;
-  final ValueChanged<String> onCommentChanged;
-  final VoidCallback onCommentCommit;
   final ValueChanged<String> onSetDeleted;
 
   @override
@@ -180,16 +174,6 @@ class _TemplateExerciseCardState extends State<TemplateExerciseCard> {
                       tooltip: l10n.duplicateSetAction,
                     ),
                 ],
-              ),
-              CommentField(
-                key: ValueKey(
-                  'template-exercise-comment-${details.templateExercise.id}',
-                ),
-                value: details.templateExercise.comment,
-                label: l10n.exerciseCommentLabel,
-                maxLength: CommentLengthLimits.workoutExercise,
-                onChanged: widget.onCommentChanged,
-                onCommit: widget.onCommentCommit,
               ),
             ],
           ],

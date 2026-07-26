@@ -1382,12 +1382,6 @@ abstract class AppLocalizations {
   /// **'Comment'**
   String get workoutCommentLabel;
 
-  /// Label of the per-exercise comment field on an exercise card (S-03, Stage 3, DM 6.6, max 1000 chars).
-  ///
-  /// In en, this message translates to:
-  /// **'Comment'**
-  String get exerciseCommentLabel;
-
   /// Tooltip on the per-set delete icon button in the sets table (S-03/S-13, Stage 10) that soft-deletes the set with a 5s Undo snackbar. Replaced the per-set comment icon (removed, Stage 10).
   ///
   /// In en, this message translates to:

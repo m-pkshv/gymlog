@@ -132,9 +132,10 @@
 | workoutId | TEXT FK→Workout | да | — | |
 | exerciseId | TEXT FK→Exercise | да | — | Одно и то же упражнение может входить в тренировку несколько раз (суперсеты) |
 | orderIndex | INTEGER | да | max+1 | Непрерывность не требуется; сортировка по значению |
-| comment | TEXT | нет | NULL | ≤ 1000 симв. |
 | progressionDecision | TEXT enum | да | `none` | Решение для следующей тренировки |
 | createdAt / updatedAt / isDeleted | | | | |
+
+Комментарий упражнения (`comment`) удалён из схемы (Этап 10, 2026-07-26, решение владельца, миграция v4→v5, раздел 11.1) — функция комментирования отдельного упражнения в тренировке признана ненужной.
 
 ### 6.7. `ExerciseSet`
 Одна таблица с nullable-колонками под все типы (D-14). Приложение показывает/валидирует только колонки, соответствующие `exerciseType` упражнения. Понятие «разминочный подход» (`isWarmup`) удалено из приложения (Этап 10, 2026-07-23, решение владельца) — все подходы равноценны и учитываются в статистике/рекордах/прогрессии/тоннаже одинаково; колонка удалена схемной миграцией v1→v2 (раздел 11.1). Комментарий подхода (`comment`) удалён из схемы (Этап 10, 2026-07-24, решение владельца, миграция v3→v4, раздел 11.1) — освободившееся место в строке подхода занято кнопкой удаления подхода (раздел 10: мягкое удаление + Undo, перенумерация `setNumber`).
@@ -163,7 +164,7 @@
 
 ### 6.8. Шаблоны (D-16)
 **`WorkoutTemplate`**: `id`, `name` (обяз., 1–80), `comment` (≤2000), `isArchived` (def 0), служебные поля.
-**`TemplateExercise`**: `id`, `templateId FK`, `exerciseId FK`, `orderIndex`, `comment`, служебные.
+**`TemplateExercise`**: `id`, `templateId FK`, `exerciseId FK`, `orderIndex`, служебные. Комментарий упражнения (`comment`) удалён из схемы (Этап 10, 2026-07-26, решение владельца, миграция v4→v5, раздел 11.1) — тот же принцип, что и у `WorkoutExercise` (раздел 6.6).
 **`TemplateSet`**: `id`, `templateExerciseId FK`, `setNumber`, только плановые метрики (`plannedWeightKg`, `plannedReps`, `plannedDurationSec`, `plannedDistanceM`, `side`), служебные.
 Создание тренировки из шаблона копирует структуру в `Workout/WorkoutExercise/ExerciseSet` (плановые поля), связь с шаблоном не хранится (предположение; при необходимости аналитики «сколько раз использован шаблон» добавить `sourceTemplateId` в `Workout` — решение владельца).
 
@@ -278,6 +279,7 @@ Exercise 1─* PersonalRecord (кэш)           Exercise 1─1 ExerciseProgress
 | 2 | Этап 10, 2026-07-23 | Удалены `ExerciseSets.isWarmup`/`TemplateSets.isWarmup` (понятие разминки убрано из приложения, решение владельца) — `Migrator.dropColumn` для обеих таблиц |
 | 3 | Этап 10, 2026-07-23 | Удалён `BodyMeasurements.comment` (комментарий к замеру убран, решение владельца) — `Migrator.dropColumn`; обе миграции покрыты одним тестом `test/data/database_migration_v1_to_current_test.dart` (v1-фикстура, реалистичный путь апгрейда) |
 | 4 | Этап 10, 2026-07-24 | Удалён `ExerciseSets.comment` (комментарий подхода убран в пользу кнопки удаления подхода, решение владельца) — `Migrator.dropColumn`; покрыто тем же тестом `database_migration_v1_to_current_test.dart` |
+| 5 | Этап 10 (редизайн), 2026-07-26 | Удалены `WorkoutExercises.comment`/`TemplateExercises.comment` (комментарий упражнения убран, решение владельца) — `Migrator.dropColumn` для обеих таблиц; покрыто тем же тестом `database_migration_v1_to_current_test.dart` |
 
 ## 12. Начальные данные (сиды)
 - Загружаются при первом запуске в транзакции; факт загрузки — по наличию строк, версия сида хранится в `AppSettings`-подобной служебной таблице `SeedInfo(seedVersion INTEGER)`.

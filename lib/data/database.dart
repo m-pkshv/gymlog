@@ -23,6 +23,13 @@ part 'database.g.dart';
 /// statistics, so the column would only ever read `false`. Version 3 (Stage
 /// 10, owner-confirmed 2026-07-23) drops `BodyMeasurements.comment` — the
 /// per-entry comment was removed in favor of a faster bulk-entry flow.
+/// Version 4 (Stage 10, owner-confirmed 2026-07-24) drops
+/// `ExerciseSets.comment` in favor of a "delete set" action. Version 5
+/// (Stage 10 redesign, owner-confirmed 2026-07-26) drops
+/// `WorkoutExercises.comment`/`TemplateExercises.comment` — the
+/// per-exercise comment field was removed entirely; `Workout.comment` and
+/// `WorkoutTemplate.comment` (the workout/template-level comments) are
+/// untouched.
 @DriftDatabase(
   tables: [
     MuscleGroups,
@@ -52,7 +59,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration {
@@ -81,6 +88,13 @@ class AppDatabase extends _$AppDatabase {
           // already specified soft-delete + renumbering for sets; this is
           // the first time it's wired up to UI).
           await m.dropColumn(exerciseSets, 'comment');
+        }
+        if (from < 5) {
+          // v4 -> v5 (Stage 10 redesign, 2026-07-26): the per-exercise
+          // comment field was removed entirely (owner-reported) --
+          // `Workout.comment`/`WorkoutTemplate.comment` are untouched.
+          await m.dropColumn(workoutExercises, 'comment');
+          await m.dropColumn(templateExercises, 'comment');
         }
       },
       beforeOpen: (details) async {

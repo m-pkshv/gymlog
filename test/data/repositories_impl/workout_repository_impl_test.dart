@@ -564,9 +564,9 @@ void main() {
 
   group('copyWorkout (Stage 3, S-02, TS 8 section 8)', () {
     test(
-      'copies exercises, order, comment and planned values into a new '
-      'draft dated by the caller -- actuals, completion and progression '
-      'are never copied',
+      'copies exercises, order and planned values into a new draft dated '
+      'by the caller -- actuals, completion and progression are never '
+      'copied',
       () async {
         final exercise = await exercises.create(
           name: 'Squat',
@@ -647,20 +647,18 @@ void main() {
 
   group('createFromTemplate (Stage 5, TS 8 section 8, DM-1)', () {
     test(
-      'copies exercises, order, comment and planned values into a new '
-      'draft named after the template',
+      'copies exercises, order and planned values into a new draft named '
+      'after the template',
       () async {
         final exercise = await exercises.create(
           name: 'Squat',
           exerciseType: ExerciseType.strength,
         );
         final template = await templates.create(name: 'Leg day');
-        var templateExercise = await templates.addExercise(
+        final templateExercise = await templates.addExercise(
           templateId: template.id,
           exerciseId: exercise.id,
         );
-        templateExercise = templateExercise.copyWith(comment: 'Go heavy');
-        await templates.updateTemplateExercise(templateExercise);
 
         final first = await templates.addSet(
           templateExerciseId: templateExercise.id,
@@ -688,7 +686,6 @@ void main() {
         expect(details!.exercises, hasLength(1));
         final exerciseDetails = details.exercises.single;
         expect(exerciseDetails.exercise.id, exercise.id);
-        expect(exerciseDetails.workoutExercise.comment, 'Go heavy');
         expect(
           exerciseDetails.workoutExercise.progressionDecision,
           ProgressionDecision.none,
@@ -917,8 +914,8 @@ void main() {
     );
   });
 
-  group('updateWorkoutExercise (Stage 3, S-03 exercise comment)', () {
-    test('persists a comment change', () async {
+  group('updateWorkoutExercise (Stage 3, DM 6.11 progression decision)', () {
+    test('persists a progressionDecision change', () async {
       final exercise = await exercises.create(
         name: 'Squat',
         exerciseType: ExerciseType.strength,
@@ -930,13 +927,15 @@ void main() {
       );
 
       await workouts.updateWorkoutExercise(
-        workoutExercise.copyWith(comment: 'Felt strong today'),
+        workoutExercise.copyWith(
+          progressionDecision: ProgressionDecision.increase,
+        ),
       );
 
       final details = await workouts.getDetails(workout.id);
       expect(
-        details!.exercises.single.workoutExercise.comment,
-        'Felt strong today',
+        details!.exercises.single.workoutExercise.progressionDecision,
+        ProgressionDecision.increase,
       );
     });
   });

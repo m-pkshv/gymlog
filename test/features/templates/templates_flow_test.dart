@@ -163,9 +163,9 @@ Future<void> _enterTemplateStepperValue(
 }
 
 /// The [index]-th `CommentField`'s underlying `TextField` -- index 0 is the
-/// template name field, index 1 the template comment field, 2+ each
-/// exercise card's comment field in list order (same convention as
-/// `workout_editor_flow_test.dart`).
+/// template name field, index 1 the template comment field. Exercise
+/// cards no longer have their own `CommentField` (Stage 10 redesign,
+/// owner-reported: removed entirely).
 Finder _commentField(int index) =>
     find.descendant(of: find.byType(CommentField).at(index), matching: find.byType(TextField));
 
@@ -389,7 +389,7 @@ void main() {
 
   testWidgets(
     'collapse exercise (Stage 10, owner-reported): tapping the header hides '
-    'sets and the comment field, keeping the name; tapping again expands it',
+    'sets, keeping the name; tapping again expands it',
     (tester) async {
       await _seedExercise(db, id: 'squat', name: 'Squat');
       await tester.pumpWidget(_appUnderTest(db));

@@ -24,6 +24,9 @@ import 'package:gymlog/domain/enums.dart';
 /// v3 -> v4 (2026-07-24, owner-confirmed): `ExerciseSets.comment` dropped --
 /// per-set comments were removed in favor of a "delete set" action in the
 /// same screen spot.
+/// v4 -> v5 (2026-07-26, owner-confirmed): `WorkoutExercises.comment`/
+/// `TemplateExercises.comment` dropped -- the per-exercise comment field
+/// was removed entirely.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -126,6 +129,28 @@ void main() {
               updatedAt: '2026-07-01T00:00:00.000Z',
             ),
           );
+      final template = await firstRun
+          .into(firstRun.workoutTemplates)
+          .insertReturning(
+            WorkoutTemplatesCompanion.insert(
+              id: 't1',
+              name: 'Leg day',
+              createdAt: '2026-07-01T00:00:00.000Z',
+              updatedAt: '2026-07-01T00:00:00.000Z',
+            ),
+          );
+      await firstRun
+          .into(firstRun.templateExercises)
+          .insert(
+            TemplateExercisesCompanion.insert(
+              id: 'te1',
+              templateId: template.id,
+              exerciseId: exercise.id,
+              orderIndex: 0,
+              createdAt: '2026-07-01T00:00:00.000Z',
+              updatedAt: '2026-07-01T00:00:00.000Z',
+            ),
+          );
 
       await firstRun.customStatement(
         'ALTER TABLE "ExerciseSets" ADD COLUMN "isWarmup" INTEGER NOT NULL DEFAULT 0',
@@ -141,6 +166,18 @@ void main() {
       );
       await firstRun.customStatement(
         'UPDATE "ExerciseSets" SET "comment" = \'felt heavy\' WHERE "id" = \'s1\'',
+      );
+      await firstRun.customStatement(
+        'ALTER TABLE "WorkoutExercises" ADD COLUMN "comment" TEXT',
+      );
+      await firstRun.customStatement(
+        'UPDATE "WorkoutExercises" SET "comment" = \'go heavy\' WHERE "id" = \'we1\'',
+      );
+      await firstRun.customStatement(
+        'ALTER TABLE "TemplateExercises" ADD COLUMN "comment" TEXT',
+      );
+      await firstRun.customStatement(
+        'UPDATE "TemplateExercises" SET "comment" = \'go heavy\' WHERE "id" = \'te1\'',
       );
       await firstRun.customStatement('PRAGMA user_version = 1');
       await firstRun.close();
@@ -174,11 +211,25 @@ void main() {
         exerciseSetColumns.map((r) => r.data['name']),
         isNot(contains('comment')),
       );
+      final workoutExerciseColumns = await secondRun
+          .customSelect('PRAGMA table_info("WorkoutExercises")')
+          .get();
+      expect(
+        workoutExerciseColumns.map((r) => r.data['name']),
+        isNot(contains('comment')),
+      );
+      final templateExerciseColumns = await secondRun
+          .customSelect('PRAGMA table_info("TemplateExercises")')
+          .get();
+      expect(
+        templateExerciseColumns.map((r) => r.data['name']),
+        isNot(contains('comment')),
+      );
 
       final versionRow = await secondRun
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(versionRow.data['user_version'], 4);
+      expect(versionRow.data['user_version'], 5);
 
       final fkRows = await secondRun.customSelect('PRAGMA foreign_keys').get();
       expect(fkRows.single.data['foreign_keys'], 1);
@@ -194,6 +245,18 @@ void main() {
           .get();
       expect(storedMeasurements.single.id, 'm1');
       expect(storedMeasurements.single.valueMetric, 82.5);
+
+      final storedWorkoutExercises = await secondRun
+          .select(secondRun.workoutExercises)
+          .get();
+      expect(storedWorkoutExercises.single.id, 'we1');
+      expect(storedWorkoutExercises.single.orderIndex, 0);
+
+      final storedTemplateExercises = await secondRun
+          .select(secondRun.templateExercises)
+          .get();
+      expect(storedTemplateExercises.single.id, 'te1');
+      expect(storedTemplateExercises.single.orderIndex, 0);
     },
   );
 }

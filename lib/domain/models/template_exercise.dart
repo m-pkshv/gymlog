@@ -11,21 +11,18 @@ class TemplateExercise {
     required this.createdAt,
     required this.updatedAt,
     required this.isDeleted,
-    this.comment,
   });
 
   final String id;
   final String templateId;
   final String exerciseId;
   final int orderIndex;
-  final String? comment;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isDeleted;
 
   TemplateExercise copyWith({
     int? orderIndex,
-    String? comment,
     DateTime? updatedAt,
     bool? isDeleted,
   }) {
@@ -34,7 +31,6 @@ class TemplateExercise {
       templateId: templateId,
       exerciseId: exerciseId,
       orderIndex: orderIndex ?? this.orderIndex,
-      comment: comment ?? this.comment,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,

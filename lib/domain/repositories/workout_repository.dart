@@ -60,8 +60,8 @@ abstract class WorkoutRepository {
     required String exerciseId,
   });
 
-  /// Persists `WorkoutExercise`-level field changes — the comment autosave
-  /// write (S-03, TS 5).
+  /// Persists `WorkoutExercise`-level field changes — currently just the
+  /// progression-decision segment (S-03, DM 6.11).
   Future<void> updateWorkoutExercise(WorkoutExercise workoutExercise);
 
   Future<ExerciseSet> addSet({required String workoutExerciseId});
@@ -97,8 +97,8 @@ abstract class WorkoutRepository {
   });
 
   /// "Скопировать прошлую" (S-02, TS 8 section 8): duplicates
-  /// [sourceWorkoutId]'s exercises (order + `WorkoutExercise.comment`) and
-  /// each set's planned values into a brand-new `draft` workout dated
+  /// [sourceWorkoutId]'s exercises (order) and each set's planned values
+  /// into a brand-new `draft` workout dated
   /// [date]. Actuals, `isCompleted`, and `progressionDecision` are never
   /// copied — the copy starts with nothing performed yet. Throws
   /// `ArgumentError` if [sourceWorkoutId] doesn't exist.
@@ -110,8 +110,8 @@ abstract class WorkoutRepository {
   /// "Создать тренировку" (S-12 template card menu / History's "Из
   /// шаблона" creation option, TS 8 section 8): the reverse of
   /// `WorkoutTemplateRepository.createFromWorkout` — copies
-  /// [templateId]'s exercises (order + comment) and each set's planned
-  /// values into a brand-new `draft` workout dated
+  /// [templateId]'s exercises (order) and each set's planned values into a
+  /// brand-new `draft` workout dated
   /// [date], named after the template (DM-1, owner-confirmed 2026-07-21:
   /// `Workout` does not store a `sourceTemplateId` back-reference — nothing
   /// in Stage 5's scope needs to trace a workout back to the template it

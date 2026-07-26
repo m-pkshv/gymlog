@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/legacy.dart';
 import '../../core/constants.dart';
 import '../../core/logger.dart';
 import '../../domain/models/template_details.dart';
-import '../../domain/models/template_exercise.dart';
 import '../../domain/models/template_set.dart';
 import '../../domain/repositories/workout_template_repository.dart';
 import 'template_set_field_config.dart';
@@ -16,9 +15,9 @@ import 'template_set_field_config.dart';
 /// to what a plan-only aggregate needs: no status transitions, no dates, no
 /// facts/completion, no tags, no progression. Same autosave debounce
 /// contract as the workout editor (03_TECHNICAL_SPEC.md, section 5):
-/// [editSet]/[editName]/[editComment]/[editExerciseComment] apply changes to
-/// local state immediately and schedule a debounced write; the matching
-/// `flush*` methods force an immediate write.
+/// [editSet]/[editName]/[editComment] apply changes to local state
+/// immediately and schedule a debounced write; the matching `flush*`
+/// methods force an immediate write.
 class TemplateEditorController
     extends StateNotifier<AsyncValue<TemplateDetails>> {
   TemplateEditorController(
@@ -40,7 +39,6 @@ class TemplateEditorController
   final Map<String, Timer> _setDebounceTimers = {};
   Timer? _nameDebounceTimer;
   Timer? _commentDebounceTimer;
-  final Map<String, Timer> _exerciseCommentDebounceTimers = {};
 
   Future<void> _load() async {
     try {
@@ -71,36 +69,6 @@ class TemplateEditorController
       }
     }
     return null;
-  }
-
-  TemplateExercise? _findExercise(String templateExerciseId) {
-    for (final exercise
-        in _details?.exercises ?? const <TemplateExerciseDetails>[]) {
-      if (exercise.templateExercise.id == templateExerciseId) {
-        return exercise.templateExercise;
-      }
-    }
-    return null;
-  }
-
-  void _replaceExercise(TemplateExercise updated) {
-    final details = _details;
-    if (details == null) return;
-    state = AsyncValue.data(
-      TemplateDetails(
-        template: details.template,
-        exercises: [
-          for (final exercise in details.exercises)
-            exercise.templateExercise.id == updated.id
-                ? TemplateExerciseDetails(
-                    templateExercise: updated,
-                    exercise: exercise.exercise,
-                    sets: exercise.sets,
-                  )
-                : exercise,
-        ],
-      ),
-    );
   }
 
   void _replaceSet(TemplateSet updated) {
@@ -321,34 +289,6 @@ class TemplateEditorController
     }
   }
 
-  void editExerciseComment(String templateExerciseId, String value) {
-    final current = _findExercise(templateExerciseId);
-    if (current == null) return;
-    _replaceExercise(
-      current.copyWith(comment: value, updatedAt: DateTime.now().toUtc()),
-    );
-    _exerciseCommentDebounceTimers[templateExerciseId]?.cancel();
-    _exerciseCommentDebounceTimers[templateExerciseId] = Timer(
-      autosaveDebounce,
-      () => flushExerciseComment(templateExerciseId),
-    );
-  }
-
-  Future<void> flushExerciseComment(String templateExerciseId) async {
-    _exerciseCommentDebounceTimers.remove(templateExerciseId)?.cancel();
-    final exercise = _findExercise(templateExerciseId);
-    if (exercise == null) return;
-    try {
-      await _repository.updateTemplateExercise(exercise);
-    } catch (error, stackTrace) {
-      _logger.error(
-        'Failed to save comment for template exercise $templateExerciseId',
-        error: error,
-        stackTrace: stackTrace,
-      );
-    }
-  }
-
   Future<void> reorderExercises(List<String> orderedTemplateExerciseIds) async {
     final details = _details;
     if (details == null) return;
@@ -400,9 +340,6 @@ class TemplateEditorController
     }
     if (_nameDebounceTimer != null) await flushName();
     if (_commentDebounceTimer != null) await flushComment();
-    for (final id in _exerciseCommentDebounceTimers.keys.toList()) {
-      await flushExerciseComment(id);
-    }
   }
 
   @override
@@ -422,15 +359,6 @@ class TemplateEditorController
         unawaited(_repository.update(details.template));
       }
     }
-
-    for (final entry in _exerciseCommentDebounceTimers.entries) {
-      entry.value.cancel();
-      final exercise = _findExercise(entry.key);
-      if (exercise != null) {
-        unawaited(_repository.updateTemplateExercise(exercise));
-      }
-    }
-    _exerciseCommentDebounceTimers.clear();
 
     super.dispose();
   }
