@@ -571,6 +571,22 @@ class _EditorBody extends StatelessWidget {
                     );
                   },
                 ),
+              // Owner-reported (Stage 10 redesign): "+ Добавить упражнение"
+              // used to be pinned at the bottom of the screen next to
+              // Start/Finish; moved into this same scrollable, right below
+              // the last exercise card and above the comment field.
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Center(
+                    child: OutlinedButton.icon(
+                      onPressed: onAddExercise,
+                      icon: const Icon(Icons.add),
+                      label: Text(l10n.addExerciseAction),
+                    ),
+                  ),
+                ),
+              ),
               // Owner-reported (Stage 10 redesign): the workout comment used
               // to be pinned above the exercise list, staying on screen while
               // scrolling; moved into this same scrollable, always after the
@@ -598,21 +614,11 @@ class _EditorBody extends StatelessWidget {
           top: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: Column(
-              children: [
-                _StatusCtaButton(
-                  key: const ValueKey('workout-status-cta'),
-                  status: workout.status,
-                  onPressed: () =>
-                      onChangeStatus(primaryStatusCtaTransition(workout.status)),
-                ),
-                const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: onAddExercise,
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.addExerciseAction),
-                ),
-              ],
+            child: _StatusCtaButton(
+              key: const ValueKey('workout-status-cta'),
+              status: workout.status,
+              onPressed: () =>
+                  onChangeStatus(primaryStatusCtaTransition(workout.status)),
             ),
           ),
         ),
