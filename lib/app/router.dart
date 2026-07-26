@@ -315,14 +315,15 @@ class _MainTabScaffold extends ConsumerWidget {
     return Scaffold(
       body: Column(
         children: [
-          // Stage 10 redesign, AUDIT.md section 1.6-доп: the banner used to
-          // sit flush against the physical top of the screen (this
-          // Scaffold has no AppBar of its own -- each tab supplies its
-          // own, nested inside `navigationShell`), colliding with the
-          // status bar. `SafeArea` gives it the same top inset an AppBar
-          // would; `bottom: false` because the bottom nav bar below
-          // handles the bottom inset itself.
-          const SafeArea(bottom: false, child: _ResumeWorkoutBanner()),
+          // The top `SafeArea` inset for this banner lives *inside*
+          // `_ResumeWorkoutBanner` itself (Stage 10 redesign,
+          // owner-reported), wrapped only around its actual `MaterialBanner`
+          // -- a `Padding`-based `SafeArea` here would reserve that inset
+          // unconditionally, even while the banner renders `SizedBox.shrink()`
+          // (no active workout, or already viewing its own editor), leaving
+          // a status-bar-tall gap above every tab's own AppBar for no
+          // reason.
+          const _ResumeWorkoutBanner(),
           Expanded(child: navigationShell),
         ],
       ),
@@ -395,14 +396,43 @@ class _ResumeWorkoutBanner extends ConsumerWidget {
                   .elapsedSeconds(activeState) ~/
               60;
 
-    return MaterialBanner(
-      content: Text(l10n.workoutContinuingBannerMessage(minutes)),
-      actions: [
-        TextButton(
-          onPressed: () => context.go('/history/workout/${workout.id}'),
-          child: Text(l10n.continueWorkoutAction),
-        ),
-      ],
+    // Stage 10 redesign, owner-reported: showing "Тренировка продолжается"
+    // on top of the very editor screen it points at is pure noise -- the
+    // owner is already looking at that workout, with its own back arrow,
+    // name and timer right below. `ListenableBuilder` on the router
+    // delegate (a `ChangeNotifier`) is required here, not just re-reading
+    // `currentConfiguration` inline: this widget only rebuilds when a
+    // *Riverpod* provider it watches changes, and `context.go` navigation
+    // doesn't touch any of those, so without an explicit listener the
+    // check below would keep evaluating the stale pre-navigation location
+    // until something else happened to trigger a rebuild.
+    final router = GoRouter.of(context);
+    return ListenableBuilder(
+      listenable: router.routerDelegate,
+      builder: (context, _) {
+        final location = router.routerDelegate.currentConfiguration.uri
+            .toString();
+        if (location.startsWith('/history/workout/${workout.id}')) {
+          return const SizedBox.shrink();
+        }
+        // `bottom: false` -- the bottom nav bar below handles the bottom
+        // inset itself; only applied here, around the actual banner, so it
+        // never reserves space when there's nothing to show (see the doc
+        // comment on `_MainTabScaffold`'s call site).
+        return SafeArea(
+          bottom: false,
+          child: MaterialBanner(
+            content: Text(l10n.workoutContinuingBannerMessage(minutes)),
+            actions: [
+              TextButton(
+                onPressed: () =>
+                    context.go('/history/workout/${workout.id}'),
+                child: Text(l10n.continueWorkoutAction),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
