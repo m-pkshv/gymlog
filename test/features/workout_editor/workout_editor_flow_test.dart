@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:gymlog/app/providers.dart';
 import 'package:gymlog/core/constants.dart';
 import 'package:gymlog/core/date_format.dart';
+import 'package:gymlog/core/widgets/completion_toggle.dart';
 import 'package:gymlog/core/widgets/numeric_stepper_field.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
@@ -553,7 +554,7 @@ void main() {
     await tester.tap(_statusCta);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(Checkbox).last);
+    await tester.tap(find.byType(CompletionToggle).last);
     await tester.pumpAndSettle();
 
     final sets = await db.select(db.exerciseSets).get();
@@ -663,7 +664,7 @@ void main() {
         // redesign) -- start first, then mark it done.
         await tester.tap(_statusCta);
         await tester.pumpAndSettle();
-        await tester.tap(find.byType(Checkbox).last); // mark the set done
+        await tester.tap(find.byType(CompletionToggle).last); // mark the set done
         await tester.pumpAndSettle();
         await tester.tap(_statusCta);
       await tester.pumpAndSettle();
@@ -746,7 +747,7 @@ void main() {
 
       expect(find.text('REST'), findsNothing);
 
-      await tester.tap(find.byType(Checkbox).last);
+      await tester.tap(find.byType(CompletionToggle).last);
       await tester.pumpAndSettle();
 
       // Stage 10 redesign: RestTimerCard's label is uppercased ("REST",
@@ -819,7 +820,7 @@ void main() {
       (tester) async {
         await startWorkoutWithOneSet(tester);
 
-        await tester.tap(find.byType(Checkbox).last);
+        await tester.tap(find.byType(CompletionToggle).last);
         await tester.pumpAndSettle();
 
         expect(find.byType(AlertDialog), findsNothing);
@@ -847,7 +848,7 @@ void main() {
         );
         await startWorkoutWithOneSet(tester);
 
-        await tester.tap(find.byType(Checkbox).last);
+        await tester.tap(find.byType(CompletionToggle).last);
         await tester.pumpAndSettle();
 
         expect(find.text('Enable notifications?'), findsOneWidget);
@@ -879,7 +880,7 @@ void main() {
         );
         await startWorkoutWithOneSet(tester);
 
-        await tester.tap(find.byType(Checkbox).last);
+        await tester.tap(find.byType(CompletionToggle).last);
         await tester.pumpAndSettle();
         await tester.tap(find.text('Not now'));
         await tester.pumpAndSettle();
@@ -900,7 +901,7 @@ void main() {
 
     testWidgets('"+15 s" reschedules the notification', (tester) async {
       await startWorkoutWithOneSet(tester);
-      await tester.tap(find.byType(Checkbox).last);
+      await tester.tap(find.byType(CompletionToggle).last);
       await tester.pumpAndSettle();
 
       await tester.tap(find.byTooltip('+15 s'));
@@ -919,7 +920,7 @@ void main() {
 
     testWidgets('"Skip" cancels the notification', (tester) async {
       await startWorkoutWithOneSet(tester);
-      await tester.tap(find.byType(Checkbox).last);
+      await tester.tap(find.byType(CompletionToggle).last);
       await tester.pumpAndSettle();
 
       await tester.tap(find.byTooltip('Skip'));
@@ -936,7 +937,7 @@ void main() {
       tester,
     ) async {
       await startWorkoutWithOneSet(tester);
-      await tester.tap(find.byType(Checkbox).last);
+      await tester.tap(find.byType(CompletionToggle).last);
       await tester.pumpAndSettle();
 
       await tester.tap(_statusCta);

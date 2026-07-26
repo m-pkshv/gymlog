@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/design_tokens.dart';
+import '../../../core/widgets/completion_toggle.dart';
 import '../../../core/widgets/expandable_set_row.dart';
 import '../../../core/widgets/numeric_stepper_field.dart';
 import '../../../domain/models/exercise_set.dart';
@@ -17,14 +18,11 @@ import '../set_field_config.dart';
 /// факта"), pre-filled from the value it edits.
 ///
 /// While [isActive] (the workout is `inProgress`) the steppers edit the
-/// *actual* value and a checkbox toggles `isCompleted`, unchanged from
-/// before -- still a real `Checkbox` (just restyled into a filled circle
-/// via `shape`/`fillColor`), not a bespoke tap target, so nothing that
-/// already exercised "the checkbox" needs to change what widget type it
-/// looks for. Outside `inProgress` the steppers edit the *planned* value
-/// and there's no checkbox at all (matches the mockup's draft/plan-only
-/// rows -- marking a set "done" before the workout has even started isn't
-/// a real state).
+/// *actual* value and a [CompletionToggle] marks `isCompleted`. Outside
+/// `inProgress` the steppers edit the *planned* value and there's no
+/// completion toggle at all (matches the mockup's draft/plan-only rows --
+/// marking a set "done" before the workout has even started isn't a real
+/// state).
 class SetRow extends StatefulWidget {
   const SetRow({
     super.key,
@@ -89,29 +87,10 @@ class _SetRowState extends State<SetRow> {
       expanded: _expanded,
       onToggleExpanded: () => setState(() => _expanded = !_expanded),
       trailing: isActive
-          ? Transform.scale(
-              // The mockup's completion circle reads much larger than
-              // Checkbox's default ~18dp glyph (owner-reported, Stage 10
-              // redesign on-device check). Scaling the whole widget grows
-              // the painted circle within its existing ~48dp tap-target
-              // box (no overflow, no change to the tap area itself), so
-              // the type stays `Checkbox` and every existing
-              // `find.byType(Checkbox)` test keeps working unchanged.
-              scale: 1.8,
-              child: Checkbox(
-                value: set.isCompleted,
-                onChanged: (value) =>
-                    widget.onCompletedChanged(value ?? false),
-                semanticLabel: l10n.setColumnDone,
-                shape: const CircleBorder(),
-                side: BorderSide(color: scheme.outline, width: 2),
-                fillColor: WidgetStateProperty.resolveWith(
-                  (states) => states.contains(WidgetState.selected)
-                      ? semantic.success
-                      : Colors.transparent,
-                ),
-                checkColor: semantic.onSuccess,
-              ),
+          ? CompletionToggle(
+              value: set.isCompleted,
+              onChanged: widget.onCompletedChanged,
+              semanticLabel: l10n.setColumnDone,
             )
           : null,
       expandedChild: Padding(
