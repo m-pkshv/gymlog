@@ -232,12 +232,12 @@ class _ExerciseCardState extends ConsumerState<ExerciseCard> {
               ),
               const SizedBox(height: 8),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     l10n.progressionDecisionLabel,
                     style: Theme.of(context).textTheme.labelLarge,
                   ),
-                  const SizedBox(width: 8),
                   ProgressionSegmentedButton(
                     selected: details.workoutExercise.progressionDecision,
                     onChanged: widget.onProgressionDecisionChanged,
