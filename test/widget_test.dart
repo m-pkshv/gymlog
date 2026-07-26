@@ -145,6 +145,48 @@ void main() {
   );
 
   testWidgets(
+    'the bottom nav bar is hidden on the active workout\'s own editor '
+    'screen, shown again after leaving it (Stage 10, owner-reported)',
+    (tester) async {
+      await WorkoutRepositoryImpl(db).createDraft(date: DateTime.now());
+
+      await tester.pumpWidget(appUnderTest());
+      await tester.pumpAndSettle();
+
+      // Today (not History, which hides drafts by default, Stage 3) shows
+      // the draft's own card straight away.
+      await tester.tap(find.byType(Card).first);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byType(NavigationBar),
+        findsOneWidget,
+        reason: 'still a draft, not yet inProgress',
+      );
+
+      await tester.tap(find.byKey(const ValueKey('workout-status-cta')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byType(NavigationBar),
+        findsNothing,
+        reason: 'inProgress now, hidden for more room for the sets list',
+      );
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byType(NavigationBar),
+        findsOneWidget,
+        reason: 'left the active workout\'s screen, nav bar returns',
+      );
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
     'AppSettings.locale = ru switches the rendered language on the fly '
     '(S-17, Stage 9)',
     (tester) async {

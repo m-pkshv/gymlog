@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../domain/models/exercise.dart';
+import 'providers.dart';
 import '../features/exercises/create_exercise_screen.dart';
 import '../features/exercises/exercise_detail_screen.dart';
 import '../features/exercises/screen.dart';
@@ -307,49 +309,75 @@ final GoRouter appRouter = GoRouter(
 /// tab's own "Continue" card (`today/screen.dart`) already covers the same
 /// "get back into the active workout" need from that tab; from elsewhere,
 /// History still reaches it too.
-class _MainTabScaffold extends StatelessWidget {
+///
+/// The [NavigationBar] itself is hidden entirely while viewing the active
+/// (`inProgress`) workout's own editor screen (Stage 10, owner-reported,
+/// mockup attached) -- more vertical room for the sets list, the one
+/// screen where scroll space matters most. Uses the exact same
+/// `ListenableBuilder` on `GoRouter.routerDelegate` the removed banner
+/// used, for the same reason: reacting to nested `context.go` navigation
+/// into/out of that screen needs the router's own notifications, not just
+/// a Riverpod watch (see the historical comment on the removed
+/// `_ResumeWorkoutBanner` in git history for the full explanation).
+class _MainTabScaffold extends ConsumerWidget {
   const _MainTabScaffold({required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: (index) => navigationShell.goBranch(
-          index,
-          // Stage 10, owner-reported: tapping the already-active tab while
-          // deeper in its stack (e.g. "Ещё" -> "Шаблоны" -> tap "Ещё"
-          // again) resets that branch back to its root instead of doing
-          // nothing.
-          initialLocation: index == navigationShell.currentIndex,
-        ),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.today_outlined),
-            label: l10n.tabToday,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.history_outlined),
-            label: l10n.tabHistory,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.fitness_center_outlined),
-            label: l10n.tabExercises,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.bar_chart_outlined),
-            label: l10n.tabStats,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.more_horiz_outlined),
-            label: l10n.tabMore,
-          ),
-        ],
-      ),
+    final inProgressWorkout = ref.watch(inProgressWorkoutProvider).value;
+    final router = GoRouter.of(context);
+
+    return ListenableBuilder(
+      listenable: router.routerDelegate,
+      builder: (context, _) {
+        final onActiveWorkoutScreen =
+            inProgressWorkout != null &&
+            router.routerDelegate.currentConfiguration.uri
+                .toString()
+                .startsWith('/history/workout/${inProgressWorkout.id}');
+
+        return Scaffold(
+          body: navigationShell,
+          bottomNavigationBar: onActiveWorkoutScreen
+              ? null
+              : NavigationBar(
+                  selectedIndex: navigationShell.currentIndex,
+                  onDestinationSelected: (index) => navigationShell.goBranch(
+                    index,
+                    // Stage 10, owner-reported: tapping the already-active
+                    // tab while deeper in its stack (e.g. "Ещё" ->
+                    // "Шаблоны" -> tap "Ещё" again) resets that branch back
+                    // to its root instead of doing nothing.
+                    initialLocation: index == navigationShell.currentIndex,
+                  ),
+                  destinations: [
+                    NavigationDestination(
+                      icon: const Icon(Icons.today_outlined),
+                      label: l10n.tabToday,
+                    ),
+                    NavigationDestination(
+                      icon: const Icon(Icons.history_outlined),
+                      label: l10n.tabHistory,
+                    ),
+                    NavigationDestination(
+                      icon: const Icon(Icons.fitness_center_outlined),
+                      label: l10n.tabExercises,
+                    ),
+                    NavigationDestination(
+                      icon: const Icon(Icons.bar_chart_outlined),
+                      label: l10n.tabStats,
+                    ),
+                    NavigationDestination(
+                      icon: const Icon(Icons.more_horiz_outlined),
+                      label: l10n.tabMore,
+                    ),
+                  ],
+                ),
+        );
+      },
     );
   }
 }
