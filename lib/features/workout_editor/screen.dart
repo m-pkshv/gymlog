@@ -500,9 +500,9 @@ class _EditorBody extends StatelessWidget {
             ],
           ),
         ),
+        _AssignedTagsWrap(tags: details.tags),
         if (workout.status == WorkoutStatus.inProgress)
           _RestTimerBar(workoutId: workout.id, controller: controller),
-        _AssignedTagsWrap(tags: details.tags),
         Expanded(
           child: CustomScrollView(
             slivers: [
