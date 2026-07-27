@@ -51,6 +51,14 @@ class WorkoutStatusMenu extends StatelessWidget {
 
     return PopupMenuButton<Object>(
       tooltip: l10n.workoutStatusMenuTooltip,
+      // Matches the tag button's density (workout_editor/screen.dart's
+      // _TagAddButton) -- Stage 10 redesign, owner-reported: the two
+      // icon buttons in the header row didn't line up with each other
+      // (default PopupMenuButton is a full 48dp target, the tag button
+      // was already compact/40dp). `PopupMenuButton` has no direct
+      // `visualDensity` param -- it forwards `style` to the internal
+      // `IconButton` it builds when no custom `icon`/`child` is given.
+      style: IconButton.styleFrom(visualDensity: VisualDensity.compact),
       onSelected: (action) {
         if (action == deleteWorkoutMenuAction) {
           onDelete?.call();

@@ -513,13 +513,27 @@ class _EditorBody extends StatelessWidget {
               const SizedBox(width: 8),
               StatusBadge(status: workout.status),
               const Spacer(),
-              _TagAddButton(workoutId: workout.id),
-              WorkoutStatusMenu(
-                key: const ValueKey('workout-status-menu'),
-                status: workout.status,
-                excludeStatus: primaryStatusCtaTransition(workout.status),
-                onSelectStatus: onChangeStatus,
-                onDelete: onDeleteWorkout,
+              // The row is top-aligned (`CrossAxisAlignment.start` above)
+              // so the date/status stay flush against the AppBar, but
+              // that leaves these two icon buttons -- taller than the
+              // text/badge even at compact density -- looking shifted
+              // down instead of level with them. Nudged up by eye/
+              // on-device measurement (Stage 10 redesign, owner-reported)
+              // to land their icon's visual center on the same line as
+              // the date/badge's.
+              Transform.translate(
+                offset: const Offset(0, -8),
+                child: _TagAddButton(workoutId: workout.id),
+              ),
+              Transform.translate(
+                offset: const Offset(0, -8),
+                child: WorkoutStatusMenu(
+                  key: const ValueKey('workout-status-menu'),
+                  status: workout.status,
+                  excludeStatus: primaryStatusCtaTransition(workout.status),
+                  onSelectStatus: onChangeStatus,
+                  onDelete: onDeleteWorkout,
+                ),
               ),
             ],
           ),
