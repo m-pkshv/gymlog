@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
 import '../../core/date_format.dart';
+import '../../core/widgets/dashed_rrect_border.dart';
 import '../../core/widgets/error_retry_state.dart';
 import '../../core/widgets/status_badge.dart';
 import '../../domain/enums.dart';
@@ -320,16 +321,21 @@ class _EmptyTodayState extends StatelessWidget {
 /// buttons in a row -- "from scratch" is the primary action (wide,
 /// leading), template/copy are secondary shortcuts (compact, icon +
 /// tooltip, same `UX 11` icon-only-needs-a-label convention used
-/// elsewhere in the app). The mockup's dashed border on the wide button
-/// isn't reproduced (a real dashed `BorderSide` needs a custom painter --
-/// no such helper exists in the project and one wasn't worth adding for a
-/// purely decorative detail); a regular outlined border is used instead.
+/// elsewhere in the app). Owner-reported follow-up: the default M3 control
+/// height (~40dp) read as too small next to the earlier corner-radius
+/// change, so all three are ~30% taller (`_quickActionHeight`, 40 -> 52)
+/// with proportionally larger icons; the wide button's own solid border is
+/// turned off (`side: BorderSide.none`) in favor of `DashedRRectBorder`
+/// painted around it, matching the mockup's dashed outline.
 class _QuickActions extends ConsumerWidget {
   const _QuickActions();
+
+  static const double _quickActionHeight = 52;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
     // Rounded-rectangle, not the M3 default stadium/circle shape (owner-
     // reported, mockup screenshot: squared-off corners on all three
     // buttons) -- scoped to this row rather than a theme-wide
@@ -341,24 +347,40 @@ class _QuickActions extends ConsumerWidget {
     return Row(
       children: [
         Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => createWorkoutFromScratchFlow(context, ref),
-            style: OutlinedButton.styleFrom(shape: shape),
-            icon: const Icon(Icons.add),
-            label: Text(l10n.newWorkoutFromScratchAction),
+          child: DashedRRectBorder(
+            borderRadius: AppRadius.button,
+            color: scheme.outline,
+            child: OutlinedButton.icon(
+              onPressed: () => createWorkoutFromScratchFlow(context, ref),
+              style: OutlinedButton.styleFrom(
+                shape: shape,
+                side: BorderSide.none,
+                minimumSize: const Size(0, _quickActionHeight),
+              ),
+              icon: const Icon(Icons.add, size: 22),
+              label: Text(l10n.newWorkoutFromScratchAction),
+            ),
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
         IconButton.outlined(
           onPressed: () => context.go('/history/template-source'),
-          style: IconButton.styleFrom(shape: shape),
+          style: IconButton.styleFrom(
+            shape: shape,
+            minimumSize: const Size(_quickActionHeight, _quickActionHeight),
+          ),
+          iconSize: 28,
           icon: const Icon(Icons.description_outlined),
           tooltip: l10n.newWorkoutFromTemplateAction,
         ),
         const SizedBox(width: AppSpacing.sm),
         IconButton.outlined(
           onPressed: () => context.go('/history/copy-source'),
-          style: IconButton.styleFrom(shape: shape),
+          style: IconButton.styleFrom(
+            shape: shape,
+            minimumSize: const Size(_quickActionHeight, _quickActionHeight),
+          ),
+          iconSize: 28,
           icon: const Icon(Icons.copy_outlined),
           tooltip: l10n.newWorkoutFromCopyAction,
         ),
