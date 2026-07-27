@@ -17,9 +17,9 @@ import 'package:gymlog/app/theme.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
 /// Mirrors the `/stats` + `/stats/exercise-search` + `/stats/exercise/:id`
-/// slice of the real router (Stage 7, S-09/S-10). `/history/workout/:id` is
-/// stubbed with a bare marker screen -- this test only cares that tapping a
-/// record navigates to the right workout id, not about the editor itself.
+/// slice of the real router (Stage 7, S-09/S-10). `/workout/:id` is stubbed
+/// with a bare marker screen -- this test only cares that tapping a record
+/// navigates to the right workout id, not about the editor itself.
 Widget _appUnderTest(AppDatabase db) {
   final router = GoRouter(
     initialLocation: '/stats',
@@ -41,7 +41,7 @@ Widget _appUnderTest(AppDatabase db) {
         ],
       ),
       GoRoute(
-        path: '/history/workout/:workoutId',
+        path: '/workout/:workoutId',
         builder: (_, state) =>
             Scaffold(body: Text('workout-${state.pathParameters['workoutId']}')),
       ),

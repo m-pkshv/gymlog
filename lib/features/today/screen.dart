@@ -25,17 +25,17 @@ import '../workout_editor/status_labels.dart';
 /// everything: the "Новая тренировка"/"Из шаблона"/"Скопировать прошлую"
 /// quick actions, always visible.
 ///
-/// Every navigation out of this screen into `/history/...` uses
-/// `context.go`, never `context.push` (Stage 10, owner-reported bug: after
-/// "Завершить" -> "Готово" on the summary screen, returning to "Сегодня"
-/// still showed the finished workout's summary with the same "Готово"
-/// button). `push` attaches the pushed route to the *calling* branch's own
-/// Navigator in a `StatefulShellRoute` — since `/history/workout/:id` etc.
-/// belong to the History branch, not Today's, a `push` from here left the
-/// editor/summary stuck at the top of Today's own (offstage) stack even
-/// after `go('/history')` moved the visible branch elsewhere; switching
-/// back to "Сегодня" then showed that stale leftover. `go` re-resolves the
-/// full location and correctly attaches it to History's branch instead.
+/// Opening the workout editor from this screen uses `context.push`
+/// (`/workout/:id` — `app/router.dart`'s top comment: a route outside the
+/// tab shell entirely), not `context.go`: `push` layers the editor on top
+/// of whatever's currently showing via the root Navigator, without
+/// touching the shell underneath, so "back" from the editor returns here
+/// exactly as left. (Historical note: before the editor moved out of the
+/// shell — Stage 10, owner-reported — this screen used `go` for the
+/// opposite reason: `push`ing a route that lived *inside* History's own
+/// branch attached it to Today's branch Navigator instead, leaving a stale
+/// screen behind. That specific failure mode doesn't exist once the route
+/// isn't nested in any branch, so `push` is correct again.)
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
 
@@ -125,7 +125,7 @@ class _ContinueWorkoutCard extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.go('/history/workout/${workout.id}'),
+        onTap: () => context.push('/workout/${workout.id}'),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Row(
@@ -155,7 +155,7 @@ class _ContinueWorkoutCard extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.md),
               FilledButton(
-                onPressed: () => context.go('/history/workout/${workout.id}'),
+                onPressed: () => context.push('/workout/${workout.id}'),
                 child: Text(l10n.continueWorkoutAction),
               ),
             ],
@@ -225,7 +225,7 @@ class _WorkoutListCard extends ConsumerWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.go('/history/workout/${workout.id}'),
+        onTap: () => context.push('/workout/${workout.id}'),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(

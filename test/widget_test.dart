@@ -133,8 +133,12 @@ void main() {
 
       // The regression: returning to "Сегодня" used to still show the
       // finished workout's summary screen (with its own "Готово" button)
-      // instead of the Today root, because the editor/summary had been
-      // `push`ed onto Today's own branch Navigator rather than History's.
+      // instead of the Today root -- `/history/workout/:id` used to live
+      // inside History's own branch, so a `push` from Today attached the
+      // editor/summary to Today's own (offstage) branch Navigator instead
+      // of History's. Fixed at the time by switching Today to `go`; fixed
+      // again, more fundamentally, by moving the editor out of the shell
+      // entirely (see the next test and `app/router.dart`'s top comment).
       await tester.tap(find.text('Today'));
       await tester.pumpAndSettle();
 
@@ -146,13 +150,52 @@ void main() {
   );
 
   testWidgets(
-    'the bottom nav bar is hidden on the active workout\'s own editor '
-    'screen, shown again after leaving it (Stage 10, owner-reported)',
+    'opening a workout from "Сегодня" and pressing back returns to '
+    '"Сегодня", not "История" (Stage 10 redesign, owner-reported)',
     (tester) async {
       await WorkoutRepositoryImpl(db).createDraft(date: DateTime.now());
 
       await tester.pumpWidget(appUnderTest());
       await tester.pumpAndSettle();
+
+      expect(find.byType(TodayScreen), findsOneWidget);
+
+      // Today (not History, which hides drafts by default, Stage 3) shows
+      // the draft's own card straight away.
+      await tester.tap(find.byType(Card).first);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TodayScreen), findsNothing);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      // The regression: `/history/workout/:id` used to be nested inside
+      // History's own branch, so opening it from any other tab (Today
+      // included) forced `StatefulShellRoute` to switch the active tab to
+      // History -- "back" then landed on History's root, not wherever the
+      // workout was actually opened from.
+      expect(find.byType(TodayScreen), findsOneWidget);
+      expect(find.byType(HistoryScreen), findsNothing);
+      final todayTab = tester.widget<BottomNavBarItem>(
+        find.widgetWithText(BottomNavBarItem, 'Today'),
+      );
+      expect(todayTab.selected, isTrue);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'the workout editor has no bottom nav bar for any workout status, '
+    'shown again after leaving it (Stage 10 redesign, owner-reported)',
+    (tester) async {
+      await WorkoutRepositoryImpl(db).createDraft(date: DateTime.now());
+
+      await tester.pumpWidget(appUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BottomNavBar), findsOneWidget);
 
       // Today (not History, which hides drafts by default, Stage 3) shows
       // the draft's own card straight away.
@@ -161,17 +204,11 @@ void main() {
 
       expect(
         find.byType(BottomNavBar),
-        findsOneWidget,
-        reason: 'still a draft, not yet inProgress',
-      );
-
-      await tester.tap(find.byKey(const ValueKey('workout-status-cta')));
-      await tester.pumpAndSettle();
-
-      expect(
-        find.byType(BottomNavBar),
         findsNothing,
-        reason: 'inProgress now, hidden for more room for the sets list',
+        reason:
+            '/workout/:id (app/router.dart) is a route outside the tab '
+            'shell entirely -- its own Scaffold has no bottom nav to hide, '
+            'for every status, not just inProgress',
       );
 
       await tester.pageBack();
@@ -180,7 +217,7 @@ void main() {
       expect(
         find.byType(BottomNavBar),
         findsOneWidget,
-        reason: 'left the active workout\'s screen, nav bar returns',
+        reason: 'left the editor, back on the tab shell\'s own Scaffold',
       );
 
       await _unmountAndFlush(tester);

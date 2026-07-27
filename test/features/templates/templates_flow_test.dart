@@ -19,10 +19,10 @@ import 'package:gymlog/core/widgets/numeric_stepper_field.dart';
 import 'package:gymlog/app/theme.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
-/// Mirrors the `/more/templates` + `/history/workout/:workoutId` slice of
-/// the real router (S-12/S-13, Stage 5; the workout route is only reached
-/// from "Создать тренировку", TS 8 section 8) -- a self-contained harness
-/// rather than pulling in all 5 tabs.
+/// Mirrors the `/more/templates` + `/workout/:workoutId` slice of the real
+/// router (S-12/S-13, Stage 5; the workout route is only reached from
+/// "Создать тренировку", TS 8 section 8) -- a self-contained harness rather
+/// than pulling in all 5 tabs.
 Widget _appUnderTest(AppDatabase db) {
   final router = GoRouter(
     initialLocation: '/more/templates',
@@ -55,7 +55,7 @@ Widget _appUnderTest(AppDatabase db) {
         ],
       ),
       GoRoute(
-        path: '/history/workout/:workoutId',
+        path: '/workout/:workoutId',
         builder: (_, state) => WorkoutEditorScreen(
           workoutId: state.pathParameters['workoutId']!,
         ),

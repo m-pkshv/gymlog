@@ -239,11 +239,9 @@ class _ProgressBody extends ConsumerWidget {
 }
 
 /// Tapping a record/`_RepsAtWeightTable` row opens the workout that set it,
-/// via `context.go`, not `push` (Stage 10, owner-reported): this screen is
-/// the "Stats" branch, and `/history/workout/:id` belongs to History's --
-/// `push`ing it here would attach the editor to Stats' own Navigator
-/// instead of History's (see `today/screen.dart`'s doc comment for the
-/// general explanation of why that's wrong for a `StatefulShellRoute`).
+/// via `context.push` (`/workout/:id` is a route outside the tab shell,
+/// `app/router.dart`'s top comment) -- see `today/screen.dart`'s doc
+/// comment for why.
 class _RecordTile extends StatelessWidget {
   const _RecordTile({required this.l10n, required this.record});
 
@@ -270,7 +268,7 @@ class _RecordTile extends StatelessWidget {
             ),
         ],
       ),
-      onTap: () => context.go('/history/workout/${record.workoutId}'),
+      onTap: () => context.push('/workout/${record.workoutId}'),
     );
   }
 }
@@ -301,7 +299,7 @@ class _RepsAtWeightTable extends StatelessWidget {
               DataCell(Text(formatShortDate(record.achievedAt))),
             ],
             onSelectChanged: (_) =>
-                context.go('/history/workout/${record.workoutId}'),
+                context.push('/workout/${record.workoutId}'),
           ),
       ],
     );

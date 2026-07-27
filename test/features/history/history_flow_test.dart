@@ -18,11 +18,11 @@ import 'package:gymlog/features/workout_summary/screen.dart';
 import 'package:gymlog/app/theme.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
-/// Mirrors the `/history` + `/history/workout/:workoutId` +
-/// `/history/copy-source` + `/history/template-source` +
-/// `/more/templates/:templateId` slice of the real router (S-02; the
-/// "Копией" creation menu option and its picker are Stage 3; the template
-/// picker/editor destinations are Stage 5's "Создать шаблон"/"Из шаблона").
+/// Mirrors the `/history` + `/workout/:workoutId` + `/history/copy-source`
+/// + `/history/template-source` + `/more/templates/:templateId` slice of
+/// the real router (S-02; the "Копией" creation menu option and its picker
+/// are Stage 3; the template picker/editor destinations are Stage 5's
+/// "Создать шаблон"/"Из шаблона").
 Widget _appUnderTest(AppDatabase db) {
   final router = GoRouter(
     initialLocation: '/history',
@@ -42,7 +42,7 @@ Widget _appUnderTest(AppDatabase db) {
         ],
       ),
       GoRoute(
-        path: '/history/workout/:workoutId',
+        path: '/workout/:workoutId',
         builder: (_, state) => WorkoutEditorScreen(
           workoutId: state.pathParameters['workoutId']!,
         ),

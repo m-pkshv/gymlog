@@ -18,9 +18,9 @@ import '../exercises/exercise_type_labels.dart';
 /// the full S-06 catalog's type/muscle/equipment filter sheet, which would
 /// be excessive for "pick one exercise and get back to logging".
 /// [addExerciseRoute] is this screen's own full path (e.g.
-/// `/history/workout/$id/add-exercise` or `/more/templates/$id/add-
-/// exercise`) — used only to build the "Создать новое" child route, so this
-/// screen doesn't need to know which aggregate it's picking for.
+/// `/workout/$id/add-exercise` or `/more/templates/$id/add-exercise`) —
+/// used only to build the "Создать новое" child route, so this screen
+/// doesn't need to know which aggregate it's picking for.
 class AddExerciseScreen extends ConsumerStatefulWidget {
   const AddExerciseScreen({super.key, required this.addExerciseRoute});
 

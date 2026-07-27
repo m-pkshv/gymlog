@@ -102,7 +102,7 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
 
   Future<void> _addExercise() async {
     final exercise = await context.push<Exercise>(
-      '/history/workout/${widget.workoutId}/add-exercise',
+      '/workout/${widget.workoutId}/add-exercise',
     );
     if (exercise == null) return;
     await ref
@@ -195,10 +195,11 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
           unawaited(_cancelRestTimerNotification());
         }
         // TS 7.2 step 6: "... → итоговый экран" (S-05). A replacement, not
-        // a push, so system back from the summary goes to History, same as
-        // it did from the editor.
+        // an additional push, so "back" from the summary lands wherever
+        // "back" would have from the editor -- whichever tab/screen it was
+        // opened from (`app/router.dart`'s top comment).
         if (newStatus == WorkoutStatus.completed) {
-          context.pushReplacement('/history/workout/${widget.workoutId}/summary');
+          context.pushReplacement('/workout/${widget.workoutId}/summary');
         }
       },
       (error) {

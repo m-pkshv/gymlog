@@ -14,17 +14,17 @@ import 'package:gymlog/features/workout_editor/screen.dart';
 import 'package:gymlog/app/theme.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
-/// Mirrors the `/today` + `/history/workout/:workoutId` +
-/// `/history/copy-source` + `/history/template-source` slice of the real
-/// router (S-01, Stage 9) -- the same destinations the quick actions and
-/// the upcoming/continue cards push to.
+/// Mirrors the `/today` + `/workout/:workoutId` + `/history/copy-source` +
+/// `/history/template-source` slice of the real router (S-01, Stage 9) --
+/// the same destinations the quick actions and the upcoming/continue cards
+/// push to.
 Widget _appUnderTest(AppDatabase db) {
   final router = GoRouter(
     initialLocation: '/today',
     routes: [
       GoRoute(path: '/today', builder: (_, _) => const TodayScreen()),
       GoRoute(
-        path: '/history/workout/:workoutId',
+        path: '/workout/:workoutId',
         builder: (_, state) => WorkoutEditorScreen(
           workoutId: state.pathParameters['workoutId']!,
         ),

@@ -56,11 +56,9 @@ Future<void> showNewWorkoutMenu(BuildContext context, WidgetRef ref) async {
 /// "С нуля" (this menu's own choice, and the S-01 "Новая тренировка" quick
 /// action, Stage 9): creates today's draft and opens it directly, the same
 /// "create then open" pattern as `copyWorkoutFlow`/
-/// `createWorkoutFromTemplateFlow`. Uses `go`, not `push` (Stage 10,
-/// owner-reported) -- called both from within `/history` (this menu, via
-/// History's own FAB) and from S-01's "Сегодня" quick action, outside that
-/// branch; see `copyWorkoutFlow`'s doc comment for why `push` is wrong for
-/// the latter.
+/// `createWorkoutFromTemplateFlow`. Uses `push`, not `go` (`/workout/:id`
+/// is a route outside the tab shell, `app/router.dart`'s top comment) --
+/// see `today/screen.dart`'s doc comment for why.
 Future<void> createWorkoutFromScratchFlow(
   BuildContext context,
   WidgetRef ref,
@@ -68,5 +66,5 @@ Future<void> createWorkoutFromScratchFlow(
   final workout = await ref
       .read(workoutRepositoryProvider)
       .createDraft(date: DateTime.now());
-  if (context.mounted) context.go('/history/workout/${workout.id}');
+  if (context.mounted) context.push('/workout/${workout.id}');
 }

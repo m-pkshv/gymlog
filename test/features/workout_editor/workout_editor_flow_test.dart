@@ -36,7 +36,7 @@ Widget _appUnderTest(AppDatabase db, {NotificationService? notificationService})
     routes: [
       GoRoute(path: '/history', builder: (_, _) => const HistoryScreen()),
       GoRoute(
-        path: '/history/workout/:workoutId',
+        path: '/workout/:workoutId',
         builder: (_, state) => WorkoutEditorScreen(
           workoutId: state.pathParameters['workoutId']!,
         ),
@@ -51,7 +51,7 @@ Widget _appUnderTest(AppDatabase db, {NotificationService? notificationService})
             path: 'add-exercise',
             builder: (_, state) => AddExerciseScreen(
               addExerciseRoute:
-                  '/history/workout/${state.pathParameters['workoutId']}/add-exercise',
+                  '/workout/${state.pathParameters['workoutId']}/add-exercise',
             ),
             routes: [
               GoRoute(
@@ -992,10 +992,10 @@ void main() {
         );
 
     final router = GoRouter(
-      initialLocation: '/history/workout/w1',
+      initialLocation: '/workout/w1',
       routes: [
         GoRoute(
-          path: '/history/workout/:workoutId',
+          path: '/workout/:workoutId',
           builder: (_, state) => WorkoutEditorScreen(
             workoutId: state.pathParameters['workoutId']!,
           ),

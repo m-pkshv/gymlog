@@ -119,7 +119,7 @@ class WorkoutHistoryTile extends ConsumerWidget {
             ),
           ],
         ),
-        onTap: () => context.push('/history/workout/${workout.id}'),
+        onTap: () => context.push('/workout/${workout.id}'),
       ),
     );
   }

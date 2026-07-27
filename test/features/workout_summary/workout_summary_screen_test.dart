@@ -19,11 +19,11 @@ import 'package:gymlog/l10n/app_localizations.dart';
 /// wiring.
 Widget _appUnderTest(AppDatabase db, {String workoutId = 'w1'}) {
   final router = GoRouter(
-    initialLocation: '/history/workout/$workoutId/summary',
+    initialLocation: '/workout/$workoutId/summary',
     routes: [
       GoRoute(path: '/history', builder: (_, _) => const _HistoryStub()),
       GoRoute(
-        path: '/history/workout/:workoutId/summary',
+        path: '/workout/:workoutId/summary',
         builder: (_, state) => WorkoutSummaryScreen(
           workoutId: state.pathParameters['workoutId']!,
         ),

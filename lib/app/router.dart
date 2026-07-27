@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/widgets/bottom_nav_bar.dart';
 import '../domain/models/exercise.dart';
-import 'providers.dart';
 import '../features/exercises/create_exercise_screen.dart';
 import '../features/exercises/exercise_detail_screen.dart';
 import '../features/exercises/screen.dart';
@@ -31,14 +29,67 @@ import '../features/workout_editor/screen.dart';
 import '../features/workout_summary/screen.dart';
 import '../l10n/app_localizations.dart';
 
-/// App routes (04_UI_UX_SPEC.md, section 4). Stage 0 wired the 5 tab roots;
-/// `/history/workout/:workoutId` (S-03, Stage 1) and its nested
-/// "add exercise"/"create exercise" modals were added alongside the workout
-/// editor. Remaining nested routes (`/exercises/:id`, the full-screen
-/// `/active` route, etc.) arrive with the features that need them.
+/// App routes (04_UI_UX_SPEC.md, section 4). Stage 0 wired the 5 tab roots.
+/// `/workout/:workoutId` (S-03) and its nested "summary"/"add exercise"/
+/// "create exercise" routes are a top-level sibling of the tab shell below,
+/// not nested inside any branch (Stage 10 redesign, owner-reported bug):
+/// the workout editor is reachable from every tab (Сегодня, История,
+/// Статистика's records, шаблоны...), and nesting it inside History's
+/// branch — as it used to be — meant `go_router`'s `StatefulShellRoute`
+/// always switched the active tab to History on open, and "back" always
+/// landed on History's root, regardless of which tab the owner actually
+/// opened it from. As a route outside the shell entirely, opening it is a
+/// `context.push` (never `context.go` — see `today/screen.dart`'s doc
+/// comment) that layers a page on top of the *current* Navigator via the
+/// root Navigator, leaving the shell (and whichever tab/stack was active
+/// underneath) completely untouched; popping it — including the system/
+/// hardware back button, which needs no special handling — reveals exactly
+/// what was there before, on whichever tab that was. Remaining nested
+/// routes (`/exercises/:id`, etc.) arrive with the features that need them.
 final GoRouter appRouter = GoRouter(
   initialLocation: '/today',
   routes: [
+    GoRoute(
+      path: '/workout/:workoutId',
+      builder: (_, state) => WorkoutEditorScreen(
+        workoutId: state.pathParameters['workoutId']!,
+      ),
+      routes: [
+        GoRoute(
+          path: 'summary',
+          // S-05, Stage 4: replaces the editor in the stack right after
+          // "Завершить" (WorkoutEditorScreen calls pushReplacement), so
+          // "back" from here lands wherever "back" would have from the
+          // editor -- whichever tab/screen the editor was opened from.
+          builder: (_, state) => WorkoutSummaryScreen(
+            workoutId: state.pathParameters['workoutId']!,
+          ),
+        ),
+        GoRoute(
+          path: 'add-exercise',
+          // Exercise pickers/creation forms are full-screen modals
+          // (04_UI_UX_SPEC.md, section 6).
+          pageBuilder: (_, state) => MaterialPage(
+            key: state.pageKey,
+            fullscreenDialog: true,
+            child: AddExerciseScreen(
+              addExerciseRoute:
+                  '/workout/${state.pathParameters['workoutId']}/add-exercise',
+            ),
+          ),
+          routes: [
+            GoRoute(
+              path: 'new',
+              pageBuilder: (_, state) => MaterialPage(
+                key: state.pageKey,
+                fullscreenDialog: true,
+                child: const CreateExerciseScreen(),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
         return _MainTabScaffold(navigationShell: navigationShell);
@@ -75,47 +126,6 @@ final GoRouter appRouter = GoRouter(
                     fullscreenDialog: true,
                     child: const TemplatePickerScreen(),
                   ),
-                ),
-                GoRoute(
-                  path: 'workout/:workoutId',
-                  builder: (_, state) => WorkoutEditorScreen(
-                    workoutId: state.pathParameters['workoutId']!,
-                  ),
-                  routes: [
-                    GoRoute(
-                      path: 'summary',
-                      // S-05, Stage 4: replaces the editor in the stack
-                      // right after "Завершить" (WorkoutEditorScreen calls
-                      // pushReplacement), so system back from here goes to
-                      // History, same as it did from the editor.
-                      builder: (_, state) => WorkoutSummaryScreen(
-                        workoutId: state.pathParameters['workoutId']!,
-                      ),
-                    ),
-                    GoRoute(
-                      path: 'add-exercise',
-                      // Exercise pickers/creation forms are full-screen
-                      // modals (04_UI_UX_SPEC.md, section 6).
-                      pageBuilder: (_, state) => MaterialPage(
-                        key: state.pageKey,
-                        fullscreenDialog: true,
-                        child: AddExerciseScreen(
-                          addExerciseRoute:
-                              '/history/workout/${state.pathParameters['workoutId']}/add-exercise',
-                        ),
-                      ),
-                      routes: [
-                        GoRoute(
-                          path: 'new',
-                          pageBuilder: (_, state) => MaterialPage(
-                            key: state.pageKey,
-                            fullscreenDialog: true,
-                            child: const CreateExerciseScreen(),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -311,74 +321,61 @@ final GoRouter appRouter = GoRouter(
 /// "get back into the active workout" need from that tab; from elsewhere,
 /// History still reaches it too.
 ///
-/// The [BottomNavBar] itself is hidden entirely while viewing the active
-/// (`inProgress`) workout's own editor screen (Stage 10, owner-reported,
-/// mockup attached) -- more vertical room for the sets list, the one
-/// screen where scroll space matters most. Uses the exact same
-/// `ListenableBuilder` on `GoRouter.routerDelegate` the removed banner
-/// used, for the same reason: reacting to nested `context.go` navigation
-/// into/out of that screen needs the router's own notifications, not just
-/// a Riverpod watch (see the historical comment on the removed
-/// `_ResumeWorkoutBanner` in git history for the full explanation).
-class _MainTabScaffold extends ConsumerWidget {
+/// Used to also conditionally hide [BottomNavBar] while viewing the active
+/// workout's own editor screen (Stage 10, owner-reported, mockup attached)
+/// -- via a `ListenableBuilder` on `GoRouter.routerDelegate` checking the
+/// current URL against `/history/workout/:id`, since that route used to be
+/// nested *inside* this very shell. Removed entirely (Stage 10, owner-
+/// reported: opening a workout always switched the active tab to History
+/// and "back" always landed on History's root, regardless of which tab it
+/// was opened from) now that `/workout/:workoutId` (`app/router.dart`'s top
+/// comment) is a route outside the shell altogether: its own `Scaffold`
+/// (`WorkoutEditorScreen`) fully covers this one, for every workout status,
+/// not just while `inProgress` -- there's no bottom nav left to hide, and
+/// no URL-watching needed to decide when to hide it.
+class _MainTabScaffold extends StatelessWidget {
   const _MainTabScaffold({required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final inProgressWorkout = ref.watch(inProgressWorkoutProvider).value;
-    final router = GoRouter.of(context);
-
-    return ListenableBuilder(
-      listenable: router.routerDelegate,
-      builder: (context, _) {
-        final onActiveWorkoutScreen =
-            inProgressWorkout != null &&
-            router.routerDelegate.currentConfiguration.uri
-                .toString()
-                .startsWith('/history/workout/${inProgressWorkout.id}');
-
-        return Scaffold(
-          body: navigationShell,
-          bottomNavigationBar: onActiveWorkoutScreen
-              ? null
-              : BottomNavBar(
-                  selectedIndex: navigationShell.currentIndex,
-                  onDestinationSelected: (index) => navigationShell.goBranch(
-                    index,
-                    // Stage 10, owner-reported: tapping the already-active
-                    // tab while deeper in its stack (e.g. "Ещё" ->
-                    // "Шаблоны" -> tap "Ещё" again) resets that branch back
-                    // to its root instead of doing nothing.
-                    initialLocation: index == navigationShell.currentIndex,
-                  ),
-                  destinations: [
-                    BottomNavBarDestination(
-                      icon: Icons.today_outlined,
-                      label: l10n.tabToday,
-                    ),
-                    BottomNavBarDestination(
-                      icon: Icons.history_outlined,
-                      label: l10n.tabHistory,
-                    ),
-                    BottomNavBarDestination(
-                      icon: Icons.fitness_center_outlined,
-                      label: l10n.tabExercises,
-                    ),
-                    BottomNavBarDestination(
-                      icon: Icons.bar_chart_outlined,
-                      label: l10n.tabStats,
-                    ),
-                    BottomNavBarDestination(
-                      icon: Icons.more_horiz_outlined,
-                      label: l10n.tabMore,
-                    ),
-                  ],
-                ),
-        );
-      },
+    return Scaffold(
+      body: navigationShell,
+      bottomNavigationBar: BottomNavBar(
+        selectedIndex: navigationShell.currentIndex,
+        onDestinationSelected: (index) => navigationShell.goBranch(
+          index,
+          // Stage 10, owner-reported: tapping the already-active tab while
+          // deeper in its stack (e.g. "Ещё" -> "Шаблоны" -> tap "Ещё"
+          // again) resets that branch back to its root instead of doing
+          // nothing.
+          initialLocation: index == navigationShell.currentIndex,
+        ),
+        destinations: [
+          BottomNavBarDestination(
+            icon: Icons.today_outlined,
+            label: l10n.tabToday,
+          ),
+          BottomNavBarDestination(
+            icon: Icons.history_outlined,
+            label: l10n.tabHistory,
+          ),
+          BottomNavBarDestination(
+            icon: Icons.fitness_center_outlined,
+            label: l10n.tabExercises,
+          ),
+          BottomNavBarDestination(
+            icon: Icons.bar_chart_outlined,
+            label: l10n.tabStats,
+          ),
+          BottomNavBarDestination(
+            icon: Icons.more_horiz_outlined,
+            label: l10n.tabMore,
+          ),
+        ],
+      ),
     );
   }
 }

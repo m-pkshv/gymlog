@@ -14,11 +14,9 @@ import 'active_workout_conflict.dart';
 /// menu does (`resolveActiveWorkoutConflict`), then opens the editor (S-03)
 /// on it — the same destination "Открыть" pushes to, so either action on
 /// the card lands the owner on a workout that's now actually started. Uses
-/// `go`, not `push` (Stage 10, owner-reported): this is only ever called
-/// from S-01, outside the `/history` branch, so `push` would attach the
-/// editor to the "Сегодня" tab's own Navigator instead of History's,
-/// leaving a stale editor/summary screen behind after "Завершить" ->
-/// "Готово" navigated elsewhere and the owner switched back to "Сегодня".
+/// `push`, not `go` (`/workout/:id` is a route outside the tab shell,
+/// `app/router.dart`'s top comment) -- see `today/screen.dart`'s doc
+/// comment for why.
 Future<void> startWorkoutFlow(
   BuildContext context,
   WidgetRef ref,
@@ -44,7 +42,7 @@ Future<void> startWorkoutFlow(
       .changeStatus(workout: workout, newStatus: WorkoutStatus.inProgress);
   if (!context.mounted) return;
   result.fold(
-    (_) => context.go('/history/workout/${workout.id}'),
+    (_) => context.push('/workout/${workout.id}'),
     (error) => ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(l10n.workoutStatusChangeError))),
