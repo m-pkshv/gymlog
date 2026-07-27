@@ -481,6 +481,14 @@ class _EditorBody extends StatelessWidget {
           // this padding; dropped to 0 on top of that.
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
           child: Row(
+            // Owner-reported (follow-up): the remaining gap wasn't really
+            // "space above the date/status" -- it's the default `.center`
+            // cross-axis alignment centering the short date text/badge
+            // against this row's tallest children (the 48dp icon-button
+            // touch targets, kept at 48dp per UX 11 -- not shrinking
+            // those). `.start` aligns everything to the row's own top
+            // edge instead, which already sits flush against the AppBar.
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // DM 6.4.1: moving the date is allowed in any status except
               // inProgress.
