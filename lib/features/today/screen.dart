@@ -130,12 +130,6 @@ class _ContinueWorkoutCard extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Row(
             children: [
-              Icon(
-                Icons.play_circle_fill,
-                color: semantic.onAccentContainer,
-                size: 36,
-              ),
-              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
