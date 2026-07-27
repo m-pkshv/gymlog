@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app/locale.dart';
 import 'app/providers.dart';
 import 'app/router.dart';
+import 'app/scroll_behavior.dart';
 import 'app/theme.dart';
 import 'core/logger.dart';
 import 'data/database.dart';
@@ -107,6 +108,7 @@ class GymLogApp extends ConsumerWidget {
       locale: flutterLocale(locale),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      scrollBehavior: const AppScrollBehavior(),
       routerConfig: appRouter,
     );
   }
