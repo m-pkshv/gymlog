@@ -7,6 +7,7 @@ import 'package:gymlog/data/database.dart' as drift;
 import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
+import 'package:gymlog/core/widgets/bottom_nav_bar.dart';
 import 'package:gymlog/features/history/screen.dart';
 import 'package:gymlog/features/today/screen.dart';
 import 'package:gymlog/features/workout_summary/screen.dart';
@@ -53,8 +54,8 @@ void main() {
     await tester.pumpWidget(appUnderTest());
     await tester.pumpAndSettle();
 
-    expect(find.byType(NavigationBar), findsOneWidget);
-    expect(find.byType(NavigationDestination), findsNWidgets(5));
+    expect(find.byType(BottomNavBar), findsOneWidget);
+    expect(find.byType(BottomNavBarItem), findsNWidgets(5));
     expect(find.text('Today'), findsWidgets);
 
     await _unmountAndFlush(tester);
@@ -159,7 +160,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.byType(NavigationBar),
+        find.byType(BottomNavBar),
         findsOneWidget,
         reason: 'still a draft, not yet inProgress',
       );
@@ -168,7 +169,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.byType(NavigationBar),
+        find.byType(BottomNavBar),
         findsNothing,
         reason: 'inProgress now, hidden for more room for the sets list',
       );
@@ -177,7 +178,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.byType(NavigationBar),
+        find.byType(BottomNavBar),
         findsOneWidget,
         reason: 'left the active workout\'s screen, nav bar returns',
       );

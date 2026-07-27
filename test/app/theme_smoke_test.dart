@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymlog/app/providers.dart';
+import 'package:gymlog/core/widgets/bottom_nav_bar.dart';
 import 'package:gymlog/data/database.dart' as drift;
 import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
@@ -56,7 +57,7 @@ void main() {
           ? Brightness.dark
           : Brightness.light;
       expect(
-        Theme.of(tester.element(find.byType(NavigationBar))).brightness,
+        Theme.of(tester.element(find.byType(BottomNavBar))).brightness,
         expectedBrightness,
       );
 
@@ -72,7 +73,7 @@ void main() {
         // the tap to the bottom nav bar specifically.
         await tester.tap(
           find.descendant(
-            of: find.byType(NavigationBar),
+            of: find.byType(BottomNavBar),
             matching: find.text(tabLabel),
           ),
         );

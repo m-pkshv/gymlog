@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/widgets/bottom_nav_bar.dart';
 import '../domain/models/exercise.dart';
 import 'providers.dart';
 import '../features/exercises/create_exercise_screen.dart';
@@ -310,7 +311,7 @@ final GoRouter appRouter = GoRouter(
 /// "get back into the active workout" need from that tab; from elsewhere,
 /// History still reaches it too.
 ///
-/// The [NavigationBar] itself is hidden entirely while viewing the active
+/// The [BottomNavBar] itself is hidden entirely while viewing the active
 /// (`inProgress`) workout's own editor screen (Stage 10, owner-reported,
 /// mockup attached) -- more vertical room for the sets list, the one
 /// screen where scroll space matters most. Uses the exact same
@@ -343,7 +344,7 @@ class _MainTabScaffold extends ConsumerWidget {
           body: navigationShell,
           bottomNavigationBar: onActiveWorkoutScreen
               ? null
-              : NavigationBar(
+              : BottomNavBar(
                   selectedIndex: navigationShell.currentIndex,
                   onDestinationSelected: (index) => navigationShell.goBranch(
                     index,
@@ -354,24 +355,24 @@ class _MainTabScaffold extends ConsumerWidget {
                     initialLocation: index == navigationShell.currentIndex,
                   ),
                   destinations: [
-                    NavigationDestination(
-                      icon: const Icon(Icons.today_outlined),
+                    BottomNavBarDestination(
+                      icon: Icons.today_outlined,
                       label: l10n.tabToday,
                     ),
-                    NavigationDestination(
-                      icon: const Icon(Icons.history_outlined),
+                    BottomNavBarDestination(
+                      icon: Icons.history_outlined,
                       label: l10n.tabHistory,
                     ),
-                    NavigationDestination(
-                      icon: const Icon(Icons.fitness_center_outlined),
+                    BottomNavBarDestination(
+                      icon: Icons.fitness_center_outlined,
                       label: l10n.tabExercises,
                     ),
-                    NavigationDestination(
-                      icon: const Icon(Icons.bar_chart_outlined),
+                    BottomNavBarDestination(
+                      icon: Icons.bar_chart_outlined,
                       label: l10n.tabStats,
                     ),
-                    NavigationDestination(
-                      icon: const Icon(Icons.more_horiz_outlined),
+                    BottomNavBarDestination(
+                      icon: Icons.more_horiz_outlined,
                       label: l10n.tabMore,
                     ),
                   ],
