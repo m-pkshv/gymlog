@@ -314,6 +314,24 @@ abstract class AppLocalizations {
   /// **'Workout'**
   String get workoutEditorTitle;
 
+  /// Title of the rename dialog opened by tapping the workout editor's AppBar title (Stage 10, owner-reported).
+  ///
+  /// In en, this message translates to:
+  /// **'Workout name'**
+  String get renameWorkoutTitle;
+
+  /// Semantics/tooltip label on the tappable AppBar title in the workout editor (Stage 10, owner-reported).
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get renameWorkoutTooltip;
+
+  /// Text field label in the rename-workout dialog (Stage 10, owner-reported).
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get workoutNameLabel;
+
   /// Error state on the workout editor (S-03) when loading fails.
   ///
   /// In en, this message translates to:

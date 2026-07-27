@@ -144,6 +144,18 @@
   "@workoutEditorTitle": {
     "description": "AppBar title of the workout editor (S-03)."
   },
+  "renameWorkoutTitle": "Workout name",
+  "@renameWorkoutTitle": {
+    "description": "Title of the rename dialog opened by tapping the workout editor's AppBar title (Stage 10, owner-reported)."
+  },
+  "renameWorkoutTooltip": "Rename",
+  "@renameWorkoutTooltip": {
+    "description": "Semantics/tooltip label on the tappable AppBar title in the workout editor (Stage 10, owner-reported)."
+  },
+  "workoutNameLabel": "Name",
+  "@workoutNameLabel": {
+    "description": "Text field label in the rename-workout dialog (Stage 10, owner-reported)."
+  },
   "workoutLoadError": "Couldn't load the workout",
   "@workoutLoadError": {
     "description": "Error state on the workout editor (S-03) when loading fails."

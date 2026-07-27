@@ -360,6 +360,22 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
         .moveDate(picked);
   }
 
+  /// Tapping the AppBar title (Stage 10, owner-reported: mirrors tapping
+  /// the date to open [_moveDate]) -- no status restriction, unlike the
+  /// date (DM 6.4.1 only forbids moving the date while `inProgress`;
+  /// renaming has no such conflict, same as the comment field which is
+  /// already editable in any status).
+  Future<void> _renameWorkout(String? currentName) async {
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (_) => _RenameWorkoutDialog(initialName: currentName ?? ''),
+    );
+    if (newName == null || !mounted) return;
+    await ref
+        .read(workoutEditorControllerProvider(widget.workoutId).notifier)
+        .renameWorkout(newName);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -391,12 +407,20 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
             // (48dp) removes most of that, on top of the row padding
             // below (also tightened).
             toolbarHeight: 48,
-            title: Tooltip(
-              message: workout.name ?? l10n.workoutDefaultNamePrefix,
-              child: Text(
-                workout.name ?? l10n.workoutDefaultNamePrefix,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            title: Semantics(
+              button: true,
+              label: l10n.renameWorkoutTooltip,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(AppRadius.control),
+                onTap: () => _renameWorkout(workout.name),
+                child: Tooltip(
+                  message: workout.name ?? l10n.workoutDefaultNamePrefix,
+                  child: Text(
+                    workout.name ?? l10n.workoutDefaultNamePrefix,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
             ),
             actions: [
@@ -439,6 +463,64 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Rename dialog opened by tapping the AppBar title (Stage 10, owner-
+/// reported). Unlike `CreateTemplateDialog`, a blank result is a valid,
+/// meaningful answer here (DM 6.4: clears `name` back to the "Тренировка +
+/// date" fallback), so there's no "Save" validation gate to speak of --
+/// this just returns whatever's typed, trimmed, on "Сохранить".
+class _RenameWorkoutDialog extends StatefulWidget {
+  const _RenameWorkoutDialog({required this.initialName});
+
+  final String initialName;
+
+  @override
+  State<_RenameWorkoutDialog> createState() => _RenameWorkoutDialogState();
+}
+
+class _RenameWorkoutDialogState extends State<_RenameWorkoutDialog> {
+  late final TextEditingController _nameController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.initialName);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+      title: Text(l10n.renameWorkoutTitle),
+      content: TextField(
+        controller: _nameController,
+        autofocus: true,
+        maxLength: WorkoutNameRules.maxNameLength,
+        decoration: InputDecoration(
+          labelText: l10n.workoutNameLabel,
+          hintText: l10n.workoutDefaultNamePrefix,
+        ),
+        onSubmitted: (value) => Navigator.of(context).pop(value),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.actionCancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_nameController.text),
+          child: Text(l10n.actionSave),
+        ),
+      ],
     );
   }
 }

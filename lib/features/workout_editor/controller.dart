@@ -545,6 +545,40 @@ class WorkoutEditorController
     }
   }
 
+  /// Renames the workout (DM 6.4: `name`, ≤80 chars; Stage 10,
+  /// owner-reported: tapping the AppBar title, mirroring how tapping the
+  /// date opens [moveDate]). A discrete, dialog-confirmed edit -- immediate
+  /// write, like [moveDate], not the continuous-typing debounce
+  /// [editWorkoutComment] uses. Empty/whitespace-only input clears `name`
+  /// back to `null` (DM 6.4: falls back to "Тренировка + date"), which
+  /// needs `Workout.copyWith`'s sentinel-default `name` param -- a plain
+  /// `?? this.name` could never express "clear it".
+  Future<void> renameWorkout(String newName) async {
+    final details = _details;
+    if (details == null) return;
+    final trimmed = newName.trim();
+    try {
+      final updated = details.workout.copyWith(
+        name: trimmed.isEmpty ? null : trimmed,
+        updatedAt: DateTime.now().toUtc(),
+      );
+      await _workoutRepository.updateWorkout(updated);
+      state = AsyncValue.data(
+        WorkoutDetails(
+          workout: updated,
+          exercises: details.exercises,
+          tags: details.tags,
+        ),
+      );
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to rename workout $_workoutId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
   /// Edits the workout-level comment (S-03), same debounce/flush contract
   /// as [editSet]/[flushSet] (03_TECHNICAL_SPEC.md, section 5).
   void editWorkoutComment(String value) {

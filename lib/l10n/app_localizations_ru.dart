@@ -117,6 +117,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get workoutEditorTitle => 'Тренировка';
 
   @override
+  String get renameWorkoutTitle => 'Название тренировки';
+
+  @override
+  String get renameWorkoutTooltip => 'Переименовать';
+
+  @override
+  String get workoutNameLabel => 'Название';
+
+  @override
   String get workoutLoadError => 'Не удалось загрузить тренировку';
 
   @override

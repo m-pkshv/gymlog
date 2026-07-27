@@ -118,6 +118,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get workoutEditorTitle => 'Workout';
 
   @override
+  String get renameWorkoutTitle => 'Workout name';
+
+  @override
+  String get renameWorkoutTooltip => 'Rename';
+
+  @override
+  String get workoutNameLabel => 'Name';
+
+  @override
   String get workoutLoadError => 'Couldn\'t load the workout';
 
   @override

@@ -234,6 +234,15 @@ Finder _commentField(int index) => find.descendant(
   matching: find.byType(TextField),
 );
 
+/// The rename-workout dialog's `TextField` — scoped to `AlertDialog`, same
+/// reasoning as the numeric-stepper dialog above: a bare
+/// `find.byType(TextField)` is ambiguous against the screen's own
+/// workout-comment field, still in the tree underneath the modal barrier.
+Finder get _renameDialogField => find.descendant(
+  of: find.byType(AlertDialog),
+  matching: find.byType(TextField),
+);
+
 /// Stage 3 turned History's FAB into a "с нуля/из шаблона/копией" creation
 /// menu (`_openNewWorkoutMenu`); most tests here only care about ending up
 /// with a fresh draft, so this does the "From scratch" tap for them.
@@ -1197,6 +1206,168 @@ void main() {
       await _unmountAndFlush(tester);
     },
   );
+
+  group('rename workout (Stage 10, owner-reported)', () {
+    testWidgets(
+      'tapping the AppBar title opens a rename dialog pre-filled with the '
+      'current name',
+      (tester) async {
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AppBar),
+            matching: find.text('Workout'),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Workout name'), findsOneWidget);
+        final field = tester.widget<TextField>(_renameDialogField);
+        expect(field.controller?.text, '');
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets('saving a new name updates the title and persists it', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+      final draftId = (await db.select(db.workouts).get()).single.id;
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.text('Workout'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(_renameDialogField, 'Leg day');
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.text('Leg day'),
+        ),
+        findsOneWidget,
+      );
+      final row = await (db.select(
+        db.workouts,
+      )..where((w) => w.id.equals(draftId))).getSingle();
+      expect(row.name, 'Leg day');
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets(
+      'clearing the name falls back to the default title and clears it in '
+      'the database (DM 6.4)',
+      (tester) async {
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+        final draftId = (await db.select(db.workouts).get()).single.id;
+
+        // Give it a name first, so there's something to clear.
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AppBar),
+            matching: find.text('Workout'),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.enterText(_renameDialogField, 'Leg day');
+        await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AppBar),
+            matching: find.text('Leg day'),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.enterText(_renameDialogField, '   ');
+        await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.descendant(
+            of: find.byType(AppBar),
+            matching: find.text('Workout'),
+          ),
+          findsOneWidget,
+        );
+        final row = await (db.select(
+          db.workouts,
+        )..where((w) => w.id.equals(draftId))).getSingle();
+        expect(row.name, isNull);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'renaming works even while inProgress, unlike moving the date '
+      '(DM 6.4.1)',
+      (tester) async {
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+
+        await tester.tap(_statusCta);
+        await tester.pumpAndSettle();
+
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AppBar),
+            matching: find.text('Workout'),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Workout name'), findsOneWidget);
+
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets('"Cancel" leaves the name unchanged', (tester) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+      final draftId = (await db.select(db.workouts).get()).single.id;
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.text('Workout'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(_renameDialogField, 'Leg day');
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      final row = await (db.select(
+        db.workouts,
+      )..where((w) => w.id.equals(draftId))).getSingle();
+      expect(row.name, isNull);
+
+      await _unmountAndFlush(tester);
+    });
+  });
 
   group('active-workout conflict dialog (S-03, DM 6.4.1)', () {
     testWidgets(

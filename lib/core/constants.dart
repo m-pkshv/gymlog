@@ -66,6 +66,17 @@ class WorkoutTemplateRules {
   static const int maxNameLength = 80;
 }
 
+/// `Workout.name` bounds (06_DATA_MODEL.md, section 6.4) -- unlike
+/// [WorkoutTemplateRules], no minimum: an empty name is valid and falls
+/// back to "Тренировка + date" (DM 6.4), so there's nothing to validate
+/// beyond the length cap, enforced via `maxLength` on the rename dialog
+/// (Stage 10, owner-reported).
+class WorkoutNameRules {
+  const WorkoutNameRules._();
+
+  static const int maxNameLength = 80;
+}
+
 /// `MeasurementType.nameCustom` bounds (06_DATA_MODEL.md, section 5.3),
 /// validated in `MeasurementTypeService.create`.
 class MeasurementTypeRules {
