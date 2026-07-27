@@ -25,17 +25,21 @@ import '../workout_editor/status_labels.dart';
 /// everything: the "Новая тренировка"/"Из шаблона"/"Скопировать прошлую"
 /// quick actions, always visible.
 ///
-/// Opening the workout editor from this screen uses `context.push`
-/// (`/workout/:id` — `app/router.dart`'s top comment: a route outside the
-/// tab shell entirely), not `context.go`: `push` layers the editor on top
-/// of whatever's currently showing via the root Navigator, without
-/// touching the shell underneath, so "back" from the editor returns here
-/// exactly as left. (Historical note: before the editor moved out of the
-/// shell — Stage 10, owner-reported — this screen used `go` for the
-/// opposite reason: `push`ing a route that lived *inside* History's own
-/// branch attached it to Today's branch Navigator instead, leaving a stale
-/// screen behind. That specific failure mode doesn't exist once the route
-/// isn't nested in any branch, so `push` is correct again.)
+/// Opening the workout editor, or the "Из шаблона"/"Копией" pickers, from
+/// this screen uses `context.push` (`/workout/:id`, `/template-source`,
+/// `/copy-source` — `app/router.dart`'s top comment: all three are routes
+/// outside the tab shell entirely), not `context.go`: `push` layers the
+/// page on top of whatever's currently showing via the root Navigator,
+/// without touching the shell underneath, so "back" (or finishing a
+/// workout created this way) returns here exactly as left. (Historical
+/// note: before these routes moved out of the shell — Stage 10, owner-
+/// reported, in two rounds: the editor first, the two pickers later once
+/// the same "wrong tab on exit" bug was reported again for them — this
+/// screen used `go` for the opposite reason: `push`ing a route that lived
+/// *inside* another tab's own branch attached it to Today's branch
+/// Navigator instead, leaving a stale screen behind. That specific failure
+/// mode doesn't exist once none of the three is nested in any branch, so
+/// `push` is correct for all of them.)
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
 
@@ -358,7 +362,7 @@ class _QuickActions extends ConsumerWidget {
         ),
         const SizedBox(width: AppSpacing.sm),
         IconButton.outlined(
-          onPressed: () => context.go('/history/template-source'),
+          onPressed: () => context.push('/template-source'),
           style: IconButton.styleFrom(
             shape: iconButtonShape,
             minimumSize: const Size(_quickActionHeight, _quickActionHeight),
@@ -369,7 +373,7 @@ class _QuickActions extends ConsumerWidget {
         ),
         const SizedBox(width: AppSpacing.sm),
         IconButton.outlined(
-          onPressed: () => context.go('/history/copy-source'),
+          onPressed: () => context.push('/copy-source'),
           style: IconButton.styleFrom(
             shape: iconButtonShape,
             minimumSize: const Size(_quickActionHeight, _quickActionHeight),

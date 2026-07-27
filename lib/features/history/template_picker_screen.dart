@@ -31,8 +31,12 @@ class TemplatePickerScreen extends ConsumerWidget {
               return ListTile(
                 title: Text(entry.template.name),
                 subtitle: Text(l10n.templateExerciseCount(entry.exerciseCount)),
-                onTap: () =>
-                    createWorkoutFromTemplateFlow(context, ref, entry.template),
+                onTap: () => createWorkoutFromTemplateFlow(
+                  context,
+                  ref,
+                  entry.template,
+                  replaceCurrentRoute: true,
+                ),
               );
             },
           );

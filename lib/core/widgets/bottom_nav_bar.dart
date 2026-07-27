@@ -104,7 +104,10 @@ class BottomNavBarItem extends StatelessWidget {
           // width depending on how long its label happened to be -- looked
           // uneven. The pill now always fills the item's full (equal) slot
           // width, with a small fixed gap to its neighbors instead of
-          // shrink-wrapping around the text.
+          // shrink-wrapping around the text. (Owner-reported: tried
+          // shrinking that gap, then removing it entirely -- neither read
+          // as clearly wider on-device, so this is back to the original
+          // gap; the corner radius is what actually changed this time.)
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
             child: AnimatedContainer(
@@ -113,7 +116,12 @@ class BottomNavBarItem extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
               decoration: BoxDecoration(
                 color: selected ? scheme.primary : Colors.transparent,
-                borderRadius: BorderRadius.circular(AppRadius.button),
+                // Owner-reported: less rounded than the app-wide button
+                // radius (AppRadius.button, 16dp) -- this pill is its own
+                // shape, not a `FilledButton`/etc., so it isn't affected by
+                // reducing the global button radius, and doesn't have to
+                // match it.
+                borderRadius: BorderRadius.circular(AppRadius.control),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -131,9 +139,7 @@ class BottomNavBarItem extends StatelessWidget {
                       // clips longer RU labels ("Упражнения", "Статистика")
                       // to an ellipsis on real devices -- shrink by 2sp.
                       fontSize:
-                          (Theme.of(
-                                context,
-                              ).textTheme.labelSmall?.fontSize ??
+                          (Theme.of(context).textTheme.labelSmall?.fontSize ??
                               11) -
                           2,
                     ),

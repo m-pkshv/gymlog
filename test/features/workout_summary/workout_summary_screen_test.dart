@@ -49,6 +49,44 @@ class _HistoryStub extends StatelessWidget {
   Widget build(BuildContext context) => const Scaffold(body: Text('History'));
 }
 
+/// Same routes as [_appUnderTest], but starts on History -- the caller is
+/// expected to `router.push('/workout/$workoutId/summary')` itself *after*
+/// the first `pumpAndSettle` (pushing before the router has ever built a
+/// widget tree doesn't register History underneath, it just replaces the
+/// initial match). That reproduces the real app's stack shape right after
+/// the editor's `pushReplacement` (`workout_editor/screen.dart`'s
+/// `_changeStatus`), which leaves History (or whatever screen opened the
+/// workout) directly underneath. Needed only for the "Done" test below:
+/// [_appUnderTest] starts *at* the summary route with nothing underneath,
+/// which can't exercise "Done" popping back to something (Stage 10 redesign,
+/// owner-reported: "Done" used to hardcode `context.go('/history')`,
+/// landing on History regardless of the stack -- now it pops instead).
+(Widget, GoRouter) _appUnderTestPushedFromHistory(AppDatabase db) {
+  final router = GoRouter(
+    initialLocation: '/history',
+    routes: [
+      GoRoute(path: '/history', builder: (_, _) => const _HistoryStub()),
+      GoRoute(
+        path: '/workout/:workoutId/summary',
+        builder: (_, state) => WorkoutSummaryScreen(
+          workoutId: state.pathParameters['workoutId']!,
+        ),
+      ),
+    ],
+  );
+
+  final app = ProviderScope(
+    overrides: [appDatabaseProvider.overrideWithValue(db)],
+    child: MaterialApp.router(
+      theme: buildLightTheme(),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      routerConfig: router,
+    ),
+  );
+  return (app, router);
+}
+
 /// Same rationale as the other feature flow tests: let drift's watch-stream
 /// unsubscribe timer fire before flutter_test's pending-timer check runs.
 Future<void> _unmountAndFlush(WidgetTester tester) async {
@@ -343,18 +381,27 @@ void main() {
     );
   });
 
-  testWidgets('"Done" navigates back to History', (tester) async {
-    await _seedCompletedWorkout(db);
+  testWidgets(
+    '"Done" pops back to whatever was underneath (Stage 10 redesign, '
+    'owner-reported: used to hardcode going to History regardless)',
+    (tester) async {
+      await _seedCompletedWorkout(db);
 
-    await tester.pumpWidget(_appUnderTest(db));
-    await tester.pumpAndSettle();
+      final (app, router) = _appUnderTestPushedFromHistory(db);
+      await tester.pumpWidget(app);
+      await tester.pumpAndSettle();
+      expect(find.text('History'), findsOneWidget, reason: 'sanity check');
 
-    await tester.tap(find.text('Done'));
-    await tester.pumpAndSettle();
+      router.push('/workout/w1/summary');
+      await tester.pumpAndSettle();
 
-    expect(find.text('History'), findsOneWidget);
-    expect(find.byType(WorkoutSummaryScreen), findsNothing);
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
 
-    await _unmountAndFlush(tester);
-  });
+      expect(find.text('History'), findsOneWidget);
+      expect(find.byType(WorkoutSummaryScreen), findsNothing);
+
+      await _unmountAndFlush(tester);
+    },
+  );
 }

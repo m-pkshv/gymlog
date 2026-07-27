@@ -13,11 +13,20 @@ import '../../l10n/app_localizations.dart';
 /// pattern as `copyWorkoutFlow` (Stage 3). Uses `push`, not `go`
 /// (`/workout/:id` is a route outside the tab shell, `app/router.dart`'s
 /// top comment) -- see `today/screen.dart`'s doc comment for why.
+///
+/// [replaceCurrentRoute] (Stage 10 redesign, owner-reported): the "Из
+/// шаблона" *picker* (`/template-source`) passes `true` -- same reasoning
+/// as `copyWorkoutFlow`'s: once a template is chosen there, the picker's
+/// job is done, so the editor replaces it in the stack; "back"/"Готово"
+/// then land directly on whatever opened the picker (Today or History).
+/// S-12's own "⋮ → Создать тренировку" on a template card (not through the
+/// picker) keeps the default `push`.
 Future<void> createWorkoutFromTemplateFlow(
   BuildContext context,
   WidgetRef ref,
-  WorkoutTemplate template,
-) async {
+  WorkoutTemplate template, {
+  bool replaceCurrentRoute = false,
+}) async {
   final l10n = AppLocalizations.of(context)!;
   final picked = await showDatePicker(
     context: context,
@@ -31,7 +40,12 @@ Future<void> createWorkoutFromTemplateFlow(
     final workout = await ref
         .read(workoutRepositoryProvider)
         .createFromTemplate(templateId: template.id, date: picked);
-    if (context.mounted) context.push('/workout/${workout.id}');
+    if (!context.mounted) return;
+    if (replaceCurrentRoute) {
+      context.pushReplacement('/workout/${workout.id}');
+    } else {
+      context.push('/workout/${workout.id}');
+    }
   } catch (error, stackTrace) {
     ref
         .read(loggerProvider)

@@ -12,11 +12,22 @@ import '../../l10n/app_localizations.dart';
 /// Shared so both entry points behave identically. Uses `push`, not `go`
 /// (`/workout/:id` is a route outside the tab shell, `app/router.dart`'s
 /// top comment) -- see `today/screen.dart`'s doc comment for why.
+///
+/// [replaceCurrentRoute] (Stage 10 redesign, owner-reported): the
+/// "Копией" *picker* (`/copy-source`) passes `true` -- once a source is
+/// chosen there, the picker has done its one job, so the editor replaces
+/// it in the stack instead of stacking on top; "back" from the fresh copy,
+/// or "Готово" after finishing it, then lands directly on whatever opened
+/// the picker (Today or History), not back on a now-pointless picker
+/// screen. History's own "⋮ → Копировать" on an existing card (not through
+/// the picker) keeps the default `push`, since going back to History's own
+/// list afterward is exactly what's wanted there.
 Future<void> copyWorkoutFlow(
   BuildContext context,
   WidgetRef ref,
-  Workout source,
-) async {
+  Workout source, {
+  bool replaceCurrentRoute = false,
+}) async {
   final l10n = AppLocalizations.of(context)!;
   // TS 8: the copy's date is chosen by the owner, not silently reused.
   final picked = await showDatePicker(
@@ -31,7 +42,12 @@ Future<void> copyWorkoutFlow(
     final copy = await ref
         .read(workoutRepositoryProvider)
         .copyWorkout(sourceWorkoutId: source.id, date: picked);
-    if (context.mounted) context.push('/workout/${copy.id}');
+    if (!context.mounted) return;
+    if (replaceCurrentRoute) {
+      context.pushReplacement('/workout/${copy.id}');
+    } else {
+      context.push('/workout/${copy.id}');
+    }
   } catch (error, stackTrace) {
     ref
         .read(loggerProvider)

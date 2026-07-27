@@ -8,6 +8,7 @@ Widget _appUnderTest({
   required WorkoutStatus status,
   required ValueChanged<WorkoutStatus> onSelectStatus,
   Set<WorkoutStatus> excludeStatuses = const {},
+  VoidCallback? onSaveAsTemplate,
   VoidCallback? onDelete,
 }) {
   return MaterialApp(
@@ -18,6 +19,7 @@ Widget _appUnderTest({
         status: status,
         onSelectStatus: onSelectStatus,
         excludeStatuses: excludeStatuses,
+        onSaveAsTemplate: onSaveAsTemplate,
         onDelete: onDelete,
       ),
     ),
@@ -83,6 +85,59 @@ void main() {
 
     expect(deleted, isTrue);
   });
+
+  testWidgets(
+    '"Create template" and "Delete" invoke their own distinct callbacks, '
+    'not each other\'s (Stage 10, owner-reported: an earlier `const '
+    'Object()`-sentinel version made both entries collapse to the same '
+    'canonicalized value, so tapping "Create template" silently ran '
+    'delete instead)',
+    (tester) async {
+      var savedAsTemplate = false;
+      var deleted = false;
+      await tester.pumpWidget(
+        _appUnderTest(
+          status: WorkoutStatus.draft,
+          onSelectStatus: (_) {},
+          onSaveAsTemplate: () => savedAsTemplate = true,
+          onDelete: () => deleted = true,
+        ),
+      );
+
+      await tester.tap(find.byType(PopupMenuButton<Object>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Create template'));
+      await tester.pumpAndSettle();
+
+      expect(savedAsTemplate, isTrue);
+      expect(deleted, isFalse);
+    },
+  );
+
+  testWidgets(
+    '"Delete" still invokes only its own callback when both entries are '
+    'present (the reverse direction of the regression above)',
+    (tester) async {
+      var savedAsTemplate = false;
+      var deleted = false;
+      await tester.pumpWidget(
+        _appUnderTest(
+          status: WorkoutStatus.draft,
+          onSelectStatus: (_) {},
+          onSaveAsTemplate: () => savedAsTemplate = true,
+          onDelete: () => deleted = true,
+        ),
+      );
+
+      await tester.tap(find.byType(PopupMenuButton<Object>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      expect(deleted, isTrue);
+      expect(savedAsTemplate, isFalse);
+    },
+  );
 
   testWidgets('omitting onDelete hides the Delete entry', (tester) async {
     await tester.pumpWidget(

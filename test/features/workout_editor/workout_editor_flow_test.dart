@@ -14,6 +14,7 @@ import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart'
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/features/exercises/create_exercise_screen.dart';
 import 'package:gymlog/features/history/screen.dart';
+import 'package:gymlog/features/template_editor/screen.dart';
 import 'package:gymlog/features/workout_editor/add_exercise_screen.dart';
 import 'package:gymlog/features/workout_editor/screen.dart';
 import 'package:gymlog/features/workout_editor/widgets/comment_field.dart';
@@ -61,6 +62,12 @@ Widget _appUnderTest(AppDatabase db, {NotificationService? notificationService})
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: '/more/templates/:templateId',
+        builder: (_, state) => TemplateEditorScreen(
+          templateId: state.pathParameters['templateId']!,
+        ),
       ),
     ],
   );
@@ -773,13 +780,24 @@ void main() {
         db.activeWorkoutStates,
       )..where((s) => s.workoutId.equals(workoutId))).getSingle();
       expect(state.restTimerDurationSec, 120); // Q-4 default
+      final endsAtBeforeAdjust = state.restTimerEndsAtUtc!;
 
       await tester.tap(find.byTooltip('+15 s'));
       await tester.pumpAndSettle();
       state = await (db.select(
         db.activeWorkoutStates,
       )..where((s) => s.workoutId.equals(workoutId))).getSingle();
-      expect(state.restTimerDurationSec, 135);
+      // Stage 10, owner-reported: `restTimerDurationSec` (RestTimerCard's
+      // fixed fill-speed denominator) no longer grows with "+15 s" -- only
+      // the deadline moves, so the bar's current position shifts instead
+      // of its future fill speed changing.
+      expect(state.restTimerDurationSec, 120);
+      expect(
+        DateTime.parse(
+          state.restTimerEndsAtUtc!,
+        ).difference(DateTime.parse(endsAtBeforeAdjust)).inSeconds,
+        15,
+      );
 
       // Stage 10 redesign: "Skip" is now an icon-only button (Icons.
       // skip_next), no visible text label.
@@ -1174,8 +1192,99 @@ void main() {
   );
 
   testWidgets(
-    'the secondary "Schedule" CTA moves a draft to planned '
-    '(Stage 10, owner-reported)',
+    '"⋮ → Create template" saves the editor\'s own workout as a template, '
+    'resetting completion, and opens it for review (Stage 10, owner-'
+    'reported: any workout -- from a plan or from history -- can be saved '
+    'as a template right from the editor, not only from a History card)',
+    (tester) async {
+      await _seedExercise(db);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add set'));
+      await tester.pumpAndSettle();
+      await _expandSet(tester);
+      await _enterStepperValue(tester, text: '60', fieldIndex: 0);
+      await _enterStepperValue(tester, text: '8', fieldIndex: 1);
+
+      // The "done" checkbox only exists once `inProgress` (Stage 10
+      // redesign) -- start the workout so there's something to mark
+      // completed and then confirm the template doesn't carry it.
+      await tester.tap(_statusCta);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(CompletionToggle).last);
+      await tester.pumpAndSettle();
+
+      await tester.tap(_statusMenu);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Create template'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WorkoutEditorScreen), findsNothing);
+      expect(find.byType(TemplateEditorScreen), findsOneWidget);
+
+      final templates = await db.select(db.workoutTemplates).get();
+      expect(templates, hasLength(1));
+      final templateExercises = await (db.select(
+        db.templateExercises,
+      )..where((te) => te.templateId.equals(templates.single.id))).get();
+      expect(templateExercises, hasLength(1));
+      final templateSets = await (db.select(
+        db.templateSets,
+      )..where(
+        (s) => s.templateExerciseId.equals(templateExercises.single.id),
+      )).get();
+      expect(templateSets.single.plannedWeightKg, 60.0);
+      expect(templateSets.single.plannedReps, 8);
+
+      // The source workout itself is untouched -- still has its completed
+      // set, this only ever creates a separate template.
+      final sourceWorkouts = await db.select(db.workouts).get();
+      expect(sourceWorkouts, hasLength(1));
+      final sourceSets = await db.select(db.exerciseSets).get();
+      expect(sourceSets.single.isCompleted, isTrue);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'deleting from the editor\'s "⋮" menu shows an Undo snackbar and leaves '
+    'the editor (Stage 10, owner-reported: used to hardcode going to '
+    'History, regardless of which tab the workout was opened from)',
+    (tester) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+
+      await tester.tap(_statusMenu);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WorkoutEditorScreen), findsNothing);
+      expect(find.byType(HistoryScreen), findsOneWidget);
+      expect(find.text('Workout deleted'), findsOneWidget);
+
+      final workouts = await db.select(db.workouts).get();
+      expect(workouts.single.isDeleted, isTrue);
+
+      await tester.pump(const Duration(seconds: 6));
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'the secondary "Schedule" CTA moves a draft to planned and leaves the '
+    'editor (Stage 10, owner-reported: previously stayed on screen)',
     (tester) async {
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
@@ -1184,10 +1293,14 @@ void main() {
       await tester.tap(_secondaryStatusCta);
       await tester.pumpAndSettle();
 
-      expect(find.text('Planned'), findsOneWidget);
-      // Once planned, there is only one obvious next step (inProgress) --
-      // the secondary CTA is draft-only and disappears.
-      expect(_secondaryStatusCta, findsNothing);
+      // Owner-reported: scheduling is "I'm done with this workout for now",
+      // same as finishing -- it should pop back to wherever the editor was
+      // opened from (here, History via the FAB), not stay on the editor.
+      expect(find.byType(WorkoutEditorScreen), findsNothing);
+      expect(find.byType(HistoryScreen), findsOneWidget);
+
+      final workouts = await db.select(db.workouts).get();
+      expect(workouts.single.status, WorkoutStatus.planned.name);
 
       await _unmountAndFlush(tester);
     },

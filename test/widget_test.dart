@@ -6,10 +6,13 @@ import 'package:gymlog/app/providers.dart';
 import 'package:gymlog/data/database.dart' as drift;
 import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_repository_impl.dart';
+import 'package:gymlog/data/repositories_impl/workout_template_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/core/widgets/bottom_nav_bar.dart';
 import 'package:gymlog/features/history/screen.dart';
+import 'package:gymlog/features/history/template_picker_screen.dart';
 import 'package:gymlog/features/today/screen.dart';
+import 'package:gymlog/features/workout_editor/screen.dart';
 import 'package:gymlog/features/workout_summary/screen.dart';
 
 import 'package:gymlog/app/router.dart';
@@ -104,9 +107,8 @@ void main() {
   );
 
   testWidgets(
-    'finishing a workout started from "Сегодня" and tapping "Готово" leaves '
-    'a clean Today root behind, not the stale summary (Stage 10, '
-    'owner-reported)',
+    'finishing a workout started from "Сегодня" and tapping "Готово" '
+    'returns straight to Today, not History (Stage 10, owner-reported)',
     (tester) async {
       await WorkoutRepositoryImpl(db).createDraft(date: DateTime.now());
 
@@ -127,23 +129,95 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(WorkoutSummaryScreen), findsOneWidget);
 
+      // Owner-reported: "Готово" used to hardcode `context.go('/history')`,
+      // so finishing a workout opened from Today always landed on History
+      // instead of back on Today -- the same "wrong tab on exit" bug as
+      // deleting from the editor's own menu (`workout_editor/screen.dart`'s
+      // `_deleteWorkout`) and creating a workout from a template. "Готово"
+      // now pops instead (the editor `pushReplacement`d this screen in its
+      // own spot in the stack, so popping reveals exactly what was
+      // underneath -- Today itself here, not History).
       await tester.tap(find.text('Done'));
-      await tester.pumpAndSettle();
-      expect(find.byType(HistoryScreen), findsOneWidget);
-
-      // The regression: returning to "Сегодня" used to still show the
-      // finished workout's summary screen (with its own "Готово" button)
-      // instead of the Today root -- `/history/workout/:id` used to live
-      // inside History's own branch, so a `push` from Today attached the
-      // editor/summary to Today's own (offstage) branch Navigator instead
-      // of History's. Fixed at the time by switching Today to `go`; fixed
-      // again, more fundamentally, by moving the editor out of the shell
-      // entirely (see the next test and `app/router.dart`'s top comment).
-      await tester.tap(find.text('Today'));
       await tester.pumpAndSettle();
 
       expect(find.byType(TodayScreen), findsOneWidget);
+      expect(find.byType(HistoryScreen), findsNothing);
       expect(find.byType(WorkoutSummaryScreen), findsNothing);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'creating a workout from a template via "Сегодня", then finishing it, '
+    'returns to "Сегодня", not "История" (Stage 10, owner-reported)',
+    (tester) async {
+      await WorkoutTemplateRepositoryImpl(db).create(name: 'Leg day');
+
+      await tester.pumpWidget(appUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('From a template'));
+      await tester.pumpAndSettle();
+      // Owner-reported: `/template-source` used to be nested inside
+      // History's own branch, so opening it from Today (`context.go`)
+      // switched the active tab to History before the workout editor was
+      // ever pushed -- the exact same class of bug as `/workout/:id`
+      // before it was moved outside the shell, just one route "later" in
+      // the flow. Now a top-level route too (`app/router.dart`'s top
+      // comment), reached with `push`, so Today stays the active tab.
+      expect(find.byType(HistoryScreen), findsNothing);
+
+      await tester.tap(find.text('Leg day'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.byType(WorkoutEditorScreen), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('workout-status-cta')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('workout-status-cta')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
+
+      // The picker `pushReplacement`d itself with the editor, which then
+      // `pushReplacement`d itself with the summary (`create_workout_from_
+      // template_flow.dart`'s `replaceCurrentRoute`) -- all three occupy
+      // the same single slot in the stack, right on top of Today, so one
+      // pop from "Готово" reveals Today directly.
+      expect(find.byType(TodayScreen), findsOneWidget);
+      expect(find.byType(HistoryScreen), findsNothing);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'creating a workout from a template via "Сегодня" and pressing back '
+    'before finishing returns straight to "Сегодня", not the (now '
+    'pointless) template picker (Stage 10, owner-reported side effect of '
+    'the fix above)',
+    (tester) async {
+      await WorkoutTemplateRepositoryImpl(db).create(name: 'Leg day');
+
+      await tester.pumpWidget(appUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('From a template'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Leg day'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.byType(WorkoutEditorScreen), findsOneWidget);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TodayScreen), findsOneWidget);
+      expect(find.byType(WorkoutEditorScreen), findsNothing);
+      expect(find.byType(TemplatePickerScreen), findsNothing);
 
       await _unmountAndFlush(tester);
     },

@@ -31,14 +31,16 @@ import '../l10n/app_localizations.dart';
 
 /// App routes (04_UI_UX_SPEC.md, section 4). Stage 0 wired the 5 tab roots.
 /// `/workout/:workoutId` (S-03) and its nested "summary"/"add exercise"/
-/// "create exercise" routes are a top-level sibling of the tab shell below,
-/// not nested inside any branch (Stage 10 redesign, owner-reported bug):
-/// the workout editor is reachable from every tab (Сегодня, История,
-/// Статистика's records, шаблоны...), and nesting it inside History's
-/// branch — as it used to be — meant `go_router`'s `StatefulShellRoute`
-/// always switched the active tab to History on open, and "back" always
-/// landed on History's root, regardless of which tab the owner actually
-/// opened it from. As a route outside the shell entirely, opening it is a
+/// "create exercise" routes, plus `/copy-source` and `/template-source`
+/// (the creation menu's "Копией"/"Из шаблона" pickers), are top-level
+/// siblings of the tab shell below, not nested inside any branch (Stage 10
+/// redesign, owner-reported bug): all four are reachable from every tab
+/// (Сегодня, История, Статистика's records, шаблоны...), and nesting any of
+/// them inside History's branch — as they used to be — meant `go_router`'s
+/// `StatefulShellRoute` always switched the active tab to History on open,
+/// and "back" (or finishing a workout created this way) always landed on
+/// History's root/branch, regardless of which tab the owner actually opened
+/// it from. As routes outside the shell entirely, opening any of them is a
 /// `context.push` (never `context.go` — see `today/screen.dart`'s doc
 /// comment) that layers a page on top of the *current* Navigator via the
 /// root Navigator, leaving the shell (and whichever tab/stack was active
@@ -90,6 +92,29 @@ final GoRouter appRouter = GoRouter(
         ),
       ],
     ),
+    GoRoute(
+      path: '/copy-source',
+      // "Копией" in the creation menu — a picker, so a full-screen modal
+      // like the other pickers/forms (04_UI_UX_SPEC.md, section 6). A
+      // top-level sibling of `/workout/:workoutId` (see the top comment),
+      // not nested under `/history` (Stage 10 redesign, owner-reported).
+      pageBuilder: (_, state) => MaterialPage(
+        key: state.pageKey,
+        fullscreenDialog: true,
+        child: const CopySourcePickerScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/template-source',
+      // "Из шаблона" in the creation menu — same full-screen modal picker
+      // pattern as "Копией" above (Stage 5; moved out of `/history`
+      // alongside it, Stage 10 redesign, owner-reported).
+      pageBuilder: (_, state) => MaterialPage(
+        key: state.pageKey,
+        fullscreenDialog: true,
+        child: const TemplatePickerScreen(),
+      ),
+    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
         return _MainTabScaffold(navigationShell: navigationShell);
@@ -102,33 +127,7 @@ final GoRouter appRouter = GoRouter(
         ),
         StatefulShellBranch(
           routes: [
-            GoRoute(
-              path: '/history',
-              builder: (_, _) => const HistoryScreen(),
-              routes: [
-                GoRoute(
-                  path: 'copy-source',
-                  // "Копией" in the creation menu — a picker, so a
-                  // full-screen modal like the other pickers/forms
-                  // (04_UI_UX_SPEC.md, section 6).
-                  pageBuilder: (_, state) => MaterialPage(
-                    key: state.pageKey,
-                    fullscreenDialog: true,
-                    child: const CopySourcePickerScreen(),
-                  ),
-                ),
-                GoRoute(
-                  path: 'template-source',
-                  // "Из шаблона" in the creation menu — same full-screen
-                  // modal picker pattern as "Копией" above (Stage 5).
-                  pageBuilder: (_, state) => MaterialPage(
-                    key: state.pageKey,
-                    fullscreenDialog: true,
-                    child: const TemplatePickerScreen(),
-                  ),
-                ),
-              ],
-            ),
+            GoRoute(path: '/history', builder: (_, _) => const HistoryScreen()),
           ],
         ),
         StatefulShellBranch(

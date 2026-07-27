@@ -18,28 +18,26 @@ import 'package:gymlog/features/workout_summary/screen.dart';
 import 'package:gymlog/app/theme.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
-/// Mirrors the `/history` + `/workout/:workoutId` + `/history/copy-source`
-/// + `/history/template-source` + `/more/templates/:templateId` slice of
-/// the real router (S-02; the "Копией" creation menu option and its picker
-/// are Stage 3; the template picker/editor destinations are Stage 5's
-/// "Создать шаблон"/"Из шаблона").
+/// Mirrors the `/history` + `/workout/:workoutId` + `/copy-source` +
+/// `/template-source` + `/more/templates/:templateId` slice of the real
+/// router (S-02; the "Копией" creation menu option and its picker are Stage
+/// 3; the template picker/editor destinations are Stage 5's "Создать
+/// шаблон"/"Из шаблона"). `/copy-source` and `/template-source` are
+/// top-level siblings of `/history`, not nested under it (Stage 10
+/// redesign, owner-reported: same "wrong tab on exit" bug as the workout
+/// editor route, `app/router.dart`'s top comment).
 Widget _appUnderTest(AppDatabase db) {
   final router = GoRouter(
     initialLocation: '/history',
     routes: [
+      GoRoute(path: '/history', builder: (_, _) => const HistoryScreen()),
       GoRoute(
-        path: '/history',
-        builder: (_, _) => const HistoryScreen(),
-        routes: [
-          GoRoute(
-            path: 'copy-source',
-            builder: (_, _) => const CopySourcePickerScreen(),
-          ),
-          GoRoute(
-            path: 'template-source',
-            builder: (_, _) => const TemplatePickerScreen(),
-          ),
-        ],
+        path: '/copy-source',
+        builder: (_, _) => const CopySourcePickerScreen(),
+      ),
+      GoRoute(
+        path: '/template-source',
+        builder: (_, _) => const TemplatePickerScreen(),
       ),
       GoRoute(
         path: '/workout/:workoutId',

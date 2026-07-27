@@ -564,9 +564,11 @@ void main() {
 
   group('copyWorkout (Stage 3, S-02, TS 8 section 8)', () {
     test(
-      'copies exercises, order and planned values into a new draft dated '
-      'by the caller -- actuals, completion and progression are never '
-      'copied',
+      'copies exercises, order, planned values and the last progression '
+      'decision into a new draft dated by the caller -- actuals and '
+      'completion are never copied (Stage 10, owner-reported: the '
+      'progression call now carries forward as a starting point, instead '
+      'of always resetting to "not set")',
       () async {
         final exercise = await exercises.create(
           name: 'Squat',
@@ -594,6 +596,9 @@ void main() {
           (await workouts.getDetails(source.id))!.exercises.single.sets.single
               .markCompleted(),
         );
+        await workouts.updateWorkoutExercise(
+          sourceWe.copyWith(progressionDecision: ProgressionDecision.increase),
+        );
         await workouts.updateWorkout(
           source.copyWith(status: WorkoutStatus.completed),
         );
@@ -617,7 +622,7 @@ void main() {
         );
         expect(
           copiedExerciseDetails.workoutExercise.progressionDecision,
-          ProgressionDecision.none,
+          ProgressionDecision.increase,
         );
 
         final copiedSet = copiedExerciseDetails.sets.single;
@@ -631,6 +636,10 @@ void main() {
         final sourceDetails = await workouts.getDetails(source.id);
         expect(sourceDetails!.workout.status, WorkoutStatus.completed);
         expect(sourceDetails.exercises.single.sets.single.isCompleted, isTrue);
+        expect(
+          sourceDetails.exercises.single.workoutExercise.progressionDecision,
+          ProgressionDecision.increase,
+        );
       },
     );
 

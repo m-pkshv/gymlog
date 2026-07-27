@@ -47,9 +47,12 @@ Future<void> showNewWorkoutMenu(BuildContext context, WidgetRef ref) async {
     case _NewWorkoutChoice.scratch:
       await createWorkoutFromScratchFlow(context, ref);
     case _NewWorkoutChoice.copy:
-      context.push('/history/copy-source');
+      // `/copy-source` is a route outside the tab shell (`app/router.dart`'s
+      // top comment, Stage 10 redesign, owner-reported) -- same reasoning
+      // as `/workout/:id` below.
+      context.push('/copy-source');
     case _NewWorkoutChoice.template:
-      context.push('/history/template-source');
+      context.push('/template-source');
   }
 }
 

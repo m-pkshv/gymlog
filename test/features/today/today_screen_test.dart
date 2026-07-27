@@ -14,10 +14,12 @@ import 'package:gymlog/features/workout_editor/screen.dart';
 import 'package:gymlog/app/theme.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
 
-/// Mirrors the `/today` + `/workout/:workoutId` + `/history/copy-source` +
-/// `/history/template-source` slice of the real router (S-01, Stage 9) --
-/// the same destinations the quick actions and the upcoming/continue cards
-/// push to.
+/// Mirrors the `/today` + `/workout/:workoutId` + `/copy-source` +
+/// `/template-source` slice of the real router (S-01, Stage 9) -- the same
+/// destinations the quick actions and the upcoming/continue cards push to.
+/// `/copy-source`/`/template-source` are top-level, not nested under
+/// `/history` (Stage 10 redesign, owner-reported: same "wrong tab on exit"
+/// bug as the workout editor route, `app/router.dart`'s top comment).
 Widget _appUnderTest(AppDatabase db) {
   final router = GoRouter(
     initialLocation: '/today',
@@ -30,11 +32,11 @@ Widget _appUnderTest(AppDatabase db) {
         ),
       ),
       GoRoute(
-        path: '/history/copy-source',
+        path: '/copy-source',
         builder: (_, _) => const CopySourcePickerScreen(),
       ),
       GoRoute(
-        path: '/history/template-source',
+        path: '/template-source',
         builder: (_, _) => const TemplatePickerScreen(),
       ),
     ],

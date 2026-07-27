@@ -36,10 +36,22 @@ class RestTimerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final semantic = Theme.of(context).extension<AppSemanticColors>()!;
-    final elapsed = totalSeconds > 0
-        ? (totalSeconds - remainingSeconds).clamp(0, totalSeconds) /
-              totalSeconds
-        : 0.0;
+    final elapsedSeconds = (totalSeconds - remainingSeconds).clamp(
+      0,
+      totalSeconds,
+    );
+    final elapsed = totalSeconds > 0 ? elapsedSeconds / totalSeconds : 0.0;
+    // Owner-reported: completing another set restarts the rest timer from
+    // full duration even if the previous one hadn't run out yet, so the
+    // fill can be jumping down from anywhere -- e.g. mostly full -- back to
+    // (almost) empty. `elapsedSeconds` is only ever this close to zero
+    // structurally right when `startRestTimer` just wrote a fresh deadline
+    // (`elapsed = total - remaining ≈ 0` by construction); a ±15с
+    // adjustment or an ordinary tick essentially never lands here (the
+    // narrow exception -- adjusting past a nearly-just-started timer -- has
+    // nothing visible to animate anyway, the bar's already near empty).
+    // That reset should snap instantly, not glide backwards.
+    final isFreshRestart = elapsedSeconds <= 1;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppRadius.card - 2),
@@ -51,9 +63,28 @@ class RestTimerCard extends StatelessWidget {
           Positioned.fill(
             child: Align(
               alignment: Alignment.centerLeft,
-              child: FractionallySizedBox(
-                widthFactor: elapsed,
-                heightFactor: 1,
+              // Owner-reported: the fill used to jump in visible steps,
+              // once per tick of the shared 1-second ticker
+              // (`_ActiveWorkoutTicker`) that drives `remainingSeconds`.
+              // `TweenAnimationBuilder` smoothly interpolates its own width
+              // toward whatever `elapsed` happens to be on each rebuild --
+              // since a new tick arrives right as the previous animation
+              // finishes, the two together read as one continuous glide
+              // rather than a stepped bar, with no extra per-frame ticking
+              // of our own. The same interpolation also covers a ±15с
+              // adjustment landing mid-tick: rather than snapping instantly,
+              // it eases to the new position over the same short window.
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: elapsed, end: elapsed),
+                duration: isFreshRestart
+                    ? Duration.zero
+                    : const Duration(milliseconds: 950),
+                curve: Curves.linear,
+                builder: (context, value, child) => FractionallySizedBox(
+                  widthFactor: value,
+                  heightFactor: 1,
+                  child: child,
+                ),
                 child: ColoredBox(color: semantic.accent),
               ),
             ),

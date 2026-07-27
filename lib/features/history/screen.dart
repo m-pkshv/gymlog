@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
 import '../../core/widgets/error_retry_state.dart';
@@ -10,13 +9,12 @@ import '../../domain/enums.dart';
 import '../../domain/models/workout.dart';
 import '../../domain/models/workout_history_filter.dart';
 import '../../domain/models/workout_tag.dart';
-import '../../domain/models/workout_template.dart';
 import '../../l10n/app_localizations.dart';
-import '../templates/widgets/create_template_dialog.dart';
 import '../workout_editor/status_labels.dart';
 import '../workout_editor/widgets/workout_tag_chip.dart';
 import 'calendar/history_calendar_view.dart';
 import 'copy_workout_flow.dart';
+import 'create_template_from_workout_flow.dart';
 import 'new_workout_menu.dart';
 import 'widgets/workout_history_tile.dart';
 
@@ -113,34 +111,6 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     });
   }
 
-  /// "Создать шаблон" (S-02 "⋮" menu, TS 8 section 8): prompts for the
-  /// template's name (defaulting to the workout's own display name) and
-  /// opens the result for review, same "create then open" pattern as
-  /// [showNewWorkoutMenu]'s "From scratch" and `copyWorkoutFlow`. Uses
-  /// `go`, not `push` (Stage 10, owner-reported): this screen is History's
-  /// branch, and `/more/templates/:id` belongs to the "More" branch --
-  /// `push`ing it here would attach the template editor to History's own
-  /// Navigator instead of More's (see `today/screen.dart`'s doc comment for
-  /// the general explanation of why that's wrong for a
-  /// `StatefulShellRoute`).
-  Future<void> _createTemplateFromWorkout(Workout source) async {
-    final l10n = AppLocalizations.of(context)!;
-    final service = ref.read(workoutTemplateServiceProvider);
-    final defaultName =
-        source.name ?? '${l10n.workoutDefaultNamePrefix} ${formatShortDate(source.date)}';
-    final created = await showDialog<WorkoutTemplate>(
-      context: context,
-      builder: (context) => CreateTemplateDialog(
-        initialName: defaultName,
-        create: (name) =>
-            service.createFromWorkout(workoutId: source.id, name: name),
-      ),
-    );
-    if (created != null && mounted) {
-      context.go('/more/templates/${created.id}');
-    }
-  }
-
   Future<void> _deleteWorkout(Workout workout) async {
     final l10n = AppLocalizations.of(context)!;
     final result = await ref.read(workoutServiceProvider).delete(workout);
@@ -215,7 +185,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     isFiltered: _hasActiveSearchOrFilters,
                     onReset: _resetAll,
                     onCopy: (source) => copyWorkoutFlow(context, ref, source),
-                    onCreateTemplate: _createTemplateFromWorkout,
+                    onCreateTemplate: (source) =>
+                        createTemplateFromWorkoutFlow(context, ref, source),
                     onDelete: _deleteWorkout,
                   )
                 : HistoryCalendarView(
@@ -223,7 +194,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     statuses: _statuses,
                     tagIds: _tagIds,
                     onCopy: (source) => copyWorkoutFlow(context, ref, source),
-                    onCreateTemplate: _createTemplateFromWorkout,
+                    onCreateTemplate: (source) =>
+                        createTemplateFromWorkoutFlow(context, ref, source),
                     onDelete: _deleteWorkout,
                   ),
           ),

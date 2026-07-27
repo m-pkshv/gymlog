@@ -85,14 +85,20 @@ class _WorkoutSummaryScreenState extends ConsumerState<WorkoutSummaryScreen>
         data: (details) => _SummaryBody(
           details: details,
           controller: controller,
-          onDone: () => context.go('/history'),
+          // Owner-reported: this used to hardcode `context.go('/history')`,
+          // which always landed on History regardless of which tab the
+          // workout was actually opened from (Today, a template, etc.).
+          // The editor `pushReplacement`s this screen in its own spot in
+          // the stack (see the editor's `_changeStatus`), so popping reveals
+          // exactly what was there before -- same invariant as
+          // `app/router.dart`'s top comment for the editor route itself.
+          onDone: () => context.pop(),
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => ErrorRetryState(
           message: l10n.workoutLoadError,
-          onRetry: () => ref.invalidate(
-            workoutEditorControllerProvider(widget.workoutId),
-          ),
+          onRetry: () =>
+              ref.invalidate(workoutEditorControllerProvider(widget.workoutId)),
         ),
       ),
     );
@@ -116,97 +122,109 @@ class _SummaryBody extends StatelessWidget {
     final semantic = Theme.of(context).extension<AppSemanticColors>()!;
     final stats = computeWorkoutSummaryStats(details);
 
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        // Duration is this screen's hero number (Stage 10 redesign,
-        // AUDIT.md section 1.7: "probably the most emotionally significant
-        // number right after finishing", but pre-redesign it carried the
-        // same visual weight as exercises/sets/tonnage). Given its own
-        // accent-tinted card, full width, above a plain row of the other
-        // three. ASSUMPTION(summary-hero-layout): no mockup reference was
-        // available for this screen specifically; this exact split (hero
-        // duration + a row of secondary tiles, replacing the audited 2x2
-        // grid) is a cosmetic call following AUDIT's explicit critique, not
-        // a literal copy of a reference design.
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: semantic.accentContainer,
-            borderRadius: BorderRadius.circular(AppRadius.card),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: HeroStatTile(
-              icon: Icons.timer_outlined,
-              iconColor: semantic.onAccentContainer,
-              value: formatElapsedTime(details.workout.actualDurationSec ?? 0),
-              label: l10n.workoutSummaryDurationLabel,
-              valueColor: semantic.onAccentContainer,
+    // Owner-reported: the "Готово" button (the list's last item) used to
+    // render right up against the physical bottom edge, ending up partly
+    // hidden behind the OS's on-screen navigation bar (back/home/recents)
+    // -- there's no AppBar-equivalent handling the bottom edge the way the
+    // Scaffold's AppBar already does the top, so this screen needs its own
+    // `SafeArea`, same as the editor's bottom CTA
+    // (`workout_editor/screen.dart`).
+    return SafeArea(
+      top: false,
+      child: ListView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        children: [
+          // Duration is this screen's hero number (Stage 10 redesign,
+          // AUDIT.md section 1.7: "probably the most emotionally significant
+          // number right after finishing", but pre-redesign it carried the
+          // same visual weight as exercises/sets/tonnage). Given its own
+          // accent-tinted card, full width, above a plain row of the other
+          // three. ASSUMPTION(summary-hero-layout): no mockup reference was
+          // available for this screen specifically; this exact split (hero
+          // duration + a row of secondary tiles, replacing the audited 2x2
+          // grid) is a cosmetic call following AUDIT's explicit critique, not
+          // a literal copy of a reference design.
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: semantic.accentContainer,
+              borderRadius: BorderRadius.circular(AppRadius.card),
             ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        Row(
-          children: [
-            Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: HeroStatTile(
-                icon: Icons.fitness_center,
-                value: stats.exerciseCount.toString(),
-                label: l10n.workoutSummaryExercisesLabel,
-              ),
-            ),
-            Expanded(
-              child: HeroStatTile(
-                icon: Icons.checklist,
-                value: stats.setCount.toString(),
-                label: l10n.workoutSummarySetsLabel,
-              ),
-            ),
-            Expanded(
-              child: HeroStatTile(
-                icon: Icons.scale_outlined,
-                value: l10n.workoutSummaryTonnageValue(
-                  stats.tonnageKg.toStringAsFixed(1),
+                icon: Icons.timer_outlined,
+                iconColor: semantic.onAccentContainer,
+                value: formatElapsedTime(
+                  details.workout.actualDurationSec ?? 0,
                 ),
-                label: l10n.workoutSummaryTonnageLabel,
+                label: l10n.workoutSummaryDurationLabel,
+                valueColor: semantic.onAccentContainer,
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        _NewRecordsSection(
-          workoutId: details.workout.id,
-          exercises: details.exercises,
-        ),
-        CommentField(
-          key: ValueKey('workout-comment-${details.workout.id}'),
-          value: details.workout.comment,
-          label: l10n.workoutCommentLabel,
-          maxLength: CommentLengthLimits.workout,
-          onChanged: controller.editWorkoutComment,
-          onCommit: controller.flushWorkoutComment,
-        ),
-        if (details.exercises.isNotEmpty) ...[
-          const SizedBox(height: 24),
-          Text(
-            l10n.progressionDecisionLabel,
-            style: Theme.of(context).textTheme.titleMedium,
           ),
-          for (final exerciseDetails in details.exercises)
-            _ExerciseProgressionRow(
-              details: exerciseDetails,
-              onChanged: (decision) => controller.setProgressionDecision(
-                exerciseDetails.workoutExercise.id,
-                decision,
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: HeroStatTile(
+                  icon: Icons.fitness_center,
+                  value: stats.exerciseCount.toString(),
+                  label: l10n.workoutSummaryExercisesLabel,
+                ),
               ),
+              Expanded(
+                child: HeroStatTile(
+                  icon: Icons.checklist,
+                  value: stats.setCount.toString(),
+                  label: l10n.workoutSummarySetsLabel,
+                ),
+              ),
+              Expanded(
+                child: HeroStatTile(
+                  icon: Icons.scale_outlined,
+                  value: l10n.workoutSummaryTonnageValue(
+                    stats.tonnageKg.toStringAsFixed(1),
+                  ),
+                  label: l10n.workoutSummaryTonnageLabel,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          _NewRecordsSection(
+            workoutId: details.workout.id,
+            exercises: details.exercises,
+          ),
+          CommentField(
+            key: ValueKey('workout-comment-${details.workout.id}'),
+            value: details.workout.comment,
+            label: l10n.workoutCommentLabel,
+            maxLength: CommentLengthLimits.workout,
+            onChanged: controller.editWorkoutComment,
+            onCommit: controller.flushWorkoutComment,
+          ),
+          if (details.exercises.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            Text(
+              l10n.progressionDecisionLabel,
+              style: Theme.of(context).textTheme.titleMedium,
             ),
+            for (final exerciseDetails in details.exercises)
+              _ExerciseProgressionRow(
+                details: exerciseDetails,
+                onChanged: (decision) => controller.setProgressionDecision(
+                  exerciseDetails.workoutExercise.id,
+                  decision,
+                ),
+              ),
+          ],
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: onDone,
+            child: Text(l10n.workoutSummaryDoneAction),
+          ),
         ],
-        const SizedBox(height: 24),
-        FilledButton(
-          onPressed: onDone,
-          child: Text(l10n.workoutSummaryDoneAction),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -286,7 +304,11 @@ class _NewRecordsSection extends ConsumerWidget {
     final groups = <(String exerciseName, List<PersonalRecord> records)>[];
     for (final exerciseDetails in exercises) {
       final records =
-          ref.watch(personalRecordsForExerciseProvider(exerciseDetails.exercise.id)).value ??
+          ref
+              .watch(
+                personalRecordsForExerciseProvider(exerciseDetails.exercise.id),
+              )
+              .value ??
           const <PersonalRecord>[];
       final newRecords = records
           .where((record) => record.workoutId == workoutId)

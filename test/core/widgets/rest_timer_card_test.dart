@@ -92,6 +92,37 @@ void main() {
     expect(find.text('00:00'), findsOneWidget);
   });
 
+  testWidgets(
+    'a fresh restart (elapsed close to zero) skips the fill animation '
+    '(Stage 10, owner-reported: completing another set restarts the rest '
+    'timer from a filled position, and that reset should snap, not '
+    'glide backwards)',
+    (tester) async {
+      await tester.pumpWidget(
+        _appUnderTest(remainingSeconds: 120, totalSeconds: 120),
+      );
+
+      final animatedFill = tester.widget<TweenAnimationBuilder<double>>(
+        find.byType(TweenAnimationBuilder<double>),
+      );
+      expect(animatedFill.duration, Duration.zero);
+    },
+  );
+
+  testWidgets(
+    'a mid-countdown update still animates the fill smoothly',
+    (tester) async {
+      await tester.pumpWidget(
+        _appUnderTest(remainingSeconds: 84, totalSeconds: 120),
+      );
+
+      final animatedFill = tester.widget<TweenAnimationBuilder<double>>(
+        find.byType(TweenAnimationBuilder<double>),
+      );
+      expect(animatedFill.duration, isNot(Duration.zero));
+    },
+  );
+
   testWidgets('renders under the dark theme without error', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

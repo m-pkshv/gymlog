@@ -97,11 +97,14 @@ abstract class WorkoutRepository {
   });
 
   /// "Скопировать прошлую" (S-02, TS 8 section 8): duplicates
-  /// [sourceWorkoutId]'s exercises (order) and each set's planned values
-  /// into a brand-new `draft` workout dated
-  /// [date]. Actuals, `isCompleted`, and `progressionDecision` are never
-  /// copied — the copy starts with nothing performed yet. Throws
-  /// `ArgumentError` if [sourceWorkoutId] doesn't exist.
+  /// [sourceWorkoutId]'s exercises (order and each one's last recorded
+  /// `progressionDecision`, Stage 10 owner-reported) and each set's planned
+  /// values into a brand-new `draft` workout dated [date]. Actuals and
+  /// `isCompleted` are never copied — the copy starts with nothing
+  /// performed yet, but the progression call (—/↑/=/↓) the owner already
+  /// made on the source carries forward as a starting point for the new
+  /// occurrence rather than resetting to "not set". Throws `ArgumentError`
+  /// if [sourceWorkoutId] doesn't exist.
   Future<Workout> copyWorkout({
     required String sourceWorkoutId,
     required DateTime date,

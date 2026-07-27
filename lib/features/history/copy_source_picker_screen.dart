@@ -44,7 +44,12 @@ class CopySourcePickerScreen extends ConsumerWidget {
                   '${formatShortDate(workout.date)} · '
                   '${l10n.workoutExerciseCount(entry.exerciseCount)}',
                 ),
-                onTap: () => copyWorkoutFlow(context, ref, workout),
+                onTap: () => copyWorkoutFlow(
+                  context,
+                  ref,
+                  workout,
+                  replaceCurrentRoute: true,
+                ),
               );
             },
           );

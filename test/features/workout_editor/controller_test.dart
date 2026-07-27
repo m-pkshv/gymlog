@@ -1004,7 +1004,10 @@ void main() {
 
         await controller.adjustRestTimer(15);
         final afterAdjust = await repository.getByWorkoutId(workout.id);
-        expect(afterAdjust!.restTimerDurationSec, 135);
+        // Stage 10, owner-reported: `restTimerDurationSec` (the fixed
+        // denominator RestTimerCard's fill fraction uses) no longer moves
+        // on adjustment -- only `restTimerEndsAtUtc` does.
+        expect(afterAdjust!.restTimerDurationSec, 120);
 
         await controller.skipRestTimer();
         final afterSkip = await repository.getByWorkoutId(workout.id);

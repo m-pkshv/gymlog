@@ -20,6 +20,7 @@ import '../../domain/models/workout_details.dart';
 import '../../domain/models/workout_tag.dart';
 import '../../l10n/app_localizations.dart';
 import '../history/active_workout_conflict.dart';
+import '../history/create_template_from_workout_flow.dart';
 import 'controller.dart';
 import 'status_labels.dart';
 import 'widgets/comment_field.dart';
@@ -143,6 +144,16 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
 
   Future<void> _changeStatus(WorkoutStatus newStatus) async {
     final l10n = AppLocalizations.of(context)!;
+    // Captured before the write below (after it, the controller's cached
+    // status already reads as `newStatus`) -- only used to recognize the
+    // draft -> planned transition specifically (see the "Schedule" pop
+    // below), not skipped/cancelled -> planned ("Вернуть в план"), which
+    // reaches `planned` too but isn't part of this owner report.
+    final fromStatus = ref
+        .read(workoutEditorControllerProvider(widget.workoutId))
+        .value
+        ?.workout
+        .status;
 
     // DM 6.4.1 invariant: at most one workout may be inProgress. Check
     // proactively (rather than reacting to the service's rejection) so we
@@ -200,6 +211,13 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
         // opened from (`app/router.dart`'s top comment).
         if (newStatus == WorkoutStatus.completed) {
           context.pushReplacement('/workout/${widget.workoutId}/summary');
+        } else if (fromStatus == WorkoutStatus.draft &&
+            newStatus == WorkoutStatus.planned) {
+          // Owner-reported: tapping the new "Запланировать" secondary CTA
+          // (a fresh draft's only other option besides "Начать", DM 6.4.1)
+          // should leave the editor too, same as finishing does -- the
+          // owner is done with this workout for now.
+          context.pop();
         }
       },
       (error) {
@@ -315,6 +333,22 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
     return confirmed ?? false;
   }
 
+  /// "⋮ → Создать шаблон" (Stage 10, owner-reported): any workout can be
+  /// saved as a template right from the editor, not only from a History
+  /// card -- `createTemplateFromWorkoutFlow` already only ever copies
+  /// exercises/order/planned values, never actuals or completion marks
+  /// (`WorkoutTemplateRepository.createFromWorkout`'s doc comment), so
+  /// there's nothing extra to reset here for a still-`inProgress` or
+  /// `completed` workout with marked-off sets.
+  Future<void> _saveAsTemplate() async {
+    final workout = ref
+        .read(workoutEditorControllerProvider(widget.workoutId))
+        .value
+        ?.workout;
+    if (workout == null) return;
+    await createTemplateFromWorkoutFlow(context, ref, workout);
+  }
+
   /// "⋮ → Удалить" in the redesigned status menu (Stage 10 redesign) --
   /// the editor never had its own delete action before (only History did,
   /// Stage 3/Step 9); reuses the exact same `WorkoutService.delete`/
@@ -339,7 +373,13 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
           actionLabel: l10n.undoAction,
           onUndo: () => ref.read(workoutServiceProvider).restore(workout.id),
         );
-        context.go('/history');
+        // Owner-reported: this used to hardcode `context.go('/history')`,
+        // which always landed on History regardless of which tab the
+        // workout was opened from -- same class of bug as the summary
+        // screen's "Готово" button. Popping leaves this editor's own
+        // top-level route (`app/router.dart`'s top comment) and reveals
+        // exactly what was there before.
+        context.pop();
       },
       (error) => ScaffoldMessenger.of(
         context,
@@ -440,6 +480,7 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
             onMoveDate: _moveDate,
             onSetCompletedChanged: _onSetCompletedChanged,
             onSetDeleted: _deleteSet,
+            onSaveAsTemplate: _saveAsTemplate,
             onDeleteWorkout: _deleteWorkout,
           ),
         );
@@ -535,6 +576,7 @@ class _EditorBody extends StatelessWidget {
     required this.onMoveDate,
     required this.onSetCompletedChanged,
     required this.onSetDeleted,
+    required this.onSaveAsTemplate,
     required this.onDeleteWorkout,
   });
 
@@ -546,6 +588,7 @@ class _EditorBody extends StatelessWidget {
   final void Function(DateTime currentDate) onMoveDate;
   final void Function(String setId, bool value) onSetCompletedChanged;
   final ValueChanged<String> onSetDeleted;
+  final VoidCallback onSaveAsTemplate;
   final VoidCallback onDeleteWorkout;
 
   @override
@@ -617,6 +660,7 @@ class _EditorBody extends StatelessWidget {
                     ?secondaryStatusCtaTransition(workout.status),
                   },
                   onSelectStatus: onChangeStatus,
+                  onSaveAsTemplate: onSaveAsTemplate,
                   onDelete: onDeleteWorkout,
                 ),
               ),
@@ -870,9 +914,24 @@ class _StatusCtaButton extends StatelessWidget {
 /// tests (it never found a quiet moment where neither was about to fire),
 /// and it's wasted work in production too. Wraps the whole `Scaffold`
 /// (Stage 10 redesign moved the timer into the AppBar, outside the body
-/// column the old version wrapped) rather than a specific subtree; both
-/// descendants stay plain `ConsumerWidget`s that just read the current
-/// anchors fresh on every rebuild this ticker causes.
+/// column the old version wrapped) rather than a specific subtree.
+///
+/// Owner-reported (Stage 10 redesign): the displayed time only advanced
+/// when *something else* triggered a rebuild (tapping anything), not on
+/// its own every second, even though the underlying elapsed-seconds value
+/// (recomputed from UTC anchors) was always correct once something did
+/// force a redraw. Root cause: `widget.child` here is the exact same
+/// `Scaffold` widget instance between ticks (nothing about `_EditorBody`'s
+/// own inputs changes just because a second passed) -- calling
+/// `setState(() {})` only marks *this* State dirty, and rebuilding it just
+/// hands back that identical `child` reference; Flutter's element
+/// reconciliation treats "same widget instance" as "nothing to update" and
+/// skips rebuilding anything underneath, so `_WorkoutTimerAction`/
+/// `_RestTimerBar` were never actually called again by the ticker itself.
+/// Threading a genuinely new value down via [_WorkoutTickerScope] (an
+/// `InheritedWidget`, notifying only the specific descendants that
+/// registered as dependents) sidesteps that "identical widget" shortcut
+/// entirely -- exactly what `InheritedWidget` exists for.
 class _ActiveWorkoutTicker extends StatefulWidget {
   const _ActiveWorkoutTicker({required this.child});
 
@@ -884,12 +943,13 @@ class _ActiveWorkoutTicker extends StatefulWidget {
 
 class _ActiveWorkoutTickerState extends State<_ActiveWorkoutTicker> {
   Timer? _ticker;
+  int _tick = 0;
 
   @override
   void initState() {
     super.initState();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
+      if (mounted) setState(() => _tick++);
     });
   }
 
@@ -900,7 +960,27 @@ class _ActiveWorkoutTickerState extends State<_ActiveWorkoutTicker> {
   }
 
   @override
-  Widget build(BuildContext context) => widget.child;
+  Widget build(BuildContext context) =>
+      _WorkoutTickerScope(tick: _tick, child: widget.child);
+}
+
+/// Notifies [_WorkoutTimerAction]/[_RestTimerBar] on every
+/// [_ActiveWorkoutTicker] tick, regardless of whether anything else in the
+/// tree changed -- see that class's doc comment for why a plain
+/// `setState(() {})` up there isn't enough on its own. [tick] itself is
+/// never read; depending on this widget at all is the point.
+class _WorkoutTickerScope extends InheritedWidget {
+  const _WorkoutTickerScope({required this.tick, required super.child});
+
+  final int tick;
+
+  static void listen(BuildContext context) {
+    context.dependOnInheritedWidgetOfExactType<_WorkoutTickerScope>();
+  }
+
+  @override
+  bool updateShouldNotify(_WorkoutTickerScope oldWidget) =>
+      tick != oldWidget.tick;
 }
 
 /// Compact AppBar timer chip (S-03, Stage 4, TS 7.1; Stage 10 redesign,
@@ -928,6 +1008,10 @@ class _WorkoutTimerAction extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Registers this widget as a dependent of `_ActiveWorkoutTicker`'s
+    // scope (see its doc comment) so it's rebuilt every second on its own,
+    // not only when something else happens to touch this subtree.
+    _WorkoutTickerScope.listen(context);
     final l10n = AppLocalizations.of(context)!;
     final stateAsync = ref.watch(activeWorkoutStateProvider(workoutId));
 
@@ -1028,6 +1112,9 @@ class _RestTimerBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Same reasoning as `_WorkoutTimerAction`'s -- see
+    // `_ActiveWorkoutTicker`'s doc comment.
+    _WorkoutTickerScope.listen(context);
     final l10n = AppLocalizations.of(context)!;
     final stateAsync = ref.watch(activeWorkoutStateProvider(workoutId));
 
@@ -1038,9 +1125,11 @@ class _RestTimerBar extends ConsumerWidget {
         }
         final timerService = ref.read(activeWorkoutTimerServiceProvider);
         final remaining = timerService.remainingRestSeconds(state) ?? 0;
-        // `restTimerDurationSec` tracks the *current* total (the initial
-        // duration plus every ±15с adjustment since, TS 7.2 step 3) --
-        // exactly the denominator RestTimerCard's progress fill needs.
+        // `restTimerDurationSec` is the original planned duration, fixed
+        // once at start (Stage 10 redesign, owner-reported: `adjustRestTimer`
+        // no longer changes it) -- exactly the denominator RestTimerCard's
+        // progress fill needs to keep a constant fill speed across ±15с
+        // adjustments.
         final totalSeconds = state.restTimerDurationSec ?? remaining;
         final notificationsEnabled = ref
             .watch(notificationsEnabledProvider)

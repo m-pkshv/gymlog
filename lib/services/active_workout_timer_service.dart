@@ -119,6 +119,19 @@ class ActiveWorkoutTimerService {
   /// Adjusts the running rest timer's remaining time by [deltaSec] (S-04:
   /// "±15 с") — positive extends, negative shortens. A no-op if no rest
   /// timer is currently running.
+  ///
+  /// Only [ActiveWorkoutState.restTimerEndsAtUtc] moves; `restTimerDurationSec`
+  /// (the original planned duration, set once by [startRestTimer]) stays
+  /// fixed (Stage 10 redesign, owner-reported). It used to grow/shrink by
+  /// the same [deltaSec] too, which -- since `RestTimerCard`'s fill fraction
+  /// is `elapsed / restTimerDurationSec` -- left elapsed time unchanged at
+  /// the instant of the press (the delta canceled out of the numerator) and
+  /// instead changed the fill *rate* going forward (a bigger/smaller
+  /// denominator). That reads as "+15 slows the bar down" rather than "+15
+  /// moves the bar back a bit", which is what pressing it actually means.
+  /// Keeping the denominator fixed makes an adjustment move the *current*
+  /// fill position by a proportional step and leaves the fill speed
+  /// constant, matching a plain countdown against one unmoving total.
   Future<void> adjustRestTimer(String workoutId, {required int deltaSec}) async {
     final state = await _repository.getByWorkoutId(workoutId);
     final endsAt = state?.restTimerEndsAtUtc;
@@ -127,8 +140,6 @@ class ActiveWorkoutTimerService {
     await _repository.upsert(
       state.copyWith(
         restTimerEndsAtUtc: newEndsAt,
-        restTimerDurationSec:
-            (state.restTimerDurationSec ?? 0) + deltaSec,
         updatedAt: DateTime.now().toUtc(),
       ),
     );

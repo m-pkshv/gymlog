@@ -209,45 +209,53 @@ void main() {
         expect(await repository.getByWorkoutId(workoutId), isNull);
       });
 
-      test('adjustRestTimer extends the remaining time by deltaSec', () async {
-        final now = DateTime.now().toUtc();
-        await repository.upsert(
-          ActiveWorkoutState(
-            workoutId: workoutId,
-            startedAtUtc: now,
-            restTimerEndsAtUtc: now.add(const Duration(seconds: 60)),
-            restTimerDurationSec: 60,
-            updatedAt: now,
-          ),
-        );
+      test(
+        'adjustRestTimer extends the remaining time by deltaSec, without '
+        'changing the original restTimerDurationSec (Stage 10, owner-'
+        'reported: RestTimerCard\'s fill speed must stay constant across '
+        'adjustments, so the denominator can\'t move)',
+        () async {
+          final now = DateTime.now().toUtc();
+          await repository.upsert(
+            ActiveWorkoutState(
+              workoutId: workoutId,
+              startedAtUtc: now,
+              restTimerEndsAtUtc: now.add(const Duration(seconds: 60)),
+              restTimerDurationSec: 60,
+              updatedAt: now,
+            ),
+          );
 
-        await service.adjustRestTimer(workoutId, deltaSec: 15);
+          await service.adjustRestTimer(workoutId, deltaSec: 15);
 
-        final state = await repository.getByWorkoutId(workoutId);
-        expect(state!.restTimerDurationSec, 75);
-        expect(
-          state.restTimerEndsAtUtc!.difference(now).inSeconds,
-          75,
-        );
-      });
+          final state = await repository.getByWorkoutId(workoutId);
+          expect(state!.restTimerDurationSec, 60);
+          expect(state.restTimerEndsAtUtc!.difference(now).inSeconds, 75);
+        },
+      );
 
-      test('adjustRestTimer shortens the remaining time for a negative deltaSec', () async {
-        final now = DateTime.now().toUtc();
-        await repository.upsert(
-          ActiveWorkoutState(
-            workoutId: workoutId,
-            startedAtUtc: now,
-            restTimerEndsAtUtc: now.add(const Duration(seconds: 60)),
-            restTimerDurationSec: 60,
-            updatedAt: now,
-          ),
-        );
+      test(
+        'adjustRestTimer shortens the remaining time for a negative '
+        'deltaSec, without changing restTimerDurationSec',
+        () async {
+          final now = DateTime.now().toUtc();
+          await repository.upsert(
+            ActiveWorkoutState(
+              workoutId: workoutId,
+              startedAtUtc: now,
+              restTimerEndsAtUtc: now.add(const Duration(seconds: 60)),
+              restTimerDurationSec: 60,
+              updatedAt: now,
+            ),
+          );
 
-        await service.adjustRestTimer(workoutId, deltaSec: -15);
+          await service.adjustRestTimer(workoutId, deltaSec: -15);
 
-        final state = await repository.getByWorkoutId(workoutId);
-        expect(state!.restTimerDurationSec, 45);
-      });
+          final state = await repository.getByWorkoutId(workoutId);
+          expect(state!.restTimerDurationSec, 60);
+          expect(state.restTimerEndsAtUtc!.difference(now).inSeconds, 45);
+        },
+      );
 
       test('adjustRestTimer is a no-op when no rest timer is running', () async {
         await service.start(workoutId);

@@ -593,7 +593,11 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
           workoutId: copy.id,
           exerciseId: sourceWorkoutExercise.exerciseId,
           orderIndex: sourceWorkoutExercise.orderIndex,
-          progressionDecision: ProgressionDecision.none,
+          // Stage 10, owner-reported: carries the source's last progression
+          // call forward as a starting point for the new occurrence,
+          // instead of resetting to "not set" (`WorkoutRepository.copyWorkout`'s
+          // doc comment).
+          progressionDecision: sourceWorkoutExercise.progressionDecision,
           createdAt: now,
           updatedAt: now,
           isDeleted: false,
