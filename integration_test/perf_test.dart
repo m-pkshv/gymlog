@@ -257,4 +257,118 @@ void main() {
       binding.reportData!['workout_editor_scroll_15_exercises'] as Map<String, dynamic>,
     );
   });
+
+  testWidgets('Workout editor: scrolling an in-progress workout (timer ticking)', (
+    tester,
+  ) async {
+    // Unlike the scenario above (a `completed` workout), this seeds the
+    // workout as `inProgress` with a live `ActiveWorkoutState` row so the
+    // screen's once-a-second `_ActiveWorkoutTicker` (screen.dart) is
+    // actually running while scrolling -- the owner reported jank
+    // specifically while scrolling the exercise list of an active workout,
+    // a scenario the `completed`-workout test above never exercised.
+    final tempDir = await Directory.systemTemp.createTemp('gymlog_perf_active_editor_');
+    final dbFile = File('${tempDir.path}/gymlog.sqlite');
+    addTearDown(() async {
+      if (await tempDir.exists()) {
+        await tempDir.delete(recursive: true);
+      }
+    });
+
+    final db = AppDatabase(NativeDatabase(dbFile));
+    addTearDown(db.close);
+    await SeedRunner(db).run();
+    final settingsRepository = AppSettingsRepositoryImpl(db);
+    await settingsRepository.ensureInitialized();
+    await settingsRepository.setLocale(AppLocale.en);
+
+    final exercises = await (db.select(db.exercises)..limit(15)).get();
+    const uuid = Uuid();
+    final now = DateTime.now().toUtc();
+    final nowIso = now.toIso8601String();
+    final workoutId = uuid.v4();
+
+    final workoutExerciseCompanions = <WorkoutExercisesCompanion>[];
+    final setCompanions = <ExerciseSetsCompanion>[];
+
+    for (var e = 0; e < exercises.length; e++) {
+      final workoutExerciseId = uuid.v4();
+      workoutExerciseCompanions.add(
+        WorkoutExercisesCompanion.insert(
+          id: workoutExerciseId,
+          workoutId: workoutId,
+          exerciseId: exercises[e].id,
+          orderIndex: e,
+          createdAt: nowIso,
+          updatedAt: nowIso,
+        ),
+      );
+      for (var s = 0; s < 5; s++) {
+        setCompanions.add(
+          ExerciseSetsCompanion.insert(
+            id: uuid.v4(),
+            workoutExerciseId: workoutExerciseId,
+            setNumber: s + 1,
+            plannedWeightKg: const Value(80),
+            plannedReps: const Value(8),
+            createdAt: nowIso,
+            updatedAt: nowIso,
+          ),
+        );
+      }
+    }
+
+    await db.batch((batch) {
+      batch.insert(
+        db.workouts,
+        WorkoutsCompanion.insert(
+          id: workoutId,
+          date: nowIso.substring(0, 10),
+          status: const Value('inProgress'),
+          startedAt: Value(nowIso),
+          createdAt: nowIso,
+          updatedAt: nowIso,
+        ),
+      );
+      batch.insertAll(db.workoutExercises, workoutExerciseCompanions);
+      batch.insertAll(db.exerciseSets, setCompanions);
+      batch.insert(
+        db.activeWorkoutStates,
+        ActiveWorkoutStatesCompanion.insert(
+          workoutId: workoutId,
+          startedAtUtc: now.subtract(const Duration(minutes: 5)).toIso8601String(),
+          updatedAt: nowIso,
+        ),
+      );
+    });
+
+    appRouter.go('/today');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        child: const GymLogApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+
+    final scrollView = find.byType(CustomScrollView);
+    expect(scrollView, findsOneWidget);
+
+    await binding.watchPerformance(() async {
+      for (var i = 0; i < 6; i++) {
+        await tester.fling(scrollView, const Offset(0, -2000), 3000);
+        await tester.pump(const Duration(milliseconds: 16));
+        await tester.pumpAndSettle();
+      }
+    }, reportKey: 'active_workout_editor_scroll');
+
+    printSummary(
+      'Active workout editor/15 exercises',
+      binding.reportData!['active_workout_editor_scroll'] as Map<String, dynamic>,
+    );
+  });
 }
