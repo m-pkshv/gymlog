@@ -4,6 +4,7 @@ import '../database.dart';
 import 'exercise_seed.dart';
 import 'reference_data_seed.dart';
 import 'workout_tag_seed.dart';
+import 'workout_template_seed.dart';
 
 /// Current seed content version (06_DATA_MODEL.md, section 12). Bump this
 /// when the seed data itself changes; `SeedRunner` re-applies the seed for
@@ -21,7 +22,11 @@ import 'workout_tag_seed.dart';
 /// exercise carried over unchanged, e.g. `barbell_back_squat`).
 /// v4 (2026-07-23, Stage 10, owner-reported): 17 built-in workout tags, one
 /// per muscle group (`workout_tag_seed.dart`).
-const int currentSeedVersion = 4;
+/// v5 (2026-07-27, Stage 10 redesign, owner-reported): 5 starter workout
+/// templates (`workout_template_seed.dart`) — ordinary, fully editable/
+/// deletable templates (no `isBuiltIn` flag on `WorkoutTemplates`), just
+/// convenience starter content.
+const int currentSeedVersion = 5;
 
 /// Loads built-in reference data and the placeholder exercise catalog
 /// (06_DATA_MODEL.md, section 12) on first run, tracked by
@@ -47,6 +52,7 @@ class SeedRunner {
       await insertReferenceDataSeed(_db);
       await insertExerciseSeed(_db);
       await insertWorkoutTagSeed(_db);
+      await insertWorkoutTemplateSeed(_db);
       await _db
           .into(_db.seedInfoTable)
           .insertOnConflictUpdate(

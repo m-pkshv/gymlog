@@ -6,6 +6,7 @@ import 'package:gymlog/data/seed/exercise_seed.dart';
 import 'package:gymlog/data/seed/reference_data_seed.dart';
 import 'package:gymlog/data/seed/seed_runner.dart';
 import 'package:gymlog/data/seed/workout_tag_seed.dart';
+import 'package:gymlog/data/seed/workout_template_seed.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +35,9 @@ void main() {
           .get();
       final l10n = await db.select(db.exerciseL10n).get();
       final workoutTags = await db.select(db.workoutTags).get();
+      final workoutTemplates = await db.select(db.workoutTemplates).get();
+      final templateExercises = await db.select(db.templateExercises).get();
+      final templateSets = await db.select(db.templateSets).get();
       final seedInfo = await db.select(db.seedInfoTable).getSingle();
 
       // 17 groups: the original 13 (DM 5.1) plus rear_delts/obliques/
@@ -61,6 +65,21 @@ void main() {
       expect(secondaryMuscles, isNotEmpty);
       expect(l10n, hasLength(398)); // 199 exercises x 2 locales (ru, en)
       expect(l10n.map((row) => row.locale).toSet(), {'ru', 'en'});
+
+      // Stage 10 redesign, owner-reported: 5 starter workout templates.
+      expect(workoutTemplates, hasLength(5));
+      expect(workoutTemplates.every((t) => !t.isDeleted), isTrue);
+      expect(workoutTemplates.every((t) => !t.isArchived), isTrue);
+      expect(templateExercises, isNotEmpty);
+      // Every seeded template-exercise references a real, existing
+      // exercise id from the catalog seeded just above.
+      final exerciseIds = exercises.map((e) => e.id).toSet();
+      expect(
+        templateExercises.every((te) => exerciseIds.contains(te.exerciseId)),
+        isTrue,
+      );
+      expect(templateSets, isNotEmpty);
+
       expect(seedInfo.seedVersion, currentSeedVersion);
     },
   );
@@ -73,12 +92,70 @@ void main() {
     final exercises = await db.select(db.exercises).get();
     final l10n = await db.select(db.exerciseL10n).get();
     final workoutTags = await db.select(db.workoutTags).get();
+    final workoutTemplates = await db.select(db.workoutTemplates).get();
+    final templateExercises = await db.select(db.templateExercises).get();
+    final templateSets = await db.select(db.templateSets).get();
 
     expect(muscleGroups, hasLength(17));
     expect(exercises, hasLength(199));
     expect(l10n, hasLength(398));
     expect(workoutTags, hasLength(17));
+    expect(workoutTemplates, hasLength(5));
+    final templateExerciseCountAfterTwoRuns = templateExercises.length;
+    final templateSetCountAfterTwoRuns = templateSets.length;
+
+    // A third run should still leave the child-row counts unchanged (not
+    // just the top-level template count).
+    await SeedRunner(db).run();
+    expect(
+      await db.select(db.templateExercises).get(),
+      hasLength(templateExerciseCountAfterTwoRuns),
+    );
+    expect(
+      await db.select(db.templateSets).get(),
+      hasLength(templateSetCountAfterTwoRuns),
+    );
   });
+
+  test(
+    'insertWorkoutTemplateSeed can re-run against an already-seeded DB '
+    'without erroring, preserving a template the owner already deleted',
+    () async {
+      // TemplateExercises.exerciseId references Exercises, so the catalog
+      // must exist first.
+      await insertReferenceDataSeed(db);
+      await insertExerciseSeed(db);
+      await insertWorkoutTemplateSeed(db);
+
+      // Simulate the owner having deleted one of the built-in templates.
+      await (db.update(
+        db.workoutTemplates,
+      )..where((t) => t.id.equals('seed_template_chest_biceps'))).write(
+        const WorkoutTemplatesCompanion(isDeleted: Value(true)),
+      );
+
+      // Re-running the seed (e.g. a future content update bumping the
+      // version on an install that already has this template) must not
+      // un-delete it, must not error on the primary-key conflict, and must
+      // not duplicate the template-exercise/set child rows.
+      await insertWorkoutTemplateSeed(db);
+
+      final deleted = await (db.select(
+        db.workoutTemplates,
+      )..where((t) => t.id.equals('seed_template_chest_biceps'))).getSingle();
+      expect(deleted.isDeleted, isTrue);
+
+      final templates = await db.select(db.workoutTemplates).get();
+      final templateExercises = await db.select(db.templateExercises).get();
+      expect(templates, hasLength(5));
+      expect(
+        templateExercises
+            .where((te) => te.templateId == 'seed_template_chest_biceps')
+            .length,
+        7, // not duplicated by the re-run
+      );
+    },
+  );
 
   test(
     'insertWorkoutTagSeed can re-run against an already-seeded DB without '
