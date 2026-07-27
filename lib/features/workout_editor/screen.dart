@@ -714,6 +714,12 @@ class _StatusCtaButton extends StatelessWidget {
           backgroundColor: isFinishing ? semantic.accent : null,
           foregroundColor: isFinishing ? semantic.onAccent : null,
           padding: const EdgeInsets.symmetric(vertical: 14),
+          // Owner-reported: rounded rectangle, not the M3 default stadium
+          // shape -- same treatment as the Today screen's quick-action
+          // buttons (AppRadius.button).
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.button),
+          ),
         ),
         onPressed: onPressed,
         child: Text(workoutTransitionActionLabel(l10n, status, target)),
