@@ -43,6 +43,22 @@ AppBarTheme _appBarTheme(ColorScheme colorScheme) {
   );
 }
 
+/// Rounded rectangle, not Material 3's default stadium (fully-rounded-ends)
+/// button shape (owner-reported, Stage 10 redesign, mockup screenshot).
+/// Started as a per-widget `style: ...styleFrom(shape: ...)` override on a
+/// handful of buttons (Today's quick actions, the workout editor's status
+/// CTA); the owner then asked for it app-wide, so it moved here once --
+/// every `FilledButton`/`ElevatedButton`/`OutlinedButton`/`TextButton` gets
+/// it automatically, including ones added later, instead of relying on
+/// every new button remembering to opt in individually. Deliberately not
+/// applied to `IconButton` -- circular icon buttons (AppBar actions, the
+/// "..." overflow menu, etc.) are standard, expected Material shapes the
+/// owner never flagged, unlike the labeled action buttons this was
+/// actually reported against.
+final RoundedRectangleBorder _buttonShape = RoundedRectangleBorder(
+  borderRadius: BorderRadius.circular(AppRadius.button),
+);
+
 /// Light theme derived from [seedColor]. Colors must always be read from
 /// `Theme.of(context).colorScheme` in widgets, never hardcoded (UX 9).
 ThemeData buildLightTheme() {
@@ -51,6 +67,18 @@ ThemeData buildLightTheme() {
     colorScheme: colorScheme,
     useMaterial3: true,
     appBarTheme: _appBarTheme(colorScheme),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(shape: _buttonShape),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(shape: _buttonShape),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(shape: _buttonShape),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(shape: _buttonShape),
+    ),
     extensions: const [AppSemanticColors.light],
   );
 }
@@ -66,6 +94,18 @@ ThemeData buildDarkTheme() {
     colorScheme: colorScheme,
     useMaterial3: true,
     appBarTheme: _appBarTheme(colorScheme),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(shape: _buttonShape),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(shape: _buttonShape),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(shape: _buttonShape),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(shape: _buttonShape),
+    ),
     extensions: const [AppSemanticColors.dark],
   );
 }
