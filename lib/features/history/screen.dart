@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
@@ -238,6 +239,16 @@ class _HistoryList extends ConsumerWidget {
           return _EmptyState(l10n: l10n, isFiltered: isFiltered, onReset: onReset);
         }
         return ListView.builder(
+          // Found while profiling frame jank (Stage 10, TS 11.6): scrolling
+          // through *varied* real workout data (different names/tag
+          // counts, not identical rows) intermittently misses the 16 ms
+          // raster budget as each newly visible, never-before-rendered
+          // tile needs fresh text/shadow rasterization -- even at slow,
+          // non-fling drag speeds. Building tiles further ahead of the
+          // viewport gives the raster thread a head start before they're
+          // actually visible, measurably reducing (though not eliminating)
+          // that on-device. Purely a perf tuning knob -- no visual change.
+          scrollCacheExtent: const ScrollCacheExtent.pixels(2000),
           itemCount: entries.length,
           itemBuilder: (context, index) => WorkoutHistoryTile(
             entry: entries[index],

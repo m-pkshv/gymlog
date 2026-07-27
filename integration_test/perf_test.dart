@@ -29,6 +29,96 @@ import 'package:uuid/uuid.dart';
 /// Run with (profile mode is required for representative numbers — debug
 /// mode timings are dominated by JIT/assert overhead):
 ///   flutter test integration_test/perf_test.dart -d DEVICE_ID --profile
+/// Seeds `count` completed workouts with varied names/exercise counts/tags
+/// (unlike the other scenarios' identical-shaped rows) so each list tile
+/// needs genuinely different text shaping/layout, not the exact same glyphs
+/// repeated -- closer to a real user's history than 1000 clones of the same
+/// row. Used by the "human-paced" scroll scenarios below, which are
+/// specifically checking whether *scrolling through varied, never-before-
+/// seen content* (not a single cold-start cost) is what causes an
+/// intermittent stutter at slow, non-fling speeds.
+Future<void> _seedRealisticHistory(AppDatabase db, {required int count}) async {
+  const uuid = Uuid();
+  final now = DateTime.now().toUtc().toIso8601String();
+
+  final exercises = await (db.select(db.exercises)..limit(10)).get();
+  final tags = await (db.select(db.workoutTags)..limit(8)).get();
+  const namePool = [
+    null, // falls back to the default "Workout + date" title
+    'Push Day A',
+    'Leg Day — Heavy Squats and Deadlifts',
+    null,
+    'Full Body Circuit Training Session',
+    'Arms',
+    null,
+    'Upper Body Strength + Accessories, Back-to-Back',
+    'Pull Day',
+    null,
+  ];
+
+  final workoutCompanions = <WorkoutsCompanion>[];
+  final workoutExerciseCompanions = <WorkoutExercisesCompanion>[];
+  final setCompanions = <ExerciseSetsCompanion>[];
+  final tagLinkCompanions = <WorkoutTagLinksCompanion>[];
+
+  for (var w = 0; w < count; w++) {
+    final workoutId = uuid.v4();
+    final name = namePool[w % namePool.length];
+    workoutCompanions.add(
+      WorkoutsCompanion.insert(
+        id: workoutId,
+        date: DateTime(2024, 1, 1).add(Duration(days: w)).toIso8601String().substring(0, 10),
+        name: Value(name),
+        status: const Value('completed'),
+        actualDurationSec: Value(600 + (w * 37) % 4200),
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    final exerciseCount = 1 + (w % 5);
+    for (var e = 0; e < exerciseCount; e++) {
+      final workoutExerciseId = uuid.v4();
+      final exercise = exercises[(w + e) % exercises.length];
+      workoutExerciseCompanions.add(
+        WorkoutExercisesCompanion.insert(
+          id: workoutExerciseId,
+          workoutId: workoutId,
+          exerciseId: exercise.id,
+          orderIndex: e,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      for (var s = 0; s < 3; s++) {
+        setCompanions.add(
+          ExerciseSetsCompanion.insert(
+            id: uuid.v4(),
+            workoutExerciseId: workoutExerciseId,
+            setNumber: s + 1,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+      }
+    }
+
+    final tagCount = w % 4; // 0..3 tags, cycling
+    for (var t = 0; t < tagCount; t++) {
+      tagLinkCompanions.add(
+        WorkoutTagLinksCompanion.insert(workoutId: workoutId, tagId: tags[(w + t) % tags.length].id),
+      );
+    }
+  }
+
+  await db.batch((batch) {
+    batch.insertAll(db.workouts, workoutCompanions);
+    batch.insertAll(db.workoutExercises, workoutExerciseCompanions);
+    batch.insertAll(db.exerciseSets, setCompanions);
+    batch.insertAll(db.workoutTagLinks, tagLinkCompanions);
+  });
+}
+
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -150,6 +240,129 @@ void main() {
     printSummary(
       'History/1000 workouts',
       binding.reportData!['history_scroll_1000_workouts'] as Map<String, dynamic>,
+    );
+  });
+
+  testWidgets('History: slow, sustained drag over 1000 completed workouts', (tester) async {
+    // Owner-reported (2026-07-28): even a *slow* continuous drag (not a
+    // fling) over the workout list shows an occasional stutter every few
+    // seconds. `fling()` above is a single ballistic gesture that settles
+    // in under a second -- it can't reproduce a multi-second, steady,
+    // human-paced drag. This uses a raw `TestGesture` with many small
+    // `moveBy` steps (one simulated 16 ms frame each) to approximate that.
+    final tempDir = await Directory.systemTemp.createTemp('gymlog_perf_slowdrag_');
+    final dbFile = File('${tempDir.path}/gymlog.sqlite');
+    addTearDown(() async {
+      if (await tempDir.exists()) {
+        await tempDir.delete(recursive: true);
+      }
+    });
+
+    final db = AppDatabase(NativeDatabase(dbFile));
+    addTearDown(db.close);
+    await SeedRunner(db).run();
+    final settingsRepository = AppSettingsRepositoryImpl(db);
+    await settingsRepository.ensureInitialized();
+    await settingsRepository.setLocale(AppLocale.en);
+    await _seedRealisticHistory(db, count: 1000);
+
+    appRouter.go('/today');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        child: const GymLogApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('History'));
+    await tester.pumpAndSettle();
+
+    final list = find.byType(ListView);
+    expect(list, findsOneWidget);
+
+    await binding.watchPerformance(() async {
+      final gesture = await tester.startGesture(tester.getCenter(list));
+      // ~500 frames * 16 ms == ~8 s of simulated time, 15 px/frame ==
+      // ~900 px/s -- a slow, steady drag, not a fling.
+      for (var i = 0; i < 500; i++) {
+        await gesture.moveBy(const Offset(0, -15));
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await gesture.up();
+      await tester.pump();
+    }, reportKey: 'history_slow_drag_1000_workouts');
+
+    printSummary(
+      'History slow drag/1000 workouts',
+      binding.reportData!['history_slow_drag_1000_workouts'] as Map<String, dynamic>,
+    );
+  });
+
+  testWidgets('History: repeated short drag-lift cycles over 1000 workouts', (tester) async {
+    // The single sustained drag above (`history_slow_drag_1000_workouts`)
+    // showed jank only in its first few frames, then nothing for the rest
+    // of a ~16 s drag -- that doesn't match "a stutter every few seconds"
+    // for a single continuous gesture. A human scrolling "slowly" rarely
+    // keeps one finger down for 16 s straight, though -- they drag a
+    // short distance, lift, drag again, repeatedly. This simulates that:
+    // if *starting* a drag has some fixed cost, repeating it every couple
+    // of seconds would reproduce exactly the reported pattern.
+    final tempDir = await Directory.systemTemp.createTemp('gymlog_perf_dragcycles_');
+    final dbFile = File('${tempDir.path}/gymlog.sqlite');
+    addTearDown(() async {
+      if (await tempDir.exists()) {
+        await tempDir.delete(recursive: true);
+      }
+    });
+
+    final db = AppDatabase(NativeDatabase(dbFile));
+    addTearDown(db.close);
+    await SeedRunner(db).run();
+    final settingsRepository = AppSettingsRepositoryImpl(db);
+    await settingsRepository.ensureInitialized();
+    await settingsRepository.setLocale(AppLocale.en);
+    await _seedRealisticHistory(db, count: 1000);
+
+    appRouter.go('/today');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        child: const GymLogApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('History'));
+    await tester.pumpAndSettle();
+
+    final list = find.byType(ListView);
+    expect(list, findsOneWidget);
+
+    await binding.watchPerformance(() async {
+      // 10 cycles: touch down, drag a short, controlled distance (not a
+      // fling), lift, then a brief pause with finger off the screen --
+      // roughly matching how someone actually scrolls "slowly" by hand.
+      for (var cycle = 0; cycle < 10; cycle++) {
+        final gesture = await tester.startGesture(tester.getCenter(list));
+        for (var i = 0; i < 12; i++) {
+          await gesture.moveBy(const Offset(0, -20));
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+        await gesture.up();
+        // Finger lifted: let any settle/decay animation finish, plus a
+        // beat of "reading the screen" before the next touch-down.
+        for (var i = 0; i < 15; i++) {
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+      }
+    }, reportKey: 'history_drag_cycles_1000_workouts');
+
+    printSummary(
+      'History drag-lift cycles/1000 workouts',
+      binding.reportData!['history_drag_cycles_1000_workouts'] as Map<String, dynamic>,
     );
   });
 
