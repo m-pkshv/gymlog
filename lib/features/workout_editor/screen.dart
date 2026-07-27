@@ -478,8 +478,12 @@ class _EditorBody extends StatelessWidget {
           // workout's own name) and this row (date/status/tags) below it
           // -- most of that gap turned out to be the AppBar's own default
           // toolbar height (also tightened, see the AppBar above), not
-          // this padding; dropped to 0 on top of that.
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+          // this padding, plus the row's cross-axis centering against its
+          // tallest children (fixed below, `.start`). Owner-reported
+          // (third follow-up): 0 read as too tight once the other two
+          // fixes landed -- split the difference between that and the
+          // pre-fix gap (measured 26px / 58px on device -> ~6dp here).
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
           child: Row(
             // Owner-reported (follow-up): the remaining gap wasn't really
             // "space above the date/status" -- it's the default `.center`
