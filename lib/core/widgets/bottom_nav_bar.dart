@@ -92,6 +92,13 @@ class BottomNavBarItem extends StatelessWidget {
         label: destination.label,
         child: InkWell(
           onTap: onTap,
+          // The pill itself (colorScheme.primary once selected) is already
+          // the tap feedback -- owner-reported: the default M3 ripple's
+          // rectangular gray highlight, spanning the full (wider) tap
+          // target rather than the pill, showed as a separate, oddly-
+          // shaped flash behind it.
+          splashFactory: NoSplash.splashFactory,
+          overlayColor: const WidgetStatePropertyAll(Colors.transparent),
           child: Center(
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
