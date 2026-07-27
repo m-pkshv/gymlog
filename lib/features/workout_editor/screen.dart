@@ -385,6 +385,12 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
         final isActive = workout.status == WorkoutStatus.inProgress;
         final scaffold = Scaffold(
           appBar: AppBar(
+            // Owner-reported: too much air below the title. Most of the
+            // default 56dp toolbar's height sits below the vertically-
+            // centered title text -- shrinking to the Material minimum
+            // (48dp) removes most of that, on top of the row padding
+            // below (also tightened).
+            toolbarHeight: 48,
             title: Tooltip(
               message: workout.name ?? l10n.workoutDefaultNamePrefix,
               child: Text(
@@ -421,11 +427,11 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
         return isActive ? _ActiveWorkoutTicker(child: scaffold) : scaffold;
       },
       loading: () => Scaffold(
-        appBar: AppBar(title: Text(l10n.workoutEditorTitle)),
+        appBar: AppBar(toolbarHeight: 48, title: Text(l10n.workoutEditorTitle)),
         body: const Center(child: CircularProgressIndicator()),
       ),
       error: (error, stackTrace) => Scaffold(
-        appBar: AppBar(title: Text(l10n.workoutEditorTitle)),
+        appBar: AppBar(toolbarHeight: 48, title: Text(l10n.workoutEditorTitle)),
         body: ErrorRetryState(
           message: l10n.workoutLoadError,
           onRetry: () => ref.invalidate(
@@ -469,8 +475,11 @@ class _EditorBody extends StatelessWidget {
       children: [
         Padding(
           // Owner-reported: too much air between the AppBar's title (the
-          // workout's own name) and this row (date/status/tags) below it.
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+          // workout's own name) and this row (date/status/tags) below it
+          // -- most of that gap turned out to be the AppBar's own default
+          // toolbar height (also tightened, see the AppBar above), not
+          // this padding; dropped to 0 on top of that.
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
           child: Row(
             children: [
               // DM 6.4.1: moving the date is allowed in any status except
