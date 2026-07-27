@@ -14,9 +14,11 @@ const Object deleteWorkoutMenuAction = Object();
 /// "Начать тренировку"/"Завершить тренировку" button replaces the old
 /// status chip's dropdown, but DM 6.4.1 still allows 5 other transitions
 /// from any given status plus delete -- this menu is where those live now,
-/// so nothing that already worked is lost). [excludeStatus] is the
-/// transition the primary CTA already covers, e.g. `inProgress` while
-/// showing "Начать тренировку" for a draft.
+/// so nothing that already worked is lost). [excludeStatuses] are the
+/// transitions already covered by CTA buttons elsewhere on screen, e.g.
+/// `{inProgress}` while showing "Начать тренировку" for a draft, or
+/// `{inProgress, planned}` once a draft also gets its own "Запланировать"
+/// button (Stage 10 redesign, owner-reported).
 ///
 /// Reuses [allowedNextStatuses]/[workoutTransitionActionLabel] directly, so
 /// this can never drift out of sync with what `WorkoutService` actually
@@ -26,13 +28,13 @@ class WorkoutStatusMenu extends StatelessWidget {
     super.key,
     required this.status,
     required this.onSelectStatus,
-    this.excludeStatus,
+    this.excludeStatuses = const {},
     this.onDelete,
   });
 
   final WorkoutStatus status;
   final ValueChanged<WorkoutStatus> onSelectStatus;
-  final WorkoutStatus? excludeStatus;
+  final Set<WorkoutStatus> excludeStatuses;
 
   /// Omit to hide "Удалить" entirely (e.g. while the workout is
   /// `inProgress`, where DM 10 forbids deletion).
@@ -43,7 +45,7 @@ class WorkoutStatusMenu extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final transitions = allowedNextStatuses(
       status,
-    ).where((to) => to != excludeStatus).toList();
+    ).where((to) => !excludeStatuses.contains(to)).toList();
 
     if (transitions.isEmpty && onDelete == null) {
       return const SizedBox.shrink();

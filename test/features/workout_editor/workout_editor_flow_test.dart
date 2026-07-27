@@ -172,6 +172,12 @@ Finder _exerciseCardMenuButton(String exerciseName) => find.descendant(
 Finder get _statusCta => find.byKey(const ValueKey('workout-status-cta'));
 Finder get _statusMenu => find.byKey(const ValueKey('workout-status-menu'));
 
+/// The secondary "Запланировать" CTA next to [_statusCta] -- only rendered
+/// for a draft (Stage 10 redesign, owner-reported: used to be reachable
+/// only from the "⋮" menu).
+Finder get _secondaryStatusCta =>
+    find.byKey(const ValueKey('workout-status-secondary-cta'));
+
 /// Taps set [setIndex] (0-based, in list order) to expand it, revealing its
 /// `NumericStepperField`s (Stage 10 redesign: replaced the old always-
 /// visible plan/fact `TextField` pair per field). A no-op if it's already
@@ -1146,20 +1152,42 @@ void main() {
       await tester.pumpAndSettle();
       await _createDraftViaFab(tester);
 
-      // Stage 10 redesign: draft -> inProgress ("Start workout") is now the
-      // big primary CTA button, always visible outside any menu -- only
-      // the *other* allowed transition (draft -> planned, "Schedule") lives
-      // in the "⋮" menu (DM 6.4.1: draft -> {planned, inProgress}, nothing
-      // else).
+      // Stage 10 redesign, owner-reported: draft -> inProgress ("Start
+      // workout") is the big primary CTA, and draft -> planned ("Schedule")
+      // is now its own secondary CTA button right next to it, not buried in
+      // the "⋮" menu anymore. DM 6.4.1's only draft transitions are exactly
+      // these two, so both are excluded from the menu -- nothing is left
+      // there but "Delete".
       expect(find.text('Start workout'), findsOneWidget);
+      expect(find.text('Schedule'), findsOneWidget);
 
       await tester.tap(_statusMenu);
       await tester.pumpAndSettle();
 
-      expect(find.text('Schedule'), findsOneWidget);
+      expect(find.text('Delete'), findsOneWidget);
       expect(find.text('Finish'), findsNothing);
       expect(find.text('Cancel'), findsNothing);
       expect(find.text('Skip'), findsNothing);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'the secondary "Schedule" CTA moves a draft to planned '
+    '(Stage 10, owner-reported)',
+    (tester) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+
+      await tester.tap(_secondaryStatusCta);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Planned'), findsOneWidget);
+      // Once planned, there is only one obvious next step (inProgress) --
+      // the secondary CTA is draft-only and disappears.
+      expect(_secondaryStatusCta, findsNothing);
 
       await _unmountAndFlush(tester);
     },

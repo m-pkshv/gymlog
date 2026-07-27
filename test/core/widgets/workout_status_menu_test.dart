@@ -7,7 +7,7 @@ import 'package:gymlog/l10n/app_localizations.dart';
 Widget _appUnderTest({
   required WorkoutStatus status,
   required ValueChanged<WorkoutStatus> onSelectStatus,
-  WorkoutStatus? excludeStatus,
+  Set<WorkoutStatus> excludeStatuses = const {},
   VoidCallback? onDelete,
 }) {
   return MaterialApp(
@@ -17,7 +17,7 @@ Widget _appUnderTest({
       body: WorkoutStatusMenu(
         status: status,
         onSelectStatus: onSelectStatus,
-        excludeStatus: excludeStatus,
+        excludeStatuses: excludeStatuses,
         onDelete: onDelete,
       ),
     ),
@@ -32,7 +32,7 @@ void main() {
         _appUnderTest(
           status: WorkoutStatus.draft,
           onSelectStatus: (_) {},
-          excludeStatus: WorkoutStatus.inProgress,
+          excludeStatuses: {WorkoutStatus.inProgress},
         ),
       );
 
@@ -52,7 +52,7 @@ void main() {
       _appUnderTest(
         status: WorkoutStatus.draft,
         onSelectStatus: (status) => selected = status,
-        excludeStatus: WorkoutStatus.inProgress,
+        excludeStatuses: {WorkoutStatus.inProgress},
       ),
     );
 
@@ -96,6 +96,29 @@ void main() {
   });
 
   testWidgets(
+    'excludeStatuses can hide more than one transition at once '
+    '(draft now has both a primary "Начать" and a secondary '
+    '"Запланировать" CTA button on screen)',
+    (tester) async {
+      await tester.pumpWidget(
+        _appUnderTest(
+          status: WorkoutStatus.draft,
+          onSelectStatus: (_) {},
+          excludeStatuses: {
+            WorkoutStatus.inProgress,
+            WorkoutStatus.planned,
+          },
+        ),
+      );
+
+      // draft -> {planned, inProgress} (DM 6.4.1): excluding both leaves no
+      // transition, so with no onDelete the menu button itself is gone
+      // (same as the single-exclusion case below, just via two statuses).
+      expect(find.byType(PopupMenuButton<Object>), findsNothing);
+    },
+  );
+
+  testWidgets(
     'renders nothing when the only transition is excluded and there is no delete',
     (tester) async {
       // completed -> {inProgress} is the state machine's only single-
@@ -105,7 +128,7 @@ void main() {
         _appUnderTest(
           status: WorkoutStatus.completed,
           onSelectStatus: (_) {},
-          excludeStatus: WorkoutStatus.inProgress,
+          excludeStatuses: {WorkoutStatus.inProgress},
         ),
       );
 

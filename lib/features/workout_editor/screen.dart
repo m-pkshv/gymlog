@@ -612,7 +612,10 @@ class _EditorBody extends StatelessWidget {
                 child: WorkoutStatusMenu(
                   key: const ValueKey('workout-status-menu'),
                   status: workout.status,
-                  excludeStatus: primaryStatusCtaTransition(workout.status),
+                  excludeStatuses: {
+                    primaryStatusCtaTransition(workout.status),
+                    ?secondaryStatusCtaTransition(workout.status),
+                  },
                   onSelectStatus: onChangeStatus,
                   onDelete: onDeleteWorkout,
                 ),
@@ -734,11 +737,53 @@ class _EditorBody extends StatelessWidget {
           top: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: _StatusCtaButton(
-              key: const ValueKey('workout-status-cta'),
-              status: workout.status,
-              onPressed: () =>
-                  onChangeStatus(primaryStatusCtaTransition(workout.status)),
+            child: Builder(
+              builder: (context) {
+                final secondary = secondaryStatusCtaTransition(
+                  workout.status,
+                );
+                final primaryButton = _StatusCtaButton(
+                  key: const ValueKey('workout-status-cta'),
+                  status: workout.status,
+                  onPressed: () => onChangeStatus(
+                    primaryStatusCtaTransition(workout.status),
+                  ),
+                );
+                if (secondary == null) {
+                  return primaryButton;
+                }
+                // Owner-reported: "Запланировать" (draft -> planned) used to
+                // be reachable only from the "⋮" menu, which was awkward for
+                // something this common right after creating a workout. Now
+                // sits next to "Начать" as its own secondary CTA, but only
+                // for the one status that actually has this second option
+                // (DM 6.4.1: draft -> {planned, inProgress}).
+                return Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        key: const ValueKey('workout-status-secondary-cta'),
+                        // Same vertical padding as _StatusCtaButton's
+                        // FilledButton so both buttons come out the same
+                        // height side by side.
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: () => onChangeStatus(secondary),
+                        child: Text(
+                          workoutTransitionActionLabel(
+                            AppLocalizations.of(context)!,
+                            workout.status,
+                            secondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(child: primaryButton),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -766,6 +811,18 @@ WorkoutStatus primaryStatusCtaTransition(WorkoutStatus status) {
     case WorkoutStatus.cancelled:
       return WorkoutStatus.planned;
   }
+}
+
+/// A second bottom CTA next to [primaryStatusCtaTransition]'s button, for
+/// the one status where DM 6.4.1 offers a genuinely useful second option
+/// right away (Stage 10 redesign, owner-reported): a fresh draft can go
+/// straight to `inProgress` ("Начать") *or* just get scheduled for later
+/// ("Запланировать") -- previously that second option was buried in the
+/// "⋮" menu, awkward for something this common right after creating a
+/// workout. `null` for every other status, where the primary CTA alone
+/// already covers "the one obvious next step".
+WorkoutStatus? secondaryStatusCtaTransition(WorkoutStatus status) {
+  return status == WorkoutStatus.draft ? WorkoutStatus.planned : null;
 }
 
 /// Big full-width CTA button for [primaryStatusCtaTransition] (DESIGN.md,
