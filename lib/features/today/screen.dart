@@ -330,11 +330,20 @@ class _QuickActions extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    // Rounded-rectangle, not the M3 default stadium/circle shape (owner-
+    // reported, mockup screenshot: squared-off corners on all three
+    // buttons) -- scoped to this row rather than a theme-wide
+    // OutlinedButton/IconButton override, same reasoning `StatsSectionCard`/
+    // `GroupedSection` give for not touching `CardTheme` globally.
+    const shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(Radius.circular(AppRadius.button)),
+    );
     return Row(
       children: [
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () => createWorkoutFromScratchFlow(context, ref),
+            style: OutlinedButton.styleFrom(shape: shape),
             icon: const Icon(Icons.add),
             label: Text(l10n.newWorkoutFromScratchAction),
           ),
@@ -342,12 +351,14 @@ class _QuickActions extends ConsumerWidget {
         const SizedBox(width: AppSpacing.sm),
         IconButton.outlined(
           onPressed: () => context.go('/history/template-source'),
+          style: IconButton.styleFrom(shape: shape),
           icon: const Icon(Icons.description_outlined),
           tooltip: l10n.newWorkoutFromTemplateAction,
         ),
         const SizedBox(width: AppSpacing.sm),
         IconButton.outlined(
           onPressed: () => context.go('/history/copy-source'),
+          style: IconButton.styleFrom(shape: shape),
           icon: const Icon(Icons.copy_outlined),
           tooltip: l10n.newWorkoutFromCopyAction,
         ),
