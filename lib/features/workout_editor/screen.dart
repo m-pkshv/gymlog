@@ -468,7 +468,9 @@ class _EditorBody extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          // Owner-reported: too much air between the AppBar's title (the
+          // workout's own name) and this row (date/status/tags) below it.
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
           child: Row(
             children: [
               // DM 6.4.1: moving the date is allowed in any status except
