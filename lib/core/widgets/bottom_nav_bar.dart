@@ -99,13 +99,18 @@ class BottomNavBarItem extends StatelessWidget {
           // shaped flash behind it.
           splashFactory: NoSplash.splashFactory,
           overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-          child: Center(
+          // Owner-reported: sizing the pill to its own content (via `Center`
+          // hugging a `mainAxisSize.min` child) made every pill a different
+          // width depending on how long its label happened to be -- looked
+          // uneven. The pill now always fills the item's full (equal) slot
+          // width, with a small fixed gap to its neighbors instead of
+          // shrink-wrapping around the text.
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.xs,
-              ),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
               decoration: BoxDecoration(
                 color: selected ? scheme.primary : Colors.transparent,
                 borderRadius: BorderRadius.circular(AppRadius.button),
@@ -122,6 +127,15 @@ class BottomNavBarItem extends StatelessWidget {
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: foreground,
                       fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                      // Owner-reported: labelSmall's default (11sp) still
+                      // clips longer RU labels ("Упражнения", "Статистика")
+                      // to an ellipsis on real devices -- shrink by 2sp.
+                      fontSize:
+                          (Theme.of(
+                                context,
+                              ).textTheme.labelSmall?.fontSize ??
+                              11) -
+                          2,
                     ),
                   ),
                 ],
