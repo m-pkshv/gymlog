@@ -330,12 +330,13 @@ class _QuickActions extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
-    // Rounded-rectangle, not the M3 default stadium/circle shape (owner-
-    // reported, mockup screenshot: squared-off corners on all three
-    // buttons) -- scoped to this row rather than a theme-wide
-    // OutlinedButton/IconButton override, same reasoning `StatsSectionCard`/
-    // `GroupedSection` give for not touching `CardTheme` globally.
-    const shape = RoundedRectangleBorder(
+    // The "+ From scratch" OutlinedButton's rounded-rectangle shape comes
+    // from the app-wide OutlinedButtonThemeData (app/theme.dart) --
+    // IconButton is deliberately left out of that theme (circular icon
+    // buttons are standard, expected Material shapes elsewhere in the
+    // app), so the two icon buttons below still need their own explicit
+    // override to match.
+    const iconButtonShape = RoundedRectangleBorder(
       borderRadius: BorderRadius.all(Radius.circular(AppRadius.button)),
     );
     return Row(
@@ -347,7 +348,6 @@ class _QuickActions extends ConsumerWidget {
             child: OutlinedButton.icon(
               onPressed: () => createWorkoutFromScratchFlow(context, ref),
               style: OutlinedButton.styleFrom(
-                shape: shape,
                 side: BorderSide.none,
                 minimumSize: const Size(0, _quickActionHeight),
               ),
@@ -360,7 +360,7 @@ class _QuickActions extends ConsumerWidget {
         IconButton.outlined(
           onPressed: () => context.go('/history/template-source'),
           style: IconButton.styleFrom(
-            shape: shape,
+            shape: iconButtonShape,
             minimumSize: const Size(_quickActionHeight, _quickActionHeight),
           ),
           iconSize: 28,
@@ -371,7 +371,7 @@ class _QuickActions extends ConsumerWidget {
         IconButton.outlined(
           onPressed: () => context.go('/history/copy-source'),
           style: IconButton.styleFrom(
-            shape: shape,
+            shape: iconButtonShape,
             minimumSize: const Size(_quickActionHeight, _quickActionHeight),
           ),
           iconSize: 28,
