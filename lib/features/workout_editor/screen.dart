@@ -105,7 +105,8 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
   }
 
   void _deferUntilTransitionSettles(Duration _) {
-    final duration = ModalRoute.of(context)?.transitionDuration ?? Duration.zero;
+    final duration =
+        ModalRoute.of(context)?.transitionDuration ?? Duration.zero;
     Future.delayed(duration, () {
       if (mounted) setState(() => _transitionSettled = true);
     });
@@ -321,15 +322,20 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
     // A direct repository read, not the cached `activeWorkoutStateProvider`
     // stream value -- right after the write above, that stream may not
     // have propagated the new row yet.
-    final endsAt = (await ref
-            .read(activeWorkoutRepositoryProvider)
-            .getByWorkoutId(widget.workoutId))
-        ?.restTimerEndsAtUtc;
+    final endsAt =
+        (await ref
+                .read(activeWorkoutRepositoryProvider)
+                .getByWorkoutId(widget.workoutId))
+            ?.restTimerEndsAtUtc;
     if (endsAt == null || !mounted) return; // autostart off, etc.
 
     await _ensureNotificationPermissionRequested();
     if (!mounted) return;
-    await _scheduleRestTimerNotification(ref, AppLocalizations.of(context)!, endsAt);
+    await _scheduleRestTimerNotification(
+      ref,
+      AppLocalizations.of(context)!,
+      endsAt,
+    );
   }
 
   /// TS 7.3: shows the app's own explanatory dialog before the system
@@ -375,7 +381,9 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
 
   Future<void> _cancelRestTimerNotification() async {
     try {
-      await ref.read(notificationServiceProvider).cancelRestTimerEndNotification();
+      await ref
+          .read(notificationServiceProvider)
+          .cancelRestTimerEndNotification();
     } catch (error, stackTrace) {
       ref
           .read(loggerProvider)
@@ -587,9 +595,8 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
         appBar: AppBar(toolbarHeight: 48, title: Text(l10n.workoutEditorTitle)),
         body: ErrorRetryState(
           message: l10n.workoutLoadError,
-          onRetry: () => ref.invalidate(
-            workoutEditorControllerProvider(widget.workoutId),
-          ),
+          onRetry: () =>
+              ref.invalidate(workoutEditorControllerProvider(widget.workoutId)),
         ),
       ),
     );
@@ -763,103 +770,128 @@ class _EditorBody extends StatelessWidget {
         if (workout.status == WorkoutStatus.inProgress)
           _RestTimerBar(workoutId: workout.id, controller: controller),
         Expanded(
-          child: CustomScrollView(
-            scrollCacheExtent: const ScrollCacheExtent.pixels(2000),
-            slivers: [
-              if (details.exercises.isEmpty)
+          // Owner-reported (Stage 10): tapping a set's stepper/checkbox/
+          // delete icon etc. while the comment field below still had focus
+          // used to leave its keyboard open and pointed at a field the
+          // user had already moved on from -- every touch in this
+          // scrollable now drops focus first, same as the precise-entry
+          // dialog's own trigger already did
+          // (`NumericStepperField._openPreciseEntry`). A `Listener` on
+          // `onPointerDown`, not a `GestureDetector.onTap`: a plain
+          // ancestor `GestureDetector` competes with every button/checkbox
+          // underneath for the same tap in Flutter's gesture arena, and
+          // usually loses (buttons' own `InkWell` recognizers tend to win
+          // clean taps) -- confirmed by a failing test with that first
+          // attempt, not assumed. `Listener.onPointerDown` fires on every
+          // raw pointer-down regardless of which recognizer later wins the
+          // gesture, so it reliably unfocuses whichever button gets tapped,
+          // while `HitTestBehavior.translucent` still lets that tap fall
+          // through untouched to the field/button underneath it.
+          child: Listener(
+            behavior: HitTestBehavior.translucent,
+            onPointerDown: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+            child: CustomScrollView(
+              scrollCacheExtent: const ScrollCacheExtent.pixels(2000),
+              slivers: [
+                if (details.exercises.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+                      child: Center(child: Text(l10n.workoutExercisesEmpty)),
+                    ),
+                  )
+                else
+                  SliverList.builder(
+                    // Owner-reported (Stage 10): the drag handle made
+                    // reordering feel sluggish on a screen already busy with
+                    // large exercise cards -- removed in favour of the
+                    // "⋮ → Вверх/Вниз" menu on each card as the *only* way to
+                    // reorder now (it already existed as the gesture-free
+                    // alternative, DM/UX 11), so no replacement control is
+                    // needed here beyond a plain, non-reorderable list.
+                    itemCount: details.exercises.length,
+                    itemBuilder: (context, index) {
+                      final exerciseDetails = details.exercises[index];
+                      final workoutExerciseId =
+                          exerciseDetails.workoutExercise.id;
+                      return ExerciseCard(
+                        key: ValueKey(workoutExerciseId),
+                        details: exerciseDetails,
+                        isActive: workout.status == WorkoutStatus.inProgress,
+                        canMoveUp: index > 0,
+                        canMoveDown: index < details.exercises.length - 1,
+                        onFieldChanged: (setId, field, actual, value) {
+                          controller.editSet(setId, (set) {
+                            return actual
+                                ? field.setActual(set, value)
+                                : field.setPlanned(set, value);
+                          });
+                        },
+                        onFieldCommit: (setId, field, actual) {
+                          controller.flushSet(setId);
+                        },
+                        onCompletedChanged: onSetCompletedChanged,
+                        onAddSet: () => controller.addSet(workoutExerciseId),
+                        onDuplicateLastSet: () =>
+                            controller.duplicateLastSet(workoutExerciseId),
+                        onCopyLastPerformance: () =>
+                            onCopyLastPerformance(workoutExerciseId),
+                        onMoveUp: () => controller.moveExercise(
+                          workoutExerciseId,
+                          up: true,
+                        ),
+                        onMoveDown: () => controller.moveExercise(
+                          workoutExerciseId,
+                          up: false,
+                        ),
+                        onSetDeleted: onSetDeleted,
+                        onProgressionDecisionChanged: (decision) =>
+                            controller.setProgressionDecision(
+                              workoutExerciseId,
+                              decision,
+                            ),
+                        onEditExercise: () =>
+                            onEditExercise(exerciseDetails.exercise),
+                        onDeleteExercise: () =>
+                            onDeleteExercise(workoutExerciseId),
+                      );
+                    },
+                  ),
+                // Owner-reported (Stage 10 redesign): "+ Добавить упражнение"
+                // used to be pinned at the bottom of the screen next to
+                // Start/Finish; moved into this same scrollable, right below
+                // the last exercise card and above the comment field.
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-                    child: Center(child: Text(l10n.workoutExercisesEmpty)),
-                  ),
-                )
-              else
-                SliverList.builder(
-                  // Owner-reported (Stage 10): the drag handle made
-                  // reordering feel sluggish on a screen already busy with
-                  // large exercise cards -- removed in favour of the
-                  // "⋮ → Вверх/Вниз" menu on each card as the *only* way to
-                  // reorder now (it already existed as the gesture-free
-                  // alternative, DM/UX 11), so no replacement control is
-                  // needed here beyond a plain, non-reorderable list.
-                  itemCount: details.exercises.length,
-                  itemBuilder: (context, index) {
-                    final exerciseDetails = details.exercises[index];
-                    final workoutExerciseId =
-                        exerciseDetails.workoutExercise.id;
-                    return ExerciseCard(
-                      key: ValueKey(workoutExerciseId),
-                      details: exerciseDetails,
-                      isActive: workout.status == WorkoutStatus.inProgress,
-                      canMoveUp: index > 0,
-                      canMoveDown: index < details.exercises.length - 1,
-                      onFieldChanged: (setId, field, actual, value) {
-                        controller.editSet(setId, (set) {
-                          return actual
-                              ? field.setActual(set, value)
-                              : field.setPlanned(set, value);
-                        });
-                      },
-                      onFieldCommit: (setId, field, actual) {
-                        controller.flushSet(setId);
-                      },
-                      onCompletedChanged: onSetCompletedChanged,
-                      onAddSet: () => controller.addSet(workoutExerciseId),
-                      onDuplicateLastSet: () =>
-                          controller.duplicateLastSet(workoutExerciseId),
-                      onCopyLastPerformance: () =>
-                          onCopyLastPerformance(workoutExerciseId),
-                      onMoveUp: () => controller.moveExercise(
-                        workoutExerciseId,
-                        up: true,
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Center(
+                      child: OutlinedButton.icon(
+                        onPressed: onAddExercise,
+                        icon: const Icon(Icons.add),
+                        label: Text(l10n.addExerciseAction),
                       ),
-                      onMoveDown: () => controller.moveExercise(
-                        workoutExerciseId,
-                        up: false,
-                      ),
-                      onSetDeleted: onSetDeleted,
-                      onProgressionDecisionChanged: (decision) => controller
-                          .setProgressionDecision(workoutExerciseId, decision),
-                      onEditExercise: () =>
-                          onEditExercise(exerciseDetails.exercise),
-                      onDeleteExercise: () => onDeleteExercise(workoutExerciseId),
-                    );
-                  },
-                ),
-              // Owner-reported (Stage 10 redesign): "+ Добавить упражнение"
-              // used to be pinned at the bottom of the screen next to
-              // Start/Finish; moved into this same scrollable, right below
-              // the last exercise card and above the comment field.
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Center(
-                    child: OutlinedButton.icon(
-                      onPressed: onAddExercise,
-                      icon: const Icon(Icons.add),
-                      label: Text(l10n.addExerciseAction),
                     ),
                   ),
                 ),
-              ),
-              // Owner-reported (Stage 10 redesign): the workout comment used
-              // to be pinned above the exercise list, staying on screen while
-              // scrolling; moved into this same scrollable, always after the
-              // last exercise, so it scrolls with them instead of pinning.
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  child: CommentField(
-                    key: ValueKey('workout-comment-${workout.id}'),
-                    value: workout.comment,
-                    label: l10n.workoutCommentLabel,
-                    maxLength: CommentLengthLimits.workout,
-                    onChanged: controller.editWorkoutComment,
-                    onCommit: controller.flushWorkoutComment,
+                // Owner-reported (Stage 10 redesign): the workout comment used
+                // to be pinned above the exercise list, staying on screen while
+                // scrolling; moved into this same scrollable, always after the
+                // last exercise, so it scrolls with them instead of pinning.
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    child: CommentField(
+                      key: ValueKey('workout-comment-${workout.id}'),
+                      value: workout.comment,
+                      label: l10n.workoutCommentLabel,
+                      maxLength: CommentLengthLimits.workout,
+                      onChanged: controller.editWorkoutComment,
+                      onCommit: controller.flushWorkoutComment,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         SafeArea(
@@ -868,9 +900,7 @@ class _EditorBody extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: Builder(
               builder: (context) {
-                final secondary = secondaryStatusCtaTransition(
-                  workout.status,
-                );
+                final secondary = secondaryStatusCtaTransition(workout.status);
                 final primaryButton = _StatusCtaButton(
                   key: const ValueKey('workout-status-cta'),
                   status: workout.status,
@@ -1164,16 +1194,21 @@ class _RestTimerBar extends ConsumerWidget {
   final String workoutId;
   final WorkoutEditorController controller;
 
-  Future<void> _adjust(BuildContext context, WidgetRef ref, int deltaSec) async {
+  Future<void> _adjust(
+    BuildContext context,
+    WidgetRef ref,
+    int deltaSec,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
     await controller.adjustRestTimer(deltaSec);
     // A direct repository read, not the cached `activeWorkoutStateProvider`
     // stream value -- right after the write above, that stream may not
     // have propagated the new row yet.
-    final endsAt = (await ref
-            .read(activeWorkoutRepositoryProvider)
-            .getByWorkoutId(workoutId))
-        ?.restTimerEndsAtUtc;
+    final endsAt =
+        (await ref
+                .read(activeWorkoutRepositoryProvider)
+                .getByWorkoutId(workoutId))
+            ?.restTimerEndsAtUtc;
     if (endsAt == null) return;
     await _scheduleRestTimerNotification(ref, l10n, endsAt);
   }

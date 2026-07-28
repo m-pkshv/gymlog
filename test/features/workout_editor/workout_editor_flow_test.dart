@@ -1,4 +1,4 @@
-﻿import 'package:drift/drift.dart' hide isNull, isNotNull;
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,16 +32,18 @@ import 'package:mocktail/mocktail.dart';
 /// (Stage 4, TS 7.3) — only the tests that specifically verify notification
 /// orchestration need to pass one; every other test relies on the
 /// provider's own safe, try/catch-guarded default.
-Widget _appUnderTest(AppDatabase db, {NotificationService? notificationService}) {
+Widget _appUnderTest(
+  AppDatabase db, {
+  NotificationService? notificationService,
+}) {
   final router = GoRouter(
     initialLocation: '/history',
     routes: [
       GoRoute(path: '/history', builder: (_, _) => const HistoryScreen()),
       GoRoute(
         path: '/workout/:workoutId',
-        builder: (_, state) => WorkoutEditorScreen(
-          workoutId: state.pathParameters['workoutId']!,
-        ),
+        builder: (_, state) =>
+            WorkoutEditorScreen(workoutId: state.pathParameters['workoutId']!),
         routes: [
           GoRoute(
             path: 'summary',
@@ -164,9 +166,7 @@ void _stubNotificationServiceDefaults(
       endsAtUtc: any(named: 'endsAtUtc'),
     ),
   ).thenAnswer((_) async {});
-  when(
-    () => service.cancelRestTimerEndNotification(),
-  ).thenAnswer((_) async {});
+  when(() => service.cancelRestTimerEndNotification()).thenAnswer((_) async {});
 }
 
 /// The "⋮" menu icon on the exercise card titled [exerciseName] --
@@ -513,7 +513,11 @@ void main() {
       final sets = await db.select(db.exerciseSets).get()
         ..sort((a, b) => a.setNumber.compareTo(b.setNumber));
       expect(sets, hasLength(2));
-      expect(sets[0].plannedWeightKg, 100.0, reason: 'the typed value survived the reload');
+      expect(
+        sets[0].plannedWeightKg,
+        100.0,
+        reason: 'the typed value survived the reload',
+      );
       expect(sets[0].plannedReps, 5);
       expect(sets[1].plannedWeightKg, 100.0);
       expect(sets[1].plannedReps, 5);
@@ -638,10 +642,10 @@ void main() {
         await tester.pumpAndSettle();
 
         await tester.tap(_statusCta);
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
         await tester.tap(_statusCta);
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
         expect(find.byType(AlertDialog), findsOneWidget);
         expect(find.text('Finish workout?'), findsOneWidget);
@@ -655,7 +659,7 @@ void main() {
         );
 
         await tester.tap(_statusCta);
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
         await tester.tap(
           find.descendant(
             of: find.byType(AlertDialog),
@@ -674,35 +678,34 @@ void main() {
       },
     );
 
-    testWidgets(
-      'a completed working set does not trigger the confirmation',
-      (tester) async {
-        await _seedExercise(db);
-        await tester.pumpWidget(_appUnderTest(db));
-        await tester.pumpAndSettle();
-        await _createDraftViaFab(tester);
-        await tester.tap(find.text('Add exercise'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Squat'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Add set'));
-        await tester.pumpAndSettle();
-
-        // The done checkbox only exists once inProgress (Stage 10
-        // redesign) -- start first, then mark it done.
-        await tester.tap(_statusCta);
-        await tester.pumpAndSettle();
-        await tester.tap(find.byType(CompletionToggle).last); // mark the set done
-        await tester.pumpAndSettle();
-        await tester.tap(_statusCta);
+    testWidgets('a completed working set does not trigger the confirmation', (
+      tester,
+    ) async {
+      await _seedExercise(db);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add set'));
       await tester.pumpAndSettle();
 
-        expect(find.byType(AlertDialog), findsNothing);
-        expect(find.byType(WorkoutSummaryScreen), findsOneWidget);
+      // The done checkbox only exists once inProgress (Stage 10
+      // redesign) -- start first, then mark it done.
+      await tester.tap(_statusCta);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(CompletionToggle).last); // mark the set done
+      await tester.pumpAndSettle();
+      await tester.tap(_statusCta);
+      await tester.pumpAndSettle();
 
-        await _unmountAndFlush(tester);
-      },
-    );
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(WorkoutSummaryScreen), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    });
   });
 
   testWidgets(
@@ -744,81 +747,80 @@ void main() {
     },
   );
 
-  testWidgets(
-    'the rest timer starts automatically when a set is marked done, '
-    '"+15 s" extends it, and "Skip" clears it (Stage 4, TS 7.2 step 2)',
-    (tester) async {
-      // Production seeds this singleton row at app startup (main.dart);
-      // this harness doesn't, so it's seeded here directly -- same
-      // approach as the "showTags is off" test above.
-      await db
-          .into(db.appSettingsTable)
-          .insert(
-            AppSettingsTableCompanion.insert(
-              id: 'singleton',
-              updatedAt: '2026-07-19T00:00:00Z',
-            ),
-          );
-      await _seedExercise(db);
-      await tester.pumpWidget(_appUnderTest(db));
-      await tester.pumpAndSettle();
-      await _createDraftViaFab(tester);
-      await tester.tap(find.text('Add exercise'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Squat'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Add set'));
-      await tester.pumpAndSettle();
+  testWidgets('the rest timer starts automatically when a set is marked done, '
+      '"+15 s" extends it, and "Skip" clears it (Stage 4, TS 7.2 step 2)', (
+    tester,
+  ) async {
+    // Production seeds this singleton row at app startup (main.dart);
+    // this harness doesn't, so it's seeded here directly -- same
+    // approach as the "showTags is off" test above.
+    await db
+        .into(db.appSettingsTable)
+        .insert(
+          AppSettingsTableCompanion.insert(
+            id: 'singleton',
+            updatedAt: '2026-07-19T00:00:00Z',
+          ),
+        );
+    await _seedExercise(db);
+    await tester.pumpWidget(_appUnderTest(db));
+    await tester.pumpAndSettle();
+    await _createDraftViaFab(tester);
+    await tester.tap(find.text('Add exercise'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Squat'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add set'));
+    await tester.pumpAndSettle();
 
-      await tester.tap(_statusCta);
-      await tester.pumpAndSettle();
+    await tester.tap(_statusCta);
+    await tester.pumpAndSettle();
 
-      expect(find.text('REST'), findsNothing);
+    expect(find.text('REST'), findsNothing);
 
-      await tester.tap(find.byType(CompletionToggle).last);
-      await tester.pumpAndSettle();
+    await tester.tap(find.byType(CompletionToggle).last);
+    await tester.pumpAndSettle();
 
-      // Stage 10 redesign: RestTimerCard's label is uppercased ("REST",
-      // DESIGN.md section 1's emphasis treatment for time-sensitive text).
-      expect(find.text('REST'), findsOneWidget);
-      final workoutId = (await db.select(db.workouts).get()).single.id;
-      var state = await (db.select(
-        db.activeWorkoutStates,
-      )..where((s) => s.workoutId.equals(workoutId))).getSingle();
-      expect(state.restTimerDurationSec, 120); // Q-4 default
-      final endsAtBeforeAdjust = state.restTimerEndsAtUtc!;
+    // Stage 10 redesign: RestTimerCard's label is uppercased ("REST",
+    // DESIGN.md section 1's emphasis treatment for time-sensitive text).
+    expect(find.text('REST'), findsOneWidget);
+    final workoutId = (await db.select(db.workouts).get()).single.id;
+    var state = await (db.select(
+      db.activeWorkoutStates,
+    )..where((s) => s.workoutId.equals(workoutId))).getSingle();
+    expect(state.restTimerDurationSec, 120); // Q-4 default
+    final endsAtBeforeAdjust = state.restTimerEndsAtUtc!;
 
-      await tester.tap(find.byTooltip('+15 s'));
-      await tester.pumpAndSettle();
-      state = await (db.select(
-        db.activeWorkoutStates,
-      )..where((s) => s.workoutId.equals(workoutId))).getSingle();
-      // Stage 10, owner-reported: `restTimerDurationSec` (RestTimerCard's
-      // fixed fill-speed denominator) no longer grows with "+15 s" -- only
-      // the deadline moves, so the bar's current position shifts instead
-      // of its future fill speed changing.
-      expect(state.restTimerDurationSec, 120);
-      expect(
-        DateTime.parse(
-          state.restTimerEndsAtUtc!,
-        ).difference(DateTime.parse(endsAtBeforeAdjust)).inSeconds,
-        15,
-      );
+    await tester.tap(find.byTooltip('+15 s'));
+    await tester.pumpAndSettle();
+    state = await (db.select(
+      db.activeWorkoutStates,
+    )..where((s) => s.workoutId.equals(workoutId))).getSingle();
+    // Stage 10, owner-reported: `restTimerDurationSec` (RestTimerCard's
+    // fixed fill-speed denominator) no longer grows with "+15 s" -- only
+    // the deadline moves, so the bar's current position shifts instead
+    // of its future fill speed changing.
+    expect(state.restTimerDurationSec, 120);
+    expect(
+      DateTime.parse(
+        state.restTimerEndsAtUtc!,
+      ).difference(DateTime.parse(endsAtBeforeAdjust)).inSeconds,
+      15,
+    );
 
-      // Stage 10 redesign: "Skip" is now an icon-only button (Icons.
-      // skip_next), no visible text label.
-      await tester.tap(find.byTooltip('Skip'));
-      await tester.pumpAndSettle();
+    // Stage 10 redesign: "Skip" is now an icon-only button (Icons.
+    // skip_next), no visible text label.
+    await tester.tap(find.byTooltip('Skip'));
+    await tester.pumpAndSettle();
 
-      expect(find.text('REST'), findsNothing);
-      state = await (db.select(
-        db.activeWorkoutStates,
-      )..where((s) => s.workoutId.equals(workoutId))).getSingle();
-      expect(state.restTimerEndsAtUtc, isNull);
+    expect(find.text('REST'), findsNothing);
+    state = await (db.select(
+      db.activeWorkoutStates,
+    )..where((s) => s.workoutId.equals(workoutId))).getSingle();
+    expect(state.restTimerEndsAtUtc, isNull);
 
-      await _unmountAndFlush(tester);
-    },
-  );
+    await _unmountAndFlush(tester);
+  });
 
   group('notifications (Stage 4, TS 7.3)', () {
     late MockNotificationService notificationService;
@@ -1243,11 +1245,11 @@ void main() {
         db.templateExercises,
       )..where((te) => te.templateId.equals(templates.single.id))).get();
       expect(templateExercises, hasLength(1));
-      final templateSets = await (db.select(
-        db.templateSets,
-      )..where(
-        (s) => s.templateExerciseId.equals(templateExercises.single.id),
-      )).get();
+      final templateSets =
+          await (db.select(db.templateSets)..where(
+                (s) => s.templateExerciseId.equals(templateExercises.single.id),
+              ))
+              .get();
       expect(templateSets.single.plannedWeightKg, 60.0);
       expect(templateSets.single.plannedReps, 8);
 
@@ -1462,33 +1464,30 @@ void main() {
       },
     );
 
-    testWidgets(
-      'renaming works even while inProgress, unlike moving the date '
-      '(DM 6.4.1)',
-      (tester) async {
-        await tester.pumpWidget(_appUnderTest(db));
-        await tester.pumpAndSettle();
-        await _createDraftViaFab(tester);
+    testWidgets('renaming works even while inProgress, unlike moving the date '
+        '(DM 6.4.1)', (tester) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
 
-        await tester.tap(_statusCta);
-        await tester.pumpAndSettle();
+      await tester.tap(_statusCta);
+      await tester.pumpAndSettle();
 
-        await tester.tap(
-          find.descendant(
-            of: find.byType(AppBar),
-            matching: find.text('Workout'),
-          ),
-        );
-        await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.text('Workout'),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        expect(find.text('Workout name'), findsOneWidget);
+      expect(find.text('Workout name'), findsOneWidget);
 
-        await tester.tap(find.text('Cancel'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
 
-        await _unmountAndFlush(tester);
-      },
-    );
+      await _unmountAndFlush(tester);
+    });
 
     testWidgets('"Cancel" leaves the name unchanged', (tester) async {
       await tester.pumpWidget(_appUnderTest(db));
@@ -1528,7 +1527,7 @@ void main() {
         await _createDraftViaFab(tester);
 
         await tester.tap(_statusCta);
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
         expect(find.text('A workout is already in progress'), findsOneWidget);
         expect(find.text('Finish it'), findsOneWidget);
@@ -1538,81 +1537,78 @@ void main() {
       },
     );
 
-    testWidgets(
-      'dismissing the dialog leaves both workouts untouched',
-      (tester) async {
-        await _seedActiveWorkout(db);
+    testWidgets('dismissing the dialog leaves both workouts untouched', (
+      tester,
+    ) async {
+      await _seedActiveWorkout(db);
 
-        await tester.pumpWidget(_appUnderTest(db));
-        await tester.pumpAndSettle();
-        await _createDraftViaFab(tester);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
 
-        await tester.tap(_statusCta);
+      await tester.tap(_statusCta);
       await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Cancel'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('Draft'), findsOneWidget);
-        final active = await (db.select(
-          db.workouts,
-        )..where((w) => w.id.equals('active'))).getSingle();
-        expect(active.status, 'inProgress');
-
-        await _unmountAndFlush(tester);
-      },
-    );
-
-    testWidgets(
-      '"Finish it" completes the other workout and starts this one',
-      (tester) async {
-        await _seedActiveWorkout(db);
-
-        await tester.pumpWidget(_appUnderTest(db));
-        await tester.pumpAndSettle();
-        await _createDraftViaFab(tester);
-
-        await tester.tap(_statusCta);
+      await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Finish it'));
-        await tester.pumpAndSettle();
+      expect(find.text('Draft'), findsOneWidget);
+      final active = await (db.select(
+        db.workouts,
+      )..where((w) => w.id.equals('active'))).getSingle();
+      expect(active.status, 'inProgress');
 
-        expect(find.text('In progress'), findsOneWidget);
-        final active = await (db.select(
-          db.workouts,
-        )..where((w) => w.id.equals('active'))).getSingle();
-        expect(active.status, 'completed');
-        expect(active.finishedAt, isNotNull);
+      await _unmountAndFlush(tester);
+    });
 
-        await _unmountAndFlush(tester);
-      },
-    );
+    testWidgets('"Finish it" completes the other workout and starts this one', (
+      tester,
+    ) async {
+      await _seedActiveWorkout(db);
 
-    testWidgets(
-      '"Cancel it" cancels the other workout and starts this one',
-      (tester) async {
-        await _seedActiveWorkout(db);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
 
-        await tester.pumpWidget(_appUnderTest(db));
-        await tester.pumpAndSettle();
-        await _createDraftViaFab(tester);
-
-        await tester.tap(_statusCta);
+      await tester.tap(_statusCta);
       await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Cancel it'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.text('Finish it'));
+      await tester.pumpAndSettle();
 
-        expect(find.text('In progress'), findsOneWidget);
-        final active = await (db.select(
-          db.workouts,
-        )..where((w) => w.id.equals('active'))).getSingle();
-        expect(active.status, 'cancelled');
+      expect(find.text('In progress'), findsOneWidget);
+      final active = await (db.select(
+        db.workouts,
+      )..where((w) => w.id.equals('active'))).getSingle();
+      expect(active.status, 'completed');
+      expect(active.finishedAt, isNotNull);
 
-        await _unmountAndFlush(tester);
-      },
-    );
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets('"Cancel it" cancels the other workout and starts this one', (
+      tester,
+    ) async {
+      await _seedActiveWorkout(db);
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+
+      await tester.tap(_statusCta);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Cancel it'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('In progress'), findsOneWidget);
+      final active = await (db.select(
+        db.workouts,
+      )..where((w) => w.id.equals('active'))).getSingle();
+      expect(active.status, 'cancelled');
+
+      await _unmountAndFlush(tester);
+    });
   });
 
   group('workout tags (Stage 3, S-03, DM 6.3/6.5)', () {
@@ -1633,31 +1629,30 @@ void main() {
       },
     );
 
-    testWidgets(
-      'tapping an existing tag in the picker sheet assigns it',
-      (tester) async {
-        await _seedTag(db);
-        await tester.pumpWidget(_appUnderTest(db));
-        await tester.pumpAndSettle();
-        await _createDraftViaFab(tester);
+    testWidgets('tapping an existing tag in the picker sheet assigns it', (
+      tester,
+    ) async {
+      await _seedTag(db);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
 
-        await tester.tap(find.byTooltip('Add tag'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Add tag'));
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.widgetWithText(FilterChip, 'Leg day'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilterChip, 'Leg day'));
+      await tester.pumpAndSettle();
 
-        final links = await db.select(db.workoutTagLinks).get();
-        expect(links, hasLength(1));
-        expect(links.single.tagId, 'tag1');
-        final chip = tester.widget<FilterChip>(
-          find.widgetWithText(FilterChip, 'Leg day'),
-        );
-        expect(chip.selected, isTrue);
+      final links = await db.select(db.workoutTagLinks).get();
+      expect(links, hasLength(1));
+      expect(links.single.tagId, 'tag1');
+      final chip = tester.widget<FilterChip>(
+        find.widgetWithText(FilterChip, 'Leg day'),
+      );
+      expect(chip.selected, isTrue);
 
-        await _unmountAndFlush(tester);
-      },
-    );
+      await _unmountAndFlush(tester);
+    });
 
     testWidgets(
       'the picker sheet has no "Create tag" button and its empty state '
@@ -1707,29 +1702,28 @@ void main() {
       },
     );
 
-    testWidgets(
-      'the tag row is hidden entirely when showTags is off (S-17)',
-      (tester) async {
-        await db
-            .into(db.appSettingsTable)
-            .insert(
-              AppSettingsTableCompanion.insert(
-                id: 'singleton',
-                showTags: const Value(false),
-                updatedAt: '2026-07-19T00:00:00Z',
-              ),
-            );
-        await _seedTag(db);
+    testWidgets('the tag row is hidden entirely when showTags is off (S-17)', (
+      tester,
+    ) async {
+      await db
+          .into(db.appSettingsTable)
+          .insert(
+            AppSettingsTableCompanion.insert(
+              id: 'singleton',
+              showTags: const Value(false),
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      await _seedTag(db);
 
-        await tester.pumpWidget(_appUnderTest(db));
-        await tester.pumpAndSettle();
-        await _createDraftViaFab(tester);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
 
-        expect(find.byTooltip('Add tag'), findsNothing);
+      expect(find.byTooltip('Add tag'), findsNothing);
 
-        await _unmountAndFlush(tester);
-      },
-    );
+      await _unmountAndFlush(tester);
+    });
   });
 
   group('collapse exercise (Stage 10, owner-reported)', () {
@@ -1754,7 +1748,11 @@ void main() {
         await tester.tap(find.text('Squat'));
         await tester.pumpAndSettle();
 
-        expect(find.text('Squat'), findsOneWidget, reason: 'name stays visible');
+        expect(
+          find.text('Squat'),
+          findsOneWidget,
+          reason: 'name stays visible',
+        );
         expect(find.byType(SetRow), findsNothing);
         expect(find.text('Add set'), findsNothing);
 
@@ -1816,10 +1814,9 @@ void main() {
         await tester.tap(find.text('Bench Press'));
         await tester.pumpAndSettle();
 
-        var order =
-            await (db.select(db.workoutExercises)
-                  ..orderBy([(we) => OrderingTerm.asc(we.orderIndex)]))
-                .get();
+        var order = await (db.select(
+          db.workoutExercises,
+        )..orderBy([(we) => OrderingTerm.asc(we.orderIndex)])).get();
         expect(order.map((we) => we.exerciseId), ['squat', 'bench']);
 
         // The second card (Bench Press, last -> no "Move down") moves up.
@@ -1831,48 +1828,47 @@ void main() {
         await tester.tap(find.text('Move up'));
         await tester.pumpAndSettle();
 
-        order = await (db.select(db.workoutExercises)
-              ..orderBy([(we) => OrderingTerm.asc(we.orderIndex)]))
-            .get();
+        order = await (db.select(
+          db.workoutExercises,
+        )..orderBy([(we) => OrderingTerm.asc(we.orderIndex)])).get();
         expect(order.map((we) => we.exerciseId), ['bench', 'squat']);
 
         await _unmountAndFlush(tester);
       },
     );
 
-    testWidgets(
-      'the first card\'s menu has no "Move up" action',
-      (tester) async {
-        tester.view.physicalSize = const Size(1080, 5000);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
+    testWidgets('the first card\'s menu has no "Move up" action', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 5000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
 
-        await _seedExercise(db, id: 'squat', name: 'Squat');
-        await _seedExercise(db, id: 'bench', name: 'Bench Press');
-        await tester.pumpWidget(_appUnderTest(db));
-        await tester.pumpAndSettle();
-        await _createDraftViaFab(tester);
+      await _seedExercise(db, id: 'squat', name: 'Squat');
+      await _seedExercise(db, id: 'bench', name: 'Bench Press');
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
 
-        await tester.tap(find.text('Add exercise'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Squat'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Add exercise'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Bench Press'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Bench Press'));
+      await tester.pumpAndSettle();
 
-        final squatMenu = _exerciseCardMenuButton('Squat');
-        await tester.ensureVisible(squatMenu);
-        await tester.tap(squatMenu);
-        await tester.pumpAndSettle();
+      final squatMenu = _exerciseCardMenuButton('Squat');
+      await tester.ensureVisible(squatMenu);
+      await tester.tap(squatMenu);
+      await tester.pumpAndSettle();
 
-        expect(find.text('Move up'), findsNothing);
-        expect(find.text('Move down'), findsOneWidget);
+      expect(find.text('Move up'), findsNothing);
+      expect(find.text('Move down'), findsOneWidget);
 
-        await _unmountAndFlush(tester);
-      },
-    );
+      await _unmountAndFlush(tester);
+    });
   });
 
   group('comments (Stage 3, S-03)', () {
@@ -1897,6 +1893,110 @@ void main() {
       },
     );
 
+    testWidgets('entering a set value while the comment field still has an '
+        'un-debounced edit saves that edit immediately and does not scroll '
+        'back to the comment field afterwards (Stage 10, owner-reported: '
+        'typing a set value used to jump the list back down to the comment)', (
+      tester,
+    ) async {
+      await _seedExercise(db);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add set'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(_commentField(0), 'Felt strong today');
+      await tester.pump();
+      var workouts = await db.select(db.workouts).get();
+      expect(
+        workouts.single.comment,
+        isNull,
+        reason: 'not flushed yet -- the debounce has not elapsed',
+      );
+
+      await _expandSet(tester);
+      await _enterStepperValue(tester, text: '60', fieldIndex: 0);
+
+      // The comment's own debounce timer never got the chance to fire
+      // (no `tester.pump(autosaveDebounce)` above), so this only passes
+      // if opening the stepper's precise-entry dialog itself dropped
+      // focus from the comment field and flushed it immediately, the
+      // same way tapping away from it always has.
+      workouts = await db.select(db.workouts).get();
+      expect(workouts.single.comment, 'Felt strong today');
+
+      expect(
+        tester.testTextInput.isVisible,
+        isFalse,
+        reason:
+            'no field (in particular not the comment field) should be '
+            'focused/editing once the precise-entry dialog closes',
+      );
+
+      await _unmountAndFlush(tester);
+    });
+
+    testWidgets(
+      'tapping a stepper\'s "+" button (no dialog involved) also saves an '
+      'un-debounced comment edit and hides the keyboard (Stage 10, owner-'
+      'reported: the fix had to cover any tap on a set, not just the '
+      'precise-entry dialog)',
+      (tester) async {
+        await _seedExercise(db);
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Add set'));
+        await tester.pumpAndSettle();
+        await _expandSet(tester);
+
+        await tester.enterText(_commentField(0), 'Felt strong today');
+        // A longer, bounded pump (not `pumpAndSettle`, which would risk
+        // running past `autosaveDebounce` and flushing the comment on its
+        // own, defeating the point of this test) -- just enough for the
+        // focus-gained scroll-into-view animation to finish.
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(
+          tester.testTextInput.isVisible,
+          isTrue,
+          reason: 'the comment field is focused and being edited',
+        );
+
+        // "Add set" -- an ordinary button on the same exercise card, not a
+        // dialog and not a `NumericStepperField` -- proves the fix isn't
+        // limited to the precise-entry dialog's own explicit unfocus call.
+        // `ensureVisible` first: the focus-triggered scroll above can leave
+        // this finder's cached geometry stale relative to the CustomScroll-
+        // View's now-shifted position.
+        final addSetButton = find.text('Add set');
+        await tester.ensureVisible(addSetButton);
+        await tester.pump();
+        await tester.tap(addSetButton);
+        await tester.pump();
+
+        final workouts = await db.select(db.workouts).get();
+        expect(workouts.single.comment, 'Felt strong today');
+        expect(
+          tester.testTextInput.isVisible,
+          isFalse,
+          reason:
+              'tapping elsewhere on the exercise card should have hidden '
+              'the keyboard along with the rest of the comment field\'s '
+              'focus',
+        );
+
+        await _unmountAndFlush(tester);
+      },
+    );
   });
 
   group('delete set (Stage 10, owner-reported: replaced the set comment '
@@ -1935,194 +2035,182 @@ void main() {
       },
     );
 
+    testWidgets('"Undo" restores the deleted set with the original numbering', (
+      tester,
+    ) async {
+      await _seedExercise(db);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add set'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add set'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Delete set').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Undo'));
+      await tester.pumpAndSettle();
+
+      final sets = await db.select(db.exerciseSets).get();
+      expect(sets.where((s) => !s.isDeleted), hasLength(2));
+      final numbers = sets.map((s) => s.setNumber).toList()..sort();
+      expect(numbers, [1, 2]);
+
+      await _unmountAndFlush(tester);
+    });
+  });
+
+  group('delete exercise (Stage 10, owner-reported: no way to remove an '
+      'exercise from a workout)', () {
     testWidgets(
-      '"Undo" restores the deleted set with the original numbering',
+      '"⋮ → Delete exercise" soft-deletes it, hides it from the list, and '
+      'shows an Undo snackbar',
       (tester) async {
-        await _seedExercise(db);
+        await _seedExercise(db, id: 'squat', name: 'Squat');
+        await _seedExercise(db, id: 'bench', name: 'Bench Press');
         await tester.pumpWidget(_appUnderTest(db));
         await tester.pumpAndSettle();
         await _createDraftViaFab(tester);
+
         await tester.tap(find.text('Add exercise'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Squat'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Add set'));
+        await tester.tap(find.text('Add exercise'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Add set'));
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.byTooltip('Delete set').first);
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Undo'));
+        await tester.tap(find.text('Bench Press'));
         await tester.pumpAndSettle();
 
-        final sets = await db.select(db.exerciseSets).get();
-        expect(sets.where((s) => !s.isDeleted), hasLength(2));
-        final numbers = sets.map((s) => s.setNumber).toList()..sort();
-        expect(numbers, [1, 2]);
+        final benchMenu = _exerciseCardMenuButton('Bench Press');
+        await tester.ensureVisible(benchMenu);
+        await tester.tap(benchMenu);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Delete exercise'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Bench Press'), findsNothing);
+        expect(find.text('Squat'), findsOneWidget);
+        expect(find.text('Exercise deleted'), findsOneWidget);
+        expect(find.text('Undo'), findsOneWidget);
+
+        final rows = await db.select(db.workoutExercises).get();
+        final bench = rows.singleWhere((r) => r.exerciseId == 'bench');
+        expect(bench.isDeleted, isTrue);
+
+        await tester.pump(const Duration(seconds: 6));
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets('"Undo" restores the deleted exercise', (tester) async {
+      await _seedExercise(db, id: 'squat', name: 'Squat');
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+
+      final squatMenu = _exerciseCardMenuButton('Squat');
+      await tester.ensureVisible(squatMenu);
+      await tester.tap(squatMenu);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete exercise'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Squat'), findsNothing);
+
+      await tester.tap(find.text('Undo'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Squat'), findsOneWidget);
+      final rows = await db.select(db.workoutExercises).get();
+      expect(rows.single.isDeleted, isFalse);
+
+      await _unmountAndFlush(tester);
+    });
+  });
+
+  group('edit exercise (Stage 10, owner-reported: a plain rename wasn\'t '
+      'enough -- the owner wanted the same full catalog edit form, without '
+      'leaving the workout)', () {
+    testWidgets(
+      '"⋮ → Edit exercise" opens the full catalog edit form and saves '
+      'changes everywhere',
+      (tester) async {
+        await _seedExercise(db, id: 'squat', name: 'Squat');
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+
+        final menu = _exerciseCardMenuButton('Squat');
+        await tester.ensureVisible(menu);
+        await tester.tap(menu);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Edit exercise'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(CreateExerciseScreen), findsOneWidget);
+
+        await tester.enterText(
+          find
+              .descendant(
+                of: find.byType(CreateExerciseScreen),
+                matching: find.byType(TextField),
+              )
+              .first,
+          'Back Squat',
+        );
+        await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(CreateExerciseScreen), findsNothing);
+        expect(find.text('Back Squat'), findsOneWidget);
+        final exercise = (await db.select(db.exercises).get()).singleWhere(
+          (r) => r.id == 'squat',
+        );
+        expect(exercise.name, 'Back Squat');
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'the menu has no "Edit exercise" action for a built-in exercise',
+      (tester) async {
+        await _seedExercise(db, id: 'squat', name: 'Squat', isBuiltIn: true);
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+
+        final menu = _exerciseCardMenuButton('Squat');
+        await tester.ensureVisible(menu);
+        await tester.tap(menu);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Edit exercise'), findsNothing);
 
         await _unmountAndFlush(tester);
       },
     );
   });
-
-  group(
-    'delete exercise (Stage 10, owner-reported: no way to remove an '
-    'exercise from a workout)',
-    () {
-      testWidgets(
-        '"⋮ → Delete exercise" soft-deletes it, hides it from the list, and '
-        'shows an Undo snackbar',
-        (tester) async {
-          await _seedExercise(db, id: 'squat', name: 'Squat');
-          await _seedExercise(db, id: 'bench', name: 'Bench Press');
-          await tester.pumpWidget(_appUnderTest(db));
-          await tester.pumpAndSettle();
-          await _createDraftViaFab(tester);
-
-          await tester.tap(find.text('Add exercise'));
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('Squat'));
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('Add exercise'));
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('Bench Press'));
-          await tester.pumpAndSettle();
-
-          final benchMenu = _exerciseCardMenuButton('Bench Press');
-          await tester.ensureVisible(benchMenu);
-          await tester.tap(benchMenu);
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('Delete exercise'));
-          await tester.pumpAndSettle();
-
-          expect(find.text('Bench Press'), findsNothing);
-          expect(find.text('Squat'), findsOneWidget);
-          expect(find.text('Exercise deleted'), findsOneWidget);
-          expect(find.text('Undo'), findsOneWidget);
-
-          final rows = await db.select(db.workoutExercises).get();
-          final bench = rows.singleWhere(
-            (r) => r.exerciseId == 'bench',
-          );
-          expect(bench.isDeleted, isTrue);
-
-          await tester.pump(const Duration(seconds: 6));
-          await _unmountAndFlush(tester);
-        },
-      );
-
-      testWidgets(
-        '"Undo" restores the deleted exercise',
-        (tester) async {
-          await _seedExercise(db, id: 'squat', name: 'Squat');
-          await tester.pumpWidget(_appUnderTest(db));
-          await tester.pumpAndSettle();
-          await _createDraftViaFab(tester);
-
-          await tester.tap(find.text('Add exercise'));
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('Squat'));
-          await tester.pumpAndSettle();
-
-          final squatMenu = _exerciseCardMenuButton('Squat');
-          await tester.ensureVisible(squatMenu);
-          await tester.tap(squatMenu);
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('Delete exercise'));
-          await tester.pumpAndSettle();
-
-          expect(find.text('Squat'), findsNothing);
-
-          await tester.tap(find.text('Undo'));
-          await tester.pumpAndSettle();
-
-          expect(find.text('Squat'), findsOneWidget);
-          final rows = await db.select(db.workoutExercises).get();
-          expect(rows.single.isDeleted, isFalse);
-
-          await _unmountAndFlush(tester);
-        },
-      );
-    },
-  );
-
-  group(
-    'edit exercise (Stage 10, owner-reported: a plain rename wasn\'t '
-    'enough -- the owner wanted the same full catalog edit form, without '
-    'leaving the workout)',
-    () {
-      testWidgets(
-        '"⋮ → Edit exercise" opens the full catalog edit form and saves '
-        'changes everywhere',
-        (tester) async {
-          await _seedExercise(db, id: 'squat', name: 'Squat');
-          await tester.pumpWidget(_appUnderTest(db));
-          await tester.pumpAndSettle();
-          await _createDraftViaFab(tester);
-
-          await tester.tap(find.text('Add exercise'));
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('Squat'));
-          await tester.pumpAndSettle();
-
-          final menu = _exerciseCardMenuButton('Squat');
-          await tester.ensureVisible(menu);
-          await tester.tap(menu);
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('Edit exercise'));
-          await tester.pumpAndSettle();
-
-          expect(find.byType(CreateExerciseScreen), findsOneWidget);
-
-          await tester.enterText(
-            find
-                .descendant(
-                  of: find.byType(CreateExerciseScreen),
-                  matching: find.byType(TextField),
-                )
-                .first,
-            'Back Squat',
-          );
-          await tester.tap(find.widgetWithText(FilledButton, 'Save'));
-          await tester.pumpAndSettle();
-
-          expect(find.byType(CreateExerciseScreen), findsNothing);
-          expect(find.text('Back Squat'), findsOneWidget);
-          final exercise = (await db.select(
-            db.exercises,
-          ).get()).singleWhere((r) => r.id == 'squat');
-          expect(exercise.name, 'Back Squat');
-
-          await _unmountAndFlush(tester);
-        },
-      );
-
-      testWidgets(
-        'the menu has no "Edit exercise" action for a built-in exercise',
-        (tester) async {
-          await _seedExercise(db, id: 'squat', name: 'Squat', isBuiltIn: true);
-          await tester.pumpWidget(_appUnderTest(db));
-          await tester.pumpAndSettle();
-          await _createDraftViaFab(tester);
-
-          await tester.tap(find.text('Add exercise'));
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('Squat'));
-          await tester.pumpAndSettle();
-
-          final menu = _exerciseCardMenuButton('Squat');
-          await tester.ensureVisible(menu);
-          await tester.tap(menu);
-          await tester.pumpAndSettle();
-
-          expect(find.text('Edit exercise'), findsNothing);
-
-          await _unmountAndFlush(tester);
-        },
-      );
-    },
-  );
 
   group('progression decision + stagnation hint (Stage 3, D-7, TS 9.4)', () {
     testWidgets(

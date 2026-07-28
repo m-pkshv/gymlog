@@ -174,89 +174,101 @@ class _EditorBody extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final template = details.template;
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          child: CommentField(
-            key: ValueKey('template-name-${template.id}'),
-            value: template.name,
-            label: l10n.templateNameLabel,
-            maxLength: WorkoutTemplateRules.maxNameLength,
-            maxLines: 1,
-            minLines: 1,
-            onChanged: controller.editName,
-            onCommit: controller.flushName,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: CommentField(
-            key: ValueKey('template-comment-${template.id}'),
-            value: template.comment,
-            label: l10n.templateCommentLabel,
-            maxLength: CommentLengthLimits.workoutTemplate,
-            onChanged: controller.editComment,
-            onCommit: controller.flushComment,
-          ),
-        ),
-        Expanded(
-          child: details.exercises.isEmpty
-              ? Center(child: Text(l10n.templateExercisesEmpty))
-              : ListView.builder(
-                  // Owner-reported (Stage 10): the drag handle this used to
-                  // have (mirroring ExerciseCard/S-03) felt sluggish, so it
-                  // was removed in favour of the "⋮ → Вверх/Вниз" menu on
-                  // each card as the only way to reorder now.
-                  itemCount: details.exercises.length,
-                  itemBuilder: (context, index) {
-                    final exerciseDetails = details.exercises[index];
-                    final templateExerciseId =
-                        exerciseDetails.templateExercise.id;
-                    return TemplateExerciseCard(
-                      key: ValueKey(templateExerciseId),
-                      details: exerciseDetails,
-                      canMoveUp: index > 0,
-                      canMoveDown: index < details.exercises.length - 1,
-                      onFieldChanged: (setId, field, value) {
-                        controller.editSet(
-                          setId,
-                          (set) => field.setPlanned(set, value),
-                        );
-                      },
-                      onFieldCommit: (setId, field) {
-                        controller.flushSet(setId);
-                      },
-                      onAddSet: () => controller.addSet(templateExerciseId),
-                      onDuplicateLastSet: () =>
-                          controller.duplicateLastSet(templateExerciseId),
-                      onMoveUp: () =>
-                          controller.moveExercise(templateExerciseId, up: true),
-                      onMoveDown: () => controller.moveExercise(
-                        templateExerciseId,
-                        up: false,
-                      ),
-                      onSetDeleted: onSetDeleted,
-                      onEditExercise: () =>
-                          onEditExercise(exerciseDetails.exercise),
-                      onDeleteExercise: () =>
-                          onDeleteExercise(templateExerciseId),
-                    );
-                  },
-                ),
-        ),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: OutlinedButton.icon(
-              onPressed: onAddExercise,
-              icon: const Icon(Icons.add),
-              label: Text(l10n.addExerciseAction),
+    // Owner-reported (Stage 10, same fix as the workout editor -- see that
+    // screen's own comment for why this is a `Listener.onPointerDown`, not
+    // a `GestureDetector.onTap`): tapping a set's stepper/checkbox/delete
+    // icon etc. while the name/comment field above still had focus used to
+    // leave its keyboard open uselessly -- every touch on this screen now
+    // drops focus first.
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: CommentField(
+              key: ValueKey('template-name-${template.id}'),
+              value: template.name,
+              label: l10n.templateNameLabel,
+              maxLength: WorkoutTemplateRules.maxNameLength,
+              maxLines: 1,
+              minLines: 1,
+              onChanged: controller.editName,
+              onCommit: controller.flushName,
             ),
           ),
-        ),
-      ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: CommentField(
+              key: ValueKey('template-comment-${template.id}'),
+              value: template.comment,
+              label: l10n.templateCommentLabel,
+              maxLength: CommentLengthLimits.workoutTemplate,
+              onChanged: controller.editComment,
+              onCommit: controller.flushComment,
+            ),
+          ),
+          Expanded(
+            child: details.exercises.isEmpty
+                ? Center(child: Text(l10n.templateExercisesEmpty))
+                : ListView.builder(
+                    // Owner-reported (Stage 10): the drag handle this used to
+                    // have (mirroring ExerciseCard/S-03) felt sluggish, so it
+                    // was removed in favour of the "⋮ → Вверх/Вниз" menu on
+                    // each card as the only way to reorder now.
+                    itemCount: details.exercises.length,
+                    itemBuilder: (context, index) {
+                      final exerciseDetails = details.exercises[index];
+                      final templateExerciseId =
+                          exerciseDetails.templateExercise.id;
+                      return TemplateExerciseCard(
+                        key: ValueKey(templateExerciseId),
+                        details: exerciseDetails,
+                        canMoveUp: index > 0,
+                        canMoveDown: index < details.exercises.length - 1,
+                        onFieldChanged: (setId, field, value) {
+                          controller.editSet(
+                            setId,
+                            (set) => field.setPlanned(set, value),
+                          );
+                        },
+                        onFieldCommit: (setId, field) {
+                          controller.flushSet(setId);
+                        },
+                        onAddSet: () => controller.addSet(templateExerciseId),
+                        onDuplicateLastSet: () =>
+                            controller.duplicateLastSet(templateExerciseId),
+                        onMoveUp: () => controller.moveExercise(
+                          templateExerciseId,
+                          up: true,
+                        ),
+                        onMoveDown: () => controller.moveExercise(
+                          templateExerciseId,
+                          up: false,
+                        ),
+                        onSetDeleted: onSetDeleted,
+                        onEditExercise: () =>
+                            onEditExercise(exerciseDetails.exercise),
+                        onDeleteExercise: () =>
+                            onDeleteExercise(templateExerciseId),
+                      );
+                    },
+                  ),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: OutlinedButton.icon(
+                onPressed: onAddExercise,
+                icon: const Icon(Icons.add),
+                label: Text(l10n.addExerciseAction),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

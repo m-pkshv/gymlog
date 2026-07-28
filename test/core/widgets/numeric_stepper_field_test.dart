@@ -128,4 +128,44 @@ void main() {
 
     expect(called, isFalse);
   });
+
+  testWidgets(
+    'opening the precise-entry dialog drops focus from an already-focused '
+    'field instead of it regaining focus (and auto-scrolling back into '
+    'view) once the dialog closes (Stage 10, owner-reported)',
+    (tester) async {
+      final commentFocusNode = FocusNode();
+      addTearDown(commentFocusNode.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Column(
+              children: [
+                TextField(focusNode: commentFocusNode),
+                NumericStepperField(
+                  label: 'Weight, kg',
+                  value: 80,
+                  onChanged: (_) {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(TextField).first);
+      await tester.pump();
+      expect(commentFocusNode.hasFocus, isTrue);
+
+      await tester.tap(find.text('80'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(commentFocusNode.hasFocus, isFalse);
+    },
+  );
 }

@@ -44,6 +44,23 @@ class NumericStepperField extends StatelessWidget {
   }
 
   Future<void> _openPreciseEntry(BuildContext context) async {
+    // Drops focus from whatever text field (e.g. the workout/template
+    // comment) was focused before this dialog opens (Stage 10, owner-
+    // reported): a dialog's own focus scope otherwise leaves that field's
+    // FocusNode as "the one to restore focus to" once the dialog closes,
+    // and Flutter's default behavior for a text field regaining focus is
+    // to scroll it back into view -- surprising the user by jumping the
+    // list back down to a comment box they'd already finished with.
+    // Unfocusing first also commits that field's already-typed text (every
+    // `CommentField` flushes on focus loss), so nothing is lost.
+    //
+    // `FocusScope.of(context).unfocus()` is *not* enough here: it acts on
+    // the enclosing scope, not on the actually-focused leaf node, so the
+    // scope still remembers (and restores) that leaf as its
+    // `focusedChild` the next time anything asks the scope for focus --
+    // which is exactly what happens when the dialog's route is popped.
+    // Unfocusing the real primary focus node clears that memory.
+    FocusManager.instance.primaryFocus?.unfocus();
     final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(text: _display);
     final entered = await showDialog<double>(
