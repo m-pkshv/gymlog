@@ -366,6 +366,105 @@ void main() {
     );
   });
 
+  testWidgets('Workout editor: opening screen (push transition)', (tester) async {
+    // Owner-reported (2026-07-28): a stutter during the push transition
+    // itself -- e.g. right as the editor screen slides in after creating
+    // a workout from a template -- not scrolling. 8 exercises x 4 sets is
+    // a realistic template size (not the 15-25 used to stress scrolling
+    // above); this measures the frames from the moment the tap that opens
+    // the editor lands through the transition settling.
+    final tempDir = await Directory.systemTemp.createTemp('gymlog_perf_editor_open_');
+    final dbFile = File('${tempDir.path}/gymlog.sqlite');
+    addTearDown(() async {
+      if (await tempDir.exists()) {
+        await tempDir.delete(recursive: true);
+      }
+    });
+
+    final db = AppDatabase(NativeDatabase(dbFile));
+    addTearDown(db.close);
+    await SeedRunner(db).run();
+    final settingsRepository = AppSettingsRepositoryImpl(db);
+    await settingsRepository.ensureInitialized();
+    await settingsRepository.setLocale(AppLocale.en);
+
+    final exercises = await (db.select(db.exercises)..limit(8)).get();
+    const uuid = Uuid();
+    final now = DateTime.now().toUtc().toIso8601String();
+    final workoutId = uuid.v4();
+
+    final workoutExerciseCompanions = <WorkoutExercisesCompanion>[];
+    final setCompanions = <ExerciseSetsCompanion>[];
+
+    for (var e = 0; e < exercises.length; e++) {
+      final workoutExerciseId = uuid.v4();
+      workoutExerciseCompanions.add(
+        WorkoutExercisesCompanion.insert(
+          id: workoutExerciseId,
+          workoutId: workoutId,
+          exerciseId: exercises[e].id,
+          orderIndex: e,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      for (var s = 0; s < 4; s++) {
+        setCompanions.add(
+          ExerciseSetsCompanion.insert(
+            id: uuid.v4(),
+            workoutExerciseId: workoutExerciseId,
+            setNumber: s + 1,
+            plannedWeightKg: Value(60.0 + e * 2.5),
+            plannedReps: Value(5 + (e % 8)),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+      }
+    }
+
+    await db.batch((batch) {
+      batch.insert(
+        db.workouts,
+        WorkoutsCompanion.insert(
+          id: workoutId,
+          date: '2024-01-01',
+          status: const Value('completed'),
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      batch.insertAll(db.workoutExercises, workoutExerciseCompanions);
+      batch.insertAll(db.exerciseSets, setCompanions);
+    });
+
+    appRouter.go('/today');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        child: const GymLogApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('History'));
+    await tester.pumpAndSettle();
+
+    final tile = find.textContaining('8 exercises');
+    expect(tile, findsOneWidget);
+
+    await binding.watchPerformance(() async {
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+    }, reportKey: 'workout_editor_open_transition');
+
+    printSummary(
+      'Workout editor open transition/8 exercises',
+      binding.reportData!['workout_editor_open_transition'] as Map<String, dynamic>,
+    );
+  });
+
   testWidgets('Workout editor: scrolling a workout with 15 exercises', (tester) async {
     final tempDir = await Directory.systemTemp.createTemp('gymlog_perf_editor_');
     final dbFile = File('${tempDir.path}/gymlog.sqlite');

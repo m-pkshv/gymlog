@@ -77,10 +77,38 @@ class WorkoutEditorScreen extends ConsumerStatefulWidget {
 
 class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
     with WidgetsBindingObserver {
+  // Owner-reported (Stage 10, TS 11.6, 2026-07-28): a stutter right as this
+  // screen slides in -- e.g. after creating a workout from a template. Root
+  // cause found via on-device profiling: building the full exercise list
+  // (each card costing real, unavoidable time -- see `CLAUDE.md`, Stage
+  // 10/Step 25) happens synchronously as part of this widget's very first
+  // build, which Flutter must run *before* it can paint even the first
+  // frame of the push transition -- so the transition's own `Animation`
+  // never gets a chance to render a single real frame while blocked; by
+  // the time the block clears, the animation's internal clock (driven by
+  // real elapsed time) already reads `completed`, since more wall-clock
+  // time passed during the block than the whole transition's duration.
+  // Listening for `AnimationStatus.completed` therefore fires immediately
+  // and changes nothing (confirmed via device logging, not guessed).
+  // Instead: keep the very first build cheap (a spinner) unconditionally,
+  // let that first frame paint, then wait out the route's own configured
+  // `transitionDuration` before switching to the real content -- by then
+  // the transition has had genuine real frames to animate across, and the
+  // expensive build happens once the screen is already at rest.
+  bool _transitionSettled = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback(_deferUntilTransitionSettles);
+  }
+
+  void _deferUntilTransitionSettles(Duration _) {
+    final duration = ModalRoute.of(context)?.transitionDuration ?? Duration.zero;
+    Future.delayed(duration, () {
+      if (mounted) setState(() => _transitionSettled = true);
+    });
   }
 
   @override
@@ -472,18 +500,24 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
                 ),
             ],
           ),
-          body: _EditorBody(
-            details: details,
-            controller: controller,
-            onAddExercise: _addExercise,
-            onChangeStatus: _changeStatus,
-            onCopyLastPerformance: _copyLastPerformance,
-            onMoveDate: _moveDate,
-            onSetCompletedChanged: _onSetCompletedChanged,
-            onSetDeleted: _deleteSet,
-            onSaveAsTemplate: _saveAsTemplate,
-            onDeleteWorkout: _deleteWorkout,
-          ),
+          // While the push transition is still animating in, the AppBar
+          // above is already showing the real title/timer (cheap to
+          // build) -- only the expensive exercise list is deferred, so a
+          // returning user isn't staring at a fully blank screen.
+          body: _transitionSettled
+              ? _EditorBody(
+                  details: details,
+                  controller: controller,
+                  onAddExercise: _addExercise,
+                  onChangeStatus: _changeStatus,
+                  onCopyLastPerformance: _copyLastPerformance,
+                  onMoveDate: _moveDate,
+                  onSetCompletedChanged: _onSetCompletedChanged,
+                  onSetDeleted: _deleteSet,
+                  onSaveAsTemplate: _saveAsTemplate,
+                  onDeleteWorkout: _deleteWorkout,
+                )
+              : const Center(child: CircularProgressIndicator()),
         );
         // A single shared ticker for both the AppBar timer chip and the
         // rest-timer card below (S-03/S-04, Stage 4) -- two independent
