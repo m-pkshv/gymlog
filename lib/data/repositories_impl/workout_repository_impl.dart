@@ -593,6 +593,7 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
           workoutId: copy.id,
           exerciseId: sourceWorkoutExercise.exerciseId,
           orderIndex: sourceWorkoutExercise.orderIndex,
+          comment: sourceWorkoutExercise.comment,
           // Stage 10, owner-reported: carries the source's last progression
           // call forward as a starting point for the new occurrence,
           // instead of resetting to "not set" (`WorkoutRepository.copyWorkout`'s
@@ -672,6 +673,7 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
           workoutId: workout.id,
           exerciseId: teRow.exerciseId,
           orderIndex: teRow.orderIndex,
+          comment: teRow.comment,
           progressionDecision: ProgressionDecision.none,
           createdAt: now,
           updatedAt: now,

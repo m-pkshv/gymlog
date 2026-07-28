@@ -362,8 +362,8 @@ void main() {
   });
 
   test(
-    'createFromWorkout copies exercises/order and planned set values, but '
-    'never facts or the workout comment '
+    'createFromWorkout copies exercises/order/comment and planned set '
+    'values, but never facts or the workout comment '
     '(TS 8 section 8)',
     () async {
       final exercise = await exercises.create(
@@ -374,10 +374,12 @@ void main() {
       await workouts.updateWorkout(
         workout.copyWith(comment: 'Great session'),
       );
-      final workoutExercise = await workouts.addExercise(
+      var workoutExercise = await workouts.addExercise(
         workoutId: workout.id,
         exerciseId: exercise.id,
       );
+      workoutExercise = workoutExercise.copyWith(comment: 'Go heavy');
+      await workouts.updateWorkoutExercise(workoutExercise);
 
       final first = await workouts.addSet(
         workoutExerciseId: workoutExercise.id,
@@ -405,6 +407,7 @@ void main() {
       expect(details!.exercises, hasLength(1));
       final exerciseDetails = details.exercises.single;
       expect(exerciseDetails.exercise.id, exercise.id);
+      expect(exerciseDetails.templateExercise.comment, 'Go heavy');
       expect(exerciseDetails.sets, hasLength(2));
       expect(exerciseDetails.sets[0].plannedWeightKg, 40);
       expect(exerciseDetails.sets[1].plannedWeightKg, 100);
@@ -437,10 +440,12 @@ void main() {
         comment: 'Heavy',
       );
       await templates.update(source.copyWith(isArchived: true));
-      final templateExercise = await templates.addExercise(
+      var templateExercise = await templates.addExercise(
         templateId: source.id,
         exerciseId: exercise.id,
       );
+      templateExercise = templateExercise.copyWith(comment: 'Go heavy');
+      await templates.updateTemplateExercise(templateExercise);
 
       final first = await templates.addSet(
         templateExerciseId: templateExercise.id,
@@ -469,6 +474,7 @@ void main() {
       expect(details!.exercises, hasLength(1));
       final exerciseDetails = details.exercises.single;
       expect(exerciseDetails.exercise.id, exercise.id);
+      expect(exerciseDetails.templateExercise.comment, 'Go heavy');
       expect(exerciseDetails.sets, hasLength(2));
       expect(exerciseDetails.sets[0].plannedWeightKg, 40);
       expect(exerciseDetails.sets[1].plannedWeightKg, 100);

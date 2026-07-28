@@ -19,6 +19,7 @@ import 'package:gymlog/features/template_editor/screen.dart';
 import 'package:gymlog/features/workout_editor/add_exercise_screen.dart';
 import 'package:gymlog/features/workout_editor/screen.dart';
 import 'package:gymlog/features/workout_editor/widgets/comment_field.dart';
+import 'package:gymlog/features/workout_editor/widgets/exercise_card.dart';
 import 'package:gymlog/features/workout_editor/widgets/set_row.dart';
 import 'package:gymlog/features/workout_summary/screen.dart';
 import 'package:gymlog/app/theme.dart';
@@ -245,12 +246,23 @@ Future<void> _enterStepperValue(
   await tester.pumpAndSettle();
 }
 
-/// The [index]-th `CommentField`'s underlying `TextField` — the workout
-/// editor only has one `CommentField` left (the workout-level comment,
-/// index 0) since exercise cards no longer have their own (Stage 10
-/// redesign, owner-reported: removed entirely).
-Finder _commentField(int index) => find.descendant(
-  of: find.byType(CommentField).at(index),
+/// The workout-level `CommentField`'s underlying `TextField` -- exercise
+/// cards have their own `CommentField` too again (Stage 11, owner-
+/// reported), always placed *before* the workout's own one in the
+/// `CustomScrollView` (each `ExerciseCard`, then "+ Добавить упражнение",
+/// then the workout comment last), so `.last` reliably picks the workout
+/// one regardless of how many exercises/exercise-comments are on screen.
+Finder get _workoutCommentField => find.descendant(
+  of: find.byType(CommentField).last,
+  matching: find.byType(TextField),
+);
+
+/// The [exerciseIndex]-th exercise card's own `CommentField` `TextField`.
+Finder _exerciseCommentField(int exerciseIndex) => find.descendant(
+  of: find.descendant(
+    of: find.byType(ExerciseCard).at(exerciseIndex),
+    matching: find.byType(CommentField),
+  ),
   matching: find.byType(TextField),
 );
 
@@ -1879,7 +1891,7 @@ void main() {
         await tester.pumpAndSettle();
         await _createDraftViaFab(tester);
 
-        await tester.enterText(_commentField(0), 'Great session');
+        await tester.enterText(_workoutCommentField, 'Great session');
         await tester.pump();
 
         var workouts = await db.select(db.workouts).get();
@@ -1893,12 +1905,62 @@ void main() {
       },
     );
 
+    testWidgets(
+      "editing an exercise's own comment debounces the write, then "
+      'autosaves, independently of the workout-level comment (Stage 11, '
+      'owner-reported: per-exercise comments were removed in the Stage 10 '
+      'redesign, then asked back)',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 3000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
+        await _seedExercise(db);
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await _createDraftViaFab(tester);
+        await tester.tap(find.text('Add exercise'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Squat'));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(_exerciseCommentField(0), 'Elbow felt off');
+        await tester.pump();
+
+        var workoutExercises = await db.select(db.workoutExercises).get();
+        expect(
+          workoutExercises.single.comment,
+          isNull,
+          reason: 'not flushed yet',
+        );
+
+        await tester.pump(autosaveDebounce + const Duration(milliseconds: 50));
+        workoutExercises = await db.select(db.workoutExercises).get();
+        expect(workoutExercises.single.comment, 'Elbow felt off');
+
+        // Untouched -- the exercise comment and the workout comment are
+        // separate fields with their own independent debounce timers.
+        final workouts = await db.select(db.workouts).get();
+        expect(workouts.single.comment, isNull);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
     testWidgets('entering a set value while the comment field still has an '
         'un-debounced edit saves that edit immediately and does not scroll '
         'back to the comment field afterwards (Stage 10, owner-reported: '
         'typing a set value used to jump the list back down to the comment)', (
       tester,
     ) async {
+      // The exercise card is taller now that it has its own comment field
+      // (Stage 11) below the sets table -- the default small test viewport
+      // pushes the set's own InkWell (tapped by `_expandSet` below) far
+      // enough that `tap()`'s computed offset lands off-screen instead.
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
       await _seedExercise(db);
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
@@ -1910,8 +1972,14 @@ void main() {
       await tester.tap(find.text('Add set'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(_commentField(0), 'Felt strong today');
-      await tester.pump();
+      await tester.enterText(_workoutCommentField, 'Felt strong today');
+      // A longer, bounded pump (not `pumpAndSettle`, which would risk
+      // running past `autosaveDebounce` and flushing the comment on its
+      // own, defeating the point of this test) -- just enough for the
+      // focus-gained scroll-into-view animation to finish, so the tap
+      // below reliably lands on its target instead of a still-animating
+      // layer above it.
+      await tester.pump(const Duration(milliseconds: 300));
       var workouts = await db.select(db.workouts).get();
       expect(
         workouts.single.comment,
@@ -1947,6 +2015,13 @@ void main() {
       'reported: the fix had to cover any tap on a set, not just the '
       'precise-entry dialog)',
       (tester) async {
+        // Same reasoning as the previous test -- the exercise card's own
+        // comment field (Stage 11) makes it taller than the default small
+        // test viewport comfortably fits.
+        tester.view.physicalSize = const Size(1080, 3000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
         await _seedExercise(db);
         await tester.pumpWidget(_appUnderTest(db));
         await tester.pumpAndSettle();
@@ -1959,7 +2034,7 @@ void main() {
         await tester.pumpAndSettle();
         await _expandSet(tester);
 
-        await tester.enterText(_commentField(0), 'Felt strong today');
+        await tester.enterText(_workoutCommentField, 'Felt strong today');
         // A longer, bounded pump (not `pumpAndSettle`, which would risk
         // running past `autosaveDebounce` and flushing the comment on its
         // own, defeating the point of this test) -- just enough for the

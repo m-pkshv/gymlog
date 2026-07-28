@@ -3761,6 +3761,17 @@ class $WorkoutExercisesTable extends WorkoutExercises
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _commentMeta = const VerificationMeta(
+    'comment',
+  );
+  @override
+  late final GeneratedColumn<String> comment = GeneratedColumn<String>(
+    'comment',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _progressionDecisionMeta =
       const VerificationMeta('progressionDecision');
   @override
@@ -3784,6 +3795,7 @@ class $WorkoutExercisesTable extends WorkoutExercises
     workoutId,
     exerciseId,
     orderIndex,
+    comment,
     progressionDecision,
   ];
   @override
@@ -3849,6 +3861,12 @@ class $WorkoutExercisesTable extends WorkoutExercises
     } else if (isInserting) {
       context.missing(_orderIndexMeta);
     }
+    if (data.containsKey('comment')) {
+      context.handle(
+        _commentMeta,
+        comment.isAcceptableOrUnknown(data['comment']!, _commentMeta),
+      );
+    }
     if (data.containsKey('progressionDecision')) {
       context.handle(
         _progressionDecisionMeta,
@@ -3895,6 +3913,10 @@ class $WorkoutExercisesTable extends WorkoutExercises
         DriftSqlType.int,
         data['${effectivePrefix}orderIndex'],
       )!,
+      comment: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}comment'],
+      ),
       progressionDecision: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}progressionDecision'],
@@ -3916,6 +3938,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
   final String workoutId;
   final String exerciseId;
   final int orderIndex;
+  final String? comment;
   final String progressionDecision;
   const WorkoutExercise({
     required this.createdAt,
@@ -3925,6 +3948,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
     required this.workoutId,
     required this.exerciseId,
     required this.orderIndex,
+    this.comment,
     required this.progressionDecision,
   });
   @override
@@ -3937,6 +3961,9 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
     map['workoutId'] = Variable<String>(workoutId);
     map['exerciseId'] = Variable<String>(exerciseId);
     map['orderIndex'] = Variable<int>(orderIndex);
+    if (!nullToAbsent || comment != null) {
+      map['comment'] = Variable<String>(comment);
+    }
     map['progressionDecision'] = Variable<String>(progressionDecision);
     return map;
   }
@@ -3950,6 +3977,9 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
       workoutId: Value(workoutId),
       exerciseId: Value(exerciseId),
       orderIndex: Value(orderIndex),
+      comment: comment == null && nullToAbsent
+          ? const Value.absent()
+          : Value(comment),
       progressionDecision: Value(progressionDecision),
     );
   }
@@ -3967,6 +3997,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
       workoutId: serializer.fromJson<String>(json['workoutId']),
       exerciseId: serializer.fromJson<String>(json['exerciseId']),
       orderIndex: serializer.fromJson<int>(json['orderIndex']),
+      comment: serializer.fromJson<String?>(json['comment']),
       progressionDecision: serializer.fromJson<String>(
         json['progressionDecision'],
       ),
@@ -3983,6 +4014,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
       'workoutId': serializer.toJson<String>(workoutId),
       'exerciseId': serializer.toJson<String>(exerciseId),
       'orderIndex': serializer.toJson<int>(orderIndex),
+      'comment': serializer.toJson<String?>(comment),
       'progressionDecision': serializer.toJson<String>(progressionDecision),
     };
   }
@@ -3995,6 +4027,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
     String? workoutId,
     String? exerciseId,
     int? orderIndex,
+    Value<String?> comment = const Value.absent(),
     String? progressionDecision,
   }) => WorkoutExercise(
     createdAt: createdAt ?? this.createdAt,
@@ -4004,6 +4037,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
     workoutId: workoutId ?? this.workoutId,
     exerciseId: exerciseId ?? this.exerciseId,
     orderIndex: orderIndex ?? this.orderIndex,
+    comment: comment.present ? comment.value : this.comment,
     progressionDecision: progressionDecision ?? this.progressionDecision,
   );
   WorkoutExercise copyWithCompanion(WorkoutExercisesCompanion data) {
@@ -4019,6 +4053,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
       orderIndex: data.orderIndex.present
           ? data.orderIndex.value
           : this.orderIndex,
+      comment: data.comment.present ? data.comment.value : this.comment,
       progressionDecision: data.progressionDecision.present
           ? data.progressionDecision.value
           : this.progressionDecision,
@@ -4035,6 +4070,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
           ..write('workoutId: $workoutId, ')
           ..write('exerciseId: $exerciseId, ')
           ..write('orderIndex: $orderIndex, ')
+          ..write('comment: $comment, ')
           ..write('progressionDecision: $progressionDecision')
           ..write(')'))
         .toString();
@@ -4049,6 +4085,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
     workoutId,
     exerciseId,
     orderIndex,
+    comment,
     progressionDecision,
   );
   @override
@@ -4062,6 +4099,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
           other.workoutId == this.workoutId &&
           other.exerciseId == this.exerciseId &&
           other.orderIndex == this.orderIndex &&
+          other.comment == this.comment &&
           other.progressionDecision == this.progressionDecision);
 }
 
@@ -4073,6 +4111,7 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
   final Value<String> workoutId;
   final Value<String> exerciseId;
   final Value<int> orderIndex;
+  final Value<String?> comment;
   final Value<String> progressionDecision;
   final Value<int> rowid;
   const WorkoutExercisesCompanion({
@@ -4083,6 +4122,7 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
     this.workoutId = const Value.absent(),
     this.exerciseId = const Value.absent(),
     this.orderIndex = const Value.absent(),
+    this.comment = const Value.absent(),
     this.progressionDecision = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -4094,6 +4134,7 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
     required String workoutId,
     required String exerciseId,
     required int orderIndex,
+    this.comment = const Value.absent(),
     this.progressionDecision = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : createdAt = Value(createdAt),
@@ -4110,6 +4151,7 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
     Expression<String>? workoutId,
     Expression<String>? exerciseId,
     Expression<int>? orderIndex,
+    Expression<String>? comment,
     Expression<String>? progressionDecision,
     Expression<int>? rowid,
   }) {
@@ -4121,6 +4163,7 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
       if (workoutId != null) 'workoutId': workoutId,
       if (exerciseId != null) 'exerciseId': exerciseId,
       if (orderIndex != null) 'orderIndex': orderIndex,
+      if (comment != null) 'comment': comment,
       if (progressionDecision != null)
         'progressionDecision': progressionDecision,
       if (rowid != null) 'rowid': rowid,
@@ -4135,6 +4178,7 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
     Value<String>? workoutId,
     Value<String>? exerciseId,
     Value<int>? orderIndex,
+    Value<String?>? comment,
     Value<String>? progressionDecision,
     Value<int>? rowid,
   }) {
@@ -4146,6 +4190,7 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
       workoutId: workoutId ?? this.workoutId,
       exerciseId: exerciseId ?? this.exerciseId,
       orderIndex: orderIndex ?? this.orderIndex,
+      comment: comment ?? this.comment,
       progressionDecision: progressionDecision ?? this.progressionDecision,
       rowid: rowid ?? this.rowid,
     );
@@ -4175,6 +4220,9 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
     if (orderIndex.present) {
       map['orderIndex'] = Variable<int>(orderIndex.value);
     }
+    if (comment.present) {
+      map['comment'] = Variable<String>(comment.value);
+    }
     if (progressionDecision.present) {
       map['progressionDecision'] = Variable<String>(progressionDecision.value);
     }
@@ -4194,6 +4242,7 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
           ..write('workoutId: $workoutId, ')
           ..write('exerciseId: $exerciseId, ')
           ..write('orderIndex: $orderIndex, ')
+          ..write('comment: $comment, ')
           ..write('progressionDecision: $progressionDecision, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -5976,6 +6025,17 @@ class $TemplateExercisesTable extends TemplateExercises
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _commentMeta = const VerificationMeta(
+    'comment',
+  );
+  @override
+  late final GeneratedColumn<String> comment = GeneratedColumn<String>(
+    'comment',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     createdAt,
@@ -5985,6 +6045,7 @@ class $TemplateExercisesTable extends TemplateExercises
     templateId,
     exerciseId,
     orderIndex,
+    comment,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6049,6 +6110,12 @@ class $TemplateExercisesTable extends TemplateExercises
     } else if (isInserting) {
       context.missing(_orderIndexMeta);
     }
+    if (data.containsKey('comment')) {
+      context.handle(
+        _commentMeta,
+        comment.isAcceptableOrUnknown(data['comment']!, _commentMeta),
+      );
+    }
     return context;
   }
 
@@ -6086,6 +6153,10 @@ class $TemplateExercisesTable extends TemplateExercises
         DriftSqlType.int,
         data['${effectivePrefix}orderIndex'],
       )!,
+      comment: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}comment'],
+      ),
     );
   }
 
@@ -6104,6 +6175,7 @@ class TemplateExercise extends DataClass
   final String templateId;
   final String exerciseId;
   final int orderIndex;
+  final String? comment;
   const TemplateExercise({
     required this.createdAt,
     required this.updatedAt,
@@ -6112,6 +6184,7 @@ class TemplateExercise extends DataClass
     required this.templateId,
     required this.exerciseId,
     required this.orderIndex,
+    this.comment,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -6123,6 +6196,9 @@ class TemplateExercise extends DataClass
     map['templateId'] = Variable<String>(templateId);
     map['exerciseId'] = Variable<String>(exerciseId);
     map['orderIndex'] = Variable<int>(orderIndex);
+    if (!nullToAbsent || comment != null) {
+      map['comment'] = Variable<String>(comment);
+    }
     return map;
   }
 
@@ -6135,6 +6211,9 @@ class TemplateExercise extends DataClass
       templateId: Value(templateId),
       exerciseId: Value(exerciseId),
       orderIndex: Value(orderIndex),
+      comment: comment == null && nullToAbsent
+          ? const Value.absent()
+          : Value(comment),
     );
   }
 
@@ -6151,6 +6230,7 @@ class TemplateExercise extends DataClass
       templateId: serializer.fromJson<String>(json['templateId']),
       exerciseId: serializer.fromJson<String>(json['exerciseId']),
       orderIndex: serializer.fromJson<int>(json['orderIndex']),
+      comment: serializer.fromJson<String?>(json['comment']),
     );
   }
   @override
@@ -6164,6 +6244,7 @@ class TemplateExercise extends DataClass
       'templateId': serializer.toJson<String>(templateId),
       'exerciseId': serializer.toJson<String>(exerciseId),
       'orderIndex': serializer.toJson<int>(orderIndex),
+      'comment': serializer.toJson<String?>(comment),
     };
   }
 
@@ -6175,6 +6256,7 @@ class TemplateExercise extends DataClass
     String? templateId,
     String? exerciseId,
     int? orderIndex,
+    Value<String?> comment = const Value.absent(),
   }) => TemplateExercise(
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -6183,6 +6265,7 @@ class TemplateExercise extends DataClass
     templateId: templateId ?? this.templateId,
     exerciseId: exerciseId ?? this.exerciseId,
     orderIndex: orderIndex ?? this.orderIndex,
+    comment: comment.present ? comment.value : this.comment,
   );
   TemplateExercise copyWithCompanion(TemplateExercisesCompanion data) {
     return TemplateExercise(
@@ -6199,6 +6282,7 @@ class TemplateExercise extends DataClass
       orderIndex: data.orderIndex.present
           ? data.orderIndex.value
           : this.orderIndex,
+      comment: data.comment.present ? data.comment.value : this.comment,
     );
   }
 
@@ -6211,7 +6295,8 @@ class TemplateExercise extends DataClass
           ..write('id: $id, ')
           ..write('templateId: $templateId, ')
           ..write('exerciseId: $exerciseId, ')
-          ..write('orderIndex: $orderIndex')
+          ..write('orderIndex: $orderIndex, ')
+          ..write('comment: $comment')
           ..write(')'))
         .toString();
   }
@@ -6225,6 +6310,7 @@ class TemplateExercise extends DataClass
     templateId,
     exerciseId,
     orderIndex,
+    comment,
   );
   @override
   bool operator ==(Object other) =>
@@ -6236,7 +6322,8 @@ class TemplateExercise extends DataClass
           other.id == this.id &&
           other.templateId == this.templateId &&
           other.exerciseId == this.exerciseId &&
-          other.orderIndex == this.orderIndex);
+          other.orderIndex == this.orderIndex &&
+          other.comment == this.comment);
 }
 
 class TemplateExercisesCompanion extends UpdateCompanion<TemplateExercise> {
@@ -6247,6 +6334,7 @@ class TemplateExercisesCompanion extends UpdateCompanion<TemplateExercise> {
   final Value<String> templateId;
   final Value<String> exerciseId;
   final Value<int> orderIndex;
+  final Value<String?> comment;
   final Value<int> rowid;
   const TemplateExercisesCompanion({
     this.createdAt = const Value.absent(),
@@ -6256,6 +6344,7 @@ class TemplateExercisesCompanion extends UpdateCompanion<TemplateExercise> {
     this.templateId = const Value.absent(),
     this.exerciseId = const Value.absent(),
     this.orderIndex = const Value.absent(),
+    this.comment = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TemplateExercisesCompanion.insert({
@@ -6266,6 +6355,7 @@ class TemplateExercisesCompanion extends UpdateCompanion<TemplateExercise> {
     required String templateId,
     required String exerciseId,
     required int orderIndex,
+    this.comment = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : createdAt = Value(createdAt),
        updatedAt = Value(updatedAt),
@@ -6281,6 +6371,7 @@ class TemplateExercisesCompanion extends UpdateCompanion<TemplateExercise> {
     Expression<String>? templateId,
     Expression<String>? exerciseId,
     Expression<int>? orderIndex,
+    Expression<String>? comment,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -6291,6 +6382,7 @@ class TemplateExercisesCompanion extends UpdateCompanion<TemplateExercise> {
       if (templateId != null) 'templateId': templateId,
       if (exerciseId != null) 'exerciseId': exerciseId,
       if (orderIndex != null) 'orderIndex': orderIndex,
+      if (comment != null) 'comment': comment,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -6303,6 +6395,7 @@ class TemplateExercisesCompanion extends UpdateCompanion<TemplateExercise> {
     Value<String>? templateId,
     Value<String>? exerciseId,
     Value<int>? orderIndex,
+    Value<String?>? comment,
     Value<int>? rowid,
   }) {
     return TemplateExercisesCompanion(
@@ -6313,6 +6406,7 @@ class TemplateExercisesCompanion extends UpdateCompanion<TemplateExercise> {
       templateId: templateId ?? this.templateId,
       exerciseId: exerciseId ?? this.exerciseId,
       orderIndex: orderIndex ?? this.orderIndex,
+      comment: comment ?? this.comment,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -6341,6 +6435,9 @@ class TemplateExercisesCompanion extends UpdateCompanion<TemplateExercise> {
     if (orderIndex.present) {
       map['orderIndex'] = Variable<int>(orderIndex.value);
     }
+    if (comment.present) {
+      map['comment'] = Variable<String>(comment.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -6357,6 +6454,7 @@ class TemplateExercisesCompanion extends UpdateCompanion<TemplateExercise> {
           ..write('templateId: $templateId, ')
           ..write('exerciseId: $exerciseId, ')
           ..write('orderIndex: $orderIndex, ')
+          ..write('comment: $comment, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -14822,6 +14920,7 @@ typedef $$WorkoutExercisesTableCreateCompanionBuilder =
       required String workoutId,
       required String exerciseId,
       required int orderIndex,
+      Value<String?> comment,
       Value<String> progressionDecision,
       Value<int> rowid,
     });
@@ -14834,6 +14933,7 @@ typedef $$WorkoutExercisesTableUpdateCompanionBuilder =
       Value<String> workoutId,
       Value<String> exerciseId,
       Value<int> orderIndex,
+      Value<String?> comment,
       Value<String> progressionDecision,
       Value<int> rowid,
     });
@@ -14931,6 +15031,11 @@ class $$WorkoutExercisesTableFilterComposer
 
   ColumnFilters<int> get orderIndex => $composableBuilder(
     column: $table.orderIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get comment => $composableBuilder(
+    column: $table.comment,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -15045,6 +15150,11 @@ class $$WorkoutExercisesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get comment => $composableBuilder(
+    column: $table.comment,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get progressionDecision => $composableBuilder(
     column: $table.progressionDecision,
     builder: (column) => ColumnOrderings(column),
@@ -15122,6 +15232,9 @@ class $$WorkoutExercisesTableAnnotationComposer
     column: $table.orderIndex,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get comment =>
+      $composableBuilder(column: $table.comment, builder: (column) => column);
 
   GeneratedColumn<String> get progressionDecision => $composableBuilder(
     column: $table.progressionDecision,
@@ -15241,6 +15354,7 @@ class $$WorkoutExercisesTableTableManager
                 Value<String> workoutId = const Value.absent(),
                 Value<String> exerciseId = const Value.absent(),
                 Value<int> orderIndex = const Value.absent(),
+                Value<String?> comment = const Value.absent(),
                 Value<String> progressionDecision = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WorkoutExercisesCompanion(
@@ -15251,6 +15365,7 @@ class $$WorkoutExercisesTableTableManager
                 workoutId: workoutId,
                 exerciseId: exerciseId,
                 orderIndex: orderIndex,
+                comment: comment,
                 progressionDecision: progressionDecision,
                 rowid: rowid,
               ),
@@ -15263,6 +15378,7 @@ class $$WorkoutExercisesTableTableManager
                 required String workoutId,
                 required String exerciseId,
                 required int orderIndex,
+                Value<String?> comment = const Value.absent(),
                 Value<String> progressionDecision = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WorkoutExercisesCompanion.insert(
@@ -15273,6 +15389,7 @@ class $$WorkoutExercisesTableTableManager
                 workoutId: workoutId,
                 exerciseId: exerciseId,
                 orderIndex: orderIndex,
+                comment: comment,
                 progressionDecision: progressionDecision,
                 rowid: rowid,
               ),
@@ -16502,6 +16619,7 @@ typedef $$TemplateExercisesTableCreateCompanionBuilder =
       required String templateId,
       required String exerciseId,
       required int orderIndex,
+      Value<String?> comment,
       Value<int> rowid,
     });
 typedef $$TemplateExercisesTableUpdateCompanionBuilder =
@@ -16513,6 +16631,7 @@ typedef $$TemplateExercisesTableUpdateCompanionBuilder =
       Value<String> templateId,
       Value<String> exerciseId,
       Value<int> orderIndex,
+      Value<String?> comment,
       Value<int> rowid,
     });
 
@@ -16614,6 +16733,11 @@ class $$TemplateExercisesTableFilterComposer
 
   ColumnFilters<int> get orderIndex => $composableBuilder(
     column: $table.orderIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get comment => $composableBuilder(
+    column: $table.comment,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -16723,6 +16847,11 @@ class $$TemplateExercisesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get comment => $composableBuilder(
+    column: $table.comment,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$WorkoutTemplatesTableOrderingComposer get templateId {
     final $$WorkoutTemplatesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -16795,6 +16924,9 @@ class $$TemplateExercisesTableAnnotationComposer
     column: $table.orderIndex,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get comment =>
+      $composableBuilder(column: $table.comment, builder: (column) => column);
 
   $$WorkoutTemplatesTableAnnotationComposer get templateId {
     final $$WorkoutTemplatesTableAnnotationComposer composer = $composerBuilder(
@@ -16912,6 +17044,7 @@ class $$TemplateExercisesTableTableManager
                 Value<String> templateId = const Value.absent(),
                 Value<String> exerciseId = const Value.absent(),
                 Value<int> orderIndex = const Value.absent(),
+                Value<String?> comment = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TemplateExercisesCompanion(
                 createdAt: createdAt,
@@ -16921,6 +17054,7 @@ class $$TemplateExercisesTableTableManager
                 templateId: templateId,
                 exerciseId: exerciseId,
                 orderIndex: orderIndex,
+                comment: comment,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -16932,6 +17066,7 @@ class $$TemplateExercisesTableTableManager
                 required String templateId,
                 required String exerciseId,
                 required int orderIndex,
+                Value<String?> comment = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TemplateExercisesCompanion.insert(
                 createdAt: createdAt,
@@ -16941,6 +17076,7 @@ class $$TemplateExercisesTableTableManager
                 templateId: templateId,
                 exerciseId: exerciseId,
                 orderIndex: orderIndex,
+                comment: comment,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

@@ -44,12 +44,13 @@ const List<String> workoutTagColorPalette = [
   '#7B8794',
 ];
 
-/// Comment field length limits (06_DATA_MODEL.md, section 6.4/6.8),
+/// Comment field length limits (06_DATA_MODEL.md, sections 6.4/6.6/6.8),
 /// enforced via `maxLength` on the S-03/S-13 comment fields.
 class CommentLengthLimits {
   const CommentLengthLimits._();
 
   static const int workout = 2000;
+  static const int workoutExercise = 1000;
   static const int workoutTemplate = 2000;
 }
 
@@ -122,7 +123,10 @@ class ExportFormat {
   /// v5 (Stage 10 redesign, 2026-07-26, owner-confirmed): `workouts.csv`
   /// dropped the `exercise_comment` column -- per-exercise comments were
   /// removed entirely.
-  static const int formatVersion = 5;
+  /// v6 (Stage 11, 2026-07-28, owner-confirmed): `workouts.csv` gets the
+  /// `exercise_comment` column back -- per-exercise comments are back
+  /// (same position as before, right after `exercise_order`).
+  static const int formatVersion = 6;
 
   /// Mirrors `pubspec.yaml`'s semantic version (currently `1.0.0+1`) --
   /// there's no `package_info_plus` dependency (not in TS 3) to read it at

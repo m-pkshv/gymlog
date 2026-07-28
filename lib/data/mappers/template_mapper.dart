@@ -49,6 +49,7 @@ extension TemplateExerciseRowMapper on drift.TemplateExercise {
       templateId: templateId,
       exerciseId: exerciseId,
       orderIndex: orderIndex,
+      comment: comment,
       createdAt: DateTime.parse(createdAt),
       updatedAt: DateTime.parse(updatedAt),
       isDeleted: isDeleted,
@@ -63,8 +64,17 @@ extension TemplateExerciseCompanionMapper on TemplateExercise {
       templateId: templateId,
       exerciseId: exerciseId,
       orderIndex: orderIndex,
+      comment: Value(comment),
       createdAt: createdAt.toUtc().toIso8601String(),
       updatedAt: updatedAt.toUtc().toIso8601String(),
+    );
+  }
+
+  drift.TemplateExercisesCompanion toUpdateCompanion() {
+    return drift.TemplateExercisesCompanion(
+      orderIndex: Value(orderIndex),
+      comment: Value(comment),
+      updatedAt: Value(updatedAt.toUtc().toIso8601String()),
     );
   }
 }

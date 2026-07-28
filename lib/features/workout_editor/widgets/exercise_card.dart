@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/constants.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/models/workout_details.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../exercises/exercise_type_labels.dart';
 import '../set_field_config.dart';
+import 'comment_field.dart';
 import 'past_results_sheet.dart';
 import 'progression_segmented_button.dart';
 import 'set_row.dart';
@@ -25,12 +27,13 @@ enum _ExerciseCardAction {
 /// прошлого выполнения" (menu, TS 8 section 8) + reorder — "⋮ → Вверх/Вниз"
 /// (owner-reported, Stage 10: the drag handle this used to have alongside
 /// the menu felt sluggish on a screen already busy with large cards, and
-/// was removed; the menu is now the only way to reorder) + the progression
-/// segment (—/↑/=/↓, DM 6.11 "ручная отметка") with the D-7 stagnation
-/// hint ("N без роста", read from `progressionStateProvider` — a cache the
-/// manual decision itself never influences). No exercise-level comment
-/// field (Stage 10 redesign, owner-reported: removed entirely,
-/// `WorkoutExercise` no longer has a `comment` field at all).
+/// was removed; the menu is now the only way to reorder) + an exercise
+/// comment field (Stage 11, owner-reported: removed entirely in the Stage
+/// 10 redesign, then asked back — same debounce/flush contract as the
+/// workout-level comment, TS 5) + the progression segment (—/↑/=/↓, DM
+/// 6.11 "ручная отметка") with the D-7 stagnation hint ("N без роста",
+/// read from `progressionStateProvider` — a cache the manual decision
+/// itself never influences).
 ///
 /// Collapsible (Stage 10, owner-reported): a long workout's sets table
 /// becomes one hard-to-scan wall of rows; tapping the header (type icon +
@@ -57,6 +60,8 @@ class ExerciseCard extends ConsumerStatefulWidget {
     required this.onCopyLastPerformance,
     required this.onMoveUp,
     required this.onMoveDown,
+    required this.onCommentChanged,
+    required this.onCommentCommit,
     required this.onSetDeleted,
     required this.onProgressionDecisionChanged,
     required this.onEditExercise,
@@ -86,6 +91,8 @@ class ExerciseCard extends ConsumerStatefulWidget {
   final VoidCallback onCopyLastPerformance;
   final VoidCallback onMoveUp;
   final VoidCallback onMoveDown;
+  final ValueChanged<String> onCommentChanged;
+  final VoidCallback onCommentCommit;
   final ValueChanged<String> onSetDeleted;
   final ValueChanged<ProgressionDecision> onProgressionDecisionChanged;
   final VoidCallback onEditExercise;
@@ -237,6 +244,14 @@ class _ExerciseCardState extends ConsumerState<ExerciseCard> {
                       tooltip: l10n.duplicateSetAction,
                     ),
                 ],
+              ),
+              CommentField(
+                key: ValueKey('exercise-comment-${details.workoutExercise.id}'),
+                value: details.workoutExercise.comment,
+                label: l10n.exerciseCommentLabel,
+                maxLength: CommentLengthLimits.workoutExercise,
+                onChanged: widget.onCommentChanged,
+                onCommit: widget.onCommentCommit,
               ),
               const SizedBox(height: 8),
               Row(

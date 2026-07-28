@@ -80,6 +80,8 @@ class WorkoutExercises extends Table with SoftDeleteColumns {
 
   IntColumn get orderIndex => integer()();
 
+  TextColumn get comment => text().nullable()();
+
   TextColumn get progressionDecision => text()
       .customConstraint(
         "NOT NULL DEFAULT 'none' CHECK (progressionDecision IN "

@@ -185,6 +185,7 @@ class WorkoutTemplateRepositoryImpl implements WorkoutTemplateRepository {
           templateId: copy.id,
           exerciseId: sourceTemplateExercise.exerciseId,
           orderIndex: sourceTemplateExercise.orderIndex,
+          comment: sourceTemplateExercise.comment,
           createdAt: now,
           updatedAt: now,
           isDeleted: false,
@@ -254,6 +255,7 @@ class WorkoutTemplateRepositoryImpl implements WorkoutTemplateRepository {
           templateId: template.id,
           exerciseId: weRow.exerciseId,
           orderIndex: weRow.orderIndex,
+          comment: weRow.comment,
           createdAt: now,
           updatedAt: now,
           isDeleted: false,
@@ -320,6 +322,13 @@ class WorkoutTemplateRepositoryImpl implements WorkoutTemplateRepository {
         .into(_db.templateExercises)
         .insert(templateExercise.toInsertCompanion());
     return templateExercise;
+  }
+
+  @override
+  Future<void> updateTemplateExercise(TemplateExercise templateExercise) async {
+    await (_db.update(_db.templateExercises)..where(
+      (te) => te.id.equals(templateExercise.id),
+    )).write(templateExercise.toUpdateCompanion());
   }
 
   Future<int> _maxOrderIndex(String templateId) async {

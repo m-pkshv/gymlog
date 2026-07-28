@@ -219,6 +219,7 @@
   "collapseExerciseAction": "Свернуть упражнение",
   "expandExerciseAction": "Развернуть упражнение",
   "workoutCommentLabel": "Комментарий",
+  "exerciseCommentLabel": "Комментарий",
   "deleteSetAction": "Удалить подход",
   "setDeletedMessage": "Подход удалён",
   "removeExerciseAction": "Удалить упражнение",

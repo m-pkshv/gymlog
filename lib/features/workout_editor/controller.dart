@@ -81,6 +81,7 @@ class WorkoutEditorController
   AppSettings? _latestSettings;
   final Map<String, Timer> _debounceTimers = {};
   Timer? _workoutCommentDebounceTimer;
+  final Map<String, Timer> _exerciseCommentDebounceTimers = {};
 
   Future<void> _load() async {
     try {
@@ -241,6 +242,10 @@ class WorkoutEditorController
     }
     if (_workoutCommentDebounceTimer != null) {
       await flushWorkoutComment();
+    }
+    for (final workoutExerciseId
+        in _exerciseCommentDebounceTimers.keys.toList()) {
+      await flushExerciseComment(workoutExerciseId);
     }
   }
 
@@ -655,6 +660,37 @@ class WorkoutEditorController
     }
   }
 
+  /// Edits an exercise's comment (S-03), same debounce/flush contract as
+  /// [editSet]/[flushSet].
+  void editExerciseComment(String workoutExerciseId, String value) {
+    final current = _findWorkoutExercise(workoutExerciseId);
+    if (current == null) return;
+    _replaceWorkoutExercise(
+      current.copyWith(comment: value, updatedAt: DateTime.now().toUtc()),
+    );
+    _exerciseCommentDebounceTimers[workoutExerciseId]?.cancel();
+    _exerciseCommentDebounceTimers[workoutExerciseId] = Timer(
+      autosaveDebounce,
+      () => flushExerciseComment(workoutExerciseId),
+    );
+  }
+
+  /// Immediate write of an exercise's comment, bypassing the debounce.
+  Future<void> flushExerciseComment(String workoutExerciseId) async {
+    _exerciseCommentDebounceTimers.remove(workoutExerciseId)?.cancel();
+    final workoutExercise = _findWorkoutExercise(workoutExerciseId);
+    if (workoutExercise == null) return;
+    try {
+      await _workoutRepository.updateWorkoutExercise(workoutExercise);
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to save comment for exercise $workoutExerciseId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
   /// Sets an exercise's manual progression decision (S-03 segment
   /// —/↑/=/↓). Purely a user annotation (DM 6.11: "на счётчик не влияет")
   /// — never touches the D-7 stagnation counter, so no recompute here.
@@ -766,6 +802,15 @@ class WorkoutEditorController
         unawaited(_workoutRepository.updateWorkout(details.workout));
       }
     }
+
+    for (final entry in _exerciseCommentDebounceTimers.entries) {
+      entry.value.cancel();
+      final workoutExercise = _findWorkoutExercise(entry.key);
+      if (workoutExercise != null) {
+        unawaited(_workoutRepository.updateWorkoutExercise(workoutExercise));
+      }
+    }
+    _exerciseCommentDebounceTimers.clear();
 
     super.dispose();
   }

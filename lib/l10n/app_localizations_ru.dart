@@ -699,6 +699,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get workoutCommentLabel => 'Комментарий';
 
   @override
+  String get exerciseCommentLabel => 'Комментарий';
+
+  @override
   String get deleteSetAction => 'Удалить подход';
 
   @override

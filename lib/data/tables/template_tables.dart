@@ -31,6 +31,8 @@ class TemplateExercises extends Table with SoftDeleteColumns {
 
   IntColumn get orderIndex => integer()();
 
+  TextColumn get comment => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }

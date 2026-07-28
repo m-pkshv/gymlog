@@ -247,6 +247,13 @@ class _EditorBody extends StatelessWidget {
                           templateExerciseId,
                           up: false,
                         ),
+                        onCommentChanged: (value) =>
+                            controller.editExerciseComment(
+                              templateExerciseId,
+                              value,
+                            ),
+                        onCommentCommit: () =>
+                            controller.flushExerciseComment(templateExerciseId),
                         onSetDeleted: onSetDeleted,
                         onEditExercise: () =>
                             onEditExercise(exerciseDetails.exercise),

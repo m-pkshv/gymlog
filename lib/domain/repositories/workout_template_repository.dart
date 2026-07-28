@@ -30,12 +30,13 @@ abstract class WorkoutTemplateRepository {
   Future<WorkoutTemplate> create({required String name, String? comment});
 
   /// "Создать шаблон" (S-02/S-03 workout action, TS 8 section 8): copies
-  /// [workoutId]'s non-deleted exercises (order) and each set's planned
-  /// values into a brand-new template named [name]. Facts, completion, and
-  /// the source workout's own comment are never copied — `TemplateSet` has
-  /// no fact fields at all (DM 6.8), and the workout-level comment follows
-  /// the same "starts blank" precedent `copyWorkout` already established
-  /// for workout-to-workout copies (Stage 3). Throws `ArgumentError` if
+  /// [workoutId]'s non-deleted exercises (order, per-exercise comment) and
+  /// each set's planned values into a brand-new template named [name].
+  /// Facts, completion, and the source workout's own (workout-level)
+  /// comment are never copied — `TemplateSet` has no fact fields at all
+  /// (DM 6.8), and the workout-level comment follows the same "starts
+  /// blank" precedent `copyWorkout` already established for
+  /// workout-to-workout copies (Stage 3). Throws `ArgumentError` if
   /// [workoutId] doesn't exist.
   Future<WorkoutTemplate> createFromWorkout({
     required String workoutId,
@@ -44,8 +45,8 @@ abstract class WorkoutTemplateRepository {
 
   /// "Дублировать" (S-12 card menu, 04_UI_UX_SPEC.md section 5): full
   /// within-aggregate clone of [templateId] — every `TemplateExercise`
-  /// (order) and `TemplateSet` (all planned fields, `side`), plus the
-  /// source template's own comment, into a brand-new,
+  /// (order, comment) and `TemplateSet` (all planned fields, `side`), plus
+  /// the source template's own comment, into a brand-new,
   /// never-archived template named [name] (04/TS 8 don't detail field
   /// copying for "duplicate" the way they do for the cross-aggregate
   /// workout<->template copies, so everything is copied 1:1 — this isn't a
@@ -63,6 +64,10 @@ abstract class WorkoutTemplateRepository {
     required String templateId,
     required String exerciseId,
   });
+
+  /// Persists `TemplateExercise`-level field changes — the comment autosave
+  /// write (S-13, mirrors S-03's TS 5 contract).
+  Future<void> updateTemplateExercise(TemplateExercise templateExercise);
 
   Future<TemplateSet> addSet({required String templateExerciseId});
 

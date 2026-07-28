@@ -8,6 +8,7 @@ class TemplateExercise {
     required this.templateId,
     required this.exerciseId,
     required this.orderIndex,
+    this.comment,
     required this.createdAt,
     required this.updatedAt,
     required this.isDeleted,
@@ -17,12 +18,18 @@ class TemplateExercise {
   final String templateId;
   final String exerciseId;
   final int orderIndex;
+  final String? comment;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isDeleted;
 
+  /// Sentinel default for [comment] — same rationale as
+  /// `WorkoutExercise.copyWith`.
+  static const Object _unset = Object();
+
   TemplateExercise copyWith({
     int? orderIndex,
+    Object? comment = _unset,
     DateTime? updatedAt,
     bool? isDeleted,
   }) {
@@ -31,6 +38,7 @@ class TemplateExercise {
       templateId: templateId,
       exerciseId: exerciseId,
       orderIndex: orderIndex ?? this.orderIndex,
+      comment: identical(comment, _unset) ? this.comment : comment as String?,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,

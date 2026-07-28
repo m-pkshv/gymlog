@@ -29,7 +29,11 @@ part 'database.g.dart';
 /// `WorkoutExercises.comment`/`TemplateExercises.comment` — the
 /// per-exercise comment field was removed entirely; `Workout.comment` and
 /// `WorkoutTemplate.comment` (the workout/template-level comments) are
-/// untouched.
+/// untouched. Version 6 (Stage 11, owner-confirmed 2026-07-28) adds
+/// `WorkoutExercises.comment`/`TemplateExercises.comment` back — the
+/// per-exercise comment field turned out to still be wanted after all. Any
+/// install that already passed through v5 lost its old comment data at
+/// that drop; this migration only restores the empty column, not the text.
 @DriftDatabase(
   tables: [
     MuscleGroups,
@@ -59,7 +63,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration {
@@ -95,6 +99,14 @@ class AppDatabase extends _$AppDatabase {
           // `Workout.comment`/`WorkoutTemplate.comment` are untouched.
           await m.dropColumn(workoutExercises, 'comment');
           await m.dropColumn(templateExercises, 'comment');
+        }
+        if (from < 6) {
+          // v5 -> v6 (Stage 11, 2026-07-28): the per-exercise comment field
+          // is back (owner-reported) -- a plain `addColumn`, always NULL
+          // for existing rows (the v4->v5 drop above already destroyed any
+          // old comment text for installs that passed through it).
+          await m.addColumn(workoutExercises, workoutExercises.comment);
+          await m.addColumn(templateExercises, templateExercises.comment);
         }
       },
       beforeOpen: (details) async {

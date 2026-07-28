@@ -8,6 +8,7 @@ class WorkoutExercise {
     required this.workoutId,
     required this.exerciseId,
     required this.orderIndex,
+    this.comment,
     required this.progressionDecision,
     required this.createdAt,
     required this.updatedAt,
@@ -18,13 +19,20 @@ class WorkoutExercise {
   final String workoutId;
   final String exerciseId;
   final int orderIndex;
+  final String? comment;
   final ProgressionDecision progressionDecision;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isDeleted;
 
+  /// Sentinel default for [comment]: distinguishes "not passed" from
+  /// "explicitly clear the field" — same rationale as `Workout.copyWith`
+  /// (Stage 10).
+  static const Object _unset = Object();
+
   WorkoutExercise copyWith({
     int? orderIndex,
+    Object? comment = _unset,
     ProgressionDecision? progressionDecision,
     DateTime? updatedAt,
     bool? isDeleted,
@@ -34,6 +42,7 @@ class WorkoutExercise {
       workoutId: workoutId,
       exerciseId: exerciseId,
       orderIndex: orderIndex ?? this.orderIndex,
+      comment: identical(comment, _unset) ? this.comment : comment as String?,
       progressionDecision: progressionDecision ?? this.progressionDecision,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

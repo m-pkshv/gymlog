@@ -693,6 +693,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get workoutCommentLabel => 'Comment';
 
   @override
+  String get exerciseCommentLabel => 'Comment';
+
+  @override
   String get deleteSetAction => 'Delete set';
 
   @override

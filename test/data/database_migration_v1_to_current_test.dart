@@ -27,6 +27,12 @@ import 'package:gymlog/domain/enums.dart';
 /// v4 -> v5 (2026-07-26, owner-confirmed): `WorkoutExercises.comment`/
 /// `TemplateExercises.comment` dropped -- the per-exercise comment field
 /// was removed entirely.
+/// v5 -> v6 (2026-07-28, owner-confirmed): `WorkoutExercises.comment`/
+/// `TemplateExercises.comment` added back -- the per-exercise comment field
+/// turned out to still be wanted. A v1 install migrating straight through
+/// to current runs both steps in sequence, so any comment text set before
+/// the v5 drop is genuinely gone by the time the v6 column reappears --
+/// this test asserts that explicitly, it isn't an oversight.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -90,6 +96,11 @@ void main() {
               workoutId: workout.id,
               exerciseId: exercise.id,
               orderIndex: 0,
+              // Set directly through the typed API -- `createAll()` already
+              // builds this column (it's back in the current schema, see
+              // the v5 -> v6 note above), unlike the columns further below
+              // that still need a raw `ALTER TABLE` to simulate a v1 shape.
+              comment: const Value('go heavy'),
               createdAt: '2026-07-01T00:00:00.000Z',
               updatedAt: '2026-07-01T00:00:00.000Z',
             ),
@@ -147,6 +158,7 @@ void main() {
               templateId: template.id,
               exerciseId: exercise.id,
               orderIndex: 0,
+              comment: const Value('go heavy'),
               createdAt: '2026-07-01T00:00:00.000Z',
               updatedAt: '2026-07-01T00:00:00.000Z',
             ),
@@ -166,18 +178,6 @@ void main() {
       );
       await firstRun.customStatement(
         'UPDATE "ExerciseSets" SET "comment" = \'felt heavy\' WHERE "id" = \'s1\'',
-      );
-      await firstRun.customStatement(
-        'ALTER TABLE "WorkoutExercises" ADD COLUMN "comment" TEXT',
-      );
-      await firstRun.customStatement(
-        'UPDATE "WorkoutExercises" SET "comment" = \'go heavy\' WHERE "id" = \'we1\'',
-      );
-      await firstRun.customStatement(
-        'ALTER TABLE "TemplateExercises" ADD COLUMN "comment" TEXT',
-      );
-      await firstRun.customStatement(
-        'UPDATE "TemplateExercises" SET "comment" = \'go heavy\' WHERE "id" = \'te1\'',
       );
       await firstRun.customStatement('PRAGMA user_version = 1');
       await firstRun.close();
@@ -211,25 +211,27 @@ void main() {
         exerciseSetColumns.map((r) => r.data['name']),
         isNot(contains('comment')),
       );
+      // `comment` is back on both tables (v5 -> v6) -- unlike the other
+      // dropped columns above, this one is expected to exist again.
       final workoutExerciseColumns = await secondRun
           .customSelect('PRAGMA table_info("WorkoutExercises")')
           .get();
       expect(
         workoutExerciseColumns.map((r) => r.data['name']),
-        isNot(contains('comment')),
+        contains('comment'),
       );
       final templateExerciseColumns = await secondRun
           .customSelect('PRAGMA table_info("TemplateExercises")')
           .get();
       expect(
         templateExerciseColumns.map((r) => r.data['name']),
-        isNot(contains('comment')),
+        contains('comment'),
       );
 
       final versionRow = await secondRun
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(versionRow.data['user_version'], 5);
+      expect(versionRow.data['user_version'], 6);
 
       final fkRows = await secondRun.customSelect('PRAGMA foreign_keys').get();
       expect(fkRows.single.data['foreign_keys'], 1);
@@ -251,12 +253,18 @@ void main() {
           .get();
       expect(storedWorkoutExercises.single.id, 'we1');
       expect(storedWorkoutExercises.single.orderIndex, 0);
+      // The 'go heavy' text set on `firstRun` didn't survive: the v5 drop
+      // (which this v1 install passes through on the way to v6) genuinely
+      // destroys it, and v6's `addColumn` only brings back an empty column,
+      // not the old data -- see this file's top doc comment.
+      expect(storedWorkoutExercises.single.comment, isNull);
 
       final storedTemplateExercises = await secondRun
           .select(secondRun.templateExercises)
           .get();
       expect(storedTemplateExercises.single.id, 'te1');
       expect(storedTemplateExercises.single.orderIndex, 0);
+      expect(storedTemplateExercises.single.comment, isNull);
     },
   );
 }

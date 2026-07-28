@@ -844,6 +844,13 @@ class _EditorBody extends StatelessWidget {
                           workoutExerciseId,
                           up: false,
                         ),
+                        onCommentChanged: (value) =>
+                            controller.editExerciseComment(
+                              workoutExerciseId,
+                              value,
+                            ),
+                        onCommentCommit: () =>
+                            controller.flushExerciseComment(workoutExerciseId),
                         onSetDeleted: onSetDeleted,
                         onProgressionDecisionChanged: (decision) =>
                             controller.setProgressionDecision(

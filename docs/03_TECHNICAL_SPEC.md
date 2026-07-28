@@ -142,10 +142,10 @@ test/ (unit), integration_test/
 - Операция журналируется в `ImportExportOperation`; сборка — во временный каталог, ZIP формируется полностью и только затем передаётся в шаринг (частичный файл наружу не попадает).
 
 ### 10.2. `manifest.json`
-`formatVersion` v2 (Этап 10, 2026-07-23): убрана колонка `is_warmup` из `workouts.csv` (10.3) — понятие разминки удалено из приложения. v3 (Этап 10, 2026-07-23): убрана колонка `comment` из `measurements.csv` (10.4) — комментарий к замеру удалён из приложения. v4 (Этап 10, 2026-07-24): убрана колонка `set_comment` из `workouts.csv` — комментарий подхода удалён из приложения. v5 (Этап 10, редизайн, 2026-07-26): убрана колонка `exercise_comment` из `workouts.csv` — комментарий упражнения удалён из приложения.
+`formatVersion` v2 (Этап 10, 2026-07-23): убрана колонка `is_warmup` из `workouts.csv` (10.3) — понятие разминки удалено из приложения. v3 (Этап 10, 2026-07-23): убрана колонка `comment` из `measurements.csv` (10.4) — комментарий к замеру удалён из приложения. v4 (Этап 10, 2026-07-24): убрана колонка `set_comment` из `workouts.csv` — комментарий подхода удалён из приложения. v5 (Этап 10, редизайн, 2026-07-26): убрана колонка `exercise_comment` из `workouts.csv` — комментарий упражнения удалён из приложения. v6 (Этап 11, 2026-07-28): колонка `exercise_comment` возвращена в `workouts.csv` — комментарий упражнения снова есть (та же позиция, сразу после `exercise_order`).
 ```json
 {
-  "formatVersion": 5,
+  "formatVersion": 6,
   "appVersion": "1.0.0",
   "exportedAtUtc": "2026-07-19T14:00:00Z",
   "files": {
@@ -158,9 +158,9 @@ test/ (unit), integration_test/
 ```
 
 ### 10.3. `workouts.csv` — строка = подход (порядок колонок фиксирован)
-`exercise_name, exercise_id, exercise_type, workout_id, workout_date, workout_name, workout_status, workout_tags, workout_comment, workout_duration_sec, exercise_order, progression_decision, set_number, is_completed, planned_weight_kg, planned_reps, actual_weight_kg, actual_reps, rpe, rir, planned_duration_sec, actual_duration_sec, planned_distance_m, actual_distance_m, resistance, incline_percent, avg_heart_rate, side`
+`exercise_name, exercise_id, exercise_type, workout_id, workout_date, workout_name, workout_status, workout_tags, workout_comment, workout_duration_sec, exercise_order, exercise_comment, progression_decision, set_number, is_completed, planned_weight_kg, planned_reps, actual_weight_kg, actual_reps, rpe, rir, planned_duration_sec, actual_duration_sec, planned_distance_m, actual_distance_m, resistance, incline_percent, avg_heart_rate, side`
 
-(колонка `set_comment` убрана в v4 формата экспорта — комментарий подхода удалён из приложения, Этап 10, 2026-07-24, решение владельца; колонка `exercise_comment` убрана в v5 — комментарий упражнения удалён из приложения, Этап 10, редизайн, 2026-07-26, решение владельца)
+(колонка `set_comment` убрана в v4 формата экспорта — комментарий подхода удалён из приложения, Этап 10, 2026-07-24, решение владельца; колонка `exercise_comment` была убрана в v5 — комментарий упражнения удалён из приложения, Этап 10, редизайн, 2026-07-26, решение владельца — и возвращена в v6, Этап 11, 2026-07-28, решение владельца)
 - `exercise_name` — первая колонка (требование D-9); для встроенных — каноническое английское имя (`06`, раздел 12).
 - `workout_tags` — имена тегов через `;` внутри одной ячейки.
 - Булевы — `true`/`false`. Тренировка без упражнений — одна строка с пустыми полями подхода. Сортировка строк: `workout_date`, `workout_id`, `exercise_order`, `set_number`.

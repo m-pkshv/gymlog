@@ -11,6 +11,7 @@ import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/domain/models/exercise.dart';
 import 'package:gymlog/features/exercises/create_exercise_screen.dart';
 import 'package:gymlog/features/template_editor/screen.dart';
+import 'package:gymlog/features/template_editor/widgets/template_exercise_card.dart';
 import 'package:gymlog/features/template_editor/widgets/template_set_row.dart';
 import 'package:gymlog/features/templates/screen.dart';
 import 'package:gymlog/features/workout_editor/add_exercise_screen.dart';
@@ -171,11 +172,21 @@ Future<void> _enterTemplateStepperValue(
 }
 
 /// The [index]-th `CommentField`'s underlying `TextField` -- index 0 is the
-/// template name field, index 1 the template comment field. Exercise
-/// cards no longer have their own `CommentField` (Stage 10 redesign,
-/// owner-reported: removed entirely).
+/// template name field, index 1 the template comment field, both always
+/// placed *before* any exercise card in `_EditorBody`'s `Column`, so these
+/// two indices stay valid regardless of how many exercise cards (each with
+/// its own `CommentField` again, Stage 11, owner-reported) are on screen.
 Finder _commentField(int index) =>
     find.descendant(of: find.byType(CommentField).at(index), matching: find.byType(TextField));
+
+/// The [exerciseIndex]-th exercise card's own `CommentField` `TextField`.
+Finder _exerciseCommentField(int exerciseIndex) => find.descendant(
+  of: find.descendant(
+    of: find.byType(TemplateExerciseCard).at(exerciseIndex),
+    matching: find.byType(CommentField),
+  ),
+  matching: find.byType(TextField),
+);
 
 void main() {
   late AppDatabase db;
@@ -353,6 +364,45 @@ void main() {
 
     await _unmountAndFlush(tester);
   });
+
+  testWidgets(
+    "editing an exercise's own comment debounces the write, then autosaves, "
+    'independently of the template-level comment (Stage 11, owner-reported: '
+    'mirrors the same fix in the workout editor)',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await _seedExercise(db);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createTemplateViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(_exerciseCommentField(0), 'Elbow felt off');
+      await tester.pump();
+
+      var templateExercises = await db.select(db.templateExercises).get();
+      expect(
+        templateExercises.single.comment,
+        isNull,
+        reason: 'not flushed yet',
+      );
+
+      await tester.pump(autosaveDebounce + const Duration(milliseconds: 50));
+      templateExercises = await db.select(db.templateExercises).get();
+      expect(templateExercises.single.comment, 'Elbow felt off');
+
+      final templates = await db.select(db.workoutTemplates).get();
+      expect(templates.single.comment, isNull);
+
+      await _unmountAndFlush(tester);
+    },
+  );
 
   testWidgets(
     'delete set (Stage 10, owner-reported): the delete icon soft-deletes a '

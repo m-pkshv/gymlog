@@ -700,11 +700,11 @@ void main() {
 
   group('copyWorkout (Stage 3, S-02, TS 8 section 8)', () {
     test(
-      'copies exercises, order, planned values and the last progression '
-      'decision into a new draft dated by the caller -- actuals and '
-      'completion are never copied (Stage 10, owner-reported: the '
-      'progression call now carries forward as a starting point, instead '
-      'of always resetting to "not set")',
+      'copies exercises, order, comment, planned values and the last '
+      'progression decision into a new draft dated by the caller -- '
+      'actuals and completion are never copied (Stage 10, owner-reported: '
+      'the progression call now carries forward as a starting point, '
+      'instead of always resetting to "not set")',
       () async {
         final exercise = await exercises.create(
           name: 'Squat',
@@ -733,7 +733,10 @@ void main() {
               .markCompleted(),
         );
         await workouts.updateWorkoutExercise(
-          sourceWe.copyWith(progressionDecision: ProgressionDecision.increase),
+          sourceWe.copyWith(
+            comment: 'Go heavy',
+            progressionDecision: ProgressionDecision.increase,
+          ),
         );
         await workouts.updateWorkout(
           source.copyWith(status: WorkoutStatus.completed),
@@ -760,6 +763,7 @@ void main() {
           copiedExerciseDetails.workoutExercise.progressionDecision,
           ProgressionDecision.increase,
         );
+        expect(copiedExerciseDetails.workoutExercise.comment, 'Go heavy');
 
         final copiedSet = copiedExerciseDetails.sets.single;
         expect(copiedSet.plannedWeightKg, 60.0);
@@ -792,18 +796,20 @@ void main() {
 
   group('createFromTemplate (Stage 5, TS 8 section 8, DM-1)', () {
     test(
-      'copies exercises, order and planned values into a new draft named '
-      'after the template',
+      'copies exercises, order, comment and planned values into a new '
+      'draft named after the template',
       () async {
         final exercise = await exercises.create(
           name: 'Squat',
           exerciseType: ExerciseType.strength,
         );
         final template = await templates.create(name: 'Leg day');
-        final templateExercise = await templates.addExercise(
+        var templateExercise = await templates.addExercise(
           templateId: template.id,
           exerciseId: exercise.id,
         );
+        templateExercise = templateExercise.copyWith(comment: 'Go heavy');
+        await templates.updateTemplateExercise(templateExercise);
 
         final first = await templates.addSet(
           templateExerciseId: templateExercise.id,
@@ -835,6 +841,7 @@ void main() {
           exerciseDetails.workoutExercise.progressionDecision,
           ProgressionDecision.none,
         );
+        expect(exerciseDetails.workoutExercise.comment, 'Go heavy');
         expect(exerciseDetails.sets, hasLength(2));
         expect(exerciseDetails.sets[0].plannedWeightKg, 40);
         expect(exerciseDetails.sets[1].plannedWeightKg, 100);
@@ -1059,7 +1066,8 @@ void main() {
     );
   });
 
-  group('updateWorkoutExercise (Stage 3, DM 6.11 progression decision)', () {
+  group('updateWorkoutExercise (Stage 3/11, S-03 exercise comment + DM 6.11 '
+      'progression decision)', () {
     test('persists a progressionDecision change', () async {
       final exercise = await exercises.create(
         name: 'Squat',
@@ -1081,6 +1089,28 @@ void main() {
       expect(
         details!.exercises.single.workoutExercise.progressionDecision,
         ProgressionDecision.increase,
+      );
+    });
+
+    test('persists a comment change', () async {
+      final exercise = await exercises.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+      final workout = await workouts.createDraft(date: DateTime(2026, 7, 20));
+      final workoutExercise = await workouts.addExercise(
+        workoutId: workout.id,
+        exerciseId: exercise.id,
+      );
+
+      await workouts.updateWorkoutExercise(
+        workoutExercise.copyWith(comment: 'Felt strong today'),
+      );
+
+      final details = await workouts.getDetails(workout.id);
+      expect(
+        details!.exercises.single.workoutExercise.comment,
+        'Felt strong today',
       );
     });
   });

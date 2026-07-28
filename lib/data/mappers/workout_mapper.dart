@@ -68,6 +68,7 @@ extension WorkoutExerciseRowMapper on drift.WorkoutExercise {
       workoutId: workoutId,
       exerciseId: exerciseId,
       orderIndex: orderIndex,
+      comment: comment,
       progressionDecision: ProgressionDecision.values.byName(
         progressionDecision,
       ),
@@ -85,6 +86,7 @@ extension WorkoutExerciseCompanionMapper on WorkoutExercise {
       workoutId: workoutId,
       exerciseId: exerciseId,
       orderIndex: orderIndex,
+      comment: Value(comment),
       progressionDecision: Value(progressionDecision.name),
       createdAt: createdAt.toUtc().toIso8601String(),
       updatedAt: updatedAt.toUtc().toIso8601String(),
@@ -94,6 +96,7 @@ extension WorkoutExerciseCompanionMapper on WorkoutExercise {
   drift.WorkoutExercisesCompanion toUpdateCompanion() {
     return drift.WorkoutExercisesCompanion(
       orderIndex: Value(orderIndex),
+      comment: Value(comment),
       progressionDecision: Value(progressionDecision.name),
       updatedAt: Value(updatedAt.toUtc().toIso8601String()),
     );
