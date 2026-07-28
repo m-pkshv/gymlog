@@ -12,12 +12,16 @@ import '../../l10n/app_localizations.dart';
 /// supply the labels, [trailing] indicator (a checkmark circle, or nothing
 /// for a template row that has no "done" concept), and [expandedChild].
 ///
-/// Deleting a set is a swipe (the mockup's primary affordance) but the
-/// project's own accessibility rule requires a non-gesture alternative for
-/// every gesture (already true of drag-reorder's "⋮ → Move up/down") --
-/// [onDelete], when supplied, also renders a plain delete icon button, the
-/// same one the pre-redesign row already had. Neither path does its own
-/// soft-delete/Undo -- that stays screen-side, unchanged from before.
+/// Deleting a set is a plain icon button ([onDelete], when supplied) --
+/// no swipe. There used to also be a `Dismissible`-based swipe-to-delete
+/// gesture, but on-device profiling (Stage 10, TS 11.6, 2026-07-28) found
+/// it was the single largest driver of the workout editor's slow-scroll
+/// jank: building a new exercise card's ~5 `Dismissible`-wrapped rows for
+/// the first time (as it scrolls into view) cost 20-56 ms in one frame,
+/// entirely gone once `Dismissible` was removed. Owner-confirmed
+/// (2026-07-28): drop the gesture, keep only the button -- the perf win
+/// matters more than the swipe affordance. Doesn't do its own soft-delete/
+/// Undo -- that stays screen-side, unchanged from before.
 class ExpandableSetRow extends StatelessWidget {
   const ExpandableSetRow({
     required Key key,
@@ -95,31 +99,12 @@ class ExpandableSetRow extends StatelessWidget {
       ),
     );
 
-    final content = Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         collapsedRow,
         if (expanded && expandedChild != null) expandedChild!,
       ],
-    );
-
-    if (onDelete == null) return content;
-
-    return Dismissible(
-      key: key!,
-      direction: DismissDirection.endToStart,
-      background: ColoredBox(
-        color: scheme.errorContainer,
-        child: Align(
-          alignment: Alignment.centerRight,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: Icon(Icons.delete_outline, color: scheme.onErrorContainer),
-          ),
-        ),
-      ),
-      onDismissed: (_) => onDelete!(),
-      child: content,
     );
   }
 }

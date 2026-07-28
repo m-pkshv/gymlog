@@ -471,6 +471,114 @@ void main() {
     );
   });
 
+  testWidgets('Workout editor: slow scroll revealing new exercise cards', (tester) async {
+    // Owner-reported (2026-07-28): scrolling the workout editor *slowly*
+    // shows a stutter right as a new exercise card's sets come into view
+    // from the bottom -- distinct from the fling scenario above (which
+    // settles in under a second and can't show a slow, sustained reveal).
+    // 25 exercises x 5 sets gives enough content to slowly scroll through
+    // several card boundaries during one measured gesture.
+    final tempDir = await Directory.systemTemp.createTemp('gymlog_perf_editor_slowscroll_');
+    final dbFile = File('${tempDir.path}/gymlog.sqlite');
+    addTearDown(() async {
+      if (await tempDir.exists()) {
+        await tempDir.delete(recursive: true);
+      }
+    });
+
+    final db = AppDatabase(NativeDatabase(dbFile));
+    addTearDown(db.close);
+    await SeedRunner(db).run();
+    final settingsRepository = AppSettingsRepositoryImpl(db);
+    await settingsRepository.ensureInitialized();
+    await settingsRepository.setLocale(AppLocale.en);
+
+    final exercises = await (db.select(db.exercises)..limit(25)).get();
+    const uuid = Uuid();
+    final now = DateTime.now().toUtc().toIso8601String();
+    final workoutId = uuid.v4();
+
+    final workoutExerciseCompanions = <WorkoutExercisesCompanion>[];
+    final setCompanions = <ExerciseSetsCompanion>[];
+
+    for (var e = 0; e < exercises.length; e++) {
+      final workoutExerciseId = uuid.v4();
+      workoutExerciseCompanions.add(
+        WorkoutExercisesCompanion.insert(
+          id: workoutExerciseId,
+          workoutId: workoutId,
+          exerciseId: exercises[e].id,
+          orderIndex: e,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      for (var s = 0; s < 5; s++) {
+        setCompanions.add(
+          ExerciseSetsCompanion.insert(
+            id: uuid.v4(),
+            workoutExerciseId: workoutExerciseId,
+            setNumber: s + 1,
+            plannedWeightKg: Value(60.0 + e * 2.5),
+            plannedReps: Value(5 + (e % 8)),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+      }
+    }
+
+    await db.batch((batch) {
+      batch.insert(
+        db.workouts,
+        WorkoutsCompanion.insert(
+          id: workoutId,
+          date: '2024-01-01',
+          status: const Value('completed'),
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      batch.insertAll(db.workoutExercises, workoutExerciseCompanions);
+      batch.insertAll(db.exerciseSets, setCompanions);
+    });
+
+    appRouter.go('/today');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        child: const GymLogApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('History'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('25 exercises'));
+    await tester.pumpAndSettle();
+
+    final scrollView = find.byType(CustomScrollView);
+    expect(scrollView, findsOneWidget);
+
+    await binding.watchPerformance(() async {
+      final gesture = await tester.startGesture(tester.getCenter(scrollView));
+      // ~600 frames * 16 ms == ~10 s, 15 px/frame == ~900 px/s -- slow,
+      // steady drag, not a fling.
+      for (var i = 0; i < 600; i++) {
+        await gesture.moveBy(const Offset(0, -15));
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await gesture.up();
+      await tester.pump();
+    }, reportKey: 'workout_editor_slow_scroll_25_exercises');
+
+    printSummary(
+      'Workout editor slow scroll/25 exercises',
+      binding.reportData!['workout_editor_slow_scroll_25_exercises'] as Map<String, dynamic>,
+    );
+  });
+
   testWidgets('Workout editor: scrolling an in-progress workout (timer ticking)', (
     tester,
   ) async {

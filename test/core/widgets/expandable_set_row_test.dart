@@ -91,22 +91,9 @@ void main() {
     },
   );
 
-  testWidgets('omitting onDelete hides the delete button and Dismissible', (
-    tester,
-  ) async {
+  testWidgets('omitting onDelete hides the delete button', (tester) async {
     await tester.pumpWidget(_appUnderTest());
 
     expect(find.byIcon(Icons.delete_outline), findsNothing);
-    expect(find.byType(Dismissible), findsNothing);
-  });
-
-  testWidgets('swiping the row end-to-start calls onDelete', (tester) async {
-    var deleted = false;
-    await tester.pumpWidget(_appUnderTest(onDelete: () => deleted = true));
-
-    await tester.drag(find.byType(Dismissible), const Offset(-500, 0));
-    await tester.pumpAndSettle();
-
-    expect(deleted, isTrue);
   });
 }
