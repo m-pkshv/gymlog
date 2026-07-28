@@ -6,8 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gymlog/app/providers.dart';
 import 'package:gymlog/core/constants.dart';
-import 'package:gymlog/data/database.dart';
+import 'package:gymlog/data/database.dart' hide Exercise;
 import 'package:gymlog/domain/enums.dart';
+import 'package:gymlog/domain/models/exercise.dart';
 import 'package:gymlog/features/exercises/create_exercise_screen.dart';
 import 'package:gymlog/features/template_editor/screen.dart';
 import 'package:gymlog/features/template_editor/widgets/template_set_row.dart';
@@ -50,6 +51,11 @@ Widget _appUnderTest(AppDatabase db) {
                   ),
                 ],
               ),
+              GoRoute(
+                path: 'edit-exercise/:exerciseId',
+                builder: (_, state) =>
+                    CreateExerciseScreen(exercise: state.extra as Exercise),
+              ),
             ],
           ),
         ],
@@ -79,6 +85,7 @@ Future<void> _seedExercise(
   String id = 'squat',
   String name = 'Squat',
   ExerciseType type = ExerciseType.strength,
+  bool isBuiltIn = false,
 }) {
   return db
       .into(db.exercises)
@@ -87,6 +94,7 @@ Future<void> _seedExercise(
           id: id,
           name: name,
           exerciseType: type.name,
+          isBuiltIn: Value(isBuiltIn),
           createdAt: '2026-07-19T00:00:00Z',
           updatedAt: '2026-07-19T00:00:00Z',
         ),
@@ -456,7 +464,50 @@ void main() {
   );
 
   testWidgets(
-    'the drag handle has an accessible label, not just an icon (UX 11)',
+    '"⋮ → Delete exercise" soft-deletes it, hides it from the list, and '
+    'shows an Undo snackbar (Stage 10, owner-reported)',
+    (tester) async {
+      await _seedExercise(db, id: 'squat', name: 'Squat');
+      await _seedExercise(db, id: 'bench', name: 'Bench Press');
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await _createTemplateViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Bench Press'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.more_vert).last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete exercise'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bench Press'), findsNothing);
+      expect(find.text('Squat'), findsOneWidget);
+      expect(find.text('Exercise deleted'), findsOneWidget);
+
+      final bench = (await db.select(
+        db.templateExercises,
+      ).get()).singleWhere((e) => e.exerciseId == 'bench');
+      expect(bench.isDeleted, isTrue);
+
+      await tester.tap(find.text('Undo'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bench Press'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    '"⋮ → Edit exercise" opens the full catalog edit form and saves '
+    'changes everywhere (Stage 10, owner-reported)',
     (tester) async {
       await _seedExercise(db, id: 'squat', name: 'Squat');
       await tester.pumpWidget(_appUnderTest(db));
@@ -468,14 +519,54 @@ void main() {
       await tester.tap(find.text('Squat'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.byWidgetPredicate(
-          (widget) =>
-              widget is Semantics &&
-              widget.properties.label == 'Drag to reorder',
-        ),
-        findsOneWidget,
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Edit exercise'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CreateExerciseScreen), findsOneWidget);
+
+      await tester.enterText(
+        find
+            .descendant(
+              of: find.byType(CreateExerciseScreen),
+              matching: find.byType(TextField),
+            )
+            .first,
+        'Back Squat',
       );
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CreateExerciseScreen), findsNothing);
+      expect(find.text('Back Squat'), findsOneWidget);
+      final exercise = (await db.select(
+        db.exercises,
+      ).get()).singleWhere((r) => r.id == 'squat');
+      expect(exercise.name, 'Back Squat');
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'the menu has no "Edit exercise" action for a built-in exercise '
+    '(Stage 10, owner-reported)',
+    (tester) async {
+      await _seedExercise(db, id: 'squat', name: 'Squat', isBuiltIn: true);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await _createTemplateViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit exercise'), findsNothing);
 
       await _unmountAndFlush(tester);
     },

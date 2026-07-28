@@ -81,6 +81,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get exerciseNameRequiredError => 'Введите название';
 
   @override
+  String get editWorkoutExerciseAction => 'Редактировать упражнение';
+
+  @override
   String get exerciseTypeLabel => 'Тип';
 
   @override
@@ -687,9 +690,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get moveExerciseDownAction => 'Переместить вниз';
 
   @override
-  String get reorderDragHandleLabel => 'Перетащить, чтобы изменить порядок';
-
-  @override
   String get collapseExerciseAction => 'Свернуть упражнение';
 
   @override
@@ -703,6 +703,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get setDeletedMessage => 'Подход удалён';
+
+  @override
+  String get removeExerciseAction => 'Удалить упражнение';
+
+  @override
+  String get exerciseDeletedMessage => 'Упражнение удалено';
 
   @override
   String get deleteWorkoutAction => 'Удалить';

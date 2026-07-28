@@ -82,6 +82,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exerciseNameRequiredError => 'Enter a name';
 
   @override
+  String get editWorkoutExerciseAction => 'Edit exercise';
+
+  @override
   String get exerciseTypeLabel => 'Type';
 
   @override
@@ -681,9 +684,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moveExerciseDownAction => 'Move down';
 
   @override
-  String get reorderDragHandleLabel => 'Drag to reorder';
-
-  @override
   String get collapseExerciseAction => 'Collapse exercise';
 
   @override
@@ -697,6 +697,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setDeletedMessage => 'Set deleted';
+
+  @override
+  String get removeExerciseAction => 'Delete exercise';
+
+  @override
+  String get exerciseDeletedMessage => 'Exercise deleted';
 
   @override
   String get deleteWorkoutAction => 'Delete';

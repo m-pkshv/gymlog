@@ -189,6 +189,142 @@ void main() {
     );
   });
 
+  group(
+    'deleteWorkoutExercise / restoreWorkoutExercise (Stage 10, owner-'
+    'reported, DM 10)',
+    () {
+      test(
+        'deleteWorkoutExercise soft-deletes the exercise and its sets, and '
+        'compacts the remaining exercises\' orderIndex',
+        () async {
+          final squat = await exercises.create(
+            name: 'Squat',
+            exerciseType: ExerciseType.strength,
+          );
+          final bench = await exercises.create(
+            name: 'Bench Press',
+            exerciseType: ExerciseType.strength,
+          );
+          final row = await exercises.create(
+            name: 'Row',
+            exerciseType: ExerciseType.strength,
+          );
+          final workout = await workouts.createDraft(date: DateTime(2026, 7, 19));
+          final we1 = await workouts.addExercise(
+            workoutId: workout.id,
+            exerciseId: squat.id,
+          );
+          final we2 = await workouts.addExercise(
+            workoutId: workout.id,
+            exerciseId: bench.id,
+          );
+          final we3 = await workouts.addExercise(
+            workoutId: workout.id,
+            exerciseId: row.id,
+          );
+          await workouts.addSet(workoutExerciseId: we2.id);
+
+          await workouts.deleteWorkoutExercise(we2.id);
+
+          final details = await workouts.getDetails(workout.id);
+          expect(details!.exercises.map((e) => e.workoutExercise.id).toList(), [
+            we1.id,
+            we3.id,
+          ]);
+          expect(
+            details.exercises.map((e) => e.workoutExercise.orderIndex).toList(),
+            [0, 1],
+          );
+        },
+      );
+
+      test(
+        'restoreWorkoutExercise un-deletes the exercise and its sets, and '
+        're-inserts it in its original relative position',
+        () async {
+          final squat = await exercises.create(
+            name: 'Squat',
+            exerciseType: ExerciseType.strength,
+          );
+          final bench = await exercises.create(
+            name: 'Bench Press',
+            exerciseType: ExerciseType.strength,
+          );
+          final row = await exercises.create(
+            name: 'Row',
+            exerciseType: ExerciseType.strength,
+          );
+          final workout = await workouts.createDraft(date: DateTime(2026, 7, 19));
+          final we1 = await workouts.addExercise(
+            workoutId: workout.id,
+            exerciseId: squat.id,
+          );
+          final we2 = await workouts.addExercise(
+            workoutId: workout.id,
+            exerciseId: bench.id,
+          );
+          final we3 = await workouts.addExercise(
+            workoutId: workout.id,
+            exerciseId: row.id,
+          );
+          final set = await workouts.addSet(workoutExerciseId: we2.id);
+
+          await workouts.deleteWorkoutExercise(we2.id);
+          await workouts.restoreWorkoutExercise(we2.id);
+
+          final details = await workouts.getDetails(workout.id);
+          expect(details!.exercises.map((e) => e.workoutExercise.id).toList(), [
+            we1.id,
+            we2.id,
+            we3.id,
+          ]);
+          expect(
+            details.exercises
+                .firstWhere((e) => e.workoutExercise.id == we2.id)
+                .sets
+                .map((s) => s.id),
+            [set.id],
+          );
+        },
+      );
+
+      test(
+        'restoreWorkoutExercise does not resurrect a set that was already '
+        'independently deleted before the exercise itself was deleted',
+        () async {
+          final squat = await exercises.create(
+            name: 'Squat',
+            exerciseType: ExerciseType.strength,
+          );
+          final workout = await workouts.createDraft(date: DateTime(2026, 7, 19));
+          final workoutExercise = await workouts.addExercise(
+            workoutId: workout.id,
+            exerciseId: squat.id,
+          );
+          final keptSet = await workouts.addSet(
+            workoutExerciseId: workoutExercise.id,
+          );
+          final alreadyDeletedSet = await workouts.addSet(
+            workoutExerciseId: workoutExercise.id,
+          );
+
+          // Independently deleted first, via the per-set delete (S-03) --
+          // before the whole exercise is deleted below.
+          await workouts.deleteSet(alreadyDeletedSet.id);
+
+          await workouts.deleteWorkoutExercise(workoutExercise.id);
+          await workouts.restoreWorkoutExercise(workoutExercise.id);
+
+          final details = await workouts.getDetails(workout.id);
+          expect(
+            details!.exercises.single.sets.map((s) => s.id).toList(),
+            [keptSet.id],
+          );
+        },
+      );
+    },
+  );
+
   group('getDetails locale (Stage 10, DM 12)', () {
     test('resolves the embedded exercise name against ExerciseL10n when a locale is given', () async {
       final exercise = await exercises.create(

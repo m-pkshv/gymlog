@@ -84,6 +84,41 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen>
     );
   }
 
+  /// "Удалить упражнение" (S-13 exercise card menu, Stage 10, owner-
+  /// reported) — mirrors `WorkoutEditorScreen._deleteExercise`.
+  Future<void> _deleteExercise(String templateExerciseId) async {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = ref.read(
+      templateEditorControllerProvider(widget.templateId).notifier,
+    );
+    final deleted = await controller.deleteExercise(templateExerciseId);
+    if (!mounted || !deleted) return;
+    showUndoSnackbar(
+      context,
+      message: l10n.exerciseDeletedMessage,
+      actionLabel: l10n.undoAction,
+      onUndo: () => controller.restoreExercise(templateExerciseId),
+    );
+  }
+
+  /// "Редактировать упражнение" (S-13 exercise card menu, Stage 10, owner-
+  /// reported) — mirrors `WorkoutEditorScreen._editExercise`.
+  Future<void> _editExercise(Exercise exercise) async {
+    final canonical = await ref
+        .read(exerciseRepositoryProvider)
+        .getById(exercise.id);
+    if (canonical == null || !mounted) return;
+    final updated = await context.push<Exercise>(
+      '/more/templates/${widget.templateId}/edit-exercise/${exercise.id}',
+      extra: canonical,
+    );
+    if (updated != null && mounted) {
+      ref
+          .read(templateEditorControllerProvider(widget.templateId).notifier)
+          .reload();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -102,6 +137,8 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen>
           controller: controller,
           onAddExercise: _addExercise,
           onSetDeleted: _deleteSet,
+          onEditExercise: _editExercise,
+          onDeleteExercise: _deleteExercise,
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => ErrorRetryState(
@@ -121,12 +158,16 @@ class _EditorBody extends StatelessWidget {
     required this.controller,
     required this.onAddExercise,
     required this.onSetDeleted,
+    required this.onEditExercise,
+    required this.onDeleteExercise,
   });
 
   final TemplateDetails details;
   final TemplateEditorController controller;
   final VoidCallback onAddExercise;
   final ValueChanged<String> onSetDeleted;
+  final ValueChanged<Exercise> onEditExercise;
+  final ValueChanged<String> onDeleteExercise;
 
   @override
   Widget build(BuildContext context) {
@@ -162,20 +203,12 @@ class _EditorBody extends StatelessWidget {
         Expanded(
           child: details.exercises.isEmpty
               ? Center(child: Text(l10n.templateExercisesEmpty))
-              : ReorderableListView.builder(
-                  // TemplateExerciseCard supplies its own drag handle, so
-                  // the default trailing handle would be redundant (same
-                  // reasoning as ExerciseCard/S-03).
-                  buildDefaultDragHandles: false,
+              : ListView.builder(
+                  // Owner-reported (Stage 10): the drag handle this used to
+                  // have (mirroring ExerciseCard/S-03) felt sluggish, so it
+                  // was removed in favour of the "⋮ → Вверх/Вниз" menu on
+                  // each card as the only way to reorder now.
                   itemCount: details.exercises.length,
-                  onReorderItem: (oldIndex, newIndex) {
-                    final ids = details.exercises
-                        .map((e) => e.templateExercise.id)
-                        .toList();
-                    final movedId = ids.removeAt(oldIndex);
-                    ids.insert(newIndex, movedId);
-                    controller.reorderExercises(ids);
-                  },
                   itemBuilder: (context, index) {
                     final exerciseDetails = details.exercises[index];
                     final templateExerciseId =
@@ -183,7 +216,6 @@ class _EditorBody extends StatelessWidget {
                     return TemplateExerciseCard(
                       key: ValueKey(templateExerciseId),
                       details: exerciseDetails,
-                      index: index,
                       canMoveUp: index > 0,
                       canMoveDown: index < details.exercises.length - 1,
                       onFieldChanged: (setId, field, value) {
@@ -205,6 +237,10 @@ class _EditorBody extends StatelessWidget {
                         up: false,
                       ),
                       onSetDeleted: onSetDeleted,
+                      onEditExercise: () =>
+                          onEditExercise(exerciseDetails.exercise),
+                      onDeleteExercise: () =>
+                          onDeleteExercise(templateExerciseId),
                     );
                   },
                 ),

@@ -124,14 +124,34 @@ abstract class WorkoutRepository {
     required DateTime date,
   });
 
-  /// Reorder (S-03, drag handle + "⋮ → Вверх/Вниз"): rewrites `orderIndex`
-  /// so it matches each id's position in [orderedWorkoutExerciseIds] (DM
-  /// 6.6: "непрерывность не требуется", so this doesn't need to preserve
-  /// any particular numbering, just the relative order).
+  /// Reorder (S-03, "⋮ → Вверх/Вниз"): rewrites `orderIndex` so it matches
+  /// each id's position in [orderedWorkoutExerciseIds] (DM 6.6:
+  /// "непрерывность не требуется", so this doesn't need to preserve any
+  /// particular numbering, just the relative order).
   Future<void> reorderExercises({
     required String workoutId,
     required List<String> orderedWorkoutExerciseIds,
   });
+
+  /// Soft-deletes [workoutExerciseId] (S-03 "⋮ → Удалить упражнение",
+  /// owner-reported, Stage 10; 06_DATA_MODEL.md section 10:
+  /// "WorkoutExercise / ExerciseSet — мягкое удаление + Undo;
+  /// перенумерация... orderIndex в той же транзакции"): marks the row and
+  /// its currently non-deleted `ExerciseSet`s `isDeleted = true`, then
+  /// compacts the workout's remaining exercises' `orderIndex` to stay
+  /// contiguous (ordered by their current `orderIndex`, which — unlike a
+  /// set's `createdAt` — is the mutable field that reflects "⋮ → Вверх/
+  /// Вниз" moves, so it's the reference to preserve here, not creation
+  /// order).
+  Future<void> deleteWorkoutExercise(String workoutExerciseId);
+
+  /// Reverses [deleteWorkoutExercise] within the Undo window: un-marks
+  /// `isDeleted` on [workoutExerciseId] and only the sets it cascaded to
+  /// at delete time (identified by their shared delete-time `updatedAt`
+  /// timestamp, so a set the owner had separately deleted *before* this
+  /// exercise was deleted stays deleted), then compacts `orderIndex`
+  /// again the same way.
+  Future<void> restoreWorkoutExercise(String workoutExerciseId);
 
   /// Soft-deletes [workoutId] (S-02 "⋮ → Удалить", DM 10): marks the
   /// workout and every one of its non-deleted `WorkoutExercise`/

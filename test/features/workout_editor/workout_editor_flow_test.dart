@@ -9,9 +9,10 @@ import 'package:gymlog/core/constants.dart';
 import 'package:gymlog/core/date_format.dart';
 import 'package:gymlog/core/widgets/completion_toggle.dart';
 import 'package:gymlog/core/widgets/numeric_stepper_field.dart';
-import 'package:gymlog/data/database.dart';
+import 'package:gymlog/data/database.dart' hide Exercise;
 import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
+import 'package:gymlog/domain/models/exercise.dart';
 import 'package:gymlog/features/exercises/create_exercise_screen.dart';
 import 'package:gymlog/features/history/screen.dart';
 import 'package:gymlog/features/template_editor/screen.dart';
@@ -61,6 +62,11 @@ Widget _appUnderTest(AppDatabase db, {NotificationService? notificationService})
               ),
             ],
           ),
+          GoRoute(
+            path: 'edit-exercise/:exerciseId',
+            builder: (_, state) =>
+                CreateExerciseScreen(exercise: state.extra as Exercise),
+          ),
         ],
       ),
       GoRoute(
@@ -92,6 +98,7 @@ Future<void> _seedExercise(
   String id = 'squat',
   String name = 'Squat',
   ExerciseType type = ExerciseType.strength,
+  bool isBuiltIn = false,
 }) {
   return db
       .into(db.exercises)
@@ -100,6 +107,7 @@ Future<void> _seedExercise(
           id: id,
           name: name,
           exerciseType: type.name,
+          isBuiltIn: Value(isBuiltIn),
           createdAt: '2026-07-19T00:00:00Z',
           updatedAt: '2026-07-19T00:00:00Z',
         ),
@@ -163,9 +171,8 @@ void _stubNotificationServiceDefaults(
 
 /// The "⋮" menu icon on the exercise card titled [exerciseName] --
 /// identified by ancestry rather than list position, since
-/// `ReorderableListView` (Stage 3 reorder) makes position-based
-/// `find.byIcon(Icons.more_vert).first/.last` unreliable once cards grow
-/// tall enough to need scrolling.
+/// `find.byIcon(Icons.more_vert).first/.last` is unreliable once cards
+/// grow tall enough to need scrolling.
 Finder _exerciseCardMenuButton(String exerciseName) => find.descendant(
   of: find.ancestor(of: find.text(exerciseName), matching: find.byType(Card)),
   matching: find.byIcon(Icons.more_vert),
@@ -472,9 +479,8 @@ void main() {
     'value, and copies it into a new set (Stage 10, owner-reported)',
     (tester) async {
       // The expanded set row (steppers) pushes the duplicate-set button
-      // past a default-sized viewport's fold, and ReorderableListView's
-      // internal Overlay makes off-screen taps land on the wrong target
-      // rather than just failing outright.
+      // past a default-sized viewport's fold -- widen it so the tap below
+      // lands on it directly instead of an off-screen target.
       tester.view.physicalSize = const Size(1080, 3000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -1763,8 +1769,7 @@ void main() {
     );
 
     testWidgets(
-      'collapsing one card does not affect the drag handle or "⋮" menu of '
-      'the same card',
+      'collapsing one card does not affect the "⋮" menu of the same card',
       (tester) async {
         await _seedExercise(db, id: 'squat', name: 'Squat');
         await tester.pumpWidget(_appUnderTest(db));
@@ -1778,14 +1783,6 @@ void main() {
         await tester.tap(find.text('Squat'));
         await tester.pumpAndSettle();
 
-        expect(
-          find.byWidgetPredicate(
-            (widget) =>
-                widget is Semantics &&
-                widget.properties.label == 'Drag to reorder',
-          ),
-          findsOneWidget,
-        );
         expect(_exerciseCardMenuButton('Squat'), findsOneWidget);
 
         await _unmountAndFlush(tester);
@@ -1793,13 +1790,13 @@ void main() {
     );
   });
 
-  group('reorder exercises (Stage 3, S-03 drag handle + "⋮ → Вверх/Вниз")', () {
+  group('reorder exercises (Stage 3, S-03 "⋮ → Вверх/Вниз")', () {
     testWidgets(
       '"Move up" in the exercise card menu swaps it with the previous card',
       (tester) async {
         // Both cards (each taller now with the progression segment) must
-        // fit without scrolling, or ReorderableListView's
-        // internal Overlay makes off-screen taps land on the wrong target.
+        // fit without scrolling for `ensureVisible`/tap below to land
+        // reliably.
         tester.view.physicalSize = const Size(1080, 5000);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.resetPhysicalSize);
@@ -1872,32 +1869,6 @@ void main() {
 
         expect(find.text('Move up'), findsNothing);
         expect(find.text('Move down'), findsOneWidget);
-
-        await _unmountAndFlush(tester);
-      },
-    );
-
-    testWidgets(
-      'the drag handle has an accessible label, not just an icon (UX 11)',
-      (tester) async {
-        await _seedExercise(db, id: 'squat', name: 'Squat');
-        await tester.pumpWidget(_appUnderTest(db));
-        await tester.pumpAndSettle();
-        await _createDraftViaFab(tester);
-
-        await tester.tap(find.text('Add exercise'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Squat'));
-        await tester.pumpAndSettle();
-
-        expect(
-          find.byWidgetPredicate(
-            (widget) =>
-                widget is Semantics &&
-                widget.properties.label == 'Drag to reorder',
-          ),
-          findsOneWidget,
-        );
 
         await _unmountAndFlush(tester);
       },
@@ -1994,6 +1965,164 @@ void main() {
       },
     );
   });
+
+  group(
+    'delete exercise (Stage 10, owner-reported: no way to remove an '
+    'exercise from a workout)',
+    () {
+      testWidgets(
+        '"⋮ → Delete exercise" soft-deletes it, hides it from the list, and '
+        'shows an Undo snackbar',
+        (tester) async {
+          await _seedExercise(db, id: 'squat', name: 'Squat');
+          await _seedExercise(db, id: 'bench', name: 'Bench Press');
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
+          await _createDraftViaFab(tester);
+
+          await tester.tap(find.text('Add exercise'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Squat'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Add exercise'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Bench Press'));
+          await tester.pumpAndSettle();
+
+          final benchMenu = _exerciseCardMenuButton('Bench Press');
+          await tester.ensureVisible(benchMenu);
+          await tester.tap(benchMenu);
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Delete exercise'));
+          await tester.pumpAndSettle();
+
+          expect(find.text('Bench Press'), findsNothing);
+          expect(find.text('Squat'), findsOneWidget);
+          expect(find.text('Exercise deleted'), findsOneWidget);
+          expect(find.text('Undo'), findsOneWidget);
+
+          final rows = await db.select(db.workoutExercises).get();
+          final bench = rows.singleWhere(
+            (r) => r.exerciseId == 'bench',
+          );
+          expect(bench.isDeleted, isTrue);
+
+          await tester.pump(const Duration(seconds: 6));
+          await _unmountAndFlush(tester);
+        },
+      );
+
+      testWidgets(
+        '"Undo" restores the deleted exercise',
+        (tester) async {
+          await _seedExercise(db, id: 'squat', name: 'Squat');
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
+          await _createDraftViaFab(tester);
+
+          await tester.tap(find.text('Add exercise'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Squat'));
+          await tester.pumpAndSettle();
+
+          final squatMenu = _exerciseCardMenuButton('Squat');
+          await tester.ensureVisible(squatMenu);
+          await tester.tap(squatMenu);
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Delete exercise'));
+          await tester.pumpAndSettle();
+
+          expect(find.text('Squat'), findsNothing);
+
+          await tester.tap(find.text('Undo'));
+          await tester.pumpAndSettle();
+
+          expect(find.text('Squat'), findsOneWidget);
+          final rows = await db.select(db.workoutExercises).get();
+          expect(rows.single.isDeleted, isFalse);
+
+          await _unmountAndFlush(tester);
+        },
+      );
+    },
+  );
+
+  group(
+    'edit exercise (Stage 10, owner-reported: a plain rename wasn\'t '
+    'enough -- the owner wanted the same full catalog edit form, without '
+    'leaving the workout)',
+    () {
+      testWidgets(
+        '"⋮ → Edit exercise" opens the full catalog edit form and saves '
+        'changes everywhere',
+        (tester) async {
+          await _seedExercise(db, id: 'squat', name: 'Squat');
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
+          await _createDraftViaFab(tester);
+
+          await tester.tap(find.text('Add exercise'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Squat'));
+          await tester.pumpAndSettle();
+
+          final menu = _exerciseCardMenuButton('Squat');
+          await tester.ensureVisible(menu);
+          await tester.tap(menu);
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Edit exercise'));
+          await tester.pumpAndSettle();
+
+          expect(find.byType(CreateExerciseScreen), findsOneWidget);
+
+          await tester.enterText(
+            find
+                .descendant(
+                  of: find.byType(CreateExerciseScreen),
+                  matching: find.byType(TextField),
+                )
+                .first,
+            'Back Squat',
+          );
+          await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+          await tester.pumpAndSettle();
+
+          expect(find.byType(CreateExerciseScreen), findsNothing);
+          expect(find.text('Back Squat'), findsOneWidget);
+          final exercise = (await db.select(
+            db.exercises,
+          ).get()).singleWhere((r) => r.id == 'squat');
+          expect(exercise.name, 'Back Squat');
+
+          await _unmountAndFlush(tester);
+        },
+      );
+
+      testWidgets(
+        'the menu has no "Edit exercise" action for a built-in exercise',
+        (tester) async {
+          await _seedExercise(db, id: 'squat', name: 'Squat', isBuiltIn: true);
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
+          await _createDraftViaFab(tester);
+
+          await tester.tap(find.text('Add exercise'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Squat'));
+          await tester.pumpAndSettle();
+
+          final menu = _exerciseCardMenuButton('Squat');
+          await tester.ensureVisible(menu);
+          await tester.tap(menu);
+          await tester.pumpAndSettle();
+
+          expect(find.text('Edit exercise'), findsNothing);
+
+          await _unmountAndFlush(tester);
+        },
+      );
+    },
+  );
 
   group('progression decision + stagnation hint (Stage 3, D-7, TS 9.4)', () {
     testWidgets(

@@ -734,6 +734,105 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
   }
 
   @override
+  Future<void> deleteWorkoutExercise(String workoutExerciseId) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await _db.transaction(() async {
+      final target = await (_db.select(
+        _db.workoutExercises,
+      )..where((we) => we.id.equals(workoutExerciseId))).getSingleOrNull();
+      if (target == null || target.isDeleted) return;
+
+      await (_db.update(
+        _db.workoutExercises,
+      )..where((we) => we.id.equals(workoutExerciseId))).write(
+        drift.WorkoutExercisesCompanion(
+          isDeleted: const Value(true),
+          updatedAt: Value(now),
+        ),
+      );
+
+      await (_db.update(_db.exerciseSets)..where(
+        (s) =>
+            s.workoutExerciseId.equals(workoutExerciseId) &
+            s.isDeleted.equals(false),
+      )).write(
+        drift.ExerciseSetsCompanion(
+          isDeleted: const Value(true),
+          updatedAt: Value(now),
+        ),
+      );
+
+      await _renumberExercises(target.workoutId, now);
+    });
+  }
+
+  @override
+  Future<void> restoreWorkoutExercise(String workoutExerciseId) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await _db.transaction(() async {
+      final target = await (_db.select(
+        _db.workoutExercises,
+      )..where((we) => we.id.equals(workoutExerciseId))).getSingleOrNull();
+      if (target == null || !target.isDeleted) return;
+
+      // Only un-delete sets whose `updatedAt` matches this exercise's own
+      // delete-time timestamp (written in the same transaction above) --
+      // a set the owner had separately soft-deleted (S-03 set menu)
+      // *before* this exercise was deleted carries an earlier timestamp
+      // and is deliberately left alone, unlike `deleteWorkout`/
+      // `restoreWorkout`'s cascade, which doesn't yet make this
+      // distinction (flagged separately, not fixed here).
+      await (_db.update(_db.exerciseSets)..where(
+        (s) =>
+            s.workoutExerciseId.equals(workoutExerciseId) &
+            s.isDeleted.equals(true) &
+            s.updatedAt.equals(target.updatedAt),
+      )).write(
+        drift.ExerciseSetsCompanion(
+          isDeleted: const Value(false),
+          updatedAt: Value(now),
+        ),
+      );
+
+      await (_db.update(
+        _db.workoutExercises,
+      )..where((we) => we.id.equals(workoutExerciseId))).write(
+        drift.WorkoutExercisesCompanion(
+          isDeleted: const Value(false),
+          updatedAt: Value(now),
+        ),
+      );
+
+      await _renumberExercises(target.workoutId, now);
+    });
+  }
+
+  /// Compacts every non-deleted exercise of [workoutId] to a contiguous
+  /// `orderIndex` starting at 0, ordered by their *current* `orderIndex`
+  /// (the mutable field "⋮ → Вверх/Вниз" moves rewrite, unlike a set's
+  /// immutable `createdAt`) -- shared by [deleteWorkoutExercise] and
+  /// [restoreWorkoutExercise] so both reconstruct the same numbering
+  /// regardless of how many deletes/restores happened in between.
+  Future<void> _renumberExercises(String workoutId, String now) async {
+    final rows =
+        await (_db.select(_db.workoutExercises)
+              ..where(
+                (we) =>
+                    we.workoutId.equals(workoutId) & we.isDeleted.equals(false),
+              )
+              ..orderBy([(we) => OrderingTerm.asc(we.orderIndex)]))
+            .get();
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].orderIndex == i) continue;
+      await (_db.update(
+        _db.workoutExercises,
+      )..where((we) => we.id.equals(rows[i].id))).write(
+        drift.WorkoutExercisesCompanion(orderIndex: Value(i), updatedAt: Value(now)),
+      );
+    }
+  }
+
+  @override
   Future<void> deleteWorkout(String workoutId) async {
     final now = DateTime.now().toUtc().toIso8601String();
     await _db.transaction(() async {

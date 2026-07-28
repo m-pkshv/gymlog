@@ -6,7 +6,12 @@ import '../../exercises/exercise_type_labels.dart';
 import '../template_set_field_config.dart';
 import 'template_set_row.dart';
 
-enum _TemplateExerciseCardAction { moveUp, moveDown }
+enum _TemplateExerciseCardAction {
+  moveUp,
+  moveDown,
+  editExercise,
+  deleteExercise,
+}
 
 /// Card for one exercise entry in the template editor (S-13) -- the
 /// template counterpart of `workout_editor/widgets/exercise_card.dart`'s
@@ -14,7 +19,9 @@ enum _TemplateExerciseCardAction { moveUp, moveDown }
 /// completion checkboxes, no "Прошлые результаты"/"Копировать показатели
 /// прошлого выполнения" (those read from *workout* history, which
 /// templates never have, D-16), no progression segment (there is nothing
-/// to have progressed on a plan that was never performed).
+/// to have progressed on a plan that was never performed). Reorder is
+/// "⋮ → Вверх/Вниз" only (owner-reported, Stage 10: the drag handle this
+/// used to have alongside the menu was removed, mirroring `ExerciseCard`).
 ///
 /// Collapsible (Stage 10, owner-reported), mirroring `ExerciseCard` --
 /// tapping the header (type icon + name) collapses everything below it
@@ -25,7 +32,6 @@ class TemplateExerciseCard extends StatefulWidget {
   const TemplateExerciseCard({
     super.key,
     required this.details,
-    required this.index,
     required this.canMoveUp,
     required this.canMoveDown,
     required this.onFieldChanged,
@@ -35,13 +41,11 @@ class TemplateExerciseCard extends StatefulWidget {
     required this.onMoveUp,
     required this.onMoveDown,
     required this.onSetDeleted,
+    required this.onEditExercise,
+    required this.onDeleteExercise,
   });
 
   final TemplateExerciseDetails details;
-
-  /// This card's position in the exercise list -- required by
-  /// [ReorderableDragStartListener] to identify the drag handle's item.
-  final int index;
   final bool canMoveUp;
   final bool canMoveDown;
   final void Function(String setId, TemplateSetFieldSpec field, double? value)
@@ -52,6 +56,8 @@ class TemplateExerciseCard extends StatefulWidget {
   final VoidCallback onMoveUp;
   final VoidCallback onMoveDown;
   final ValueChanged<String> onSetDeleted;
+  final VoidCallback onEditExercise;
+  final VoidCallback onDeleteExercise;
 
   @override
   State<TemplateExerciseCard> createState() => _TemplateExerciseCardState();
@@ -78,20 +84,6 @@ class _TemplateExerciseCardState extends State<TemplateExerciseCard> {
           children: [
             Row(
               children: [
-                // UX 11: icon-only control, no visible text of its own --
-                // needs a Semantics label. The bare 24dp icon is also below
-                // the 48dp minimum touch target; the padding brings it up
-                // to exactly 48dp without changing what's visually drawn.
-                Semantics(
-                  label: l10n.reorderDragHandleLabel,
-                  child: ReorderableDragStartListener(
-                    index: widget.index,
-                    child: const Padding(
-                      padding: EdgeInsets.all(12),
-                      child: Icon(Icons.drag_handle),
-                    ),
-                  ),
-                ),
                 Expanded(
                   child: Semantics(
                     label: _expanded
@@ -120,32 +112,47 @@ class _TemplateExerciseCardState extends State<TemplateExerciseCard> {
                     ),
                   ),
                 ),
-                // Hidden entirely rather than shown with an empty menu when
-                // this is the only exercise (unlike `ExerciseCard`, whose
-                // menu always has other, unconditional items).
-                if (widget.canMoveUp || widget.canMoveDown)
-                  PopupMenuButton<_TemplateExerciseCardAction>(
-                    onSelected: (action) {
-                      switch (action) {
-                        case _TemplateExerciseCardAction.moveUp:
-                          widget.onMoveUp();
-                        case _TemplateExerciseCardAction.moveDown:
-                          widget.onMoveDown();
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      if (widget.canMoveUp)
-                        PopupMenuItem(
-                          value: _TemplateExerciseCardAction.moveUp,
-                          child: Text(l10n.moveExerciseUpAction),
-                        ),
-                      if (widget.canMoveDown)
-                        PopupMenuItem(
-                          value: _TemplateExerciseCardAction.moveDown,
-                          child: Text(l10n.moveExerciseDownAction),
-                        ),
-                    ],
-                  ),
+                // Owner-reported (Stage 10): "Delete exercise" is always
+                // available, so the menu is no longer hidden even when
+                // move up/down are both unavailable (single-exercise
+                // template) -- unlike before, when it had only those two
+                // conditional entries and nothing else to show.
+                PopupMenuButton<_TemplateExerciseCardAction>(
+                  onSelected: (action) {
+                    switch (action) {
+                      case _TemplateExerciseCardAction.moveUp:
+                        widget.onMoveUp();
+                      case _TemplateExerciseCardAction.moveDown:
+                        widget.onMoveDown();
+                      case _TemplateExerciseCardAction.editExercise:
+                        widget.onEditExercise();
+                      case _TemplateExerciseCardAction.deleteExercise:
+                        widget.onDeleteExercise();
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    if (widget.canMoveUp)
+                      PopupMenuItem(
+                        value: _TemplateExerciseCardAction.moveUp,
+                        child: Text(l10n.moveExerciseUpAction),
+                      ),
+                    if (widget.canMoveDown)
+                      PopupMenuItem(
+                        value: _TemplateExerciseCardAction.moveDown,
+                        child: Text(l10n.moveExerciseDownAction),
+                      ),
+                    // DM 10: only a user-created exercise may be edited.
+                    if (!details.exercise.isBuiltIn)
+                      PopupMenuItem(
+                        value: _TemplateExerciseCardAction.editExercise,
+                        child: Text(l10n.editWorkoutExerciseAction),
+                      ),
+                    PopupMenuItem(
+                      value: _TemplateExerciseCardAction.deleteExercise,
+                      child: Text(l10n.removeExerciseAction),
+                    ),
+                  ],
+                ),
               ],
             ),
             if (_expanded) ...[

@@ -82,13 +82,25 @@ abstract class WorkoutTemplateRepository {
   /// the original order.
   Future<void> restoreTemplateSet(String setId);
 
-  /// Reorder (S-13, same drag handle + "⋮ → Вверх/Вниз" as S-03): rewrites
-  /// `orderIndex` so it matches each id's position in
-  /// [orderedTemplateExerciseIds].
+  /// Reorder (S-13, same "⋮ → Вверх/Вниз" as S-03): rewrites `orderIndex`
+  /// so it matches each id's position in [orderedTemplateExerciseIds].
   Future<void> reorderExercises({
     required String templateId,
     required List<String> orderedTemplateExerciseIds,
   });
+
+  /// Soft-deletes [templateExerciseId] (S-13 "⋮ → Удалить упражнение",
+  /// owner-reported, Stage 10; mirrors
+  /// `WorkoutRepository.deleteWorkoutExercise`): marks the row and its
+  /// currently non-deleted `TemplateSet`s `isDeleted = true`, then compacts
+  /// the template's remaining exercises' `orderIndex` to stay contiguous.
+  Future<void> deleteTemplateExercise(String templateExerciseId);
+
+  /// Reverses [deleteTemplateExercise] within the Undo window: un-marks
+  /// `isDeleted` on [templateExerciseId] and only the sets it cascaded to
+  /// at delete time (matched by their shared delete-time `updatedAt`),
+  /// then compacts `orderIndex` again.
+  Future<void> restoreTemplateExercise(String templateExerciseId);
 
   /// Soft-deletes [templateId] (S-12 "⋮ → Удалить", D-19): marks the
   /// template and every one of its non-deleted `TemplateExercise`/

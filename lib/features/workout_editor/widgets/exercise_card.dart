@@ -11,19 +11,26 @@ import 'past_results_sheet.dart';
 import 'progression_segmented_button.dart';
 import 'set_row.dart';
 
-enum _ExerciseCardAction { pastResults, copyLastPerformance, moveUp, moveDown }
+enum _ExerciseCardAction {
+  pastResults,
+  copyLastPerformance,
+  moveUp,
+  moveDown,
+  editExercise,
+  deleteExercise,
+}
 
 /// Card for one exercise entry in the workout editor (S-03): header + the
 /// sets table + "+ Подход" + "Прошлые результаты"/"Копировать показатели
-/// прошлого выполнения" (menu, TS 8 section 8) + reorder — a leading drag
-/// handle (04_UI_UX_SPEC.md, section 5: "ручка-иконка (drag)") plus
-/// "⋮ → Вверх/Вниз" as the gesture-free alternative (05_AI_INSTRUCTIONS.md,
-/// rule: every gesture needs one) + the progression segment (—/↑/=/↓, DM
-/// 6.11 "ручная отметка") with the D-7 stagnation hint ("N без роста",
-/// read from `progressionStateProvider` — a cache the manual decision
-/// itself never influences). No exercise-level comment field (Stage 10
-/// redesign, owner-reported: removed entirely, `WorkoutExercise` no
-/// longer has a `comment` field at all).
+/// прошлого выполнения" (menu, TS 8 section 8) + reorder — "⋮ → Вверх/Вниз"
+/// (owner-reported, Stage 10: the drag handle this used to have alongside
+/// the menu felt sluggish on a screen already busy with large cards, and
+/// was removed; the menu is now the only way to reorder) + the progression
+/// segment (—/↑/=/↓, DM 6.11 "ручная отметка") with the D-7 stagnation
+/// hint ("N без роста", read from `progressionStateProvider` — a cache the
+/// manual decision itself never influences). No exercise-level comment
+/// field (Stage 10 redesign, owner-reported: removed entirely,
+/// `WorkoutExercise` no longer has a `comment` field at all).
 ///
 /// Collapsible (Stage 10, owner-reported): a long workout's sets table
 /// becomes one hard-to-scan wall of rows; tapping the header (type icon +
@@ -39,7 +46,6 @@ class ExerciseCard extends ConsumerStatefulWidget {
   const ExerciseCard({
     super.key,
     required this.details,
-    required this.index,
     required this.isActive,
     required this.canMoveUp,
     required this.canMoveDown,
@@ -53,13 +59,11 @@ class ExerciseCard extends ConsumerStatefulWidget {
     required this.onMoveDown,
     required this.onSetDeleted,
     required this.onProgressionDecisionChanged,
+    required this.onEditExercise,
+    required this.onDeleteExercise,
   });
 
   final WorkoutExerciseDetails details;
-
-  /// This card's position in the exercise list — required by
-  /// [ReorderableDragStartListener] to identify the drag handle's item.
-  final int index;
 
   /// Whether the workout is `inProgress` (DM 6.4.1) -- passed straight
   /// through to each [SetRow] to decide whether its steppers edit the
@@ -84,6 +88,8 @@ class ExerciseCard extends ConsumerStatefulWidget {
   final VoidCallback onMoveDown;
   final ValueChanged<String> onSetDeleted;
   final ValueChanged<ProgressionDecision> onProgressionDecisionChanged;
+  final VoidCallback onEditExercise;
+  final VoidCallback onDeleteExercise;
 
   @override
   ConsumerState<ExerciseCard> createState() => _ExerciseCardState();
@@ -114,20 +120,6 @@ class _ExerciseCardState extends ConsumerState<ExerciseCard> {
           children: [
             Row(
               children: [
-                // UX 11: icon-only control, no visible text of its own --
-                // needs a Semantics label. The bare 24dp icon is also below
-                // the 48dp minimum touch target; the padding brings it up
-                // to exactly 48dp without changing what's visually drawn.
-                Semantics(
-                  label: l10n.reorderDragHandleLabel,
-                  child: ReorderableDragStartListener(
-                    index: widget.index,
-                    child: const Padding(
-                      padding: EdgeInsets.all(12),
-                      child: Icon(Icons.drag_handle),
-                    ),
-                  ),
-                ),
                 Expanded(
                   child: Semantics(
                     label: _expanded
@@ -173,6 +165,10 @@ class _ExerciseCardState extends ConsumerState<ExerciseCard> {
                         widget.onMoveUp();
                       case _ExerciseCardAction.moveDown:
                         widget.onMoveDown();
+                      case _ExerciseCardAction.editExercise:
+                        widget.onEditExercise();
+                      case _ExerciseCardAction.deleteExercise:
+                        widget.onDeleteExercise();
                     }
                   },
                   itemBuilder: (context) => [
@@ -194,6 +190,18 @@ class _ExerciseCardState extends ConsumerState<ExerciseCard> {
                         value: _ExerciseCardAction.moveDown,
                         child: Text(l10n.moveExerciseDownAction),
                       ),
+                    // DM 10: only a user-created exercise may be edited --
+                    // a built-in one has no edit action at all in the
+                    // catalog either (S-07).
+                    if (!details.exercise.isBuiltIn)
+                      PopupMenuItem(
+                        value: _ExerciseCardAction.editExercise,
+                        child: Text(l10n.editWorkoutExerciseAction),
+                      ),
+                    PopupMenuItem(
+                      value: _ExerciseCardAction.deleteExercise,
+                      child: Text(l10n.removeExerciseAction),
+                    ),
                   ],
                 ),
               ],

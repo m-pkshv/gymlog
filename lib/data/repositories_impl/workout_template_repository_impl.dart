@@ -462,6 +462,101 @@ class WorkoutTemplateRepositoryImpl implements WorkoutTemplateRepository {
   }
 
   @override
+  Future<void> deleteTemplateExercise(String templateExerciseId) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await _db.transaction(() async {
+      final target = await (_db.select(
+        _db.templateExercises,
+      )..where((te) => te.id.equals(templateExerciseId))).getSingleOrNull();
+      if (target == null || target.isDeleted) return;
+
+      await (_db.update(
+        _db.templateExercises,
+      )..where((te) => te.id.equals(templateExerciseId))).write(
+        drift.TemplateExercisesCompanion(
+          isDeleted: const Value(true),
+          updatedAt: Value(now),
+        ),
+      );
+
+      await (_db.update(_db.templateSets)..where(
+        (s) =>
+            s.templateExerciseId.equals(templateExerciseId) &
+            s.isDeleted.equals(false),
+      )).write(
+        drift.TemplateSetsCompanion(
+          isDeleted: const Value(true),
+          updatedAt: Value(now),
+        ),
+      );
+
+      await _renumberTemplateExercises(target.templateId, now);
+    });
+  }
+
+  @override
+  Future<void> restoreTemplateExercise(String templateExerciseId) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await _db.transaction(() async {
+      final target = await (_db.select(
+        _db.templateExercises,
+      )..where((te) => te.id.equals(templateExerciseId))).getSingleOrNull();
+      if (target == null || !target.isDeleted) return;
+
+      // Only un-delete sets whose `updatedAt` matches this exercise's own
+      // delete-time timestamp -- a set separately soft-deleted (S-13 set
+      // menu) *before* this exercise was deleted carries an earlier
+      // timestamp and is deliberately left alone (mirrors
+      // `WorkoutRepositoryImpl.restoreWorkoutExercise`).
+      await (_db.update(_db.templateSets)..where(
+        (s) =>
+            s.templateExerciseId.equals(templateExerciseId) &
+            s.isDeleted.equals(true) &
+            s.updatedAt.equals(target.updatedAt),
+      )).write(
+        drift.TemplateSetsCompanion(
+          isDeleted: const Value(false),
+          updatedAt: Value(now),
+        ),
+      );
+
+      await (_db.update(
+        _db.templateExercises,
+      )..where((te) => te.id.equals(templateExerciseId))).write(
+        drift.TemplateExercisesCompanion(
+          isDeleted: const Value(false),
+          updatedAt: Value(now),
+        ),
+      );
+
+      await _renumberTemplateExercises(target.templateId, now);
+    });
+  }
+
+  /// Compacts every non-deleted exercise of [templateId] to a contiguous
+  /// `orderIndex` starting at 0, ordered by their current `orderIndex` --
+  /// mirrors `WorkoutRepositoryImpl._renumberExercises`.
+  Future<void> _renumberTemplateExercises(String templateId, String now) async {
+    final rows =
+        await (_db.select(_db.templateExercises)
+              ..where(
+                (te) =>
+                    te.templateId.equals(templateId) &
+                    te.isDeleted.equals(false),
+              )
+              ..orderBy([(te) => OrderingTerm.asc(te.orderIndex)]))
+            .get();
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].orderIndex == i) continue;
+      await (_db.update(
+        _db.templateExercises,
+      )..where((te) => te.id.equals(rows[i].id))).write(
+        drift.TemplateExercisesCompanion(orderIndex: Value(i), updatedAt: Value(now)),
+      );
+    }
+  }
+
+  @override
   Future<void> deleteTemplate(String templateId) async {
     final now = DateTime.now().toUtc().toIso8601String();
     await _db.transaction(() async {

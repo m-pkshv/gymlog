@@ -96,6 +96,10 @@
   "@exerciseNameRequiredError": {
     "description": "Validation error when the exercise name field is left empty (S-08)."
   },
+  "editWorkoutExerciseAction": "Edit exercise",
+  "@editWorkoutExerciseAction": {
+    "description": "Menu action on an exercise card in the workout/template editor (S-03/S-13, Stage 10, owner-reported) that opens the same full edit form the exercise catalog uses (S-08 in edit mode) for the underlying user-created Exercise, without leaving the editor -- only offered when Exercise.isBuiltIn is false (DM 10: built-in exercises can't be edited). Named distinctly from the catalog's own editExerciseAction (\"Edit\", a different screen) to avoid the same kind of ARB key collision already found once this session."
+  },
   "exerciseTypeLabel": "Type",
   "@exerciseTypeLabel": {
     "description": "Label for the exercise type field on the create-exercise form (S-08)."
@@ -778,15 +782,11 @@
   },
   "moveExerciseUpAction": "Move up",
   "@moveExerciseUpAction": {
-    "description": "Menu action on an exercise card in the workout editor (S-03, Stage 3) — the gesture-free alternative to the drag handle. Hidden when the card is already first."
+    "description": "Menu action on an exercise card in the workout editor (S-03, Stage 3) — the only way to reorder exercises (Stage 10, owner-reported: the drag handle this used to accompany was removed). Hidden when the card is already first."
   },
   "moveExerciseDownAction": "Move down",
   "@moveExerciseDownAction": {
-    "description": "Menu action on an exercise card in the workout editor (S-03, Stage 3) — the gesture-free alternative to the drag handle. Hidden when the card is already last."
-  },
-  "reorderDragHandleLabel": "Drag to reorder",
-  "@reorderDragHandleLabel": {
-    "description": "UX 11 accessibility: Semantics label for the icon-only drag handle on an exercise card (workout editor S-03 and template editor S-13) -- the handle itself has no visible text; the \"Move up\"/\"Move down\" menu items are its gesture-free alternative."
+    "description": "Menu action on an exercise card in the workout editor (S-03, Stage 3) — the only way to reorder exercises (Stage 10, owner-reported: the drag handle this used to accompany was removed). Hidden when the card is already last."
   },
   "collapseExerciseAction": "Collapse exercise",
   "@collapseExerciseAction": {
@@ -807,6 +807,14 @@
   "setDeletedMessage": "Set deleted",
   "@setDeletedMessage": {
     "description": "Snackbar message shown after deleting a set (S-03/S-13, Stage 10, DM 10), with an Undo action."
+  },
+  "removeExerciseAction": "Delete exercise",
+  "@removeExerciseAction": {
+    "description": "Menu action on an exercise card in the workout/template editor (S-03/S-13, Stage 10, owner-reported, DM 10) that soft-deletes the exercise (and its sets) with a 5s Undo snackbar. Named distinctly from deleteExerciseAction (the exercise *catalog*'s S-07 delete action, a different screen/concept) to avoid an ARB key collision -- an earlier version of this string accidentally reused that name and silently overwrote the catalog's \"Delete\" label with \"Delete exercise\" until the collision was found via a failing exercise_detail_flow_test.dart test."
+  },
+  "exerciseDeletedMessage": "Exercise deleted",
+  "@exerciseDeletedMessage": {
+    "description": "Snackbar message shown after deleting an exercise from a workout/template (S-03/S-13, Stage 10, DM 10), with an Undo action."
   },
   "deleteWorkoutAction": "Delete",
   "@deleteWorkoutAction": {

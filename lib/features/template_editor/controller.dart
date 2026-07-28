@@ -59,6 +59,13 @@ class TemplateEditorController
     }
   }
 
+  /// Re-reads the whole aggregate -- used after a change made through a
+  /// different aggregate entirely (editing the underlying `Exercise` via
+  /// its own catalog form, Stage 10, owner-reported), which this
+  /// controller's own writes never touch and so never trigger a reload on
+  /// their own.
+  Future<void> reload() => _load();
+
   TemplateDetails? get _details => state.value;
 
   TemplateSet? _findSet(String setId) {
@@ -180,6 +187,40 @@ class TemplateEditorController
     } catch (error, stackTrace) {
       _logger.error(
         'Failed to restore template set $setId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  /// "Удалить упражнение" (S-13 exercise card menu, Stage 10, owner-
+  /// reported) — the template counterpart of
+  /// `WorkoutEditorController.deleteExercise`. Returns whether the delete
+  /// succeeded.
+  Future<bool> deleteExercise(String templateExerciseId) async {
+    await flushAll();
+    try {
+      await _repository.deleteTemplateExercise(templateExerciseId);
+      await _load();
+      return true;
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to delete template exercise $templateExerciseId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return false;
+    }
+  }
+
+  /// Reverses [deleteExercise] within the Undo window.
+  Future<void> restoreExercise(String templateExerciseId) async {
+    try {
+      await _repository.restoreTemplateExercise(templateExerciseId);
+      await _load();
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to restore template exercise $templateExerciseId',
         error: error,
         stackTrace: stackTrace,
       );

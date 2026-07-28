@@ -171,6 +171,57 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
     );
   }
 
+  /// "Удалить упражнение" (S-03 exercise card menu, Stage 10, owner-
+  /// reported: no way to remove an exercise added by mistake, or drop one
+  /// from a workout copied/created from a template without touching the
+  /// source). Same soft-delete + 5s Undo snackbar shape as [_deleteSet].
+  Future<void> _deleteExercise(String workoutExerciseId) async {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = ref.read(
+      workoutEditorControllerProvider(widget.workoutId).notifier,
+    );
+    final deleted = await controller.deleteExercise(workoutExerciseId);
+    if (!mounted || !deleted) return;
+    showUndoSnackbar(
+      context,
+      message: l10n.exerciseDeletedMessage,
+      actionLabel: l10n.undoAction,
+      onUndo: () => controller.restoreExercise(workoutExerciseId),
+    );
+  }
+
+  /// "Редактировать упражнение" (S-03 exercise card menu, Stage 10, owner-
+  /// reported: a plain rename wasn't enough -- the owner wanted the same
+  /// full edit form the catalog offers, without leaving the workout).
+  /// Pushes the *same* `CreateExerciseScreen` widget the catalog's own
+  /// "⋮ → Edit" uses (in edit mode), just registered at a second route
+  /// nested under this already-top-level `/workout/:workoutId` (see
+  /// `app/router.dart`'s top comment for why that placement matters) --
+  /// no new form, no new perf cost beyond a screen push already exercised
+  /// by "+ Добавить упражнение → Создать новое" from this same editor.
+  /// Mirrors `ExerciseDetailScreen._edit()`: [exercise] (from `details`)
+  /// may carry DM 12 localized text, so the canonical record is re-fetched
+  /// before handing it to the form, and the controller is reloaded
+  /// afterwards since a write through a different aggregate
+  /// (`ExerciseRepository`, not this screen's `WorkoutRepository`) never
+  /// triggers one on its own. Only ever reachable for a user-created
+  /// exercise (the menu hides this item for a built-in one, DM 10).
+  Future<void> _editExercise(Exercise exercise) async {
+    final canonical = await ref
+        .read(exerciseRepositoryProvider)
+        .getById(exercise.id);
+    if (canonical == null || !mounted) return;
+    final updated = await context.push<Exercise>(
+      '/workout/${widget.workoutId}/edit-exercise/${exercise.id}',
+      extra: canonical,
+    );
+    if (updated != null && mounted) {
+      ref
+          .read(workoutEditorControllerProvider(widget.workoutId).notifier)
+          .reload();
+    }
+  }
+
   Future<void> _changeStatus(WorkoutStatus newStatus) async {
     final l10n = AppLocalizations.of(context)!;
     // Captured before the write below (after it, the controller's cached
@@ -514,6 +565,8 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
                   onMoveDate: _moveDate,
                   onSetCompletedChanged: _onSetCompletedChanged,
                   onSetDeleted: _deleteSet,
+                  onEditExercise: _editExercise,
+                  onDeleteExercise: _deleteExercise,
                   onSaveAsTemplate: _saveAsTemplate,
                   onDeleteWorkout: _deleteWorkout,
                 )
@@ -611,6 +664,8 @@ class _EditorBody extends StatelessWidget {
     required this.onMoveDate,
     required this.onSetCompletedChanged,
     required this.onSetDeleted,
+    required this.onEditExercise,
+    required this.onDeleteExercise,
     required this.onSaveAsTemplate,
     required this.onDeleteWorkout,
   });
@@ -623,6 +678,8 @@ class _EditorBody extends StatelessWidget {
   final void Function(DateTime currentDate) onMoveDate;
   final void Function(String setId, bool value) onSetCompletedChanged;
   final ValueChanged<String> onSetDeleted;
+  final ValueChanged<Exercise> onEditExercise;
+  final ValueChanged<String> onDeleteExercise;
   final VoidCallback onSaveAsTemplate;
   final VoidCallback onDeleteWorkout;
 
@@ -717,22 +774,15 @@ class _EditorBody extends StatelessWidget {
                   ),
                 )
               else
-                SliverReorderableList(
-                  // ExerciseCard supplies its own drag handle (04_UI_UX_SPEC.md,
-                  // section 5), so the default trailing handle is redundant --
-                  // unlike `ReorderableListView`, a plain `SliverReorderableList`
-                  // never adds one on its own.
+                SliverList.builder(
+                  // Owner-reported (Stage 10): the drag handle made
+                  // reordering feel sluggish on a screen already busy with
+                  // large exercise cards -- removed in favour of the
+                  // "⋮ → Вверх/Вниз" menu on each card as the *only* way to
+                  // reorder now (it already existed as the gesture-free
+                  // alternative, DM/UX 11), so no replacement control is
+                  // needed here beyond a plain, non-reorderable list.
                   itemCount: details.exercises.length,
-                  // `newIndex` here is already adjusted for the removed
-                  // item at `oldIndex` (unlike the deprecated `onReorder`).
-                  onReorderItem: (oldIndex, newIndex) {
-                    final ids = details.exercises
-                        .map((e) => e.workoutExercise.id)
-                        .toList();
-                    final movedId = ids.removeAt(oldIndex);
-                    ids.insert(newIndex, movedId);
-                    controller.reorderExercises(ids);
-                  },
                   itemBuilder: (context, index) {
                     final exerciseDetails = details.exercises[index];
                     final workoutExerciseId =
@@ -740,7 +790,6 @@ class _EditorBody extends StatelessWidget {
                     return ExerciseCard(
                       key: ValueKey(workoutExerciseId),
                       details: exerciseDetails,
-                      index: index,
                       isActive: workout.status == WorkoutStatus.inProgress,
                       canMoveUp: index > 0,
                       canMoveDown: index < details.exercises.length - 1,
@@ -771,6 +820,9 @@ class _EditorBody extends StatelessWidget {
                       onSetDeleted: onSetDeleted,
                       onProgressionDecisionChanged: (decision) => controller
                           .setProgressionDecision(workoutExerciseId, decision),
+                      onEditExercise: () =>
+                          onEditExercise(exerciseDetails.exercise),
+                      onDeleteExercise: () => onDeleteExercise(workoutExerciseId),
                     );
                   },
                 ),
@@ -794,9 +846,6 @@ class _EditorBody extends StatelessWidget {
               // to be pinned above the exercise list, staying on screen while
               // scrolling; moved into this same scrollable, always after the
               // last exercise, so it scrolls with them instead of pinning.
-              // A plain sliver (not part of `SliverReorderableList` above)
-              // -- it has no drag handle, so it can never be dragged out of
-              // last place the way a list item could.
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),

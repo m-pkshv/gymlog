@@ -242,6 +242,12 @@ abstract class AppLocalizations {
   /// **'Enter a name'**
   String get exerciseNameRequiredError;
 
+  /// Menu action on an exercise card in the workout/template editor (S-03/S-13, Stage 10, owner-reported) that opens the same full edit form the exercise catalog uses (S-08 in edit mode) for the underlying user-created Exercise, without leaving the editor -- only offered when Exercise.isBuiltIn is false (DM 10: built-in exercises can't be edited). Named distinctly from the catalog's own editExerciseAction ("Edit", a different screen) to avoid the same kind of ARB key collision already found once this session.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit exercise'**
+  String get editWorkoutExerciseAction;
+
   /// Label for the exercise type field on the create-exercise form (S-08).
   ///
   /// In en, this message translates to:
@@ -1376,23 +1382,17 @@ abstract class AppLocalizations {
   /// **'No matches found'**
   String get historySearchEmptyTitle;
 
-  /// Menu action on an exercise card in the workout editor (S-03, Stage 3) — the gesture-free alternative to the drag handle. Hidden when the card is already first.
+  /// Menu action on an exercise card in the workout editor (S-03, Stage 3) — the only way to reorder exercises (Stage 10, owner-reported: the drag handle this used to accompany was removed). Hidden when the card is already first.
   ///
   /// In en, this message translates to:
   /// **'Move up'**
   String get moveExerciseUpAction;
 
-  /// Menu action on an exercise card in the workout editor (S-03, Stage 3) — the gesture-free alternative to the drag handle. Hidden when the card is already last.
+  /// Menu action on an exercise card in the workout editor (S-03, Stage 3) — the only way to reorder exercises (Stage 10, owner-reported: the drag handle this used to accompany was removed). Hidden when the card is already last.
   ///
   /// In en, this message translates to:
   /// **'Move down'**
   String get moveExerciseDownAction;
-
-  /// UX 11 accessibility: Semantics label for the icon-only drag handle on an exercise card (workout editor S-03 and template editor S-13) -- the handle itself has no visible text; the "Move up"/"Move down" menu items are its gesture-free alternative.
-  ///
-  /// In en, this message translates to:
-  /// **'Drag to reorder'**
-  String get reorderDragHandleLabel;
 
   /// Semantics label for the tappable exercise-card header (type icon + name + chevron) when the card is expanded -- tapping it collapses the card to just its name (S-03/S-13, Stage 10, owner-reported: long lists of sets were hard to scan).
   ///
@@ -1423,6 +1423,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set deleted'**
   String get setDeletedMessage;
+
+  /// Menu action on an exercise card in the workout/template editor (S-03/S-13, Stage 10, owner-reported, DM 10) that soft-deletes the exercise (and its sets) with a 5s Undo snackbar. Named distinctly from deleteExerciseAction (the exercise *catalog*'s S-07 delete action, a different screen/concept) to avoid an ARB key collision -- an earlier version of this string accidentally reused that name and silently overwrote the catalog's "Delete" label with "Delete exercise" until the collision was found via a failing exercise_detail_flow_test.dart test.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete exercise'**
+  String get removeExerciseAction;
+
+  /// Snackbar message shown after deleting an exercise from a workout/template (S-03/S-13, Stage 10, DM 10), with an Undo action.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise deleted'**
+  String get exerciseDeletedMessage;
 
   /// "⋮" menu action on a History card (S-02, Stage 3, DM 10) that soft-deletes the workout with a 5s Undo snackbar.
   ///

@@ -104,8 +104,11 @@ class WorkoutEditorController
     }
   }
 
-  /// Re-reads the whole aggregate — used after structural changes (adding
-  /// an exercise or a set) rather than reconciling the tree by hand.
+  /// Re-reads the whole aggregate -- used after a change made through a
+  /// different aggregate entirely (editing the underlying `Exercise` via
+  /// its own catalog form, Stage 10, owner-reported), which this
+  /// controller's own writes never touch and so never trigger a reload on
+  /// their own.
   Future<void> reload() => _load();
 
   WorkoutDetails? get _details => state.value;
@@ -350,6 +353,42 @@ class WorkoutEditorController
     } catch (error, stackTrace) {
       _logger.error(
         'Failed to restore set $setId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  /// "Удалить упражнение" (S-03 exercise card menu, Stage 10, owner-
+  /// reported: no way to remove an exercise added by mistake, or one not
+  /// wanted today from a copied/templated workout without touching its
+  /// source). Same shape as [deleteSet]: flush pending edits first, soft-
+  /// delete + renumber via the repository, reload, report success so the
+  /// screen only offers "Undo" when there's something to undo.
+  Future<bool> deleteExercise(String workoutExerciseId) async {
+    await flushAll();
+    try {
+      await _workoutRepository.deleteWorkoutExercise(workoutExerciseId);
+      await _load();
+      return true;
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to delete workout exercise $workoutExerciseId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return false;
+    }
+  }
+
+  /// Reverses [deleteExercise] within the Undo window.
+  Future<void> restoreExercise(String workoutExerciseId) async {
+    try {
+      await _workoutRepository.restoreWorkoutExercise(workoutExerciseId);
+      await _load();
+    } catch (error, stackTrace) {
+      _logger.error(
+        'Failed to restore workout exercise $workoutExerciseId',
         error: error,
         stackTrace: stackTrace,
       );

@@ -90,6 +90,23 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
+        GoRoute(
+          path: 'edit-exercise/:exerciseId',
+          // "⋮ → Edit exercise" on an exercise card (S-03, Stage 10, owner-
+          // reported: a user-created exercise's full edit form, reachable
+          // from inside the workout instead of only from the catalog) --
+          // the *same* `CreateExerciseScreen` widget the catalog's own
+          // edit flow uses (`/exercises/:exerciseId/edit`), just registered
+          // at a second path nested under this already-top-level route
+          // (see this file's top comment) instead of under the Exercises
+          // tab's branch, mirroring how `add-exercise/new` above already
+          // reuses the same creation form from two different route trees.
+          pageBuilder: (_, state) => MaterialPage(
+            key: state.pageKey,
+            fullscreenDialog: true,
+            child: CreateExerciseScreen(exercise: state.extra as Exercise),
+          ),
+        ),
       ],
     ),
     GoRoute(
@@ -236,6 +253,20 @@ final GoRouter appRouter = GoRouter(
                               ),
                             ),
                           ],
+                        ),
+                        GoRoute(
+                          path: 'edit-exercise/:exerciseId',
+                          // "⋮ → Edit exercise" on an exercise card (S-13,
+                          // Stage 10, owner-reported) -- mirrors the
+                          // workout editor's identically-named nested
+                          // route above.
+                          pageBuilder: (_, state) => MaterialPage(
+                            key: state.pageKey,
+                            fullscreenDialog: true,
+                            child: CreateExerciseScreen(
+                              exercise: state.extra as Exercise,
+                            ),
+                          ),
                         ),
                       ],
                     ),

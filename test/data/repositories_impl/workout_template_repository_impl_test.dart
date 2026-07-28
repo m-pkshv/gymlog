@@ -148,6 +148,141 @@ void main() {
     },
   );
 
+  group(
+    'deleteTemplateExercise / restoreTemplateExercise (Stage 10, owner-'
+    'reported, DM 10)',
+    () {
+      test(
+        'deleteTemplateExercise soft-deletes the exercise and its sets, and '
+        'compacts the remaining exercises\' orderIndex',
+        () async {
+          final squat = await exercises.create(
+            name: 'Squat',
+            exerciseType: ExerciseType.strength,
+          );
+          final bench = await exercises.create(
+            name: 'Bench Press',
+            exerciseType: ExerciseType.strength,
+          );
+          final row = await exercises.create(
+            name: 'Row',
+            exerciseType: ExerciseType.strength,
+          );
+          final template = await templates.create(name: 'Leg day');
+          final te1 = await templates.addExercise(
+            templateId: template.id,
+            exerciseId: squat.id,
+          );
+          final te2 = await templates.addExercise(
+            templateId: template.id,
+            exerciseId: bench.id,
+          );
+          final te3 = await templates.addExercise(
+            templateId: template.id,
+            exerciseId: row.id,
+          );
+          await templates.addSet(templateExerciseId: te2.id);
+
+          await templates.deleteTemplateExercise(te2.id);
+
+          final details = await templates.getDetails(template.id);
+          expect(
+            details!.exercises.map((e) => e.templateExercise.id).toList(),
+            [te1.id, te3.id],
+          );
+          expect(
+            details.exercises
+                .map((e) => e.templateExercise.orderIndex)
+                .toList(),
+            [0, 1],
+          );
+        },
+      );
+
+      test(
+        'restoreTemplateExercise un-deletes the exercise and its sets, and '
+        're-inserts it in its original relative position',
+        () async {
+          final squat = await exercises.create(
+            name: 'Squat',
+            exerciseType: ExerciseType.strength,
+          );
+          final bench = await exercises.create(
+            name: 'Bench Press',
+            exerciseType: ExerciseType.strength,
+          );
+          final row = await exercises.create(
+            name: 'Row',
+            exerciseType: ExerciseType.strength,
+          );
+          final template = await templates.create(name: 'Leg day');
+          final te1 = await templates.addExercise(
+            templateId: template.id,
+            exerciseId: squat.id,
+          );
+          final te2 = await templates.addExercise(
+            templateId: template.id,
+            exerciseId: bench.id,
+          );
+          final te3 = await templates.addExercise(
+            templateId: template.id,
+            exerciseId: row.id,
+          );
+          final set = await templates.addSet(templateExerciseId: te2.id);
+
+          await templates.deleteTemplateExercise(te2.id);
+          await templates.restoreTemplateExercise(te2.id);
+
+          final details = await templates.getDetails(template.id);
+          expect(
+            details!.exercises.map((e) => e.templateExercise.id).toList(),
+            [te1.id, te2.id, te3.id],
+          );
+          expect(
+            details.exercises
+                .firstWhere((e) => e.templateExercise.id == te2.id)
+                .sets
+                .map((s) => s.id),
+            [set.id],
+          );
+        },
+      );
+
+      test(
+        'restoreTemplateExercise does not resurrect a set that was already '
+        'independently deleted before the exercise itself was deleted',
+        () async {
+          final squat = await exercises.create(
+            name: 'Squat',
+            exerciseType: ExerciseType.strength,
+          );
+          final template = await templates.create(name: 'Leg day');
+          final templateExercise = await templates.addExercise(
+            templateId: template.id,
+            exerciseId: squat.id,
+          );
+          final keptSet = await templates.addSet(
+            templateExerciseId: templateExercise.id,
+          );
+          final alreadyDeletedSet = await templates.addSet(
+            templateExerciseId: templateExercise.id,
+          );
+
+          await templates.deleteTemplateSet(alreadyDeletedSet.id);
+
+          await templates.deleteTemplateExercise(templateExercise.id);
+          await templates.restoreTemplateExercise(templateExercise.id);
+
+          final details = await templates.getDetails(template.id);
+          expect(
+            details!.exercises.single.sets.map((s) => s.id).toList(),
+            [keptSet.id],
+          );
+        },
+      );
+    },
+  );
+
   group('getDetails locale (Stage 10, DM 12)', () {
     test('resolves the embedded exercise name against ExerciseL10n when a locale is given', () async {
       final exercise = await exercises.create(
