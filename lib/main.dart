@@ -43,14 +43,31 @@ Future<void> main() async {
     return true;
   };
 
-  // Reference data + the placeholder exercise catalog (DM 12) must exist
-  // before any screen queries them; done once here, ahead of the first
-  // frame, so the UI never has to special-case an unseeded database.
+  // Reference data + the placeholder exercise catalog (DM 12), and the
+  // settings singleton row (DM 6.12): started here but *not* awaited before
+  // `runApp` (Stage 10, TS 11.6 cold-start profiling, owner-approved
+  // 2026-07-28: the sequential DB-open + two lookup queries measurably
+  // delayed the first frame, which itself never touches the database --
+  // same reasoning as notification init below). Every screen that reads
+  // this data goes through a Drift `watch()` stream (a Riverpod
+  // `StreamProvider`), so a screen opened in the ~150-200ms window before
+  // this finishes just shows its existing loading/empty state
+  // (05_AI_INSTRUCTIONS.md rule 7 already requires every screen to have
+  // one) and refreshes itself the moment the seed transaction / settings
+  // insert commits, without any special-casing.
   final db = AppDatabase();
-  await SeedRunner(db).run();
-  // The settings singleton row (DM 6.12) must exist before any screen
-  // watches it, same reasoning as the seed above.
-  await AppSettingsRepositoryImpl(db).ensureInitialized();
+  unawaited(
+    SeedRunner(db)
+        .run()
+        .then((_) => AppSettingsRepositoryImpl(db).ensureInitialized())
+        .catchError((Object error, StackTrace stackTrace) {
+          logger.error(
+            'Failed to seed the database / initialize settings',
+            error: error,
+            stackTrace: stackTrace,
+          );
+        }),
+  );
 
   // Rest-timer notifications (Stage 4, TS 7.3, D-11): plugin/channel setup
   // happens once here, but *after* the first frame (Stage 10, TS 11.6
@@ -78,7 +95,10 @@ Future<void> main() async {
   );
 
   unawaited(
-    notificationService.initialize().catchError((Object error, StackTrace stackTrace) {
+    notificationService.initialize().catchError((
+      Object error,
+      StackTrace stackTrace,
+    ) {
       logger.error(
         'Failed to initialize the notification service',
         error: error,
