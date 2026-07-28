@@ -14,6 +14,7 @@ import 'package:gymlog/features/history/screen.dart';
 import 'package:gymlog/features/history/template_picker_screen.dart';
 import 'package:gymlog/features/template_editor/screen.dart';
 import 'package:gymlog/features/workout_editor/screen.dart';
+import 'package:gymlog/features/workout_editor/widgets/workout_tag_chip.dart';
 import 'package:gymlog/features/workout_summary/screen.dart';
 import 'package:gymlog/app/theme.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
@@ -789,7 +790,7 @@ void main() {
         await tester.pumpWidget(_appUnderTest(db));
         await tester.pumpAndSettle();
 
-        expect(find.widgetWithText(Chip, 'Legs'), findsOneWidget);
+        expect(find.widgetWithText(WorkoutTagChip, 'Legs'), findsOneWidget);
 
         await tester.tap(find.byIcon(Icons.tune));
         await tester.pumpAndSettle();
@@ -863,7 +864,7 @@ void main() {
         await tester.pumpWidget(_appUnderTest(db));
         await tester.pumpAndSettle();
 
-        expect(find.widgetWithText(Chip, 'Legs'), findsNothing);
+        expect(find.widgetWithText(WorkoutTagChip, 'Legs'), findsNothing);
 
         await tester.tap(find.byIcon(Icons.tune));
         await tester.pumpAndSettle();
