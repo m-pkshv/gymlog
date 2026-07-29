@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/repositories_impl/exercise_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
+import 'package:gymlog/domain/models/exercise_catalog_filter.dart';
 
 void main() {
   late AppDatabase db;
@@ -423,6 +424,72 @@ void main() {
 
       expect(results.map((e) => e.name), ['Bench Press']);
     });
+
+    test(
+      'muscle group filter\'s "none" sentinel matches exercises with no '
+      'primary muscle group (Stage 10, owner-reported), regardless of '
+      'secondary muscles',
+      () async {
+        await db
+            .into(db.muscleGroups)
+            .insert(MuscleGroupsCompanion.insert(id: 'chest', sortOrder: 0));
+        await db
+            .into(db.muscleGroups)
+            .insert(MuscleGroupsCompanion.insert(id: 'triceps', sortOrder: 1));
+        await repository.create(
+          name: 'Bench Press',
+          exerciseType: ExerciseType.strength,
+          primaryMuscleGroupId: 'chest',
+        );
+        await repository.create(
+          name: 'Mystery Move',
+          exerciseType: ExerciseType.reps,
+          secondaryMuscleGroupIds: ['triceps'],
+        );
+
+        final results = await repository
+            .watchAll(filter: (
+              query: '',
+              type: null,
+              muscleGroupId: exerciseFilterNoneValue,
+              equipmentId: null,
+              includeArchived: false,
+              onlyUserCreated: false,
+            ))
+            .first;
+
+        expect(results.map((e) => e.name), ['Mystery Move']);
+      },
+    );
+
+    test(
+      'equipment filter\'s "none" sentinel matches exercises with no '
+      'equipment set (Stage 10, owner-reported)',
+      () async {
+        await db
+            .into(db.equipments)
+            .insert(EquipmentsCompanion.insert(id: 'barbell', sortOrder: 0));
+        await repository.create(
+          name: 'Bench Press',
+          exerciseType: ExerciseType.strength,
+          equipmentId: 'barbell',
+        );
+        await repository.create(name: 'Push-Up', exerciseType: ExerciseType.reps);
+
+        final results = await repository
+            .watchAll(filter: (
+              query: '',
+              type: null,
+              muscleGroupId: null,
+              equipmentId: exerciseFilterNoneValue,
+              includeArchived: false,
+              onlyUserCreated: false,
+            ))
+            .first;
+
+        expect(results.map((e) => e.name), ['Push-Up']);
+      },
+    );
 
     test('includeArchived reveals archived exercises', () async {
       final exercise = await repository.create(

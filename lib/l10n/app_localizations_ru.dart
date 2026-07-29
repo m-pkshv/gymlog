@@ -81,6 +81,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get exerciseNameRequiredError => 'Введите название';
 
   @override
+  String get exerciseNameDuplicateError =>
+      'Упражнение с таким названием уже существует';
+
+  @override
+  String get exerciseCopyFromAction => 'Скопировать из...';
+
+  @override
+  String get exerciseCopySourcePickerTitle => 'Копировать из';
+
+  @override
   String get editWorkoutExerciseAction => 'Редактировать упражнение';
 
   @override
@@ -397,6 +407,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get exerciseNoMuscleGroupLabel => 'Без группы мышц';
+
+  @override
+  String get exerciseNoEquipmentLabel => 'Без оборудования';
 
   @override
   String get archiveExerciseAction => 'Архивировать';

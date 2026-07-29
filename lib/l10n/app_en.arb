@@ -96,6 +96,18 @@
   "@exerciseNameRequiredError": {
     "description": "Validation error when the exercise name field is left empty (S-08)."
   },
+  "exerciseNameDuplicateError": "An exercise with this name already exists",
+  "@exerciseNameDuplicateError": {
+    "description": "Validation error on the create/edit exercise form (S-08, Stage 10, owner-reported) when the name matches another exercise (built-in or user-created, archived ones excluded)."
+  },
+  "exerciseCopyFromAction": "Copy from...",
+  "@exerciseCopyFromAction": {
+    "description": "Button on the create-exercise form (S-08, Stage 10, owner-reported), create mode only, that opens a picker to prefill the form from an existing exercise's fields."
+  },
+  "exerciseCopySourcePickerTitle": "Copy from",
+  "@exerciseCopySourcePickerTitle": {
+    "description": "Title of the exercise picker opened by exerciseCopyFromAction (S-08, Stage 10, owner-reported)."
+  },
   "editWorkoutExerciseAction": "Edit exercise",
   "@editWorkoutExerciseAction": {
     "description": "Menu action on an exercise card in the workout/template editor (S-03/S-13, Stage 10, owner-reported) that opens the same full edit form the exercise catalog uses (S-08 in edit mode) for the underlying user-created Exercise, without leaving the editor -- only offered when Exercise.isBuiltIn is false (DM 10: built-in exercises can't be edited). Named distinctly from the catalog's own editExerciseAction (\"Edit\", a different screen) to avoid the same kind of ARB key collision already found once this session."
@@ -417,7 +429,11 @@
   },
   "exerciseNoMuscleGroupLabel": "No muscle group",
   "@exerciseNoMuscleGroupLabel": {
-    "description": "Section header on the exercise catalog (S-06, Stage 10 redesign) for exercises with no primary muscle group set."
+    "description": "Section header on the exercise catalog (S-06, Stage 10 redesign) for exercises with no primary muscle group set. Reused as the filter sheet's \"no muscle group\" option (Stage 10, owner-reported) -- same concept, same wording."
+  },
+  "exerciseNoEquipmentLabel": "No equipment",
+  "@exerciseNoEquipmentLabel": {
+    "description": "Filter sheet option (S-06, Stage 10, owner-reported) for exercises with no equipment set -- mirrors exerciseNoMuscleGroupLabel's role for the muscle-group filter."
   },
   "archiveExerciseAction": "Archive",
   "@archiveExerciseAction": {

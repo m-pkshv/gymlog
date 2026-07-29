@@ -82,6 +82,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exerciseNameRequiredError => 'Enter a name';
 
   @override
+  String get exerciseNameDuplicateError =>
+      'An exercise with this name already exists';
+
+  @override
+  String get exerciseCopyFromAction => 'Copy from...';
+
+  @override
+  String get exerciseCopySourcePickerTitle => 'Copy from';
+
+  @override
   String get editWorkoutExerciseAction => 'Edit exercise';
 
   @override
@@ -396,6 +406,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exerciseNoMuscleGroupLabel => 'No muscle group';
+
+  @override
+  String get exerciseNoEquipmentLabel => 'No equipment';
 
   @override
   String get archiveExerciseAction => 'Archive';

@@ -28,7 +28,9 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
     if (filter.type != null) {
       query.where((e) => e.exerciseType.equals(filter.type!.name));
     }
-    if (filter.equipmentId != null) {
+    if (filter.equipmentId == exerciseFilterNoneValue) {
+      query.where((e) => e.equipmentId.isNull());
+    } else if (filter.equipmentId != null) {
       query.where((e) => e.equipmentId.equals(filter.equipmentId!));
     }
     if (filter.onlyUserCreated) {
@@ -57,7 +59,15 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
           .toList();
 
       final muscleGroupId = filter.muscleGroupId;
-      if (muscleGroupId != null) {
+      if (muscleGroupId == exerciseFilterNoneValue) {
+        // "No muscle group" (Stage 10, owner-reported) mirrors the catalog's
+        // own "Без группы мышц" section (Stage 10 redesign, AUDIT.md 1.3),
+        // which groups purely by primaryMuscleGroupId -- secondary muscles
+        // don't count here either, unlike the specific-id branch below.
+        exercises = exercises
+            .where((exercise) => exercise.primaryMuscleGroupId == null)
+            .toList();
+      } else if (muscleGroupId != null) {
         exercises = exercises
             .where(
               (exercise) =>

@@ -14,6 +14,7 @@ import 'package:gymlog/domain/models/exercise_catalog_filter.dart';
 import 'package:gymlog/domain/models/exercise_localization.dart';
 import 'package:gymlog/domain/repositories/exercise_repository.dart';
 import 'package:gymlog/features/exercises/create_exercise_screen.dart';
+import 'package:gymlog/features/exercises/exercise_copy_source_picker_screen.dart';
 import 'package:gymlog/features/exercises/screen.dart';
 import 'package:gymlog/app/theme.dart';
 import 'package:gymlog/l10n/app_localizations.dart';
@@ -25,7 +26,13 @@ Widget _appUnderTest(AppDatabase db, {ExerciseRepository? exerciseRepository}) {
       GoRoute(path: '/exercises', builder: (_, _) => const ExercisesScreen()),
       GoRoute(
         path: '/exercises/new',
-        builder: (_, _) => const CreateExerciseScreen(),
+        builder: (_, _) => const CreateExerciseScreen(ownRoute: '/exercises/new'),
+        routes: [
+          GoRoute(
+            path: 'copy-source',
+            builder: (_, _) => const ExerciseCopySourcePickerScreen(),
+          ),
+        ],
       ),
     ],
   );
@@ -382,6 +389,107 @@ void main() {
   );
 
   testWidgets(
+    'rejects creating an exercise whose name duplicates an existing one, '
+    'case-insensitively (Stage 10, owner-reported: check among all '
+    'exercises)',
+    (tester) async {
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'squat',
+              name: 'Squat',
+              exerciseType: ExerciseType.strength.name,
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField).first, 'squat');
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('An exercise with this name already exists'),
+        findsOneWidget,
+      );
+      expect(find.byType(CreateExerciseScreen), findsOneWidget);
+      expect(await db.select(db.exercises).get(), hasLength(1));
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    '"Copy from..." prefills the form from an existing exercise, and the '
+    'duplicate-name check blocks creating without renaming (Stage 10, '
+    'owner-reported: "проверять среди всех, а копировать из всех")',
+    (tester) async {
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'squat',
+              name: 'Squat',
+              exerciseType: ExerciseType.strength.name,
+              description: const Value('A classic compound lift.'),
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Copy from...'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ExerciseCopySourcePickerScreen), findsOneWidget);
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+
+      // Back on the create form, with the name copied over.
+      expect(find.byType(ExerciseCopySourcePickerScreen), findsNothing);
+      expect(
+        tester
+            .widget<TextField>(find.byType(TextField).first)
+            .controller!
+            .text,
+        'Squat',
+      );
+
+      // Saving without renaming trips the duplicate-name check.
+      await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('An exercise with this name already exists'),
+        findsOneWidget,
+      );
+      expect(await db.select(db.exercises).get(), hasLength(1));
+
+      // Renaming lets it through, keeping the copied description.
+      await tester.enterText(find.byType(TextField).first, 'Front Squat');
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+      await tester.pumpAndSettle();
+
+      final exercises = await db.select(db.exercises).get();
+      expect(exercises, hasLength(2));
+      final created = exercises.singleWhere((e) => e.name == 'Front Squat');
+      expect(created.description, 'A classic compound lift.');
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
     'effort metric field only shows for strength exercises (S-08, DM 6.1)',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 5000);
@@ -644,6 +752,107 @@ void main() {
 
     await _unmountAndFlush(tester);
   });
+
+  testWidgets(
+    'the muscle group filter\'s "No muscle group" option narrows the list '
+    '(Stage 10, owner-reported: exercises can be created without one, but '
+    'the filter had no way to search for exactly those)',
+    (tester) async {
+      await db
+          .into(db.muscleGroups)
+          .insert(MuscleGroupsCompanion.insert(id: 'chest', sortOrder: 0));
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'bench',
+              name: 'Bench Press',
+              exerciseType: ExerciseType.strength.name,
+              primaryMuscleGroupId: const Value('chest'),
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'mystery',
+              name: 'Mystery Move',
+              exerciseType: ExerciseType.reps.name,
+              createdAt: '2026-07-19T00:01:00Z',
+              updatedAt: '2026-07-19T00:01:00Z',
+            ),
+          );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.tune));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Any muscle group'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('No muscle group').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Apply'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Mystery Move'), findsOneWidget);
+      expect(find.text('Bench Press'), findsNothing);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'the equipment filter\'s "No equipment" option narrows the list '
+    '(Stage 10, owner-reported)',
+    (tester) async {
+      await db
+          .into(db.equipments)
+          .insert(EquipmentsCompanion.insert(id: 'barbell', sortOrder: 0));
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'bench',
+              name: 'Bench Press',
+              exerciseType: ExerciseType.strength.name,
+              equipmentId: const Value('barbell'),
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'pushup',
+              name: 'Push-Up',
+              exerciseType: ExerciseType.reps.name,
+              createdAt: '2026-07-19T00:01:00Z',
+              updatedAt: '2026-07-19T00:01:00Z',
+            ),
+          );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.tune));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Any equipment'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('No equipment').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Apply'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Push-Up'), findsOneWidget);
+      expect(find.text('Bench Press'), findsNothing);
+
+      await _unmountAndFlush(tester);
+    },
+  );
 
   testWidgets('"Reset" in the filter sheet clears the selected filters', (
     tester,

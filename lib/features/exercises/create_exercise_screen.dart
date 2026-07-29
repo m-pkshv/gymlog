@@ -40,14 +40,26 @@ class _LocalizationEntry {
 ///
 /// Doubles as the S-07 "Edit" form when [exercise] is passed: fields are
 /// pre-filled and saving calls `ExerciseService.update` instead of
-/// `ExerciseRepository.create`. The exerciseType dropdown is disabled in
+/// `ExerciseService.create`. The exerciseType dropdown is disabled in
 /// edit mode once `ExerciseService.canChangeType` says it's locked (DM 6.1:
 /// at least one set has been logged against this exercise).
+///
+/// In create mode, [ownRoute] (this screen's own full path -- see
+/// `AddExerciseScreen.addExerciseRoute`'s identical rationale) enables the
+/// "Скопировать из..." button (S-08, Stage 10, owner-reported): pushes a
+/// picker over any exercise, built-in or user-created, and prefills every
+/// field from it, so a user who just wants a tweaked variant doesn't start
+/// from a blank form. `null` simply hides that button (edit mode never
+/// needs it).
 class CreateExerciseScreen extends ConsumerStatefulWidget {
-  const CreateExerciseScreen({super.key, this.exercise});
+  const CreateExerciseScreen({super.key, this.exercise, this.ownRoute});
 
   /// When set, edits this exercise instead of creating a new one.
   final Exercise? exercise;
+
+  /// This screen's own full route path, e.g. `/exercises/new` or
+  /// `/workout/$id/add-exercise/new` -- create mode only, see the class doc.
+  final String? ownRoute;
 
   @override
   ConsumerState<CreateExerciseScreen> createState() =>
@@ -185,6 +197,33 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
     }
   }
 
+  /// Opens [ExerciseCopySourcePickerScreen] and, if the owner picks one,
+  /// prefills every field from it (S-08, Stage 10, owner-reported) -- the
+  /// same fields [initState] copies for edit mode, just triggered by a
+  /// button instead of automatically at open. Localizations are
+  /// deliberately not copied (a brand-new exercise doesn't inherit the
+  /// source's translations); `_typeLocked` stays `false`, as it always is
+  /// in create mode, so the type dropdown remains editable.
+  Future<void> _copyFrom() async {
+    final ownRoute = widget.ownRoute;
+    if (ownRoute == null) return;
+    final source = await context.push<Exercise>('$ownRoute/copy-source');
+    if (source == null || !mounted) return;
+    setState(() {
+      _nameController.text = source.name;
+      _descriptionController.text = source.description ?? '';
+      _youtubeUrlController.text = source.youtubeUrl ?? '';
+      _selectedType = source.exerciseType;
+      _effortMetric = source.effortMetric;
+      _primaryMuscleGroupId = source.primaryMuscleGroupId;
+      _equipmentId = source.equipmentId;
+      _secondaryMuscleGroupIds
+        ..clear()
+        ..addAll(source.secondaryMuscleGroupIds);
+      _nameError = null;
+    });
+  }
+
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
     final name = _nameController.text.trim();
@@ -194,6 +233,16 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
     }
 
     final existing = widget.exercise;
+    final service = ref.read(exerciseServiceProvider);
+    // Proactive inline check (Stage 10, owner-reported: "проверять среди
+    // всех") -- `create`/`update` re-validate the same rule server-side
+    // regardless, this just avoids a round-trip through the generic error
+    // snackbar for the single most likely failure.
+    if (await service.isNameTaken(name, excludeId: existing?.id)) {
+      if (mounted) setState(() => _nameError = l10n.exerciseNameDuplicateError);
+      return;
+    }
+
     final description = _descriptionController.text.trim();
     final youtubeUrl = _youtubeUrlController.text.trim();
     final effortMetric = _selectedType == ExerciseType.strength
@@ -202,10 +251,19 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
 
     setState(() => _isSubmitting = true);
     try {
-      if (existing == null) {
-        final created = await ref
-            .read(exerciseRepositoryProvider)
-            .create(
+      final result = existing == null
+          ? await service.create(
+              name: name,
+              exerciseType: _selectedType,
+              description: description.isEmpty ? null : description,
+              youtubeUrl: youtubeUrl.isEmpty ? null : youtubeUrl,
+              primaryMuscleGroupId: _primaryMuscleGroupId,
+              equipmentId: _equipmentId,
+              effortMetric: effortMetric,
+              secondaryMuscleGroupIds: _secondaryMuscleGroupIds.toList(),
+            )
+          : await service.update(
+              current: existing,
               name: name,
               exerciseType: _selectedType,
               description: description.isEmpty ? null : description,
@@ -215,34 +273,21 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
               effortMetric: effortMetric,
               secondaryMuscleGroupIds: _secondaryMuscleGroupIds.toList(),
             );
-        await _saveLocalizations(created.id);
-        if (mounted) context.pop(created);
-        return;
-      }
-
-      final result = await ref
-          .read(exerciseServiceProvider)
-          .update(
-            current: existing,
-            name: name,
-            exerciseType: _selectedType,
-            description: description.isEmpty ? null : description,
-            youtubeUrl: youtubeUrl.isEmpty ? null : youtubeUrl,
-            primaryMuscleGroupId: _primaryMuscleGroupId,
-            equipmentId: _equipmentId,
-            effortMetric: effortMetric,
-            secondaryMuscleGroupIds: _secondaryMuscleGroupIds.toList(),
-          );
-      final updated = result.getOrNull();
-      if (updated != null) {
-        await _saveLocalizations(updated.id);
+      final saved = result.getOrNull();
+      if (saved != null) {
+        await _saveLocalizations(saved.id);
       }
       if (!mounted) return;
       result.fold(
-        (updated) => context.pop(updated),
-        (_) => ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.editExerciseError))),
+        (saved) => context.pop(saved),
+        (_) {
+          final message = existing == null
+              ? l10n.createExerciseError
+              : l10n.editExerciseError;
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(message)));
+        },
       );
     } catch (error, stackTrace) {
       ref
@@ -294,6 +339,17 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
                       });
                     },
                   ),
+                  if (!_isEditing && widget.ownRoute != null) ...[
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: OutlinedButton.icon(
+                        onPressed: _copyFrom,
+                        icon: const Icon(Icons.content_copy),
+                        label: Text(l10n.exerciseCopyFromAction),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   DropdownButtonFormField<ExerciseType>(
                     isExpanded: true,

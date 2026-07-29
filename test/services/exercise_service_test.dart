@@ -91,6 +91,83 @@ void main() {
     });
   });
 
+  group('create (Stage 10, owner-reported: name must be unique across the '
+      'whole catalog)', () {
+    test('creates and returns the exercise when the name is unique', () async {
+      final result = await service.create(
+        name: 'Lunges',
+        exerciseType: ExerciseType.reps,
+      );
+
+      expect(result.isOk, isTrue);
+      expect(result.getOrNull()!.name, 'Lunges');
+      expect((await repository.getById(result.getOrNull()!.id)), isNotNull);
+    });
+
+    test('trims the name before saving and comparing', () async {
+      final result = await service.create(
+        name: '  Lunges  ',
+        exerciseType: ExerciseType.reps,
+      );
+
+      expect(result.getOrNull()!.name, 'Lunges');
+    });
+
+    test('rejects an empty (or whitespace-only) name', () async {
+      final result = await service.create(
+        name: '   ',
+        exerciseType: ExerciseType.reps,
+      );
+
+      expect(result.isErr, isTrue);
+      expect(result.errorOrNull(), isA<ValidationError>());
+    });
+
+    test(
+      'rejects a name already used by another user-created exercise, '
+      'case-insensitively',
+      () async {
+        await repository.create(name: 'Lunges', exerciseType: ExerciseType.reps);
+
+        final result = await service.create(
+          name: 'lunges',
+          exerciseType: ExerciseType.reps,
+        );
+
+        expect(result.isErr, isTrue);
+        expect(result.errorOrNull(), isA<ValidationError>());
+      },
+    );
+
+    test('rejects a name already used by a built-in exercise', () async {
+      final builtIn = _builtIn('squat', name: 'Barbell Squat');
+      await db.into(db.exercises).insert(builtIn.toInsertCompanion());
+
+      final result = await service.create(
+        name: 'Barbell Squat',
+        exerciseType: ExerciseType.strength,
+      );
+
+      expect(result.isErr, isTrue);
+      expect(result.errorOrNull(), isA<ValidationError>());
+    });
+
+    test('allows a name that only matches an archived exercise', () async {
+      final exercise = await repository.create(
+        name: 'Lunges',
+        exerciseType: ExerciseType.reps,
+      );
+      await service.archive(exercise);
+
+      final result = await service.create(
+        name: 'Lunges',
+        exerciseType: ExerciseType.reps,
+      );
+
+      expect(result.isOk, isTrue);
+    });
+  });
+
   group('update (DM 6.1)', () {
     test('saves field changes when the type is unchanged', () async {
       final exercise = await repository.create(
@@ -234,6 +311,126 @@ void main() {
         expect(result.getOrNull()!.name, 'Back Squat');
       },
     );
+
+    test(
+      'saving without renaming does not trip on the exercise\'s own name '
+      '(Stage 10, owner-reported: exclude self from the duplicate check)',
+      () async {
+        final exercise = await repository.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+
+        final result = await service.update(
+          current: exercise,
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+          description: 'Updated description only.',
+        );
+
+        expect(result.isOk, isTrue);
+      },
+    );
+
+    test(
+      'rejects renaming to a name already used by another exercise',
+      () async {
+        await repository.create(name: 'Bench Press', exerciseType: ExerciseType.strength);
+        final exercise = await repository.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+
+        final result = await service.update(
+          current: exercise,
+          name: 'bench press',
+          exerciseType: ExerciseType.strength,
+        );
+
+        expect(result.isErr, isTrue);
+        expect(result.errorOrNull(), isA<ValidationError>());
+        expect(
+          (await repository.getById(exercise.id))!.name,
+          'Squat',
+          reason: 'the rejected rename must not have been written',
+        );
+      },
+    );
+
+    test('rejects renaming to a name already used by a built-in exercise', () async {
+      final builtIn = _builtIn('bench', name: 'Barbell Bench Press');
+      await db.into(db.exercises).insert(builtIn.toInsertCompanion());
+      final exercise = await repository.create(
+        name: 'Squat',
+        exerciseType: ExerciseType.strength,
+      );
+
+      final result = await service.update(
+        current: exercise,
+        name: 'Barbell Bench Press',
+        exerciseType: ExerciseType.strength,
+      );
+
+      expect(result.isErr, isTrue);
+      expect(result.errorOrNull(), isA<ValidationError>());
+    });
+
+    test(
+      'allows renaming to a name that only matches an archived exercise',
+      () async {
+        final other = await repository.create(
+          name: 'Bench Press',
+          exerciseType: ExerciseType.strength,
+        );
+        await service.archive(other);
+        final exercise = await repository.create(
+          name: 'Squat',
+          exerciseType: ExerciseType.strength,
+        );
+
+        final result = await service.update(
+          current: exercise,
+          name: 'Bench Press',
+          exerciseType: ExerciseType.strength,
+        );
+
+        expect(result.isOk, isTrue);
+      },
+    );
+  });
+
+  group('isNameTaken (Stage 10, owner-reported)', () {
+    test('true for an existing name, case-insensitive', () async {
+      await repository.create(name: 'Lunges', exerciseType: ExerciseType.reps);
+
+      expect(await service.isNameTaken('lunges'), isTrue);
+    });
+
+    test('false for a name nothing uses', () async {
+      expect(await service.isNameTaken('Nonexistent Move'), isFalse);
+    });
+
+    test('false when excludeId is the only exercise with that name', () async {
+      final exercise = await repository.create(
+        name: 'Lunges',
+        exerciseType: ExerciseType.reps,
+      );
+
+      expect(
+        await service.isNameTaken('Lunges', excludeId: exercise.id),
+        isFalse,
+      );
+    });
+
+    test('false for a name that only matches an archived exercise', () async {
+      final exercise = await repository.create(
+        name: 'Lunges',
+        exerciseType: ExerciseType.reps,
+      );
+      await service.archive(exercise);
+
+      expect(await service.isNameTaken('Lunges'), isFalse);
+    });
   });
 
   group('archive/unarchive', () {

@@ -508,6 +508,10 @@ class _FilterSheetState extends State<_FilterSheet> {
                   value: null,
                   child: Text(l10n.filterAnyMuscleGroup),
                 ),
+                DropdownMenuItem(
+                  value: exerciseFilterNoneValue,
+                  child: Text(l10n.exerciseNoMuscleGroupLabel),
+                ),
                 for (final id in muscleGroupIds)
                   DropdownMenuItem(
                     value: id,
@@ -527,6 +531,10 @@ class _FilterSheetState extends State<_FilterSheet> {
                 DropdownMenuItem(
                   value: null,
                   child: Text(l10n.filterAnyEquipment),
+                ),
+                DropdownMenuItem(
+                  value: exerciseFilterNoneValue,
+                  child: Text(l10n.exerciseNoEquipmentLabel),
                 ),
                 for (final id in equipmentIds)
                   DropdownMenuItem(

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../core/widgets/bottom_nav_bar.dart';
 import '../domain/models/exercise.dart';
 import '../features/exercises/create_exercise_screen.dart';
+import '../features/exercises/exercise_copy_source_picker_screen.dart';
 import '../features/exercises/exercise_detail_screen.dart';
 import '../features/exercises/screen.dart';
 import '../features/export/export_format_help_screen.dart';
@@ -85,8 +86,24 @@ final GoRouter appRouter = GoRouter(
               pageBuilder: (_, state) => MaterialPage(
                 key: state.pageKey,
                 fullscreenDialog: true,
-                child: const CreateExerciseScreen(),
+                child: CreateExerciseScreen(
+                  ownRoute:
+                      '/workout/${state.pathParameters['workoutId']}/add-exercise/new',
+                ),
               ),
+              routes: [
+                GoRoute(
+                  path: 'copy-source',
+                  // "Скопировать из..." on the create form (S-08, Stage 10,
+                  // owner-reported) -- a picker, so a full-screen modal like
+                  // the form itself.
+                  pageBuilder: (_, state) => MaterialPage(
+                    key: state.pageKey,
+                    fullscreenDialog: true,
+                    child: const ExerciseCopySourcePickerScreen(),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -160,8 +177,21 @@ final GoRouter appRouter = GoRouter(
                   pageBuilder: (_, state) => MaterialPage(
                     key: state.pageKey,
                     fullscreenDialog: true,
-                    child: const CreateExerciseScreen(),
+                    child: const CreateExerciseScreen(ownRoute: '/exercises/new'),
                   ),
+                  routes: [
+                    GoRoute(
+                      path: 'copy-source',
+                      // "Скопировать из..." on the create form (S-08, Stage
+                      // 10, owner-reported) -- a picker, so a full-screen
+                      // modal like the form itself.
+                      pageBuilder: (_, state) => MaterialPage(
+                        key: state.pageKey,
+                        fullscreenDialog: true,
+                        child: const ExerciseCopySourcePickerScreen(),
+                      ),
+                    ),
+                  ],
                 ),
                 GoRoute(
                   path: ':exerciseId',
@@ -249,8 +279,25 @@ final GoRouter appRouter = GoRouter(
                               pageBuilder: (_, state) => MaterialPage(
                                 key: state.pageKey,
                                 fullscreenDialog: true,
-                                child: const CreateExerciseScreen(),
+                                child: CreateExerciseScreen(
+                                  ownRoute:
+                                      '/more/templates/${state.pathParameters['templateId']}/add-exercise/new',
+                                ),
                               ),
+                              routes: [
+                                GoRoute(
+                                  path: 'copy-source',
+                                  // "Скопировать из..." on the create form
+                                  // (S-08, Stage 10, owner-reported) -- a
+                                  // picker, so a full-screen modal like the
+                                  // form itself.
+                                  pageBuilder: (_, state) => MaterialPage(
+                                    key: state.pageKey,
+                                    fullscreenDialog: true,
+                                    child: const ExerciseCopySourcePickerScreen(),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),

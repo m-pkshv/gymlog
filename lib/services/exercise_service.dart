@@ -22,6 +22,43 @@ class ExerciseService {
     return !(await _exerciseRepository.hasLoggedSets(exerciseId));
   }
 
+  /// Creates a new exercise (S-08, Stage 10, owner-reported: name must be
+  /// unique across the whole catalog, not just among user-created entries —
+  /// see [isNameTaken]). The single point of truth for this rule, mirroring
+  /// [update]'s re-check below; `CreateExerciseScreen` also pre-checks via
+  /// [isNameTaken] for an inline error, but this is the authoritative check.
+  Future<Result<Exercise, AppError>> create({
+    required String name,
+    required ExerciseType exerciseType,
+    String? description,
+    String? youtubeUrl,
+    String? primaryMuscleGroupId,
+    String? equipmentId,
+    EffortMetric effortMetric = EffortMetric.none,
+    List<String> secondaryMuscleGroupIds = const [],
+  }) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) {
+      return const Err(ValidationError('Exercise name is required'));
+    }
+    if (await _isDuplicateName(trimmed)) {
+      return const Err(
+        ValidationError('An exercise with this name already exists'),
+      );
+    }
+    final created = await _exerciseRepository.create(
+      name: trimmed,
+      exerciseType: exerciseType,
+      description: description,
+      youtubeUrl: youtubeUrl,
+      primaryMuscleGroupId: primaryMuscleGroupId,
+      equipmentId: equipmentId,
+      effortMetric: effortMetric,
+      secondaryMuscleGroupIds: secondaryMuscleGroupIds,
+    );
+    return Ok(created);
+  }
+
   /// Saves edits to an existing exercise (S-07 "Edit" → S-08 form in edit
   /// mode, DM 6.1). Re-checks the exerciseType lock server-side even though
   /// the UI already disables the field once locked — the single point of
@@ -47,9 +84,18 @@ class ExerciseService {
         ),
       );
     }
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) {
+      return const Err(ValidationError('Exercise name is required'));
+    }
+    if (await _isDuplicateName(trimmed, excludeId: current.id)) {
+      return const Err(
+        ValidationError('An exercise with this name already exists'),
+      );
+    }
     final updated = await _exerciseRepository.update(
       id: current.id,
-      name: name,
+      name: trimmed,
       exerciseType: exerciseType,
       description: description,
       youtubeUrl: youtubeUrl,
@@ -59,6 +105,32 @@ class ExerciseService {
       secondaryMuscleGroupIds: secondaryMuscleGroupIds,
     );
     return Ok(updated);
+  }
+
+  /// Whether [name] collides with an existing exercise (Stage 10,
+  /// owner-reported: "проверять среди всех" — built-in and user-created
+  /// alike, case-insensitively, archived exercises excluded so a retired
+  /// name can be reused). [excludeId], when editing, leaves that exercise's
+  /// own row out of the comparison so saving without renaming never trips
+  /// on itself. `CreateExerciseScreen` calls this directly for a proactive
+  /// inline field error; [create]/[update] re-check the same rule
+  /// server-side regardless.
+  Future<bool> isNameTaken(String name, {String? excludeId}) {
+    return _isDuplicateName(name.trim(), excludeId: excludeId);
+  }
+
+  Future<bool> _isDuplicateName(
+    String trimmedName, {
+    String? excludeId,
+  }) async {
+    final all = await _exerciseRepository.getAllForExport();
+    final lower = trimmedName.toLowerCase();
+    return all.any(
+      (exercise) =>
+          !exercise.isArchived &&
+          exercise.id != excludeId &&
+          exercise.name.toLowerCase() == lower,
+    );
   }
 
   /// Archiving is always available — built-in or user-created, used or not

@@ -242,6 +242,24 @@ abstract class AppLocalizations {
   /// **'Enter a name'**
   String get exerciseNameRequiredError;
 
+  /// Validation error on the create/edit exercise form (S-08, Stage 10, owner-reported) when the name matches another exercise (built-in or user-created, archived ones excluded).
+  ///
+  /// In en, this message translates to:
+  /// **'An exercise with this name already exists'**
+  String get exerciseNameDuplicateError;
+
+  /// Button on the create-exercise form (S-08, Stage 10, owner-reported), create mode only, that opens a picker to prefill the form from an existing exercise's fields.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy from...'**
+  String get exerciseCopyFromAction;
+
+  /// Title of the exercise picker opened by exerciseCopyFromAction (S-08, Stage 10, owner-reported).
+  ///
+  /// In en, this message translates to:
+  /// **'Copy from'**
+  String get exerciseCopySourcePickerTitle;
+
   /// Menu action on an exercise card in the workout/template editor (S-03/S-13, Stage 10, owner-reported) that opens the same full edit form the exercise catalog uses (S-08 in edit mode) for the underlying user-created Exercise, without leaving the editor -- only offered when Exercise.isBuiltIn is false (DM 10: built-in exercises can't be edited). Named distinctly from the catalog's own editExerciseAction ("Edit", a different screen) to avoid the same kind of ARB key collision already found once this session.
   ///
   /// In en, this message translates to:
@@ -842,11 +860,17 @@ abstract class AppLocalizations {
   /// **'Archived'**
   String get exerciseArchivedBadge;
 
-  /// Section header on the exercise catalog (S-06, Stage 10 redesign) for exercises with no primary muscle group set.
+  /// Section header on the exercise catalog (S-06, Stage 10 redesign) for exercises with no primary muscle group set. Reused as the filter sheet's "no muscle group" option (Stage 10, owner-reported) -- same concept, same wording.
   ///
   /// In en, this message translates to:
   /// **'No muscle group'**
   String get exerciseNoMuscleGroupLabel;
+
+  /// Filter sheet option (S-06, Stage 10, owner-reported) for exercises with no equipment set -- mirrors exerciseNoMuscleGroupLabel's role for the muscle-group filter.
+  ///
+  /// In en, this message translates to:
+  /// **'No equipment'**
+  String get exerciseNoEquipmentLabel;
 
   /// Menu action on the exercise card (S-07).
   ///
