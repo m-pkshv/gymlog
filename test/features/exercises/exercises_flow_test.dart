@@ -336,6 +336,171 @@ void main() {
     },
   );
 
+  testWidgets(
+    'the jump rail shows one dot per section and dragging it scrolls to a '
+    'later section (Stage 10, owner-reported: "точки быстрого перемещения '
+    '... как алфавитный переход в контактах")',
+    (tester) async {
+      await db
+          .into(db.muscleGroups)
+          .insert(MuscleGroupsCompanion.insert(id: 'chest', sortOrder: 0));
+      await db
+          .into(db.muscleGroups)
+          .insert(MuscleGroupsCompanion.insert(id: 'back', sortOrder: 1));
+      await db
+          .into(db.muscleGroups)
+          .insert(MuscleGroupsCompanion.insert(id: 'quads', sortOrder: 11));
+
+      var counter = 0;
+      for (final groupId in ['chest', 'back', 'quads']) {
+        for (var n = 0; n < 4; n++) {
+          counter++;
+          await db
+              .into(db.exercises)
+              .insert(
+                ExercisesCompanion.insert(
+                  id: 'ex$counter',
+                  name: 'Exercise $counter',
+                  exerciseType: ExerciseType.strength.name,
+                  primaryMuscleGroupId: Value(groupId),
+                  createdAt: '2026-07-19T00:00:00Z',
+                  updatedAt: '2026-07-19T00:00:00Z',
+                ),
+              );
+        }
+      }
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      final rail = find.byKey(const Key('exercise-index-rail'));
+      expect(rail, findsOneWidget);
+      // One dot per section (chest/back/quads) -- no "No muscle group"
+      // bucket, every exercise here has a primary group. The dots cluster
+      // at a fixed row height instead of stretching across the rail's full
+      // (Positioned-defined) height (Stage 10, owner-reported: "группируем
+      // плотнее"), so `rail`'s own bounds -- centered around, but taller
+      // than, the dot cluster -- aren't a reliable drag anchor; anchoring on
+      // the dots themselves is.
+      final dots = find.descendant(
+        of: rail,
+        matching: find.byType(AnimatedContainer),
+      );
+      expect(dots, findsNWidgets(3));
+
+      // The first exercise starts out visible, at the very top of the list.
+      expect(find.text('Exercise 1'), findsOneWidget);
+
+      // Drag from the first dot to just past the last one -- the touched
+      // index is clamped internally, so overshooting still lands on the
+      // last dot. (The jump is only *proportional*, per _jumpToRow's own
+      // doc comment -- landing on this exact exercise isn't guaranteed, but
+      // scrolling the first one out of view is a reliable, user-visible
+      // sign the rail actually moved the list, not just registered a
+      // gesture.)
+      final firstDotCenter = tester.getCenter(dots.first);
+      final lastDotCenter = tester.getCenter(dots.last);
+      await tester.dragFrom(
+        firstDotCenter,
+        (lastDotCenter - firstDotCenter) + const Offset(0, 40),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Exercise 1'), findsNothing);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'the jump rail dims to a hint when idle and turns fully opaque while '
+    'actively being dragged (Stage 10, owner-reported: "если точки не '
+    'использую они полупрозрачные")',
+    (tester) async {
+      await db
+          .into(db.muscleGroups)
+          .insert(MuscleGroupsCompanion.insert(id: 'chest', sortOrder: 0));
+      await db
+          .into(db.muscleGroups)
+          .insert(MuscleGroupsCompanion.insert(id: 'back', sortOrder: 1));
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'ex1',
+              name: 'Exercise 1',
+              exerciseType: ExerciseType.strength.name,
+              primaryMuscleGroupId: const Value('chest'),
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'ex2',
+              name: 'Exercise 2',
+              exerciseType: ExerciseType.strength.name,
+              primaryMuscleGroupId: const Value('back'),
+              createdAt: '2026-07-19T00:01:00Z',
+              updatedAt: '2026-07-19T00:01:00Z',
+            ),
+          );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      final rail = find.byKey(const Key('exercise-index-rail'));
+      final opacity = find.descendant(
+        of: rail,
+        matching: find.byType(AnimatedOpacity),
+      );
+      expect(opacity, findsOneWidget);
+      expect(tester.widget<AnimatedOpacity>(opacity).opacity, 0.35);
+
+      final firstDot = find
+          .descendant(of: rail, matching: find.byType(AnimatedContainer))
+          .first;
+      final gesture = await tester.startGesture(tester.getCenter(firstDot));
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(tester.widget<AnimatedOpacity>(opacity).opacity, 1.0);
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(tester.widget<AnimatedOpacity>(opacity).opacity, 0.35);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'the jump rail does not appear when there is only one section '
+    '(Stage 10, owner-reported)',
+    (tester) async {
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'squat',
+              name: 'Squat',
+              exerciseType: ExerciseType.strength.name,
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('exercise-index-rail')), findsNothing);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
   testWidgets('Create button is disabled until a name is entered', (
     tester,
   ) async {

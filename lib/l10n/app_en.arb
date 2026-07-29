@@ -435,6 +435,10 @@
   "@exerciseNoEquipmentLabel": {
     "description": "Filter sheet option (S-06, Stage 10, owner-reported) for exercises with no equipment set -- mirrors exerciseNoMuscleGroupLabel's role for the muscle-group filter."
   },
+  "exerciseIndexRailLabel": "Jump to category",
+  "@exerciseIndexRailLabel": {
+    "description": "Accessibility label for the exercise catalog's jump-to-section rail (S-06, Stage 10, owner-reported: a Contacts-style A-Z index, one dot per muscle-group section)."
+  },
   "archiveExerciseAction": "Archive",
   "@archiveExerciseAction": {
     "description": "Menu action on the exercise card (S-07)."

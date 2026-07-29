@@ -412,6 +412,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get exerciseNoEquipmentLabel => 'Без оборудования';
 
   @override
+  String get exerciseIndexRailLabel => 'Быстрый переход по категориям';
+
+  @override
   String get archiveExerciseAction => 'Архивировать';
 
   @override

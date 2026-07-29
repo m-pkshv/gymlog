@@ -872,6 +872,12 @@ abstract class AppLocalizations {
   /// **'No equipment'**
   String get exerciseNoEquipmentLabel;
 
+  /// Accessibility label for the exercise catalog's jump-to-section rail (S-06, Stage 10, owner-reported: a Contacts-style A-Z index, one dot per muscle-group section).
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to category'**
+  String get exerciseIndexRailLabel;
+
   /// Menu action on the exercise card (S-07).
   ///
   /// In en, this message translates to:

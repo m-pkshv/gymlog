@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -27,6 +28,7 @@ class ExercisesScreen extends ConsumerStatefulWidget {
 
 class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
   final _searchController = TextEditingController();
+  final _scrollController = ScrollController();
   ExerciseType? _type;
   String? _muscleGroupId;
   String? _equipmentId;
@@ -42,7 +44,28 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  /// Jumps the list to [rowIndex] out of [totalRows] (S-06, Stage 10,
+  /// owner-reported: "точки быстрого перемещения... как алфавитный переход
+  /// в контактах"). `ListView.builder` never knows every row's exact pixel
+  /// height up front (section headers and exercise cards differ, and a
+  /// lazily-built sliver only has an *estimate* of its total scroll extent
+  /// until every item has been laid out at least once) — rather than try to
+  /// track real per-row heights, this jumps to the *proportional* offset
+  /// `rowIndex / totalRows` of however much scroll extent is currently
+  /// known. That's the same trade-off every "no exact heights" jump-list
+  /// implementation makes: it lands close to the right section, not
+  /// necessarily pixel-exact, same as tapping a letter in Contacts doesn't
+  /// promise the very first matching row sits at the very top.
+  void _jumpToRow(int rowIndex, int totalRows) {
+    if (!_scrollController.hasClients || totalRows <= 1) return;
+    final maxExtent = _scrollController.position.maxScrollExtent;
+    if (maxExtent <= 0) return;
+    final target = (rowIndex / (totalRows - 1)) * maxExtent;
+    _scrollController.jumpTo(target.clamp(0.0, maxExtent));
   }
 
   ExerciseCatalogFilter get _filter => (
@@ -144,7 +167,9 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                   );
                 }
                 final rows = _groupByMuscleGroup(exercises);
-                return ListView.builder(
+                final sections = _sectionAnchors(rows);
+                final list = ListView.builder(
+                  controller: _scrollController,
                   itemCount: rows.length,
                   itemBuilder: (context, index) {
                     final row = rows[index];
@@ -158,6 +183,26 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                       ),
                     };
                   },
+                );
+                // A jump-to-section rail only earns its screen space once
+                // there's more than one section to jump between.
+                if (sections.length <= 1) return list;
+                return Stack(
+                  children: [
+                    list,
+                    Positioned(
+                      top: 0,
+                      bottom: 72, // clears the FAB (Stage 10, owner-reported)
+                      right: 0,
+                      child: _SectionIndexRail(
+                        key: const Key('exercise-index-rail'),
+                        sections: sections,
+                        totalRows: rows.length,
+                        onSelect: (rowIndex) =>
+                            _jumpToRow(rowIndex, rows.length),
+                      ),
+                    ),
+                  ],
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -226,6 +271,156 @@ List<_ListRow> _groupByMuscleGroup(List<Exercise> exercises) {
     rows.addAll(group.map(_ExerciseRow.new));
   }
   return rows;
+}
+
+/// One entry per section header in [rows], in the same order they appear
+/// (S-06, Stage 10, owner-reported: the jump rail's dots) — [rowIndex] is
+/// what [_ExercisesScreenState._jumpToRow] needs; [muscleGroupId] isn't
+/// used for display anymore (the dots are neutral, see
+/// [_SectionIndexRail]'s doc comment) but stays on the record in case a
+/// future tweak wants it back.
+List<({String? muscleGroupId, int rowIndex})> _sectionAnchors(
+  List<_ListRow> rows,
+) {
+  final anchors = <({String? muscleGroupId, int rowIndex})>[];
+  for (var i = 0; i < rows.length; i++) {
+    final row = rows[i];
+    if (row is _SectionHeaderRow) {
+      anchors.add((muscleGroupId: row.muscleGroupId, rowIndex: i));
+    }
+  }
+  return anchors;
+}
+
+/// The jump rail itself (S-06, Stage 10, owner-reported: "точки быстрого
+/// перемещения... как алфавитный переход в контактах") — one dot per
+/// [sections] entry. A single vertical-drag gesture covers both a plain tap
+/// (Flutter reports a tap as a drag that starts and ends with ~no movement,
+/// so `onVerticalDragStart` alone already fires for it) and a Contacts-style
+/// scan across dots without lifting the finger — [onSelect] fires every
+/// time the touched dot changes, not on every pixel of movement, both to
+/// avoid redundant scroll jumps and to know when to fire
+/// [HapticFeedback.selectionClick] (the same per-letter tick Contacts-style
+/// pickers give on every native platform).
+///
+/// Stage 10, owner-reported (second pass, "ужасный вид... сложно попасть"):
+/// the first version colored each dot by muscle group, spread all of them
+/// across the *entire* available height (`MainAxisAlignment.spaceEvenly`
+/// over the full rail) at a bare 24dp width. All three turned out wrong in
+/// practice — the per-muscle-group color duplicated the section headers'
+/// own color without adding information here; stretching thinly across the
+/// whole screen when there are only a few sections looked sparse and made
+/// each dot's effective drag target *height* tiny; 24dp is already half
+/// Material's own 48dp minimum touch target, easy to slide off sideways
+/// while scanning down a screen edge. Now: dots are neutral
+/// (`onSurfaceVariant`, no color), packed at a fixed row height instead of
+/// stretched (so few sections cluster tightly rather than spreading thin),
+/// and the rail is twice as wide (48dp, meeting the 48dp minimum) with that
+/// same fixed row height as its floor -- capped, not fixed, so a catalog
+/// with many sections still fits without overflowing.
+class _SectionIndexRail extends StatefulWidget {
+  const _SectionIndexRail({
+    super.key,
+    required this.sections,
+    required this.totalRows,
+    required this.onSelect,
+  });
+
+  final List<({String? muscleGroupId, int rowIndex})> sections;
+  final int totalRows;
+  final ValueChanged<int> onSelect;
+
+  @override
+  State<_SectionIndexRail> createState() => _SectionIndexRailState();
+}
+
+class _SectionIndexRailState extends State<_SectionIndexRail> {
+  int? _activeIndex;
+
+  static const double _railWidth = 48;
+  static const double _maxDotRowHeight = 32;
+
+  void _handleTouch(double localDy, double rowHeight, int count) {
+    if (count == 0 || rowHeight <= 0) return;
+    final index = (localDy / rowHeight).floor().clamp(0, count - 1);
+    if (index == _activeIndex) return;
+    setState(() => _activeIndex = index);
+    HapticFeedback.selectionClick();
+    widget.onSelect(widget.sections[index].rowIndex);
+  }
+
+  void _endTouch() {
+    if (_activeIndex == null) return;
+    setState(() => _activeIndex = null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    final count = widget.sections.length;
+    return Semantics(
+      label: l10n.exerciseIndexRailLabel,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final rowHeight = count == 0
+              ? _maxDotRowHeight
+              : (constraints.maxHeight / count).clamp(0.0, _maxDotRowHeight);
+          return Center(
+            child: SizedBox(
+              width: _railWidth,
+              height: rowHeight * count,
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onVerticalDragStart: (details) =>
+                    _handleTouch(details.localPosition.dy, rowHeight, count),
+                onVerticalDragUpdate: (details) =>
+                    _handleTouch(details.localPosition.dy, rowHeight, count),
+                onVerticalDragEnd: (_) => _endTouch(),
+                onVerticalDragCancel: _endTouch,
+                // Stage 10, owner-reported: dim to a faint hint when idle,
+                // full opacity only while actually being dragged/tapped --
+                // otherwise the rail sat there at full strength permanently,
+                // competing with the list for attention even when unused.
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 150),
+                  opacity: _activeIndex != null ? 1.0 : 0.35,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      for (var i = 0; i < count; i++)
+                        _RailDot(
+                          color: scheme.onSurfaceVariant,
+                          active: _activeIndex == i,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _RailDot extends StatelessWidget {
+  const _RailDot({required this.color, required this.active});
+
+  final Color color;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = active ? 12.0 : 8.0;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 100),
+      width: size,
+      height: size,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
 }
 
 class _MuscleGroupSectionHeader extends StatelessWidget {

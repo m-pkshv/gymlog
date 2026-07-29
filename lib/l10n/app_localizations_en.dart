@@ -411,6 +411,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exerciseNoEquipmentLabel => 'No equipment';
 
   @override
+  String get exerciseIndexRailLabel => 'Jump to category';
+
+  @override
   String get archiveExerciseAction => 'Archive';
 
   @override

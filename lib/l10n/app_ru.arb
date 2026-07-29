@@ -129,6 +129,7 @@
   "exerciseArchivedBadge": "В архиве",
   "exerciseNoMuscleGroupLabel": "Без группы мышц",
   "exerciseNoEquipmentLabel": "Без оборудования",
+  "exerciseIndexRailLabel": "Быстрый переход по категориям",
   "archiveExerciseAction": "Архивировать",
   "unarchiveExerciseAction": "Разархивировать",
   "deleteExerciseAction": "Удалить",
