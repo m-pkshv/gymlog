@@ -20,6 +20,7 @@
 | Файлы/пути | `path_provider`, `archive` | Каталоги приложения; сборка ZIP |
 | CSV | `csv` | Генерация; экранирование по RFC 4180 |
 | UUID | `uuid` | v4 |
+| Изображения | `image_picker` | Выбор фото аватара для экрана «Профиль» (06_DATA_MODEL.md, раздел 6.15, Этап 11) |
 | Тесты | `flutter_test`, `integration_test`, `mocktail` | |
 | Линт | `flutter_lints` (+ строгие правила в `analysis_options.yaml`) | |
 Минимальные ОС: Android 8.0 (API 26), iOS 15 (D-10). Ориентация: только portrait (задать в `AndroidManifest`/`Info.plist` и `SystemChrome`).

@@ -69,6 +69,31 @@ class ImportExportOperations extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Single-row user profile (06_DATA_MODEL.md, section 6.15, Stage 11) --
+/// nickname/first/last name plus a path to a locally-copied avatar image.
+/// The service layer always writes/reads the row with `id = 'singleton'`,
+/// same convention as [AppSettingsTable].
+@DataClassName('UserProfileRow')
+class UserProfileTable extends Table {
+  TextColumn get id => text()();
+
+  TextColumn get nickname => text().nullable()();
+
+  TextColumn get firstName => text().nullable()();
+
+  TextColumn get lastName => text().nullable()();
+
+  /// Absolute path to the copied avatar file under the app's documents
+  /// directory (same directory as `gymlog.sqlite`), or NULL if no avatar
+  /// has been set.
+  TextColumn get avatarPath => text().nullable()();
+
+  TextColumn get updatedAt => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Bookkeeping for the built-in content seed (06_DATA_MODEL.md, section
 /// 12): a single row whose presence/version tells the app whether the seed
 /// already ran and which version it is at.

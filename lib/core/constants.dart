@@ -109,6 +109,25 @@ class RestTimerRules {
   static const int maxSeconds = 600;
 }
 
+/// `UserProfile` name field bounds (06_DATA_MODEL.md, section 6.15),
+/// validated in `UserProfileService.updateProfile`. All three fields are
+/// optional -- there's no minimum, only a length cap.
+class UserProfileRules {
+  const UserProfileRules._();
+
+  static const int maxNameLength = 60;
+}
+
+/// Full-database backup format (Stage 11) -- a ZIP containing
+/// `manifest.json` + a raw copy of `gymlog.sqlite`. A separate
+/// format/version space from [ExportFormat] (the human-readable CSV
+/// export, TS 10): the two can evolve independently.
+class BackupFormat {
+  const BackupFormat._();
+
+  static const int formatVersion = 1;
+}
+
 /// CSV export format (03_TECHNICAL_SPEC.md, section 10.1/10.2, D-9).
 class ExportFormat {
   const ExportFormat._();

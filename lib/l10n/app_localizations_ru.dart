@@ -562,6 +562,36 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get profileTitle => 'Профиль';
+
+  @override
+  String get profileLoadError => 'Не удалось загрузить профиль';
+
+  @override
+  String get profileNicknameLabel => 'Никнейм';
+
+  @override
+  String get profileFirstNameLabel => 'Имя';
+
+  @override
+  String get profileLastNameLabel => 'Фамилия';
+
+  @override
+  String get profileNameLengthError => 'Каждое поле — не более 60 символов';
+
+  @override
+  String get profileChoosePhotoAction => 'Выбрать фото';
+
+  @override
+  String get profileRemovePhotoAction => 'Удалить фото';
+
+  @override
+  String get profileAvatarError => 'Не удалось установить фото';
+
+  @override
+  String get moreProfileSubtitle => 'Никнейм, имя и фото';
+
+  @override
   String get settingsTitle => 'Настройки';
 
   @override
@@ -947,6 +977,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get createTemplateFromWorkoutAction => 'Создать шаблон';
 
   @override
+  String get exportWorkoutPdfAction => 'Экспортировать в PDF';
+
+  @override
+  String get exportWorkoutPdfError => 'Не удалось создать PDF';
+
+  @override
   String get createWorkoutFromTemplateAction => 'Создать тренировку';
 
   @override
@@ -1321,4 +1357,48 @@ class AppLocalizationsRu extends AppLocalizations {
   ) {
     return '$workouts трен. · $sets подх. · $measurements изм. · $exercises упр.';
   }
+
+  @override
+  String get backupSectionTitle => 'Резервная копия';
+
+  @override
+  String get backupExportAction => 'Экспортировать бэкап';
+
+  @override
+  String get backupExportError => 'Не удалось создать бэкап';
+
+  @override
+  String get backupRestoreAction => 'Восстановить из бэкапа';
+
+  @override
+  String get backupRestoreInvalidFileError =>
+      'Это не похоже на файл бэкапа GymLog';
+
+  @override
+  String get backupRestoreNewerSchemaError =>
+      'Этот бэкап сделан более новой версией приложения. Обновите приложение перед восстановлением.';
+
+  @override
+  String get backupRestoreConfirmTitle => 'Восстановить из бэкапа?';
+
+  @override
+  String backupRestoreConfirmMessage(String date) {
+    return 'Это ЗАМЕНИТ все текущие данные данными из бэкапа от $date. Действие нельзя отменить.';
+  }
+
+  @override
+  String get backupRestoreConfirmAction => 'Восстановить';
+
+  @override
+  String get backupRestoreError => 'Не удалось восстановить бэкап';
+
+  @override
+  String get backupRestartTitle => 'Восстановление завершено';
+
+  @override
+  String get backupRestartMessage =>
+      'Данные восстановлены. Закройте и снова откройте приложение, чтобы изменения вступили в силу.';
+
+  @override
+  String get backupRestartCloseAppAction => 'Закрыть приложение';
 }

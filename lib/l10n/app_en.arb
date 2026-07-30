@@ -620,6 +620,46 @@
       }
     }
   },
+  "profileTitle": "Profile",
+  "@profileTitle": {
+    "description": "Stage 11 profile screen title (AppBar) and its entry point label on the \"More\" screen (06_DATA_MODEL.md, section 6.15)."
+  },
+  "profileLoadError": "Couldn't load profile",
+  "@profileLoadError": {
+    "description": "Profile screen's ErrorRetryState message if watchProfile fails."
+  },
+  "profileNicknameLabel": "Nickname",
+  "@profileNicknameLabel": {
+    "description": "Text field label on the profile screen."
+  },
+  "profileFirstNameLabel": "First name",
+  "@profileFirstNameLabel": {
+    "description": "Text field label on the profile screen."
+  },
+  "profileLastNameLabel": "Last name",
+  "@profileLastNameLabel": {
+    "description": "Text field label on the profile screen."
+  },
+  "profileNameLengthError": "Each field must be at most 60 characters",
+  "@profileNameLengthError": {
+    "description": "Inline error shown under the last name field if UserProfileService.updateProfile rejects a value (defense-in-depth -- the fields already cap input at 60 characters via TextField.maxLength)."
+  },
+  "profileChoosePhotoAction": "Choose photo",
+  "@profileChoosePhotoAction": {
+    "description": "Action sheet item on the profile screen's avatar: opens the gallery picker."
+  },
+  "profileRemovePhotoAction": "Remove photo",
+  "@profileRemovePhotoAction": {
+    "description": "Action sheet item on the profile screen's avatar, shown only when one is set: clears it."
+  },
+  "profileAvatarError": "Couldn't set the photo",
+  "@profileAvatarError": {
+    "description": "Snackbar shown if UserProfileService.pickAndSetAvatar fails (not shown if the user simply cancels the picker)."
+  },
+  "moreProfileSubtitle": "Nickname, name, and photo",
+  "@moreProfileSubtitle": {
+    "description": "S-11 \"More\" screen: one-line description under \"Profile\"."
+  },
   "settingsTitle": "Settings",
   "@settingsTitle": {
     "description": "S-17 settings screen title (AppBar) and its entry point label on the \"More\" screen."
@@ -1106,6 +1146,14 @@
   "createTemplateFromWorkoutAction": "Create template",
   "@createTemplateFromWorkoutAction": {
     "description": "S-02 workout card '⋮' menu item that creates a template from that workout's structure and planned values (TS 8 section 8)."
+  },
+  "exportWorkoutPdfAction": "Export as PDF",
+  "@exportWorkoutPdfAction": {
+    "description": "Stage 11: workout editor '⋮' menu item and workout summary screen button that generate a single-workout PDF (e.g. to send to a coach) and open the OS share sheet."
+  },
+  "exportWorkoutPdfError": "Couldn't create the PDF",
+  "@exportWorkoutPdfError": {
+    "description": "Snackbar shown if WorkoutPdfService.buildWorkoutPdf or the share sheet fails."
   },
   "createWorkoutFromTemplateAction": "Create workout",
   "@createWorkoutFromTemplateAction": {
@@ -1596,5 +1644,60 @@
       "measurements": {"type": "int"},
       "exercises": {"type": "int"}
     }
+  },
+  "backupSectionTitle": "Backup",
+  "@backupSectionTitle": {
+    "description": "S-16 screen: group card header over the whole-database backup export/restore actions (Stage 11)."
+  },
+  "backupExportAction": "Export backup",
+  "@backupExportAction": {
+    "description": "S-16: button that exports a full-database backup ZIP and opens the OS share sheet."
+  },
+  "backupExportError": "Couldn't create the backup",
+  "@backupExportError": {
+    "description": "Snackbar shown if BackupService.exportBackup fails."
+  },
+  "backupRestoreAction": "Restore from backup",
+  "@backupRestoreAction": {
+    "description": "S-16: button that opens a file picker to choose a backup ZIP to restore."
+  },
+  "backupRestoreInvalidFileError": "This doesn't look like a GymLog backup file",
+  "@backupRestoreInvalidFileError": {
+    "description": "Snackbar shown if the picked file fails to parse as a backup archive (BackupService.inspectBackup threw)."
+  },
+  "backupRestoreNewerSchemaError": "This backup was made with a newer version of the app. Update the app before restoring it.",
+  "@backupRestoreNewerSchemaError": {
+    "description": "Snackbar shown if the backup's schemaVersion is higher than the app's own AppDatabase.schemaVersion -- restoring it isn't safe."
+  },
+  "backupRestoreConfirmTitle": "Restore from backup?",
+  "@backupRestoreConfirmTitle": {
+    "description": "Title of the destructive confirmation dialog before overwriting the database with a backup."
+  },
+  "backupRestoreConfirmMessage": "This will replace ALL current data with the backup from {date}. This cannot be undone.",
+  "@backupRestoreConfirmMessage": {
+    "description": "Body of the restore confirmation dialog -- {date} is the backup's creation date/time, already locale-formatted by the caller.",
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "backupRestoreConfirmAction": "Restore",
+  "@backupRestoreConfirmAction": {
+    "description": "Confirm button on the restore confirmation dialog."
+  },
+  "backupRestoreError": "Couldn't restore the backup",
+  "@backupRestoreError": {
+    "description": "Snackbar shown if BackupService.restoreBackup fails after confirmation."
+  },
+  "backupRestartTitle": "Restore complete",
+  "@backupRestartTitle": {
+    "description": "Title of the full-screen \"please restart\" view shown right after a successful restore."
+  },
+  "backupRestartMessage": "Your data has been restored. Close and reopen the app for the change to take effect.",
+  "@backupRestartMessage": {
+    "description": "Body of the full-screen \"please restart\" view -- the in-memory database connection is gone for good; a real app restart is required, not just navigating within the app."
+  },
+  "backupRestartCloseAppAction": "Close app",
+  "@backupRestartCloseAppAction": {
+    "description": "Button on the \"please restart\" view that calls SystemNavigator.pop() to help the user exit -- they still have to reopen it manually."
   }
 }

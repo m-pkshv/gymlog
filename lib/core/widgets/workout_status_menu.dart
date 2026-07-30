@@ -19,7 +19,7 @@ import '../../l10n/app_localizations.dart';
 /// action (found the hard way: tapping "Создать шаблон" silently ran the
 /// delete flow instead, since that `if` branch was checked first). Enum
 /// values don't have this problem -- each one is guaranteed distinct.
-enum _WorkoutMenuExtraAction { saveAsTemplate, delete }
+enum _WorkoutMenuExtraAction { saveAsTemplate, delete, exportPdf }
 
 /// Marker for the "Создать шаблон" entry inside [WorkoutStatusMenu]
 /// (Stage 10, owner-reported: any workout -- draft, planned, or already
@@ -29,6 +29,10 @@ const Object saveAsTemplateMenuAction = _WorkoutMenuExtraAction.saveAsTemplate;
 
 /// Marker for the "Удалить" entry inside [WorkoutStatusMenu].
 const Object deleteWorkoutMenuAction = _WorkoutMenuExtraAction.delete;
+
+/// Marker for the "Экспортировать в PDF" entry inside [WorkoutStatusMenu]
+/// (Stage 11).
+const Object exportPdfMenuAction = _WorkoutMenuExtraAction.exportPdf;
 
 /// "⋮"-menu of workout status transitions other than the one already shown
 /// as a big primary CTA button (Stage 10 redesign: the mockup's single
@@ -52,6 +56,7 @@ class WorkoutStatusMenu extends StatelessWidget {
     this.excludeStatuses = const {},
     this.onSaveAsTemplate,
     this.onDelete,
+    this.onExportPdf,
   });
 
   final WorkoutStatus status;
@@ -68,6 +73,11 @@ class WorkoutStatusMenu extends StatelessWidget {
   /// `inProgress`, where DM 10 forbids deletion).
   final VoidCallback? onDelete;
 
+  /// Omit to hide "Экспортировать в PDF" entirely (Stage 11) -- unlike
+  /// delete, there's no status restriction, so every caller that supports
+  /// it should always pass this.
+  final VoidCallback? onExportPdf;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -75,7 +85,10 @@ class WorkoutStatusMenu extends StatelessWidget {
       status,
     ).where((to) => !excludeStatuses.contains(to)).toList();
 
-    if (transitions.isEmpty && onSaveAsTemplate == null && onDelete == null) {
+    if (transitions.isEmpty &&
+        onSaveAsTemplate == null &&
+        onDelete == null &&
+        onExportPdf == null) {
       return const SizedBox.shrink();
     }
 
@@ -94,6 +107,8 @@ class WorkoutStatusMenu extends StatelessWidget {
           onDelete?.call();
         } else if (action == saveAsTemplateMenuAction) {
           onSaveAsTemplate?.call();
+        } else if (action == exportPdfMenuAction) {
+          onExportPdf?.call();
         } else {
           onSelectStatus(action as WorkoutStatus);
         }
@@ -108,6 +123,11 @@ class WorkoutStatusMenu extends StatelessWidget {
           PopupMenuItem(
             value: saveAsTemplateMenuAction,
             child: Text(l10n.createTemplateFromWorkoutAction),
+          ),
+        if (onExportPdf != null)
+          PopupMenuItem(
+            value: exportPdfMenuAction,
+            child: Text(l10n.exportWorkoutPdfAction),
           ),
         if (onDelete != null)
           PopupMenuItem(

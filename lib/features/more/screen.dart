@@ -60,6 +60,12 @@ class MoreScreen extends StatelessWidget {
             title: l10n.moreSectionConfiguration,
             children: [
               _MoreListTile(
+                icon: Icons.person_outline,
+                title: l10n.profileTitle,
+                subtitle: l10n.moreProfileSubtitle,
+                onTap: () => context.push('/more/profile'),
+              ),
+              _MoreListTile(
                 icon: Icons.settings_outlined,
                 title: l10n.settingsTitle,
                 subtitle: l10n.moreSettingsSubtitle,

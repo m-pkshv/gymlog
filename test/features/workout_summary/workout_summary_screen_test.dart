@@ -206,6 +206,23 @@ void main() {
     await _unmountAndFlush(tester);
   });
 
+  testWidgets(
+    'shows an "Export as PDF" action in the AppBar (Stage 11) -- not tapped '
+    'here since it goes through a real platform channel (printing); '
+    'WorkoutPdfService itself is fully covered without any platform '
+    'boundary in workout_pdf_service_test.dart',
+    (tester) async {
+      await _seedCompletedWorkout(db);
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip('Export as PDF'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
   testWidgets('shows and persists the exercise progression segment', (
     tester,
   ) async {

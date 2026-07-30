@@ -14,6 +14,7 @@ import 'app/theme.dart';
 import 'core/logger.dart';
 import 'data/database.dart';
 import 'data/repositories_impl/app_settings_repository_impl.dart';
+import 'data/repositories_impl/user_profile_repository_impl.dart';
 import 'data/seed/seed_runner.dart';
 import 'domain/enums.dart';
 import 'l10n/app_localizations.dart';
@@ -43,8 +44,9 @@ Future<void> main() async {
     return true;
   };
 
-  // Reference data + the placeholder exercise catalog (DM 12), and the
-  // settings singleton row (DM 6.12): started here but *not* awaited before
+  // Reference data + the placeholder exercise catalog (DM 12), the
+  // settings singleton row (DM 6.12), and the user profile singleton row
+  // (DM 6.15, Stage 11): started here but *not* awaited before
   // `runApp` (Stage 10, TS 11.6 cold-start profiling, owner-approved
   // 2026-07-28: the sequential DB-open + two lookup queries measurably
   // delayed the first frame, which itself never touches the database --
@@ -60,9 +62,10 @@ Future<void> main() async {
     SeedRunner(db)
         .run()
         .then((_) => AppSettingsRepositoryImpl(db).ensureInitialized())
+        .then((_) => UserProfileRepositoryImpl(db).ensureInitialized())
         .catchError((Object error, StackTrace stackTrace) {
           logger.error(
-            'Failed to seed the database / initialize settings',
+            'Failed to seed the database / initialize settings/profile',
             error: error,
             stackTrace: stackTrace,
           );

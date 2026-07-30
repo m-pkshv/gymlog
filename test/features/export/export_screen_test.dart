@@ -79,13 +79,27 @@ void main() {
   );
 
   testWidgets(
-    'groups the format-help/import rows and the journal into GroupedSections '
-    '(Stage 10 redesign)',
+    'groups the format-help/import rows, the backup section, and the '
+    'journal into GroupedSections (Stage 10 redesign)',
     (tester) async {
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
 
-      expect(find.byType(GroupedSection), findsNWidgets(2));
+      expect(find.byType(GroupedSection), findsNWidgets(3));
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'shows the backup section with export and restore actions (Stage 11)',
+    (tester) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Backup'), findsOneWidget);
+      expect(find.text('Export backup'), findsOneWidget);
+      expect(find.text('Restore from backup'), findsOneWidget);
 
       await _unmountAndFlush(tester);
     },
@@ -193,4 +207,12 @@ void main() {
   // directory in export_service_test.dart, with no platform boundary
   // involved -- the same "can't meaningfully test the real plugin without
   // a device" boundary already accepted for NotificationService.
+  //
+  // Same reasoning for the Stage 11 backup buttons: "Export backup" touches
+  // `path_provider` the same way, and "Restore from backup" additionally
+  // calls `FilePicker.pickFile` -- a real platform channel with no
+  // meaningful fake in a plain widget test. `BackupService.exportBackup`/
+  // `inspectBackup`/`restoreBackup` already have full coverage against a
+  // real (file-backed, not in-memory) database in backup_service_test.dart,
+  // with no platform boundary involved.
 }

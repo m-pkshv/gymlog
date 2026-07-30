@@ -1277,6 +1277,29 @@ void main() {
   );
 
   testWidgets(
+    '"⋮" menu includes an "Export as PDF" item (Stage 11) -- not tapped '
+    'here since it goes through a real platform channel (printing); '
+    'WorkoutPdfService itself is fully covered without any platform '
+    'boundary in workout_pdf_service_test.dart',
+    (tester) async {
+      await _seedExercise(db);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+
+      await tester.tap(_statusMenu);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Export as PDF'), findsOneWidget);
+
+      // Dismiss the menu before unmounting.
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
     'deleting from the editor\'s "⋮" menu shows an Undo snackbar and leaves '
     'the editor (Stage 10, owner-reported: used to hardcode going to '
     'History, regardless of which tab the workout was opened from)',

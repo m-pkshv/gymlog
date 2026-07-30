@@ -34,6 +34,9 @@ part 'database.g.dart';
 /// per-exercise comment field turned out to still be wanted after all. Any
 /// install that already passed through v5 lost its old comment data at
 /// that drop; this migration only restores the empty column, not the text.
+/// Version 7 (Stage 11, owner-confirmed 2026-07-29) adds `UserProfileTable`
+/// (06_DATA_MODEL.md, section 6.15) -- a brand-new table, not a column
+/// change; nothing existing is touched.
 @DriftDatabase(
   tables: [
     MuscleGroups,
@@ -57,13 +60,14 @@ part 'database.g.dart';
     ImportExportOperations,
     SeedInfoTable,
     ActiveWorkoutStates,
+    UserProfileTable,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration {
@@ -108,6 +112,12 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(workoutExercises, workoutExercises.comment);
           await m.addColumn(templateExercises, templateExercises.comment);
         }
+        if (from < 7) {
+          // v6 -> v7 (Stage 11, 2026-07-29): a brand-new singleton table
+          // (nickname/first/last name + avatar path), not a column change --
+          // nothing existing is touched.
+          await m.createTable(userProfileTable);
+        }
       },
       beforeOpen: (details) async {
         // Foreign keys are off by default in SQLite; DM 3 requires them on
@@ -119,9 +129,17 @@ class AppDatabase extends _$AppDatabase {
 
   static QueryExecutor _openConnection() {
     return LazyDatabase(() async {
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/gymlog.sqlite');
+      final file = await resolveDatabaseFile();
       return NativeDatabase.createInBackground(file);
     });
   }
+}
+
+/// The on-disk path of the app's single SQLite file -- the same
+/// computation [AppDatabase._openConnection] uses, exposed so the backup
+/// feature (Stage 11) can locate the real file without duplicating this
+/// logic or opening a second connection to it.
+Future<File> resolveDatabaseFile() async {
+  final dir = await getApplicationDocumentsDirectory();
+  return File('${dir.path}/gymlog.sqlite');
 }

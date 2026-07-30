@@ -17,6 +17,7 @@ import '../../l10n/app_localizations.dart';
 import '../stats/record_type_labels.dart';
 import '../stats/record_value_format.dart';
 import '../workout_editor/controller.dart';
+import '../workout_editor/export_workout_pdf_flow.dart';
 import '../workout_editor/widgets/comment_field.dart';
 import '../workout_editor/widgets/progression_segmented_button.dart';
 import 'workout_summary_stats.dart';
@@ -80,7 +81,22 @@ class _WorkoutSummaryScreenState extends ConsumerState<WorkoutSummaryScreen>
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.workoutSummaryTitle)),
+      appBar: AppBar(
+        title: Text(l10n.workoutSummaryTitle),
+        actions: [
+          IconButton(
+            tooltip: l10n.exportWorkoutPdfAction,
+            icon: const Icon(Icons.picture_as_pdf_outlined),
+            onPressed: () {
+              final details = ref
+                  .read(workoutEditorControllerProvider(widget.workoutId))
+                  .value;
+              if (details == null) return;
+              exportWorkoutPdfFlow(context, ref, details);
+            },
+          ),
+        ],
+      ),
       body: detailsAsync.when(
         data: (details) => _SummaryBody(
           details: details,

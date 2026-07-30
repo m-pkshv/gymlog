@@ -557,6 +557,37 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get profileTitle => 'Profile';
+
+  @override
+  String get profileLoadError => 'Couldn\'t load profile';
+
+  @override
+  String get profileNicknameLabel => 'Nickname';
+
+  @override
+  String get profileFirstNameLabel => 'First name';
+
+  @override
+  String get profileLastNameLabel => 'Last name';
+
+  @override
+  String get profileNameLengthError =>
+      'Each field must be at most 60 characters';
+
+  @override
+  String get profileChoosePhotoAction => 'Choose photo';
+
+  @override
+  String get profileRemovePhotoAction => 'Remove photo';
+
+  @override
+  String get profileAvatarError => 'Couldn\'t set the photo';
+
+  @override
+  String get moreProfileSubtitle => 'Nickname, name, and photo';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override
@@ -937,6 +968,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createTemplateFromWorkoutAction => 'Create template';
 
   @override
+  String get exportWorkoutPdfAction => 'Export as PDF';
+
+  @override
+  String get exportWorkoutPdfError => 'Couldn\'t create the PDF';
+
+  @override
   String get createWorkoutFromTemplateAction => 'Create workout';
 
   @override
@@ -1313,4 +1350,48 @@ class AppLocalizationsEn extends AppLocalizations {
   ) {
     return '$workouts workouts · $sets sets · $measurements measurements · $exercises exercises';
   }
+
+  @override
+  String get backupSectionTitle => 'Backup';
+
+  @override
+  String get backupExportAction => 'Export backup';
+
+  @override
+  String get backupExportError => 'Couldn\'t create the backup';
+
+  @override
+  String get backupRestoreAction => 'Restore from backup';
+
+  @override
+  String get backupRestoreInvalidFileError =>
+      'This doesn\'t look like a GymLog backup file';
+
+  @override
+  String get backupRestoreNewerSchemaError =>
+      'This backup was made with a newer version of the app. Update the app before restoring it.';
+
+  @override
+  String get backupRestoreConfirmTitle => 'Restore from backup?';
+
+  @override
+  String backupRestoreConfirmMessage(String date) {
+    return 'This will replace ALL current data with the backup from $date. This cannot be undone.';
+  }
+
+  @override
+  String get backupRestoreConfirmAction => 'Restore';
+
+  @override
+  String get backupRestoreError => 'Couldn\'t restore the backup';
+
+  @override
+  String get backupRestartTitle => 'Restore complete';
+
+  @override
+  String get backupRestartMessage =>
+      'Your data has been restored. Close and reopen the app for the change to take effect.';
+
+  @override
+  String get backupRestartCloseAppAction => 'Close app';
 }

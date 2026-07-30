@@ -64,6 +64,22 @@ dependencies:
   # section 5: "Уведомления" -- статус + переход в системные настройки) --
   # owner-approved 2026-07-22.
   permission_handler: ^12.0.3
+  # Avatar picker for the user profile screen (Stage 11, 06_DATA_MODEL.md,
+  # section 6.15) -- owner-approved 2026-07-29.
+  image_picker: ^1.2.1
+  # Lets the user pick a backup ZIP file to restore (Stage 11) -- there is
+  # no other way to browse-and-select an arbitrary file on-device.
+  # Owner-approved 2026-07-30. Pinned to the 12.x beta line: every stable
+  # release up to 11.0.2 depends on an older `win32` that conflicts with
+  # `share_plus`'s; 12.x is the first line that resolves alongside it.
+  file_picker: ^12.0.0-beta.1
+  # Single-workout PDF export (Stage 11) -- owner-approved 2026-07-30.
+  # `assets/fonts/Roboto-*.ttf` (Apache License 2.0, Google) is embedded so
+  # Cyrillic workout/exercise names and comments render correctly -- the
+  # `pdf` package's built-in core fonts (Helvetica/Times/Courier) have no
+  # Cyrillic glyphs at all.
+  pdf: ^3.13.0
+  printing: ^5.15.0
 
 dev_dependencies:
   flutter_test:
@@ -90,6 +106,7 @@ flutter:
 
   assets:
     - assets/seed/
+    - assets/fonts/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

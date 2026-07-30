@@ -229,6 +229,16 @@ PK: (`exerciseId`, `recordType`, `keyValue`). Триггеры пересчёт�
 ### 6.14. `ActiveWorkoutState` (одна строка, восстановление активного режима)
 `workoutId FK`, `startedAtUtc`, `accumulatedActiveSec` (набежавшее активное время до последней паузы), `isPaused`, `pauseStartedAtUtc`, `restTimerEndsAtUtc` (NULL, если таймер не идёт), `restTimerDurationSec`, `updatedAt`. Обновляется при каждом событии режима; логика восстановления — `03_TECHNICAL_SPEC.md`, раздел 7.
 
+### 6.15. `UserProfile` (одна строка, `id = 'singleton'`, Этап 11)
+| Поле | Тип | Описание |
+|---|---|---|
+| nickname | TEXT nullable | 0–60 симв. (валидация в сервисе) |
+| firstName | TEXT nullable | 0–60 симв. |
+| lastName | TEXT nullable | 0–60 симв. |
+| avatarPath | TEXT nullable | Абсолютный путь к скопированному файлу аватара в каталоге документов приложения (тот же каталог, что `gymlog.sqlite`), либо NULL |
+| updatedAt | TEXT UTC | |
+Все три текстовых поля необязательны, пустое/пробельное значение нормализуется в NULL (тот же принцип, что у `Workout.name`). Пока используется только на собственном экране «Профиль» («Ещё → Профиль») — задел для будущего PDF-экспорта тренировки (Этап 11, ещё не реализован).
+
 ## 7. Диаграмма связей (текстом)
 ```
 MuscleGroup 1─* Exercise (primary)          Equipment 1─* Exercise
@@ -282,6 +292,7 @@ Exercise 1─* PersonalRecord (кэш)           Exercise 1─1 ExerciseProgress
 | 4 | Этап 10, 2026-07-24 | Удалён `ExerciseSets.comment` (комментарий подхода убран в пользу кнопки удаления подхода, решение владельца) — `Migrator.dropColumn`; покрыто тем же тестом `database_migration_v1_to_current_test.dart` |
 | 5 | Этап 10 (редизайн), 2026-07-26 | Удалены `WorkoutExercises.comment`/`TemplateExercises.comment` (комментарий упражнения убран, решение владельца) — `Migrator.dropColumn` для обеих таблиц; покрыто тем же тестом `database_migration_v1_to_current_test.dart` |
 | 6 | Этап 11, 2026-07-28 | Возвращены `WorkoutExercises.comment`/`TemplateExercises.comment` (комментарий упражнения снова нужен, решение владельца) — `Migrator.addColumn` для обеих таблиц (пустая колонка; старые данные, потерянные при удалении v5, не восстанавливаются); покрыто тем же тестом `database_migration_v1_to_current_test.dart` |
+| 7 | Этап 11, 2026-07-29 | Добавлена новая таблица `UserProfileTable` (раздел 6.15) — не изменение колонки, а новая таблица; `Migrator.createTable`; покрыто тем же тестом `database_migration_v1_to_current_test.dart` (v1-фикстура собирается через `createAll()`, затем новая таблица физически удаляется раньше, чем `user_version` принудительно ставится в 1, — иначе `createTable` в реальной миграции упал бы на «таблица уже существует») |
 
 ## 12. Начальные данные (сиды)
 - Загружаются при первом запуске в транзакции; факт загрузки — по наличию строк, версия сида хранится в `AppSettings`-подобной служебной таблице `SeedInfo(seedVersion INTEGER)`.

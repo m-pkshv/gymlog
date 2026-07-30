@@ -7,6 +7,7 @@ library;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../core/logger.dart';
 import '../data/database.dart' as drift;
@@ -18,6 +19,7 @@ import '../data/repositories_impl/import_export_operation_repository_impl.dart';
 import '../data/repositories_impl/measurement_type_repository_impl.dart';
 import '../data/repositories_impl/personal_record_repository_impl.dart';
 import '../data/repositories_impl/progression_repository_impl.dart';
+import '../data/repositories_impl/user_profile_repository_impl.dart';
 import '../data/repositories_impl/workout_repository_impl.dart';
 import '../data/repositories_impl/workout_tag_repository_impl.dart';
 import '../data/repositories_impl/workout_template_repository_impl.dart';
@@ -34,6 +36,7 @@ import '../domain/models/measurement_type.dart';
 import '../domain/models/personal_record.dart';
 import '../domain/models/template_details.dart';
 import '../domain/models/template_list_entry.dart';
+import '../domain/models/user_profile.dart';
 import '../domain/models/workout.dart';
 import '../domain/models/workout_details.dart';
 import '../domain/models/workout_history_entry.dart';
@@ -48,6 +51,7 @@ import '../domain/repositories/import_export_operation_repository.dart';
 import '../domain/repositories/measurement_type_repository.dart';
 import '../domain/repositories/personal_record_repository.dart';
 import '../domain/repositories/progression_repository.dart';
+import '../domain/repositories/user_profile_repository.dart';
 import '../domain/repositories/workout_repository.dart';
 import '../domain/repositories/workout_tag_repository.dart';
 import '../domain/repositories/workout_template_repository.dart';
@@ -56,13 +60,16 @@ import '../features/workout_editor/controller.dart';
 import 'locale.dart';
 import '../services/active_workout_timer_service.dart';
 import '../services/app_settings_service.dart';
+import '../services/backup/backup_service.dart';
 import '../services/body_measurement_service.dart';
+import '../services/pdf/workout_pdf_service.dart';
 import '../services/exercise_service.dart';
 import '../services/export/export_service.dart';
 import '../services/measurement_type_service.dart';
 import '../services/notification_service.dart';
 import '../services/progression_service.dart';
 import '../services/records_service.dart';
+import '../services/user_profile_service.dart';
 import '../services/workout_service.dart';
 import '../services/workout_tag_service.dart';
 import '../services/workout_template_service.dart';
@@ -174,6 +181,16 @@ final exportServiceProvider = Provider<ExportService>((ref) {
     ref.watch(exerciseRepositoryProvider),
     ref.watch(importExportOperationRepositoryProvider),
   );
+});
+
+/// The Stage 11 whole-database backup export/import pipeline.
+final backupServiceProvider = Provider<BackupService>((ref) {
+  return const BackupService();
+});
+
+/// The Stage 11 single-workout PDF export pipeline.
+final workoutPdfServiceProvider = Provider<WorkoutPdfService>((ref) {
+  return const WorkoutPdfService();
 });
 
 /// The D-7 stagnation-counter algorithm (03_TECHNICAL_SPEC.md, section 9.4).
@@ -436,4 +453,23 @@ final bodyMeasurementServiceProvider = Provider<BodyMeasurementService>((
     ref.watch(bodyMeasurementRepositoryProvider),
     ref.watch(measurementTypeRepositoryProvider),
   );
+});
+
+final userProfileRepositoryProvider = Provider<UserProfileRepository>((ref) {
+  return UserProfileRepositoryImpl(ref.watch(appDatabaseProvider));
+});
+
+/// Name validation + avatar-file lifecycle (06_DATA_MODEL.md, section 6.15).
+final userProfileServiceProvider = Provider<UserProfileService>((ref) {
+  return UserProfileService(
+    ref.watch(userProfileRepositoryProvider),
+    ImagePicker(),
+  );
+});
+
+/// The singleton user profile row -- `UserProfileRepositoryImpl.
+/// ensureInitialized` is called once in `main.dart` before this is ever
+/// watched, same as [appSettingsProvider].
+final userProfileProvider = StreamProvider<UserProfile>((ref) {
+  return ref.watch(userProfileRepositoryProvider).watchProfile();
 });

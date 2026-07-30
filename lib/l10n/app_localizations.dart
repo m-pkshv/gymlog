@@ -1142,6 +1142,66 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0{This tag isn\'t used by any workout.} one{This tag will be removed from {count} workout.} other{This tag will be removed from {count} workouts.}}'**
   String deleteTagConfirmMessage(int count);
 
+  /// Stage 11 profile screen title (AppBar) and its entry point label on the "More" screen (06_DATA_MODEL.md, section 6.15).
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profileTitle;
+
+  /// Profile screen's ErrorRetryState message if watchProfile fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load profile'**
+  String get profileLoadError;
+
+  /// Text field label on the profile screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Nickname'**
+  String get profileNicknameLabel;
+
+  /// Text field label on the profile screen.
+  ///
+  /// In en, this message translates to:
+  /// **'First name'**
+  String get profileFirstNameLabel;
+
+  /// Text field label on the profile screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Last name'**
+  String get profileLastNameLabel;
+
+  /// Inline error shown under the last name field if UserProfileService.updateProfile rejects a value (defense-in-depth -- the fields already cap input at 60 characters via TextField.maxLength).
+  ///
+  /// In en, this message translates to:
+  /// **'Each field must be at most 60 characters'**
+  String get profileNameLengthError;
+
+  /// Action sheet item on the profile screen's avatar: opens the gallery picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose photo'**
+  String get profileChoosePhotoAction;
+
+  /// Action sheet item on the profile screen's avatar, shown only when one is set: clears it.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get profileRemovePhotoAction;
+
+  /// Snackbar shown if UserProfileService.pickAndSetAvatar fails (not shown if the user simply cancels the picker).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t set the photo'**
+  String get profileAvatarError;
+
+  /// S-11 "More" screen: one-line description under "Profile".
+  ///
+  /// In en, this message translates to:
+  /// **'Nickname, name, and photo'**
+  String get moreProfileSubtitle;
+
   /// S-17 settings screen title (AppBar) and its entry point label on the "More" screen.
   ///
   /// In en, this message translates to:
@@ -1850,6 +1910,18 @@ abstract class AppLocalizations {
   /// **'Create template'**
   String get createTemplateFromWorkoutAction;
 
+  /// Stage 11: workout editor '⋮' menu item and workout summary screen button that generate a single-workout PDF (e.g. to send to a coach) and open the OS share sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Export as PDF'**
+  String get exportWorkoutPdfAction;
+
+  /// Snackbar shown if WorkoutPdfService.buildWorkoutPdf or the share sheet fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create the PDF'**
+  String get exportWorkoutPdfError;
+
   /// S-12 template card '⋮' menu item that creates a workout from that template's structure and planned values (TS 8 section 8, reverse of createTemplateFromWorkoutAction).
   ///
   /// In en, this message translates to:
@@ -2556,6 +2628,84 @@ abstract class AppLocalizations {
     int measurements,
     int exercises,
   );
+
+  /// S-16 screen: group card header over the whole-database backup export/restore actions (Stage 11).
+  ///
+  /// In en, this message translates to:
+  /// **'Backup'**
+  String get backupSectionTitle;
+
+  /// S-16: button that exports a full-database backup ZIP and opens the OS share sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Export backup'**
+  String get backupExportAction;
+
+  /// Snackbar shown if BackupService.exportBackup fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create the backup'**
+  String get backupExportError;
+
+  /// S-16: button that opens a file picker to choose a backup ZIP to restore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from backup'**
+  String get backupRestoreAction;
+
+  /// Snackbar shown if the picked file fails to parse as a backup archive (BackupService.inspectBackup threw).
+  ///
+  /// In en, this message translates to:
+  /// **'This doesn\'t look like a GymLog backup file'**
+  String get backupRestoreInvalidFileError;
+
+  /// Snackbar shown if the backup's schemaVersion is higher than the app's own AppDatabase.schemaVersion -- restoring it isn't safe.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup was made with a newer version of the app. Update the app before restoring it.'**
+  String get backupRestoreNewerSchemaError;
+
+  /// Title of the destructive confirmation dialog before overwriting the database with a backup.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from backup?'**
+  String get backupRestoreConfirmTitle;
+
+  /// Body of the restore confirmation dialog -- {date} is the backup's creation date/time, already locale-formatted by the caller.
+  ///
+  /// In en, this message translates to:
+  /// **'This will replace ALL current data with the backup from {date}. This cannot be undone.'**
+  String backupRestoreConfirmMessage(String date);
+
+  /// Confirm button on the restore confirmation dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get backupRestoreConfirmAction;
+
+  /// Snackbar shown if BackupService.restoreBackup fails after confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t restore the backup'**
+  String get backupRestoreError;
+
+  /// Title of the full-screen "please restart" view shown right after a successful restore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore complete'**
+  String get backupRestartTitle;
+
+  /// Body of the full-screen "please restart" view -- the in-memory database connection is gone for good; a real app restart is required, not just navigating within the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data has been restored. Close and reopen the app for the change to take effect.'**
+  String get backupRestartMessage;
+
+  /// Button on the "please restart" view that calls SystemNavigator.pop() to help the user exit -- they still have to reopen it manually.
+  ///
+  /// In en, this message translates to:
+  /// **'Close app'**
+  String get backupRestartCloseAppAction;
 }
 
 class _AppLocalizationsDelegate

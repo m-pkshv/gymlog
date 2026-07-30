@@ -33,6 +33,12 @@ import 'package:gymlog/domain/enums.dart';
 /// to current runs both steps in sequence, so any comment text set before
 /// the v5 drop is genuinely gone by the time the v6 column reappears --
 /// this test asserts that explicitly, it isn't an oversight.
+/// v6 -> v7 (2026-07-29, owner-confirmed): `UserProfileTable` added -- a
+/// brand-new table, not a column change. Unlike the dropped-column cases
+/// above (where `createAll()` already reflects the *current*, post-drop
+/// schema and the fixture has to add the old column back via raw SQL), a
+/// v1 fixture never had this table at all, so it's dropped right back out
+/// after `createAll()` builds it, before `user_version` is forced to 1.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -179,6 +185,10 @@ void main() {
       await firstRun.customStatement(
         'UPDATE "ExerciseSets" SET "comment" = \'felt heavy\' WHERE "id" = \'s1\'',
       );
+      // `createAll()` above already created `UserProfileTable` (it's part
+      // of the *current* schema) -- drop it so the fixture genuinely
+      // matches a v1 install, which never had this table.
+      await firstRun.customStatement('DROP TABLE "UserProfileTable"');
       await firstRun.customStatement('PRAGMA user_version = 1');
       await firstRun.close();
 
@@ -228,10 +238,18 @@ void main() {
         contains('comment'),
       );
 
+      final userProfileTables = await secondRun
+          .customSelect(
+            "SELECT name FROM sqlite_master WHERE type='table' "
+            "AND name='UserProfileTable'",
+          )
+          .get();
+      expect(userProfileTables, hasLength(1));
+
       final versionRow = await secondRun
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(versionRow.data['user_version'], 6);
+      expect(versionRow.data['user_version'], 7);
 
       final fkRows = await secondRun.customSelect('PRAGMA foreign_keys').get();
       expect(fkRows.single.data['foreign_keys'], 1);

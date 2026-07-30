@@ -23,6 +23,7 @@ import '../../l10n/app_localizations.dart';
 import '../history/active_workout_conflict.dart';
 import '../history/create_template_from_workout_flow.dart';
 import 'controller.dart';
+import 'export_workout_pdf_flow.dart';
 import 'status_labels.dart';
 import 'widgets/comment_field.dart';
 import 'widgets/exercise_card.dart';
@@ -437,6 +438,16 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
     await createTemplateFromWorkoutFlow(context, ref, workout);
   }
 
+  /// "⋮ → Экспортировать в PDF" (Stage 11) -- available regardless of
+  /// status, same as "Создать шаблон" above.
+  Future<void> _exportPdf() async {
+    final details = ref
+        .read(workoutEditorControllerProvider(widget.workoutId))
+        .value;
+    if (details == null) return;
+    await exportWorkoutPdfFlow(context, ref, details);
+  }
+
   /// "⋮ → Удалить" in the redesigned status menu (Stage 10 redesign) --
   /// the editor never had its own delete action before (only History did,
   /// Stage 3/Step 9); reuses the exact same `WorkoutService.delete`/
@@ -577,6 +588,7 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
                   onDeleteExercise: _deleteExercise,
                   onSaveAsTemplate: _saveAsTemplate,
                   onDeleteWorkout: _deleteWorkout,
+                  onExportPdf: _exportPdf,
                 )
               : const Center(child: CircularProgressIndicator()),
         );
@@ -675,6 +687,7 @@ class _EditorBody extends StatelessWidget {
     required this.onDeleteExercise,
     required this.onSaveAsTemplate,
     required this.onDeleteWorkout,
+    required this.onExportPdf,
   });
 
   final WorkoutDetails details;
@@ -689,6 +702,7 @@ class _EditorBody extends StatelessWidget {
   final ValueChanged<String> onDeleteExercise;
   final VoidCallback onSaveAsTemplate;
   final VoidCallback onDeleteWorkout;
+  final VoidCallback onExportPdf;
 
   @override
   Widget build(BuildContext context) {
@@ -761,6 +775,7 @@ class _EditorBody extends StatelessWidget {
                   onSelectStatus: onChangeStatus,
                   onSaveAsTemplate: onSaveAsTemplate,
                   onDelete: onDeleteWorkout,
+                  onExportPdf: onExportPdf,
                 ),
               ),
             ],
