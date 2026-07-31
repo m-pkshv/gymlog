@@ -15,7 +15,6 @@ import '../data/repositories_impl/active_workout_repository_impl.dart';
 import '../data/repositories_impl/app_settings_repository_impl.dart';
 import '../data/repositories_impl/body_measurement_repository_impl.dart';
 import '../data/repositories_impl/exercise_repository_impl.dart';
-import '../data/repositories_impl/import_export_operation_repository_impl.dart';
 import '../data/repositories_impl/measurement_type_repository_impl.dart';
 import '../data/repositories_impl/personal_record_repository_impl.dart';
 import '../data/repositories_impl/progression_repository_impl.dart';
@@ -31,7 +30,6 @@ import '../domain/models/exercise.dart';
 import '../domain/models/exercise_catalog_filter.dart';
 import '../domain/models/exercise_history_entry.dart';
 import '../domain/models/exercise_progression_state.dart';
-import '../domain/models/import_export_operation.dart';
 import '../domain/models/measurement_type.dart';
 import '../domain/models/personal_record.dart';
 import '../domain/models/template_details.dart';
@@ -47,7 +45,6 @@ import '../domain/repositories/active_workout_repository.dart';
 import '../domain/repositories/app_settings_repository.dart';
 import '../domain/repositories/body_measurement_repository.dart';
 import '../domain/repositories/exercise_repository.dart';
-import '../domain/repositories/import_export_operation_repository.dart';
 import '../domain/repositories/measurement_type_repository.dart';
 import '../domain/repositories/personal_record_repository.dart';
 import '../domain/repositories/progression_repository.dart';
@@ -161,25 +158,15 @@ final personalRecordsForExerciseProvider = StreamProvider.family<
       .watchForExercise(exerciseId);
 });
 
-final importExportOperationRepositoryProvider =
-    Provider<ImportExportOperationRepository>((ref) {
-      return ImportExportOperationRepositoryImpl(ref.watch(appDatabaseProvider));
-    });
-
-/// S-16's operations journal, newest first.
-final importExportOperationsProvider =
-    StreamProvider<List<ImportExportOperation>>((ref) {
-      return ref.watch(importExportOperationRepositoryProvider).watchAll();
-    });
-
-/// The Stage 8 CSV export pipeline (TS 10).
+/// The Stage 8 CSV export pipeline (TS 10). No longer journals operations
+/// (Stage 11, owner-reported: the journal was removed entirely -- screen,
+/// write path, and the `ImportExportOperations` table).
 final exportServiceProvider = Provider<ExportService>((ref) {
   return ExportService(
     ref.watch(workoutRepositoryProvider),
     ref.watch(bodyMeasurementRepositoryProvider),
     ref.watch(measurementTypeRepositoryProvider),
     ref.watch(exerciseRepositoryProvider),
-    ref.watch(importExportOperationRepositoryProvider),
   );
 });
 

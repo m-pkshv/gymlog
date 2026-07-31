@@ -116,6 +116,17 @@ class UserProfileRules {
   const UserProfileRules._();
 
   static const int maxNameLength = 60;
+
+  /// Cap on the picked avatar image (gallery or camera), applied at
+  /// `ImagePicker.pickImage` time. Without this, a photo straight off a
+  /// modern phone camera (several MB) gets embedded into every PDF export
+  /// (Stage 11) at *full resolution* -- `package:pdf` doesn't downsample to
+  /// the size it's actually drawn at (a 48dp circle) -- silently bloating
+  /// every exported file by megabytes for no visual benefit. 512px/85%
+  /// quality is already generous for a circular profile picture at any
+  /// size this app draws it.
+  static const int avatarMaxDimensionPx = 512;
+  static const int avatarQualityPercent = 85;
 }
 
 /// Full-database backup format (Stage 11) -- a ZIP containing

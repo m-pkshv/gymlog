@@ -43,7 +43,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Weight, body fat, and body measurements';
 
   @override
-  String get moreExportSubtitle => 'Export your data as CSV';
+  String get moreExportSubtitle => 'Backup and export your data';
 
   @override
   String get moreSettingsSubtitle => 'Theme, language, units';
@@ -576,7 +576,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Each field must be at most 60 characters';
 
   @override
-  String get profileChoosePhotoAction => 'Choose photo';
+  String get profileChoosePhotoAction => 'Choose from gallery';
+
+  @override
+  String get profileTakePhotoAction => 'Take photo';
 
   @override
   String get profileRemovePhotoAction => 'Remove photo';
@@ -1277,19 +1280,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get exportScreenTitle => 'Import/Export';
+  String get exportScreenTitle => 'Backup';
 
   @override
   String get exportAction => 'Export data (CSV)';
 
   @override
   String get exportError => 'Failed to export data';
-
-  @override
-  String get importAction => 'Import';
-
-  @override
-  String get importComingSoonLabel => 'Coming in future versions';
 
   @override
   String get exportFormatHelpAction => 'CSV format description';
@@ -1322,37 +1319,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exportFormatHelpColumnsLabel => 'Columns:';
-
-  @override
-  String get exportJournalTitle => 'Operations log';
-
-  @override
-  String get exportJournalEmpty => 'No operations yet';
-
-  @override
-  String get exportJournalLoadError => 'Failed to load the log';
-
-  @override
-  String get exportStatusInProgress => 'In progress';
-
-  @override
-  String get exportStatusSuccess => 'Success';
-
-  @override
-  String get exportStatusFailed => 'Failed';
-
-  @override
-  String exportJournalCounts(
-    int workouts,
-    int sets,
-    int measurements,
-    int exercises,
-  ) {
-    return '$workouts workouts · $sets sets · $measurements measurements · $exercises exercises';
-  }
-
-  @override
-  String get backupSectionTitle => 'Backup';
 
   @override
   String get backupExportAction => 'Export backup';

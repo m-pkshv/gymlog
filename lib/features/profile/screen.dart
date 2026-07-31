@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../app/design_tokens.dart';
@@ -10,6 +11,7 @@ import '../../core/constants.dart';
 import '../../core/widgets/error_retry_state.dart';
 import '../../domain/models/user_profile.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/user_profile_service.dart';
 
 /// User profile screen (Stage 11, 06_DATA_MODEL.md, section 6.15) --
 /// nickname/first/last name and an avatar photo, so far only used to
@@ -27,7 +29,20 @@ class ProfileScreen extends ConsumerWidget {
         data: (profile) => ListView(
           padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
-            Center(child: _ProfileAvatar(avatarPath: profile.avatarPath)),
+            Center(
+              // Keyed on `updatedAt`, not just `avatarPath`: re-picking a
+              // photo always overwrites the same fixed file
+              // (UserProfileService.avatarFileName), so `avatarPath` itself
+              // never changes -- Flutter's `Image` widget compares its new
+              // `FileImage` against the old one by *value* (same path =
+              // "no change") and skips re-resolving entirely, regardless of
+              // the `evict()` call below. A changing key forces the avatar
+              // subtree to be torn down and rebuilt from scratch instead.
+              child: _ProfileAvatar(
+                key: ValueKey(profile.updatedAt),
+                avatarPath: profile.avatarPath,
+              ),
+            ),
             const SizedBox(height: AppSpacing.lg),
             _ProfileNameFields(profile: profile),
           ],
@@ -42,14 +57,14 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-enum _AvatarAction { choosePhoto, removePhoto }
+enum _AvatarAction { choosePhoto, takePhoto, removePhoto }
 
 /// The avatar photo -- tap opens a sheet to choose a new one from the
-/// gallery or (if one is already set) remove it. All file I/O and the
-/// picker call itself live in `UserProfileService`, never here
-/// (05_AI_INSTRUCTIONS.md, rule 6).
+/// gallery, take a new one with the camera, or (if one is already set)
+/// remove it. All file I/O and the picker call itself live in
+/// `UserProfileService`, never here (05_AI_INSTRUCTIONS.md, rule 6).
 class _ProfileAvatar extends ConsumerWidget {
-  const _ProfileAvatar({required this.avatarPath});
+  const _ProfileAvatar({super.key, required this.avatarPath});
 
   final String? avatarPath;
 
@@ -75,6 +90,12 @@ class _ProfileAvatar extends ConsumerWidget {
                   sheetContext,
                 ).pop(_AvatarAction.choosePhoto),
               ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: Text(l10n.profileTakePhotoAction),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_AvatarAction.takePhoto),
+              ),
               if (avatarPath != null)
                 ListTile(
                   leading: const Icon(Icons.delete_outline),
@@ -91,20 +112,25 @@ class _ProfileAvatar extends ConsumerWidget {
     if (!context.mounted || action == null) return;
     switch (action) {
       case _AvatarAction.choosePhoto:
-        await _pickPhoto(context, ref);
+        await _pickPhoto(context, ref, source: ImageSource.gallery);
+      case _AvatarAction.takePhoto:
+        await _pickPhoto(context, ref, source: ImageSource.camera);
       case _AvatarAction.removePhoto:
         await ref.read(userProfileServiceProvider).removeAvatar(avatarPath);
     }
   }
 
-  Future<void> _pickPhoto(BuildContext context, WidgetRef ref) async {
+  Future<void> _pickPhoto(
+    BuildContext context,
+    WidgetRef ref, {
+    required ImageSource source,
+  }) async {
     final l10n = AppLocalizations.of(context)!;
     final documentsDir = await getApplicationDocumentsDirectory();
+    final storageDirectory = Directory('${documentsDir.path}/profile');
     final result = await ref
         .read(userProfileServiceProvider)
-        .pickAndSetAvatar(
-          storageDirectory: Directory('${documentsDir.path}/profile'),
-        );
+        .pickAndSetAvatar(storageDirectory: storageDirectory, source: source);
     if (!context.mounted) return;
     final error = result.errorOrNull();
     if (error != null) {
@@ -114,6 +140,19 @@ class _ProfileAvatar extends ConsumerWidget {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.profileAvatarError)));
+      return;
+    }
+    if (result.getOrNull() == true) {
+      // Re-picking always overwrites the same fixed file name
+      // (UserProfileService.avatarFileName), but Flutter's ImageCache keys
+      // a FileImage purely by its path, not by file content/mtime -- left
+      // alone, the stale decoded bytes stay cached under that path until
+      // the widget happens to get disposed and recreated (e.g. leaving and
+      // re-entering this screen), which is the bug the owner reported.
+      // Evicting here forces a fresh decode on the very next paint.
+      final targetPath =
+          '${storageDirectory.path}/${UserProfileService.avatarFileName}';
+      await FileImage(File(targetPath)).evict();
     }
   }
 

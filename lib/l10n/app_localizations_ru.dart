@@ -42,7 +42,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get moreMeasurementsSubtitle => 'Вес, % жира и обхваты тела';
 
   @override
-  String get moreExportSubtitle => 'Экспорт данных в CSV';
+  String get moreExportSubtitle => 'Резервная копия и экспорт данных';
 
   @override
   String get moreSettingsSubtitle => 'Тема, язык, единицы измерения';
@@ -580,7 +580,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileNameLengthError => 'Каждое поле — не более 60 символов';
 
   @override
-  String get profileChoosePhotoAction => 'Выбрать фото';
+  String get profileChoosePhotoAction => 'Выбрать из галереи';
+
+  @override
+  String get profileTakePhotoAction => 'Сделать фото';
 
   @override
   String get profileRemovePhotoAction => 'Удалить фото';
@@ -1284,19 +1287,13 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get exportScreenTitle => 'Импорт/экспорт';
+  String get exportScreenTitle => 'Резервная копия';
 
   @override
   String get exportAction => 'Экспортировать данные (CSV)';
 
   @override
   String get exportError => 'Не удалось экспортировать данные';
-
-  @override
-  String get importAction => 'Импорт';
-
-  @override
-  String get importComingSoonLabel => 'Появится в следующих версиях';
 
   @override
   String get exportFormatHelpAction => 'Описание формата CSV';
@@ -1331,66 +1328,35 @@ class AppLocalizationsRu extends AppLocalizations {
   String get exportFormatHelpColumnsLabel => 'Колонки:';
 
   @override
-  String get exportJournalTitle => 'Журнал операций';
+  String get backupExportAction => 'Экспортировать резервную копию';
 
   @override
-  String get exportJournalEmpty => 'Пока нет операций';
+  String get backupExportError => 'Не удалось создать резервную копию';
 
   @override
-  String get exportJournalLoadError => 'Не удалось загрузить журнал';
-
-  @override
-  String get exportStatusInProgress => 'Выполняется';
-
-  @override
-  String get exportStatusSuccess => 'Успешно';
-
-  @override
-  String get exportStatusFailed => 'Ошибка';
-
-  @override
-  String exportJournalCounts(
-    int workouts,
-    int sets,
-    int measurements,
-    int exercises,
-  ) {
-    return '$workouts трен. · $sets подх. · $measurements изм. · $exercises упр.';
-  }
-
-  @override
-  String get backupSectionTitle => 'Резервная копия';
-
-  @override
-  String get backupExportAction => 'Экспортировать бэкап';
-
-  @override
-  String get backupExportError => 'Не удалось создать бэкап';
-
-  @override
-  String get backupRestoreAction => 'Восстановить из бэкапа';
+  String get backupRestoreAction => 'Восстановить из резервной копии';
 
   @override
   String get backupRestoreInvalidFileError =>
-      'Это не похоже на файл бэкапа GymLog';
+      'Это не похоже на файл резервной копии GymLog';
 
   @override
   String get backupRestoreNewerSchemaError =>
-      'Этот бэкап сделан более новой версией приложения. Обновите приложение перед восстановлением.';
+      'Эта резервная копия сделана более новой версией приложения. Обновите приложение перед восстановлением.';
 
   @override
-  String get backupRestoreConfirmTitle => 'Восстановить из бэкапа?';
+  String get backupRestoreConfirmTitle => 'Восстановить из резервной копии?';
 
   @override
   String backupRestoreConfirmMessage(String date) {
-    return 'Это ЗАМЕНИТ все текущие данные данными из бэкапа от $date. Действие нельзя отменить.';
+    return 'Это ЗАМЕНИТ все текущие данные данными из резервной копии от $date. Действие нельзя отменить.';
   }
 
   @override
   String get backupRestoreConfirmAction => 'Восстановить';
 
   @override
-  String get backupRestoreError => 'Не удалось восстановить бэкап';
+  String get backupRestoreError => 'Не удалось восстановить резервную копию';
 
   @override
   String get backupRestartTitle => 'Восстановление завершено';

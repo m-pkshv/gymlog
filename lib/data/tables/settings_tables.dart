@@ -39,36 +39,6 @@ class AppSettingsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-/// Export/import operation log (06_DATA_MODEL.md, section 6.13). Only the
-/// last 50 rows are kept; older ones are physically deleted.
-@DataClassName('ImportExportOperation')
-class ImportExportOperations extends Table {
-  TextColumn get id => text()();
-
-  TextColumn get operationType => text()
-      .customConstraint(
-        "NOT NULL DEFAULT 'export' CHECK (operationType IN ('export', 'import'))",
-      )
-      .withDefault(const Constant('export'))();
-
-  TextColumn get status => text().customConstraint(
-    "NOT NULL CHECK (status IN ('inProgress', 'success', 'failed'))",
-  )();
-
-  IntColumn get formatVersion => integer()();
-
-  TextColumn get startedAt => text()();
-
-  TextColumn get finishedAt => text().nullable()();
-
-  TextColumn get itemCountsJson => text().nullable()();
-
-  TextColumn get errorSummary => text().nullable()();
-
-  @override
-  Set<Column> get primaryKey => {id};
-}
-
 /// Single-row user profile (06_DATA_MODEL.md, section 6.15, Stage 11) --
 /// nickname/first/last name plus a path to a locally-copied avatar image.
 /// The service layer always writes/reads the row with `id = 'singleton'`,

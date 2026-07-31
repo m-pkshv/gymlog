@@ -10,18 +10,21 @@ import 'package:share_plus/share_plus.dart';
 import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
 import '../../core/date_format.dart';
-import '../../core/widgets/error_retry_state.dart';
 import '../../core/widgets/grouped_section.dart';
-import '../../data/database.dart' hide ImportExportOperation;
-import '../../domain/enums.dart';
-import '../../domain/models/import_export_operation.dart';
+import '../../data/database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/backup/backup_manifest.dart';
 import 'restart_required_screen.dart';
 
-/// S-16 "Импорт/экспорт" (04_UI_UX_SPEC.md, section 5): the export button
-/// + progress, the operations journal, the disabled "Импорт" stub
-/// (post-MVP, TS 10.6), and a link to the format help screen.
+/// S-16 "Резервная копия" (04_UI_UX_SPEC.md, section 5; renamed from
+/// "Импорт/экспорт" Stage 11, owner-reported: the whole-database backup is
+/// this screen's primary function, CSV export is secondary -- "Бэкап" was
+/// tried first, then replaced with the more formal RU term) -- the backup
+/// export/restore buttons (moved above the CSV section, separated from it
+/// by a divider), the CSV export button + progress, and a link to the
+/// format help screen. The disabled "Импорт" stub (post-MVP, TS 10.6) and
+/// the operations journal were both removed outright rather than kept as
+/// placeholders/dead weight (owner-reported: no user-facing value).
 class ExportScreen extends ConsumerStatefulWidget {
   const ExportScreen({super.key});
 
@@ -181,18 +184,74 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final journalAsync = ref.watch(importExportOperationsProvider);
+    final semantic = Theme.of(context).extension<AppSemanticColors>()!;
+    final busyWithBackup = _isExportingBackup || _isRestoringBackup;
+    // Matches the app-wide "big primary CTA" convention (e.g.
+    // _StatusCtaButton in workout_editor/screen.dart) rather than the
+    // default FilledButton size -- applied to all three full-width buttons
+    // on this screen so they read as one consistent size, not just the
+    // backup ones sticking out (owner-reported: "сделаем их больше").
+    const bigButtonPadding = EdgeInsets.symmetric(vertical: 14);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.exportScreenTitle)),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
-          // Full-width: this screen's one primary action, same weight as
-          // other screens' single dominant CTA (Stage 10 redesign).
+          // Backup first (owner-reported: it's this screen's primary
+          // function, CSV export is secondary) -- export in the app's
+          // ordinary primary blue, restore in the accent color already used
+          // elsewhere for "important, higher-stakes" CTAs (finishing a
+          // workout, the rest timer), since restoring irreversibly
+          // overwrites the whole database.
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
+              style: FilledButton.styleFrom(padding: bigButtonPadding),
+              onPressed: busyWithBackup ? null : _exportBackup,
+              icon: _isExportingBackup
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.backup_outlined),
+              label: Text(l10n.backupExportAction),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: semantic.accent,
+                foregroundColor: semantic.onAccent,
+                padding: bigButtonPadding,
+              ),
+              onPressed: busyWithBackup ? null : _restoreBackup,
+              icon: _isRestoringBackup
+                  ? SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: semantic.onAccent,
+                      ),
+                    )
+                  : const Icon(Icons.settings_backup_restore),
+              label: Text(l10n.backupRestoreAction),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          // Owner-reported: a visual divider between the two backup
+          // buttons and the CSV export/format-description block below,
+          // so the two functions of this screen read as clearly separate.
+          const Divider(),
+          const SizedBox(height: AppSpacing.lg),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(padding: bigButtonPadding),
               onPressed: _isExporting ? null : _export,
               icon: _isExporting
                   ? const SizedBox(
@@ -212,115 +271,10 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                 title: Text(l10n.exportFormatHelpAction),
                 onTap: () => context.push('/more/export/format'),
               ),
-              const Divider(height: 1, indent: 16, endIndent: 16),
-              ListTile(
-                enabled: false,
-                leading: const Icon(Icons.file_download_outlined),
-                title: Text(l10n.importAction),
-                subtitle: Text(l10n.importComingSoonLabel),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          GroupedSection(
-            title: l10n.backupSectionTitle,
-            children: [
-              ListTile(
-                leading: _isExportingBackup
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.backup_outlined),
-                title: Text(l10n.backupExportAction),
-                enabled: !_isExportingBackup && !_isRestoringBackup,
-                onTap: _exportBackup,
-              ),
-              const Divider(height: 1, indent: 16, endIndent: 16),
-              ListTile(
-                leading: _isRestoringBackup
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.settings_backup_restore),
-                title: Text(l10n.backupRestoreAction),
-                enabled: !_isExportingBackup && !_isRestoringBackup,
-                onTap: _restoreBackup,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          GroupedSection(
-            title: l10n.exportJournalTitle,
-            children: [
-              journalAsync.when(
-                data: (entries) {
-                  if (entries.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Text(l10n.exportJournalEmpty),
-                    );
-                  }
-                  return Column(
-                    children: [
-                      for (final entry in entries) _JournalRow(entry: entry),
-                    ],
-                  );
-                },
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
-                error: (error, stackTrace) => ErrorRetryState(
-                  message: l10n.exportJournalLoadError,
-                  onRetry: () =>
-                      ref.invalidate(importExportOperationsProvider),
-                ),
-              ),
             ],
           ),
         ],
       ),
-    );
-  }
-}
-
-class _JournalRow extends StatelessWidget {
-  const _JournalRow({required this.entry});
-
-  final ImportExportOperation entry;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final (icon, statusLabel) = switch (entry.status) {
-      ImportExportOperationStatus.inProgress => (
-        Icons.hourglass_empty,
-        l10n.exportStatusInProgress,
-      ),
-      ImportExportOperationStatus.success => (
-        Icons.check_circle_outline,
-        l10n.exportStatusSuccess,
-      ),
-      ImportExportOperationStatus.failed => (
-        Icons.error_outline,
-        l10n.exportStatusFailed,
-      ),
-    };
-    final counts = entry.itemCounts;
-    final subtitle = counts == null
-        ? statusLabel
-        : '$statusLabel · ${l10n.exportJournalCounts(counts.workouts, counts.sets, counts.measurements, counts.exercises)}';
-
-    final local = entry.startedAt.toLocal();
-    final hh = local.hour.toString().padLeft(2, '0');
-    final mm = local.minute.toString().padLeft(2, '0');
-
-    return ListTile(
-      leading: Icon(icon),
-      title: Text('${formatShortDate(local)} $hh:$mm'),
-      subtitle: Text(subtitle),
     );
   }
 }

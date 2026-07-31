@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymlog/core/app_error.dart';
+import 'package:gymlog/core/constants.dart';
 import 'package:gymlog/domain/repositories/user_profile_repository.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:gymlog/services/user_profile_service.dart';
@@ -90,12 +91,18 @@ void main() {
     test('copies the picked image into the storage directory and stores '
         'its path', () async {
       when(
-        () => picker.pickImage(source: ImageSource.gallery),
+        () => picker.pickImage(
+          source: ImageSource.gallery,
+          maxWidth: any(named: 'maxWidth'),
+          maxHeight: any(named: 'maxHeight'),
+          imageQuality: any(named: 'imageQuality'),
+        ),
       ).thenAnswer((_) async => XFile(sourceImage.path));
       final storageDir = Directory('${tempDir.path}/profile');
 
       final result = await service.pickAndSetAvatar(
         storageDirectory: storageDir,
+        source: ImageSource.gallery,
       );
 
       expect(result.isOk, isTrue);
@@ -107,13 +114,73 @@ void main() {
       verify(() => repository.setAvatarPath(expectedPath)).called(1);
     });
 
+    test('passes ImageSource.camera through to the picker for "take photo"', () async {
+      when(
+        () => picker.pickImage(
+          source: ImageSource.camera,
+          maxWidth: any(named: 'maxWidth'),
+          maxHeight: any(named: 'maxHeight'),
+          imageQuality: any(named: 'imageQuality'),
+        ),
+      ).thenAnswer((_) async => XFile(sourceImage.path));
+      final storageDir = Directory('${tempDir.path}/profile');
+
+      final result = await service.pickAndSetAvatar(
+        storageDirectory: storageDir,
+        source: ImageSource.camera,
+      );
+
+      expect(result.isOk, isTrue);
+      expect(result.getOrNull(), isTrue);
+      verify(
+        () => picker.pickImage(
+          source: ImageSource.camera,
+          maxWidth: any(named: 'maxWidth'),
+          maxHeight: any(named: 'maxHeight'),
+          imageQuality: any(named: 'imageQuality'),
+        ),
+      ).called(1);
+    });
+
+    test(
+      'caps the picked image at UserProfileRules.avatarMaxDimensionPx/'
+      'avatarQualityPercent (owner-reported: an uncompressed camera photo '
+      'was silently bloating every PDF export by several MB, since '
+      'package:pdf embeds an image at its full resolution regardless of '
+      'the small size it\'s actually drawn at)',
+      () async {
+        when(
+          () => picker.pickImage(
+            source: ImageSource.camera,
+            maxWidth: UserProfileRules.avatarMaxDimensionPx.toDouble(),
+            maxHeight: UserProfileRules.avatarMaxDimensionPx.toDouble(),
+            imageQuality: UserProfileRules.avatarQualityPercent,
+          ),
+        ).thenAnswer((_) async => XFile(sourceImage.path));
+
+        final result = await service.pickAndSetAvatar(
+          storageDirectory: Directory('${tempDir.path}/profile'),
+          source: ImageSource.camera,
+        );
+
+        expect(result.isOk, isTrue);
+        expect(result.getOrNull(), isTrue);
+      },
+    );
+
     test('returns Ok(false) without writing anything if the user cancels', () async {
       when(
-        () => picker.pickImage(source: ImageSource.gallery),
+        () => picker.pickImage(
+          source: ImageSource.gallery,
+          maxWidth: any(named: 'maxWidth'),
+          maxHeight: any(named: 'maxHeight'),
+          imageQuality: any(named: 'imageQuality'),
+        ),
       ).thenAnswer((_) async => null);
 
       final result = await service.pickAndSetAvatar(
         storageDirectory: Directory('${tempDir.path}/profile'),
+        source: ImageSource.gallery,
       );
 
       expect(result.isOk, isTrue);

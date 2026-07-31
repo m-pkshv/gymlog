@@ -36,7 +36,14 @@ part 'database.g.dart';
 /// that drop; this migration only restores the empty column, not the text.
 /// Version 7 (Stage 11, owner-confirmed 2026-07-29) adds `UserProfileTable`
 /// (06_DATA_MODEL.md, section 6.15) -- a brand-new table, not a column
-/// change; nothing existing is touched.
+/// change; nothing existing is touched. Version 8 (Stage 11, owner-confirmed
+/// 2026-07-31) drops `ImportExportOperations` entirely -- the CSV-export
+/// operations journal (06_DATA_MODEL.md, former section 6.13) was removed
+/// from the screen, the write path, and the table together (owner-reported:
+/// no user-facing value, and CSV export already gives immediate
+/// success/failure feedback via a snackbar/share sheet without needing a
+/// persisted log). No migration can bring back old journal rows -- the
+/// table is gone for good.
 @DriftDatabase(
   tables: [
     MuscleGroups,
@@ -57,7 +64,6 @@ part 'database.g.dart';
     PersonalRecords,
     ExerciseProgressionStates,
     AppSettingsTable,
-    ImportExportOperations,
     SeedInfoTable,
     ActiveWorkoutStates,
     UserProfileTable,
@@ -67,7 +73,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration {
@@ -117,6 +123,13 @@ class AppDatabase extends _$AppDatabase {
           // (nickname/first/last name + avatar path), not a column change --
           // nothing existing is touched.
           await m.createTable(userProfileTable);
+        }
+        if (from < 8) {
+          // v7 -> v8 (Stage 11, 2026-07-31): the CSV-export operations
+          // journal was removed entirely (owner-reported: no user-facing
+          // value). `deleteTable` takes a plain string, not a `TableInfo`,
+          // precisely because the Dart table class is gone by this point.
+          await m.deleteTable('ImportExportOperations');
         }
       },
       beforeOpen: (details) async {

@@ -44,14 +44,6 @@ enum RecordType {
   longestDuration,
 }
 
-/// `ImportExportOperation.operationType` (06_DATA_MODEL.md, section 6.13).
-/// Only `export` is ever produced in the MVP (D-9); `import` is reserved for
-/// a post-MVP importer (TS 10.6).
-enum ImportExportOperationType { export, import }
-
-/// `ImportExportOperation.status` (06_DATA_MODEL.md, section 6.13).
-enum ImportExportOperationStatus { inProgress, success, failed }
-
 /// `AppSettings.theme` (06_DATA_MODEL.md, section 6.12; 04_UI_UX_SPEC.md,
 /// section 9). `system` follows the OS light/dark setting; `light`/`dark`
 /// pin the app to one regardless of the OS. Mapped to Flutter's own

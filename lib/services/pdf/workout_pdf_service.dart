@@ -31,6 +31,55 @@ class WorkoutPdfService {
   static const _regularFontAsset = 'assets/fonts/Roboto-Regular.ttf';
   static const _boldFontAsset = 'assets/fonts/Roboto-Bold.ttf';
 
+  /// Index of the "done" column in each exercise's set table -- referenced
+  /// by both the row data and the table's column-width/alignment overrides.
+  static const _doneColumnIndex = 3;
+
+  /// Same "green filled circle with a check mark" done indicator the app
+  /// itself uses (`CompletionToggle`, light theme's `AppSemanticColors`),
+  /// drawn by hand rather than referencing a Material icon font -- the
+  /// bundled Roboto doesn't carry icon glyphs, and pulling in a whole icon
+  /// font just for one check mark isn't worth it.
+  static const _successColor = PdfColor.fromInt(0xFF2C974F);
+  static const _doneMarkDiameter = 12.0;
+
+  pw.Widget _doneMark(bool completed) {
+    return pw.SizedBox(
+      width: _doneMarkDiameter,
+      height: _doneMarkDiameter,
+      child: pw.CustomPaint(
+        size: const PdfPoint(_doneMarkDiameter, _doneMarkDiameter),
+        painter: (canvas, size) {
+          final cx = size.x / 2;
+          final cy = size.y / 2;
+          if (completed) {
+            canvas
+              ..setColor(_successColor)
+              ..drawEllipse(cx, cy, size.x / 2, size.y / 2)
+              ..fillPath();
+            canvas
+              ..setStrokeColor(PdfColors.white)
+              ..setLineWidth(1.3)
+              ..setLineCap(PdfLineCap.round)
+              ..setLineJoin(PdfLineJoin.round)
+              // PDF's y-axis runs bottom-to-top (unlike screen coordinates),
+              // so the check mark's points are given already flipped.
+              ..moveTo(size.x * 0.27, size.y * 0.48)
+              ..lineTo(size.x * 0.44, size.y * 0.3)
+              ..lineTo(size.x * 0.75, size.y * 0.68)
+              ..strokePath();
+          } else {
+            canvas
+              ..setStrokeColor(PdfColors.grey400)
+              ..setLineWidth(1)
+              ..drawEllipse(cx, cy, size.x / 2 - 0.5, size.y / 2 - 0.5)
+              ..strokePath();
+          }
+        },
+      ),
+    );
+  }
+
   Future<Uint8List> buildWorkoutPdf({
     required WorkoutDetails details,
     required UserProfile profile,
@@ -65,8 +114,11 @@ class WorkoutPdfService {
             pw.SizedBox(height: 12),
             pw.Text(details.workout.comment!.trim()),
           ],
+          pw.SizedBox(height: 20),
+          for (final exerciseDetails in details.exercises)
+            _buildExerciseSection(exerciseDetails, l10n, boldFont),
           if (newRecordsByExerciseId.values.any((records) => records.isNotEmpty)) ...[
-            pw.SizedBox(height: 16),
+            pw.SizedBox(height: 8),
             _buildNewRecordsSection(
               details,
               newRecordsByExerciseId,
@@ -74,9 +126,6 @@ class WorkoutPdfService {
               boldFont,
             ),
           ],
-          pw.SizedBox(height: 20),
-          for (final exerciseDetails in details.exercises)
-            _buildExerciseSection(exerciseDetails, l10n, boldFont),
         ],
       ),
     );
@@ -94,7 +143,17 @@ class WorkoutPdfService {
       profile.firstName,
       profile.lastName,
     ].where((part) => (part ?? '').trim().isNotEmpty).join(' ');
-    final displayName = fullName.isNotEmpty ? fullName : profile.nickname;
+    final nickname = (profile.nickname ?? '').trim();
+    final String? displayName;
+    if (fullName.isNotEmpty && nickname.isNotEmpty) {
+      displayName = '$fullName ($nickname)';
+    } else if (fullName.isNotEmpty) {
+      displayName = fullName;
+    } else if (nickname.isNotEmpty) {
+      displayName = nickname;
+    } else {
+      displayName = null;
+    }
     final title = details.workout.name ?? l10n.workoutDefaultNamePrefix;
     final durationLabel = details.workout.actualDurationSec != null
         ? formatElapsedTime(details.workout.actualDurationSec!)
@@ -310,7 +369,7 @@ class WorkoutPdfService {
             set.setNumber.toString(),
             formatFieldsSummary(set, fields, actual: false),
             formatFieldsSummary(set, fields, actual: true),
-            set.isCompleted ? 'X' : '',
+            _doneMark(set.isCompleted),
           ],
         )
         .toList();
@@ -341,6 +400,11 @@ class WorkoutPdfService {
               cellStyle: const pw.TextStyle(fontSize: 9),
               headerStyle: pw.TextStyle(font: boldFont, fontSize: 9),
               cellAlignment: pw.Alignment.centerLeft,
+              cellAlignments: const {_doneColumnIndex: pw.Alignment.center},
+              headerAlignments: const {_doneColumnIndex: pw.Alignment.center},
+              columnWidths: const {
+                _doneColumnIndex: pw.FixedColumnWidth(28),
+              },
               cellPadding: const pw.EdgeInsets.symmetric(
                 horizontal: 6,
                 vertical: 4,

@@ -4,6 +4,12 @@
          NotificationService (D-10: Android 8+ minimum, this permission is
          only actually enforced starting Android 13, a no-op below that). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Profile avatar "Take photo" action (Stage 11, image_picker's
+         ImageSource.camera). android.hardware.camera is marked not required
+         so devices without a camera can still install the app: "Take
+         photo" just won't work there, "Choose from gallery" still will. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <application
         android:label="gymlog"
         android:name=".MainApplication"

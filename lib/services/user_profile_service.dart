@@ -59,15 +59,22 @@ class UserProfileService {
     return trimmed.isEmpty ? null : trimmed;
   }
 
-  /// Opens the gallery picker and, if the user picked something, copies it
-  /// into [storageDirectory] under [avatarFileName] and stores that path.
-  /// Returns `Ok(false)` (not an error) if the user cancelled the picker.
+  /// Opens the gallery/camera picker (per [source]) and, if the user picked
+  /// something, copies it into [storageDirectory] under [avatarFileName] and
+  /// stores that path. Returns `Ok(false)` (not an error) if the user
+  /// cancelled the picker.
   Future<Result<bool, AppError>> pickAndSetAvatar({
     required Directory storageDirectory,
+    required ImageSource source,
   }) async {
     final XFile? picked;
     try {
-      picked = await _picker.pickImage(source: ImageSource.gallery);
+      picked = await _picker.pickImage(
+        source: source,
+        maxWidth: UserProfileRules.avatarMaxDimensionPx.toDouble(),
+        maxHeight: UserProfileRules.avatarMaxDimensionPx.toDouble(),
+        imageQuality: UserProfileRules.avatarQualityPercent,
+      );
     } catch (error) {
       return Err(UnknownError('Failed to open the image picker', error));
     }

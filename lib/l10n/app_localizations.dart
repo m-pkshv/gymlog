@@ -164,10 +164,10 @@ abstract class AppLocalizations {
   /// **'Weight, body fat, and body measurements'**
   String get moreMeasurementsSubtitle;
 
-  /// S-11 "More" screen (Stage 10 redesign): one-line description under "Import/Export".
+  /// S-11 "More" screen (Stage 10 redesign): one-line description under "Backup" (renamed from "Import/Export", Stage 11).
   ///
   /// In en, this message translates to:
-  /// **'Export your data as CSV'**
+  /// **'Backup and export your data'**
   String get moreExportSubtitle;
 
   /// S-11 "More" screen (Stage 10 redesign): one-line description under "Settings".
@@ -1181,8 +1181,14 @@ abstract class AppLocalizations {
   /// Action sheet item on the profile screen's avatar: opens the gallery picker.
   ///
   /// In en, this message translates to:
-  /// **'Choose photo'**
+  /// **'Choose from gallery'**
   String get profileChoosePhotoAction;
+
+  /// Action sheet item on the profile screen's avatar: opens the camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get profileTakePhotoAction;
 
   /// Action sheet item on the profile screen's avatar, shown only when one is set: clears it.
   ///
@@ -2498,10 +2504,10 @@ abstract class AppLocalizations {
   /// **'{value} / km'**
   String statsPaceValue(String value);
 
-  /// S-16 AppBar title (Stage 8).
+  /// S-16 AppBar title and the "More" screen's link to it -- renamed from "Import/Export" (Stage 8) to "Backup" (Stage 11, owner-reported: the whole-database backup is this screen's primary function, CSV export is secondary).
   ///
   /// In en, this message translates to:
-  /// **'Import/Export'**
+  /// **'Backup'**
   String get exportScreenTitle;
 
   /// S-16's main export button.
@@ -2515,18 +2521,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to export data'**
   String get exportError;
-
-  /// S-16's disabled "Import" stub row title.
-  ///
-  /// In en, this message translates to:
-  /// **'Import'**
-  String get importAction;
-
-  /// Subtitle under the disabled "Import" stub row (04_UI_UX_SPEC.md S-16: import is post-MVP, TS 10.6).
-  ///
-  /// In en, this message translates to:
-  /// **'Coming in future versions'**
-  String get importComingSoonLabel;
 
   /// S-16 row that opens the built-in CSV format help screen.
   ///
@@ -2581,59 +2575,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Columns:'**
   String get exportFormatHelpColumnsLabel;
-
-  /// S-16 section title for the ImportExportOperation journal list.
-  ///
-  /// In en, this message translates to:
-  /// **'Operations log'**
-  String get exportJournalTitle;
-
-  /// Empty state for the S-16 journal.
-  ///
-  /// In en, this message translates to:
-  /// **'No operations yet'**
-  String get exportJournalEmpty;
-
-  /// Error state for the S-16 journal stream.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load the log'**
-  String get exportJournalLoadError;
-
-  /// ImportExportOperationStatus.inProgress label.
-  ///
-  /// In en, this message translates to:
-  /// **'In progress'**
-  String get exportStatusInProgress;
-
-  /// ImportExportOperationStatus.success label.
-  ///
-  /// In en, this message translates to:
-  /// **'Success'**
-  String get exportStatusSuccess;
-
-  /// ImportExportOperationStatus.failed label.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed'**
-  String get exportStatusFailed;
-
-  /// Compact counts line on a successful S-16 journal row.
-  ///
-  /// In en, this message translates to:
-  /// **'{workouts} workouts · {sets} sets · {measurements} measurements · {exercises} exercises'**
-  String exportJournalCounts(
-    int workouts,
-    int sets,
-    int measurements,
-    int exercises,
-  );
-
-  /// S-16 screen: group card header over the whole-database backup export/restore actions (Stage 11).
-  ///
-  /// In en, this message translates to:
-  /// **'Backup'**
-  String get backupSectionTitle;
 
   /// S-16: button that exports a full-database backup ZIP and opens the OS share sheet.
   ///

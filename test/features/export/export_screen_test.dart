@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:gymlog/app/design_tokens.dart';
 import 'package:gymlog/app/providers.dart';
 import 'package:gymlog/data/database.dart';
-import 'package:gymlog/data/repositories_impl/import_export_operation_repository_impl.dart';
-import 'package:gymlog/domain/models/import_export_operation.dart';
 import 'package:gymlog/core/widgets/grouped_section.dart';
 import 'package:gymlog/features/export/export_format_help_screen.dart';
 import 'package:gymlog/features/export/export_screen.dart';
@@ -60,109 +59,86 @@ void main() {
   });
 
   testWidgets(
-    'shows the export button, format link, and a disabled "Import" stub',
+    'shows the export button and format link, with no "Import" stub and no '
+    'operations journal (Stage 11, owner-reported: the disabled placeholder '
+    'and the journal -- screen, write path, and table -- were both removed '
+    'outright, not just hidden)',
     (tester) async {
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
 
       expect(find.text('Export data (CSV)'), findsOneWidget);
       expect(find.text('CSV format description'), findsOneWidget);
-
-      final importTile = tester.widget<ListTile>(
-        find.widgetWithText(ListTile, 'Import'),
-      );
-      expect(importTile.enabled, isFalse);
-      expect(find.text('Coming in future versions'), findsOneWidget);
+      expect(find.text('Import'), findsNothing);
+      expect(find.text('Coming in future versions'), findsNothing);
+      expect(find.text('Operations log'), findsNothing);
 
       await _unmountAndFlush(tester);
     },
   );
 
   testWidgets(
-    'groups the format-help/import rows, the backup section, and the '
-    'journal into GroupedSections (Stage 10 redesign)',
+    'groups only the format-help row into a GroupedSection, with the '
+    'backup buttons standalone above it (Stage 10 redesign, Stage 11 '
+    'owner-reported restyle + journal removal)',
     (tester) async {
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
 
-      expect(find.byType(GroupedSection), findsNWidgets(3));
+      expect(find.byType(GroupedSection), findsOneWidget);
 
       await _unmountAndFlush(tester);
     },
   );
 
   testWidgets(
-    'shows the backup section with export and restore actions (Stage 11)',
+    'shows the backup export/restore actions as big full-width buttons '
+    'above the CSV section, restore styled with the accent color (Stage 11, '
+    'owner-reported)',
     (tester) async {
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
 
-      expect(find.text('Backup'), findsOneWidget);
-      expect(find.text('Export backup'), findsOneWidget);
-      expect(find.text('Restore from backup'), findsOneWidget);
-
-      await _unmountAndFlush(tester);
-    },
-  );
-
-  testWidgets('shows an empty journal state with no operations', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_appUnderTest(db));
-    await tester.pumpAndSettle();
-
-    expect(find.text('No operations yet'), findsOneWidget);
-
-    await _unmountAndFlush(tester);
-  });
-
-  testWidgets(
-    'renders a successful journal entry with status and counts',
-    (tester) async {
-      final operations = ImportExportOperationRepositoryImpl(db);
-      final operation = await operations.startExport(formatVersion: 1);
-      await operations.markSuccess(
-        operationId: operation.id,
-        counts: const ImportExportOperationCounts(
-          workouts: 12,
-          sets: 340,
-          measurements: 56,
-          exercises: 199,
+      final exportButton = tester.widget<FilledButton>(
+        find.ancestor(
+          of: find.text('Export backup'),
+          matching: find.byType(FilledButton),
         ),
       );
-
-      await tester.pumpWidget(_appUnderTest(db));
-      await tester.pumpAndSettle();
-
-      expect(find.text('No operations yet'), findsNothing);
+      final restoreButton = tester.widget<FilledButton>(
+        find.ancestor(
+          of: find.text('Restore from backup'),
+          matching: find.byType(FilledButton),
+        ),
+      );
+      // Export uses the app-wide default (no explicit backgroundColor
+      // override); restore is explicitly styled with the accent color.
+      expect(exportButton.style?.backgroundColor, isNull);
+      final semantic = buildLightTheme().extension<AppSemanticColors>()!;
       expect(
-        find.textContaining(
-          'Success · 12 workouts · 340 sets · 56 measurements · 199 exercises',
-        ),
-        findsOneWidget,
+        restoreButton.style?.backgroundColor?.resolve({}),
+        semantic.accent,
       );
+
+      // Backup buttons appear above the CSV export button in paint order.
+      final backupY = tester
+          .getTopLeft(find.text('Export backup'))
+          .dy;
+      final csvY = tester.getTopLeft(find.text('Export data (CSV)')).dy;
+      expect(backupY, lessThan(csvY));
+
+      // A divider visually separates the backup buttons from the CSV
+      // section (owner-reported), sitting between the restore button and
+      // the CSV export button.
+      expect(find.byType(Divider), findsOneWidget);
+      final restoreY = tester.getTopLeft(find.text('Restore from backup')).dy;
+      final dividerY = tester.getTopLeft(find.byType(Divider)).dy;
+      expect(dividerY, greaterThan(restoreY));
+      expect(dividerY, lessThan(csvY));
 
       await _unmountAndFlush(tester);
     },
   );
-
-  testWidgets('renders a failed journal entry with a Failed status', (
-    tester,
-  ) async {
-    final operations = ImportExportOperationRepositoryImpl(db);
-    final operation = await operations.startExport(formatVersion: 1);
-    await operations.markFailed(
-      operationId: operation.id,
-      errorSummary: 'Disk full',
-    );
-
-    await tester.pumpWidget(_appUnderTest(db));
-    await tester.pumpAndSettle();
-
-    expect(find.textContaining('Failed'), findsWidgets);
-
-    await _unmountAndFlush(tester);
-  });
 
   testWidgets(
     'tapping the format link opens the help screen with each file\'s '

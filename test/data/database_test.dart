@@ -40,7 +40,6 @@ void main() {
         'PersonalRecords',
         'ExerciseProgressionStates',
         'AppSettingsTable',
-        'ImportExportOperations',
         'SeedInfoTable',
         'ActiveWorkoutStates',
       };

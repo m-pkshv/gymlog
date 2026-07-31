@@ -57,7 +57,7 @@ void main() {
     expect(find.text('Templates'), findsOneWidget);
     expect(find.text('Tags'), findsOneWidget);
     expect(find.text('Measurements'), findsOneWidget);
-    expect(find.text('Import/Export'), findsOneWidget);
+    expect(find.text('Backup'), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);
   });
 
@@ -73,7 +73,7 @@ void main() {
       expect(find.text('Reusable workout blueprints'), findsOneWidget);
       expect(find.text('Manage workout tags'), findsOneWidget);
       expect(find.text('Weight, body fat, and body measurements'), findsOneWidget);
-      expect(find.text('Export your data as CSV'), findsOneWidget);
+      expect(find.text('Backup and export your data'), findsOneWidget);
       expect(find.text('Theme, language, units'), findsOneWidget);
     },
   );

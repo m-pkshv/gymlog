@@ -504,6 +504,47 @@ void main() {
   });
 
   group(
+    '"Export as PDF" from the "⋮" menu (Stage 11, owner-reported: sharing '
+    'a workout without opening it first)',
+    () {
+      testWidgets(
+        'the card\'s "⋮" menu includes "Export as PDF" -- not tapped here '
+        'since it goes through a real platform channel (printing); the '
+        'fetch-details-then-share flow itself is covered without any '
+        'platform boundary via exportWorkoutPdfFromWorkoutFlow\'s own '
+        'building blocks (WorkoutRepository.getDetails, '
+        'workout_pdf_service_test.dart)',
+        (tester) async {
+          await _insertCompletedWorkout(
+            db,
+            id: 'w1',
+            date: '2026-07-01',
+            name: 'Leg day',
+          );
+
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
+
+          await tester.tap(find.byIcon(Icons.more_vert));
+          await tester.pumpAndSettle();
+
+          expect(find.text('Export as PDF'), findsOneWidget);
+          // Also still shows the other actions -- the new item was added
+          // alongside them, not in place of one.
+          expect(find.text('Copy'), findsOneWidget);
+          expect(find.text('Create template'), findsOneWidget);
+          expect(find.text('Delete'), findsOneWidget);
+
+          // Dismiss the menu before unmounting.
+          await tester.tapAt(const Offset(10, 10));
+          await tester.pumpAndSettle();
+          await _unmountAndFlush(tester);
+        },
+      );
+    },
+  );
+
+  group(
     'creation menu (Stage 3, 02_DEVELOPMENT_PLAN.md: "с нуля/из шаблона/копией")',
     () {
       testWidgets(

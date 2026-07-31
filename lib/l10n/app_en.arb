@@ -44,9 +44,9 @@
   "@moreMeasurementsSubtitle": {
     "description": "S-11 \"More\" screen (Stage 10 redesign): one-line description under \"Measurements\"."
   },
-  "moreExportSubtitle": "Export your data as CSV",
+  "moreExportSubtitle": "Backup and export your data",
   "@moreExportSubtitle": {
-    "description": "S-11 \"More\" screen (Stage 10 redesign): one-line description under \"Import/Export\"."
+    "description": "S-11 \"More\" screen (Stage 10 redesign): one-line description under \"Backup\" (renamed from \"Import/Export\", Stage 11)."
   },
   "moreSettingsSubtitle": "Theme, language, units",
   "@moreSettingsSubtitle": {
@@ -644,9 +644,13 @@
   "@profileNameLengthError": {
     "description": "Inline error shown under the last name field if UserProfileService.updateProfile rejects a value (defense-in-depth -- the fields already cap input at 60 characters via TextField.maxLength)."
   },
-  "profileChoosePhotoAction": "Choose photo",
+  "profileChoosePhotoAction": "Choose from gallery",
   "@profileChoosePhotoAction": {
     "description": "Action sheet item on the profile screen's avatar: opens the gallery picker."
+  },
+  "profileTakePhotoAction": "Take photo",
+  "@profileTakePhotoAction": {
+    "description": "Action sheet item on the profile screen's avatar: opens the camera."
   },
   "profileRemovePhotoAction": "Remove photo",
   "@profileRemovePhotoAction": {
@@ -1555,9 +1559,9 @@
       "value": {"type": "String"}
     }
   },
-  "exportScreenTitle": "Import/Export",
+  "exportScreenTitle": "Backup",
   "@exportScreenTitle": {
-    "description": "S-16 AppBar title (Stage 8)."
+    "description": "S-16 AppBar title and the \"More\" screen's link to it -- renamed from \"Import/Export\" (Stage 8) to \"Backup\" (Stage 11, owner-reported: the whole-database backup is this screen's primary function, CSV export is secondary)."
   },
   "exportAction": "Export data (CSV)",
   "@exportAction": {
@@ -1566,14 +1570,6 @@
   "exportError": "Failed to export data",
   "@exportError": {
     "description": "Snackbar shown when ExportService.export throws."
-  },
-  "importAction": "Import",
-  "@importAction": {
-    "description": "S-16's disabled \"Import\" stub row title."
-  },
-  "importComingSoonLabel": "Coming in future versions",
-  "@importComingSoonLabel": {
-    "description": "Subtitle under the disabled \"Import\" stub row (04_UI_UX_SPEC.md S-16: import is post-MVP, TS 10.6)."
   },
   "exportFormatHelpAction": "CSV format description",
   "@exportFormatHelpAction": {
@@ -1610,44 +1606,6 @@
   "exportFormatHelpColumnsLabel": "Columns:",
   "@exportFormatHelpColumnsLabel": {
     "description": "Label preceding the literal (untranslated) column-name list for each CSV file."
-  },
-  "exportJournalTitle": "Operations log",
-  "@exportJournalTitle": {
-    "description": "S-16 section title for the ImportExportOperation journal list."
-  },
-  "exportJournalEmpty": "No operations yet",
-  "@exportJournalEmpty": {
-    "description": "Empty state for the S-16 journal."
-  },
-  "exportJournalLoadError": "Failed to load the log",
-  "@exportJournalLoadError": {
-    "description": "Error state for the S-16 journal stream."
-  },
-  "exportStatusInProgress": "In progress",
-  "@exportStatusInProgress": {
-    "description": "ImportExportOperationStatus.inProgress label."
-  },
-  "exportStatusSuccess": "Success",
-  "@exportStatusSuccess": {
-    "description": "ImportExportOperationStatus.success label."
-  },
-  "exportStatusFailed": "Failed",
-  "@exportStatusFailed": {
-    "description": "ImportExportOperationStatus.failed label."
-  },
-  "exportJournalCounts": "{workouts} workouts · {sets} sets · {measurements} measurements · {exercises} exercises",
-  "@exportJournalCounts": {
-    "description": "Compact counts line on a successful S-16 journal row.",
-    "placeholders": {
-      "workouts": {"type": "int"},
-      "sets": {"type": "int"},
-      "measurements": {"type": "int"},
-      "exercises": {"type": "int"}
-    }
-  },
-  "backupSectionTitle": "Backup",
-  "@backupSectionTitle": {
-    "description": "S-16 screen: group card header over the whole-database backup export/restore actions (Stage 11)."
   },
   "backupExportAction": "Export backup",
   "@backupExportAction": {

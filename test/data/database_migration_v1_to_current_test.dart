@@ -39,6 +39,12 @@ import 'package:gymlog/domain/enums.dart';
 /// schema and the fixture has to add the old column back via raw SQL), a
 /// v1 fixture never had this table at all, so it's dropped right back out
 /// after `createAll()` builds it, before `user_version` is forced to 1.
+/// v7 -> v8 (2026-07-31, owner-confirmed): `ImportExportOperations` (the
+/// CSV-export operations journal) dropped entirely -- the opposite
+/// situation from v6 -> v7: a real v1 install DID have this table, but
+/// `createAll()` (reflecting the *current*, post-drop schema) no longer
+/// creates it, so the fixture has to add it back by hand via raw SQL to
+/// genuinely represent a v1 shape.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -189,6 +195,31 @@ void main() {
       // of the *current* schema) -- drop it so the fixture genuinely
       // matches a v1 install, which never had this table.
       await firstRun.customStatement('DROP TABLE "UserProfileTable"');
+      // The opposite situation: a real v1 install DID have
+      // `ImportExportOperations`, but `createAll()` (reflecting the
+      // *current*, post-drop schema) no longer creates it -- add it back by
+      // hand, with one row, so the migration genuinely has something to
+      // drop.
+      await firstRun.customStatement('''
+        CREATE TABLE "ImportExportOperations" (
+          "id" TEXT NOT NULL,
+          "operationType" TEXT NOT NULL DEFAULT 'export'
+            CHECK ("operationType" IN ('export', 'import')),
+          "status" TEXT NOT NULL
+            CHECK ("status" IN ('inProgress', 'success', 'failed')),
+          "formatVersion" INTEGER NOT NULL,
+          "startedAt" TEXT NOT NULL,
+          "finishedAt" TEXT,
+          "itemCountsJson" TEXT,
+          "errorSummary" TEXT,
+          PRIMARY KEY ("id")
+        )
+      ''');
+      await firstRun.customStatement('''
+        INSERT INTO "ImportExportOperations"
+          ("id", "status", "formatVersion", "startedAt")
+        VALUES ('op1', 'success', 1, '2026-07-01T00:00:00.000Z')
+      ''');
       await firstRun.customStatement('PRAGMA user_version = 1');
       await firstRun.close();
 
@@ -246,10 +277,20 @@ void main() {
           .get();
       expect(userProfileTables, hasLength(1));
 
+      // v7 -> v8: the journal table is gone entirely, taking its one row
+      // with it -- there is no migration that could bring it back.
+      final journalTables = await secondRun
+          .customSelect(
+            "SELECT name FROM sqlite_master WHERE type='table' "
+            "AND name='ImportExportOperations'",
+          )
+          .get();
+      expect(journalTables, isEmpty);
+
       final versionRow = await secondRun
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(versionRow.data['user_version'], 7);
+      expect(versionRow.data['user_version'], 8);
 
       final fkRows = await secondRun.customSelect('PRAGMA foreign_keys').get();
       expect(fkRows.single.data['foreign_keys'], 1);

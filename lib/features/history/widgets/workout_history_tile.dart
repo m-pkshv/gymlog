@@ -11,10 +11,12 @@ import '../../../domain/models/workout_history_entry.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../workout_editor/widgets/workout_tag_chip.dart';
 
-enum _HistoryCardAction { copy, createTemplate, delete }
+enum _HistoryCardAction { copy, createTemplate, exportPdf, delete }
 
 /// A single workout row (S-02): date/name/exercise count/duration/status/
-/// tags, "⋮" menu with "Копировать"/"Создать шаблон"/"Удалить". Shared by
+/// tags, "⋮" menu with "Копировать"/"Создать шаблон"/"Экспортировать в
+/// PDF"/"Удалить" (the PDF item added Stage 11, owner-reported: sharing a
+/// workout without opening it first). Shared by
 /// History's list view (`screen.dart`) and calendar view
 /// (`calendar/history_calendar_view.dart`, Stage 3) so both render workouts
 /// identically. Tapping the row always opens the editor (S-03), regardless
@@ -38,6 +40,7 @@ class WorkoutHistoryTile extends ConsumerWidget {
     required this.entry,
     required this.onCopy,
     required this.onCreateTemplate,
+    required this.onExportPdf,
     required this.onDelete,
   });
 
@@ -48,6 +51,12 @@ class WorkoutHistoryTile extends ConsumerWidget {
   /// template copy direction; the reverse ("создать тренировку из
   /// шаблона") isn't wired up here yet, it needs DM-1 resolved first.
   final void Function(Workout source) onCreateTemplate;
+
+  /// "Экспортировать в PDF" (Stage 11, owner-reported) -- unlike the other
+  /// actions here, this one needs the full `WorkoutDetails` aggregate, not
+  /// just the `Workout` row, so the callback itself is `async` (fetches
+  /// the details first) rather than a plain `void Function`.
+  final Future<void> Function(Workout source) onExportPdf;
   final void Function(Workout workout) onDelete;
 
   @override
@@ -98,6 +107,8 @@ class WorkoutHistoryTile extends ConsumerWidget {
                     onCopy(workout);
                   case _HistoryCardAction.createTemplate:
                     onCreateTemplate(workout);
+                  case _HistoryCardAction.exportPdf:
+                    onExportPdf(workout);
                   case _HistoryCardAction.delete:
                     onDelete(workout);
                 }
@@ -110,6 +121,10 @@ class WorkoutHistoryTile extends ConsumerWidget {
                 PopupMenuItem(
                   value: _HistoryCardAction.createTemplate,
                   child: Text(l10n.createTemplateFromWorkoutAction),
+                ),
+                PopupMenuItem(
+                  value: _HistoryCardAction.exportPdf,
+                  child: Text(l10n.exportWorkoutPdfAction),
                 ),
                 PopupMenuItem(
                   value: _HistoryCardAction.delete,

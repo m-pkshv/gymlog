@@ -26,6 +26,15 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- Profile avatar "Choose from gallery"/"Take photo" (Stage 11,
+	     image_picker) -- iOS refuses to show either picker at all without
+	     these usage strings, regardless of whether the permission is ever
+	     actually requested. Untested: no macOS/Xcode toolchain in the
+	     working environment (accepted risk since Stage 0). -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Used to choose a profile photo.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Used to take a profile photo.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -214,17 +214,8 @@ PK: (`exerciseId`, `recordType`, `keyValue`). Триггеры пересчёт�
 | restTimerAutoStart | INTEGER | 1 | Автозапуск таймера отдыха после отметки подхода |
 | updatedAt | TEXT UTC | | |
 
-### 6.13. `ImportExportOperation`
-| Поле | Тип | Обяз. | Описание |
-|---|---|---|---|
-| id | TEXT PK | да | UUID |
-| operationType | TEXT enum | да | `export` в MVP |
-| status | TEXT enum | да | `inProgress`/`success`/`failed` |
-| formatVersion | INTEGER | да | Версия формата CSV (`03`, раздел 10) |
-| startedAt / finishedAt | TEXT UTC | да/нет | |
-| itemCountsJson | TEXT | нет | `{"workouts":N,"sets":N,"measurements":N,"exercises":N}` |
-| errorSummary | TEXT | нет | Текст ошибки при `failed` |
-Записи — журнал для пользователя (экран «Импорт/экспорт») и опора будущего импорта. Хранятся последние 50, старые удаляются физически.
+### 6.13. `ImportExportOperation` — удалено (Этап 11, 2026-07-31)
+Таблица (журнал CSV-экспортов: `id`/`operationType`/`status`/`formatVersion`/`startedAt`/`finishedAt`/`itemCountsJson`/`errorSummary`) удалена целиком — экран, запись, таблица (миграция v7→v8, `CHANGELOG` раздела 11.1). Владелец: не видел пользы для пользователя, немедленная обратная связь (снекбар/диалог «Поделиться») при самом экспорте уже достаточна. Номер раздела оставлен как историческая пометка, не переиспользуется.
 
 ### 6.14. `ActiveWorkoutState` (одна строка, восстановление активного режима)
 `workoutId FK`, `startedAtUtc`, `accumulatedActiveSec` (набежавшее активное время до последней паузы), `isPaused`, `pauseStartedAtUtc`, `restTimerEndsAtUtc` (NULL, если таймер не идёт), `restTimerDurationSec`, `updatedAt`. Обновляется при каждом событии режима; логика восстановления — `03_TECHNICAL_SPEC.md`, раздел 7.
@@ -293,6 +284,7 @@ Exercise 1─* PersonalRecord (кэш)           Exercise 1─1 ExerciseProgress
 | 5 | Этап 10 (редизайн), 2026-07-26 | Удалены `WorkoutExercises.comment`/`TemplateExercises.comment` (комментарий упражнения убран, решение владельца) — `Migrator.dropColumn` для обеих таблиц; покрыто тем же тестом `database_migration_v1_to_current_test.dart` |
 | 6 | Этап 11, 2026-07-28 | Возвращены `WorkoutExercises.comment`/`TemplateExercises.comment` (комментарий упражнения снова нужен, решение владельца) — `Migrator.addColumn` для обеих таблиц (пустая колонка; старые данные, потерянные при удалении v5, не восстанавливаются); покрыто тем же тестом `database_migration_v1_to_current_test.dart` |
 | 7 | Этап 11, 2026-07-29 | Добавлена новая таблица `UserProfileTable` (раздел 6.15) — не изменение колонки, а новая таблица; `Migrator.createTable`; покрыто тем же тестом `database_migration_v1_to_current_test.dart` (v1-фикстура собирается через `createAll()`, затем новая таблица физически удаляется раньше, чем `user_version` принудительно ставится в 1, — иначе `createTable` в реальной миграции упал бы на «таблица уже существует») |
+| 8 | Этап 11, 2026-07-31 | Удалена таблица `ImportExportOperations` (журнал CSV-экспортов, бывший раздел 6.13) целиком — решение владельца, не видел пользы для пользователя; `Migrator.deleteTable('ImportExportOperations')` (строка-имя, не `TableInfo` — Dart-класс таблицы уже удалён из схемы к этому моменту); покрыто тем же тестом `database_migration_v1_to_current_test.dart` (v1-фикстура воссоздаёт старую таблицу вручную через сырой SQL, т.к. `createAll()` теперь строит уже пост-удалённую схему — обратная ситуация по сравнению с версией 7) |
 
 ## 12. Начальные данные (сиды)
 - Загружаются при первом запуске в транзакции; факт загрузки — по наличию строк, версия сида хранится в `AppSettings`-подобной служебной таблице `SeedInfo(seedVersion INTEGER)`.

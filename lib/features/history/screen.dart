@@ -11,6 +11,7 @@ import '../../domain/models/workout.dart';
 import '../../domain/models/workout_history_filter.dart';
 import '../../domain/models/workout_tag.dart';
 import '../../l10n/app_localizations.dart';
+import '../workout_editor/export_workout_pdf_flow.dart';
 import '../workout_editor/status_labels.dart';
 import '../workout_editor/widgets/workout_tag_chip.dart';
 import 'calendar/history_calendar_view.dart';
@@ -188,6 +189,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     onCopy: (source) => copyWorkoutFlow(context, ref, source),
                     onCreateTemplate: (source) =>
                         createTemplateFromWorkoutFlow(context, ref, source),
+                    onExportPdf: (source) =>
+                        exportWorkoutPdfFromWorkoutFlow(context, ref, source),
                     onDelete: _deleteWorkout,
                   )
                 : HistoryCalendarView(
@@ -197,6 +200,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     onCopy: (source) => copyWorkoutFlow(context, ref, source),
                     onCreateTemplate: (source) =>
                         createTemplateFromWorkoutFlow(context, ref, source),
+                    onExportPdf: (source) =>
+                        exportWorkoutPdfFromWorkoutFlow(context, ref, source),
                     onDelete: _deleteWorkout,
                   ),
           ),
@@ -218,6 +223,7 @@ class _HistoryList extends ConsumerWidget {
     required this.onReset,
     required this.onCopy,
     required this.onCreateTemplate,
+    required this.onExportPdf,
     required this.onDelete,
   });
 
@@ -226,6 +232,7 @@ class _HistoryList extends ConsumerWidget {
   final VoidCallback onReset;
   final void Function(Workout source) onCopy;
   final void Function(Workout source) onCreateTemplate;
+  final Future<void> Function(Workout source) onExportPdf;
   final void Function(Workout workout) onDelete;
 
   @override
@@ -254,6 +261,7 @@ class _HistoryList extends ConsumerWidget {
             entry: entries[index],
             onCopy: onCopy,
             onCreateTemplate: onCreateTemplate,
+            onExportPdf: onExportPdf,
             onDelete: onDelete,
           ),
         );

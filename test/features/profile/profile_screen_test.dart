@@ -93,8 +93,8 @@ void main() {
   );
 
   testWidgets(
-    'tapping the avatar opens a sheet with only "Choose photo" when none is '
-    'set',
+    'tapping the avatar opens a sheet with the gallery/camera actions but '
+    'no "Remove photo" when none is set',
     (tester) async {
       await UserProfileRepositoryImpl(db).ensureInitialized();
       await tester.pumpWidget(_appUnderTest(db));
@@ -103,7 +103,8 @@ void main() {
       await tester.tap(find.byType(CircleAvatar));
       await tester.pumpAndSettle();
 
-      expect(find.text('Choose photo'), findsOneWidget);
+      expect(find.text('Choose from gallery'), findsOneWidget);
+      expect(find.text('Take photo'), findsOneWidget);
       expect(find.text('Remove photo'), findsNothing);
 
       // Dismiss the sheet before unmounting.
@@ -158,6 +159,48 @@ void main() {
       )..where((t) => t.id.equals('singleton'))).getSingle();
       expect(row.avatarPath, isNull);
       expect(find.byIcon(Icons.person_outline), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'the avatar subtree remounts when the profile row updates even if '
+    'avatarPath itself is unchanged (Stage 11, owner-reported: re-picking a '
+    'photo overwrites the same fixed file name, so avatarPath never '
+    'changes -- without a key tied to something that DOES change on every '
+    'write, Flutter\'s Image widget treats the FileImage as identical by '
+    'path and never re-resolves, leaving the old photo on screen until '
+    'leaving and re-entering this screen)',
+    (tester) async {
+      // Same "no real file/decode needed" approach as the "Remove photo"
+      // test above -- this test is only about whether the widget *subtree*
+      // gets torn down and rebuilt, not about actual image bytes.
+      final samePath =
+          '${Directory.systemTemp.path}${Platform.pathSeparator}'
+          'gymlog_profile_test_avatar.jpg';
+      final repository = UserProfileRepositoryImpl(db);
+      await repository.ensureInitialized();
+      await repository.setAvatarPath(samePath);
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      final elementBefore = tester.element(find.byType(CircleAvatar));
+
+      // A real re-pick always writes the identical path (the fixed file
+      // name) but still bumps `updatedAt` on every write -- a short real
+      // delay (via `runAsync`, since `DateTime.now()` reads the actual
+      // wall clock, not flutter_test's FakeAsync clock) guards against two
+      // back-to-back writes landing on the same millisecond and producing
+      // an identical `updatedAt` string, which would make this test flaky.
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 5)),
+      );
+      await repository.setAvatarPath(samePath);
+      await tester.pumpAndSettle();
+
+      final elementAfter = tester.element(find.byType(CircleAvatar));
+      expect(elementAfter, isNot(same(elementBefore)));
 
       await _unmountAndFlush(tester);
     },

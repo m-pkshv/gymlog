@@ -4,6 +4,7 @@ import 'package:printing/printing.dart';
 
 import '../../app/providers.dart';
 import '../../domain/models/personal_record.dart';
+import '../../domain/models/workout.dart';
 import '../../domain/models/workout_details.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/pdf/workout_pdf_file_name.dart';
@@ -62,4 +63,24 @@ Future<void> exportWorkoutPdfFlow(
       context,
     ).showSnackBar(SnackBar(content: Text(l10n.exportWorkoutPdfError)));
   }
+}
+
+/// Same PDF export as [exportWorkoutPdfFlow], starting from just a
+/// [Workout] instead of an already-loaded [WorkoutDetails] -- History's
+/// "⋮" menu (Stage 11, owner-reported: "отправлять файл без необходимости
+/// заходить глубже в тренировки") only has the summary row, not the full
+/// aggregate the editor/summary screens already keep loaded. Fetches the
+/// details with the same resolved locale [workoutEditorControllerProvider]
+/// itself uses, so the PDF matches what the editor would show.
+Future<void> exportWorkoutPdfFromWorkoutFlow(
+  BuildContext context,
+  WidgetRef ref,
+  Workout workout,
+) async {
+  final locale = ref.read(effectiveLocaleProvider);
+  final details = await ref
+      .read(workoutRepositoryProvider)
+      .getDetails(workout.id, locale: locale);
+  if (details == null || !context.mounted) return;
+  await exportWorkoutPdfFlow(context, ref, details);
 }
