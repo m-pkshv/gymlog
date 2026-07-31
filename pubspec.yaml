@@ -91,6 +91,12 @@ dev_dependencies:
   build_runner: ^2.15.1
   drift_dev: ^2.34.0
   mocktail: ^1.0.5
+  # Launcher icon + splash-screen generation (Stage 12, owner-approved
+  # 2026-07-31) -- dev-only, run manually via `dart run
+  # flutter_launcher_icons`/`dart run flutter_native_splash:create`; neither
+  # ships in the built app.
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -138,3 +144,40 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Launcher icon (Stage 12, owner-supplied artwork 2026-07-31): dumbbell +
+# checkmark mark on a solid blue background. `image_path` is the flat
+# original (used for iOS, which wants a single opaque square, no
+# transparency). Android uses the separate adaptive foreground/background
+# pair below instead of `image_path` -- `adaptive_icon_foreground` was
+# extracted from the same artwork by keying out the blue background to
+# transparency, then scaled to ~75% and re-centered (the original symbol
+# spans ~87% of the canvas width, which a circular adaptive-icon mask on
+# some launchers would clip; verified safe against both a worst-case full
+# circle and a typical rounded-square mask before finalizing). minSdk is
+# already 26 (Android 8+, D-10) -- the same version adaptive icons require
+# -- so there's no older-Android legacy-icon fallback to worry about.
+# `adaptive_icon_background` is the artwork's own blue (#076DFE), sampled
+# directly from the flat background, not the app's in-UI Material blue
+# (#4C7BD9) -- owner confirmed keeping the more saturated artwork color
+# for the icon rather than matching the muted in-app seed color.
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#076DFE"
+  adaptive_icon_foreground: "assets/icon/icon_foreground_padded.png"
+
+# Splash screen (Stage 12, owner-approved 2026-07-31): reuses the launcher
+# icon artwork itself -- a separate splash graphic wasn't requested. Uses
+# the transparent-background symbol layer (not the flat `icon.png`, which
+# has its own baked-in blue with a subtle vignette) so the symbol sits on
+# a perfectly flat `color` backdrop with no visible seam/rectangle where
+# the source image's own background would otherwise meet the splash
+# background.
+flutter_native_splash:
+  color: "#076DFE"
+  image: "assets/icon/icon_foreground_padded.png"
+  android_12:
+    color: "#076DFE"
+    image: "assets/icon/icon_foreground_padded.png"

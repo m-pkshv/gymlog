@@ -61,7 +61,7 @@ ParsedBackupArchive readBackupArchive(Uint8List zipBytes) {
   final databaseFile = archive.findFile(backupDatabaseEntryName);
   if (manifestFile == null || databaseFile == null) {
     throw const FormatException(
-      'Missing manifest.json or gymlog.sqlite entry -- not a GymLog backup',
+      'Missing manifest.json or gymlog.sqlite entry -- not an IronBook backup',
     );
   }
   final manifest = BackupManifest.fromJsonString(

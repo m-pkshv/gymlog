@@ -9,7 +9,7 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
-  String get appTitle => 'GymLog';
+  String get appTitle => 'IronBook';
 
   @override
   String get tabToday => 'Сегодня';
@@ -1338,7 +1338,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get backupRestoreInvalidFileError =>
-      'Это не похоже на файл резервной копии GymLog';
+      'Это не похоже на файл резервной копии IronBook';
 
   @override
   String get backupRestoreNewerSchemaError =>

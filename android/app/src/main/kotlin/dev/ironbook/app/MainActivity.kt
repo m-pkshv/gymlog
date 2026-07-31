@@ -1,4 +1,4 @@
-package dev.gymlog.app
+package dev.ironbook.app
 
 import android.content.Context
 import io.flutter.embedding.android.FlutterActivity

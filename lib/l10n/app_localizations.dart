@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// Application title, used as the OS task-switcher label.
   ///
   /// In en, this message translates to:
-  /// **'GymLog'**
+  /// **'IronBook'**
   String get appTitle;
 
   /// Bottom navigation label for the Today tab (S-01).
@@ -2597,7 +2597,7 @@ abstract class AppLocalizations {
   /// Snackbar shown if the picked file fails to parse as a backup archive (BackupService.inspectBackup threw).
   ///
   /// In en, this message translates to:
-  /// **'This doesn\'t look like a GymLog backup file'**
+  /// **'This doesn\'t look like an IronBook backup file'**
   String get backupRestoreInvalidFileError;
 
   /// Snackbar shown if the backup's schemaVersion is higher than the app's own AppDatabase.schemaVersion -- restoring it isn't safe.

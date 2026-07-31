@@ -1,6 +1,6 @@
 {
   "@@locale": "ru",
-  "appTitle": "GymLog",
+  "appTitle": "IronBook",
   "tabToday": "Сегодня",
   "tabHistory": "История",
   "tabExercises": "Упражнения",
@@ -416,7 +416,7 @@
   "backupExportAction": "Экспортировать резервную копию",
   "backupExportError": "Не удалось создать резервную копию",
   "backupRestoreAction": "Восстановить из резервной копии",
-  "backupRestoreInvalidFileError": "Это не похоже на файл резервной копии GymLog",
+  "backupRestoreInvalidFileError": "Это не похоже на файл резервной копии IronBook",
   "backupRestoreNewerSchemaError": "Эта резервная копия сделана более новой версией приложения. Обновите приложение перед восстановлением.",
   "backupRestoreConfirmTitle": "Восстановить из резервной копии?",
   "backupRestoreConfirmMessage": "Это ЗАМЕНИТ все текущие данные данными из резервной копии от {date}. Действие нельзя отменить.",

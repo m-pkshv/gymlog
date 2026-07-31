@@ -1,4 +1,4 @@
-package dev.gymlog.app
+package dev.ironbook.app
 
 import android.app.Application
 import io.flutter.embedding.engine.FlutterEngine

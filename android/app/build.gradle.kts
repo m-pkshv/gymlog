@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "dev.gymlog.app"
+    namespace = "dev.ironbook.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -17,8 +17,8 @@ android {
     }
 
     defaultConfig {
-        // Working application id per docs/02_DEVELOPMENT_PLAN.md (Q-2 open until release prep).
-        applicationId = "dev.gymlog.app"
+        // Final application id (Q-2, owner-confirmed 2026-07-31).
+        applicationId = "dev.ironbook.app"
         // Minimum OS per D-10: Android 8.0 (API 26).
         minSdk = 26
         targetSdk = flutter.targetSdkVersion
