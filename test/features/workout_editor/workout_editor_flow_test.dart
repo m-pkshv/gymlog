@@ -153,6 +153,8 @@ class MockNotificationService extends Mock implements NotificationService {}
 void _stubNotificationServiceDefaults(
   MockNotificationService service, {
   bool hasRequestedPermission = true,
+  bool hasExactAlarmPermission = true,
+  bool hasRequestedExactAlarmPermission = true,
 }) {
   when(
     () => service.hasRequestedPermission(),
@@ -160,6 +162,22 @@ void _stubNotificationServiceDefaults(
   when(() => service.markPermissionRequested()).thenAnswer((_) async {});
   when(() => service.requestPermission()).thenAnswer((_) async {});
   when(() => service.areNotificationsEnabled()).thenAnswer((_) async => true);
+  // Defaults to already granted (Stage 12) so the new exact-alarm rationale
+  // dialog doesn't unexpectedly pop up in tests that don't care about it --
+  // same "opt in to the interesting case via a parameter" pattern as
+  // hasRequestedPermission above.
+  when(
+    () => service.hasExactAlarmPermission(),
+  ).thenAnswer((_) async => hasExactAlarmPermission);
+  when(
+    () => service.hasRequestedExactAlarmPermission(),
+  ).thenAnswer((_) async => hasRequestedExactAlarmPermission);
+  when(
+    () => service.markExactAlarmPermissionRequested(),
+  ).thenAnswer((_) async {});
+  when(
+    () => service.requestExactAlarmPermission(),
+  ).thenAnswer((_) async {});
   when(
     () => service.scheduleRestTimerEndNotification(
       title: any(named: 'title'),
@@ -947,6 +965,102 @@ void main() {
             endsAtUtc: any(named: 'endsAtUtc'),
           ),
         ).called(1);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'shows the exact-alarm rationale dialog when that permission is '
+      'missing and not yet asked for; "Open settings" requests it and '
+      'still schedules the notification (Stage 12, owner-reported: '
+      'AndroidScheduleMode.alarmClock throws exact_alarms_not_permitted '
+      'without it on Android 14+)',
+      (tester) async {
+        notificationService = MockNotificationService();
+        _stubNotificationServiceDefaults(
+          notificationService,
+          hasExactAlarmPermission: false,
+          hasRequestedExactAlarmPermission: false,
+        );
+        await startWorkoutWithOneSet(tester);
+
+        await tester.tap(find.byType(CompletionToggle).last);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Allow precise reminders?'), findsOneWidget);
+        await tester.tap(find.text('Open settings'));
+        await tester.pumpAndSettle();
+
+        verify(
+          () => notificationService.markExactAlarmPermissionRequested(),
+        ).called(1);
+        verify(
+          () => notificationService.requestExactAlarmPermission(),
+        ).called(1);
+        verify(
+          () => notificationService.scheduleRestTimerEndNotification(
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            endsAtUtc: any(named: 'endsAtUtc'),
+          ),
+        ).called(1);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      '"Not now" on the exact-alarm rationale dialog skips opening settings '
+      'but still schedules the notification',
+      (tester) async {
+        notificationService = MockNotificationService();
+        _stubNotificationServiceDefaults(
+          notificationService,
+          hasExactAlarmPermission: false,
+          hasRequestedExactAlarmPermission: false,
+        );
+        await startWorkoutWithOneSet(tester);
+
+        await tester.tap(find.byType(CompletionToggle).last);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Not now'));
+        await tester.pumpAndSettle();
+
+        verify(
+          () => notificationService.markExactAlarmPermissionRequested(),
+        ).called(1);
+        verifyNever(() => notificationService.requestExactAlarmPermission());
+        verify(
+          () => notificationService.scheduleRestTimerEndNotification(
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            endsAtUtc: any(named: 'endsAtUtc'),
+          ),
+        ).called(1);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
+      'skips the exact-alarm rationale dialog when the permission is '
+      'already granted',
+      (tester) async {
+        notificationService = MockNotificationService();
+        _stubNotificationServiceDefaults(
+          notificationService,
+          hasExactAlarmPermission: true,
+        );
+        await startWorkoutWithOneSet(tester);
+
+        await tester.tap(find.byType(CompletionToggle).last);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Allow precise reminders?'), findsNothing);
+        verifyNever(
+          () => notificationService.requestExactAlarmPermission(),
+        );
 
         await _unmountAndFlush(tester);
       },

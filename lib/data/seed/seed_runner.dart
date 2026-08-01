@@ -26,7 +26,12 @@ import 'workout_template_seed.dart';
 /// templates (`workout_template_seed.dart`) — ordinary, fully editable/
 /// deletable templates (no `isBuiltIn` flag on `WorkoutTemplates`), just
 /// convenience starter content.
-const int currentSeedVersion = 5;
+/// v6 (2026-08-01, owner-supplied list): 160 additional exercises (grip/
+/// stance/equipment variants and functional/cardio movements) appended to
+/// the v3 base list — 197 of the owner's ~358 supplied rows already matched
+/// an existing exercise by English name and were skipped rather than
+/// duplicated; catalog grows from 199 to 359.
+const int currentSeedVersion = 6;
 
 /// Loads built-in reference data and the placeholder exercise catalog
 /// (06_DATA_MODEL.md, section 12) on first run, tracked by

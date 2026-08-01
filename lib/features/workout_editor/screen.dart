@@ -332,6 +332,8 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
 
     await _ensureNotificationPermissionRequested();
     if (!mounted) return;
+    await _ensureExactAlarmPermissionRequested();
+    if (!mounted) return;
     await _scheduleRestTimerNotification(
       ref,
       AppLocalizations.of(context)!,
@@ -374,6 +376,56 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
           .read(loggerProvider)
           .error(
             'Failed to request notification permission',
+            error: error,
+            stackTrace: stackTrace,
+          );
+    }
+  }
+
+  /// Same contextual, asked-once pattern as
+  /// [_ensureNotificationPermissionRequested], for the "Alarms & reminders"
+  /// special access `AndroidScheduleMode.alarmClock` needs (Stage 12,
+  /// owner-reported: without it, `scheduleRestTimerEndNotification` throws
+  /// `PlatformException(exact_alarms_not_permitted)` on Android 14+ — see
+  /// `NotificationService`/`AndroidManifest.xml` for how that was
+  /// diagnosed). Checks live OS state first (unlike the notifications flow,
+  /// this one is auto-granted on many devices/OS versions, so there's often
+  /// nothing to ask for at all) and only shows the app's own rationale
+  /// before sending the user to the OS settings screen -- there is no
+  /// runtime dialog for this permission.
+  Future<void> _ensureExactAlarmPermissionRequested() async {
+    final notificationService = ref.read(notificationServiceProvider);
+    try {
+      if (await notificationService.hasExactAlarmPermission()) return;
+      if (await notificationService.hasRequestedExactAlarmPermission()) return;
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(l10n.exactAlarmPermissionRationaleTitle),
+          content: Text(l10n.exactAlarmPermissionRationaleMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.notificationPermissionNotNowAction),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.exactAlarmPermissionOpenSettingsAction),
+            ),
+          ],
+        ),
+      );
+      await notificationService.markExactAlarmPermissionRequested();
+      if (proceed ?? false) {
+        await notificationService.requestExactAlarmPermission();
+      }
+    } catch (error, stackTrace) {
+      ref
+          .read(loggerProvider)
+          .error(
+            'Failed to request exact alarm permission',
             error: error,
             stackTrace: stackTrace,
           );

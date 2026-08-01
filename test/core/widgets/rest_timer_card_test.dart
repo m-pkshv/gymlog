@@ -44,7 +44,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.byIcon(Icons.remove_circle_outline));
+    await tester.tap(find.byTooltip('-15 s'));
     await tester.pump();
 
     expect(delta, -15);
@@ -60,7 +60,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.byIcon(Icons.add_circle_outline));
+    await tester.tap(find.byTooltip('+15 s'));
     await tester.pump();
 
     expect(delta, 15);

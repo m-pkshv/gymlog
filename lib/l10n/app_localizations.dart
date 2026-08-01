@@ -1352,6 +1352,36 @@ abstract class AppLocalizations {
   /// **'Couldn\'t open system settings'**
   String get settingsNotificationsOpenSettingsError;
 
+  /// Button on the S-17 notifications row that fires NotificationService.showTestNotification() immediately (no AlarmManager scheduling), to isolate whether posting a notification works at all from whether the rest timer's specific scheduled-alarm delivery path is broken (owner-reported, Stage 12: the rest timer notification never appeared on a MIUI device).
+  ///
+  /// In en, this message translates to:
+  /// **'Send a test notification'**
+  String get settingsNotificationsTestAction;
+
+  /// Snackbar shown after showTestNotification() completes without throwing. Confirms the call succeeded, not that the notification was actually seen.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent — check your notification shade'**
+  String get settingsNotificationsTestSent;
+
+  /// Snackbar shown when showTestNotification() throws. Also reused for scheduleTestNotification()'s failure case.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send the notification'**
+  String get settingsNotificationsTestError;
+
+  /// Button on the S-17 notifications row that fires NotificationService.scheduleTestNotification() -- the same zonedSchedule/AlarmManager delivery path the rest timer notification uses, with a fixed 10s delay -- to isolate whether that specific path is broken from whether posting works at all (owner-reported, Stage 12).
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule one for 10 seconds from now'**
+  String get settingsNotificationsScheduledTestAction;
+
+  /// Snackbar shown after scheduleTestNotification() completes without throwing. Confirms the call succeeded, not that the notification was actually delivered 10 seconds later.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled — wait 10 seconds and check your notification shade'**
+  String get settingsNotificationsScheduledTestSent;
+
   /// Header above the S-17 'About' rows (04_UI_UX_SPEC.md, section 5: version, export format version).
   ///
   /// In en, this message translates to:
@@ -1735,6 +1765,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Allow'**
   String get notificationPermissionAllowAction;
+
+  /// Title of the rationale dialog shown before sending the user to the OS "Alarms & reminders" settings screen (Stage 12, owner-reported: on Android 14+, AndroidScheduleMode.alarmClock throws exact_alarms_not_permitted without this special access granted).
+  ///
+  /// In en, this message translates to:
+  /// **'Allow precise reminders?'**
+  String get exactAlarmPermissionRationaleTitle;
+
+  /// Body of the exact-alarm rationale dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'On your device, the rest timer notification may not appear at all without the \"Alarms & reminders\" permission. Open settings and turn it on for IronBook -- it\'s a single tap.'**
+  String get exactAlarmPermissionRationaleMessage;
+
+  /// Accepts the exact-alarm rationale dialog and opens the OS "Alarms & reminders" settings screen via NotificationService.requestExactAlarmPermission() -- there is no runtime dialog for this permission, unlike POST_NOTIFICATIONS.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get exactAlarmPermissionOpenSettingsAction;
 
   /// Title of the scheduled local notification fired when the rest timer ends (Stage 4, TS 7.2 step 3).
   ///

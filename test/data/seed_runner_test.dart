@@ -54,8 +54,10 @@ void main() {
       );
       expect(workoutTags.every((t) => !t.isDeleted), isTrue);
 
-      // Q-1: the owner's full base list (199 exercises, 2026-07-20).
-      expect(exercises, hasLength(199));
+      // Q-1: the owner's full base list (199 exercises, 2026-07-20) plus a
+      // 2026-08-01 update adding 160 more grip/stance/equipment variants
+      // and functional/cardio movements — 359 total.
+      expect(exercises, hasLength(359));
       expect(
         exercises.map((exercise) => exercise.exerciseType).toSet(),
         {'strength', 'cardio', 'reps', 'time'},
@@ -63,7 +65,7 @@ void main() {
       expect(exercises.every((exercise) => exercise.isBuiltIn), isTrue);
       expect(exercises.map((exercise) => exercise.id), contains('barbell_back_squat'));
       expect(secondaryMuscles, isNotEmpty);
-      expect(l10n, hasLength(398)); // 199 exercises x 2 locales (ru, en)
+      expect(l10n, hasLength(718)); // 359 exercises x 2 locales (ru, en)
       expect(l10n.map((row) => row.locale).toSet(), {'ru', 'en'});
 
       // Stage 10 redesign, owner-reported: 5 starter workout templates.
@@ -97,8 +99,8 @@ void main() {
     final templateSets = await db.select(db.templateSets).get();
 
     expect(muscleGroups, hasLength(17));
-    expect(exercises, hasLength(199));
-    expect(l10n, hasLength(398));
+    expect(exercises, hasLength(359));
+    expect(l10n, hasLength(718));
     expect(workoutTags, hasLength(17));
     expect(workoutTemplates, hasLength(5));
     final templateExerciseCountAfterTwoRuns = templateExercises.length;
@@ -216,8 +218,8 @@ void main() {
           .select(db.exerciseSecondaryMuscles)
           .get();
       final l10n = await db.select(db.exerciseL10n).get();
-      expect(exercises, hasLength(199));
-      expect(l10n, hasLength(398));
+      expect(exercises, hasLength(359));
+      expect(l10n, hasLength(718));
       expect(
         secondaryMuscles
             .where((row) => row.exerciseId == 'barbell_back_squat')

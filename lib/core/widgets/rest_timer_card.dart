@@ -119,13 +119,18 @@ class RestTimerCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                IconButton(
+                // -15с shortens the remaining wait (`endsAt` moves earlier)
+                // -- the same effect as fast-forwarding through the
+                // countdown, so it gets a forward-pointing scrub icon;
+                // +15с lengthens it (`endsAt` moves later), matching a
+                // rewind (owner-reported: replace the generic +/- circles
+                // with player-style seek arrows for clarity).
+                _SeekSecondsButton(
+                  seconds: 15,
+                  forward: true,
+                  color: semantic.onAccentContainer,
                   tooltip: l10n.restTimerMinus15Tooltip,
                   onPressed: () => onAdjust(-15),
-                  icon: Icon(
-                    Icons.remove_circle_outline,
-                    color: semantic.onAccentContainer,
-                  ),
                 ),
                 Container(
                   width: 40,
@@ -140,18 +145,73 @@ class RestTimerCard extends StatelessWidget {
                     icon: Icon(Icons.skip_next, color: semantic.onAccent),
                   ),
                 ),
-                IconButton(
+                _SeekSecondsButton(
+                  seconds: 15,
+                  forward: false,
+                  color: semantic.onAccentContainer,
                   tooltip: l10n.restTimerPlus15Tooltip,
                   onPressed: () => onAdjust(15),
-                  icon: Icon(
-                    Icons.add_circle_outline,
-                    color: semantic.onAccentContainer,
-                  ),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// A player-style "seek ±N seconds" control -- a circular arrow (Material
+/// has no built-in glyph for 15 specifically, only `replay_10`/`forward_10`/
+/// `_30`, whose forward variants are themselves just the rewind glyph
+/// mirrored) with the second count overlaid in its center, the same visual
+/// idiom podcast/video players use for skip buttons.
+class _SeekSecondsButton extends StatelessWidget {
+  const _SeekSecondsButton({
+    required this.seconds,
+    required this.forward,
+    required this.color,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final int seconds;
+
+  /// `true` mirrors the rewind glyph into a forward one; `false` leaves it
+  /// as the rewind glyph.
+  final bool forward;
+  final Color color;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      icon: Transform.flip(
+        flipX: forward,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Icon(Icons.replay, color: color, size: 26),
+            Padding(
+              // Nudges the digits down/into the arrow's circular sweep, off
+              // its default vertical center -- matching where Material's
+              // own `replay_10`/`replay_30` glyphs place their digits.
+              padding: const EdgeInsets.only(top: 3),
+              child: Text(
+                '$seconds',
+                style: TextStyle(
+                  color: color,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

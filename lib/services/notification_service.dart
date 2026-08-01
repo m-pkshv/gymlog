@@ -26,9 +26,13 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _plugin;
 
   static const _restTimerNotificationId = 1;
+  static const _testNotificationId = 2;
+  static const _scheduledTestNotificationId = 3;
   static const _restTimerChannelId = 'rest_timer';
   static const _restTimerChannelName = 'Rest timer';
   static const _permissionRequestedKey = 'notifications_permission_requested';
+  static const _exactAlarmPermissionRequestedKey =
+      'exact_alarm_permission_requested';
 
   /// Sets up the plugin and the Android notification channel. Called once
   /// at app startup (`main.dart`) — this is setup, not the TS 7.3 permission
@@ -36,8 +40,16 @@ class NotificationService {
   Future<void> initialize() async {
     tz_data.initializeTimeZones();
     await _plugin.initialize(
+      // `ic_notification` (android/app/src/main/res/drawable), not the app
+      // launcher icon: `@mipmap/ic_launcher` became an adaptive icon on
+      // Stage 12 (foreground+background layers), and several OEM skins
+      // (MIUI observed, owner-reported) silently drop a notification whose
+      // small icon resolves to an adaptive icon instead of a plain
+      // silhouette -- no crash, no logcat error, the scheduled alarm still
+      // fires (confirmed via `dumpsys alarm`), the notification just never
+      // reaches the tray.
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        android: AndroidInitializationSettings('ic_notification'),
         iOS: DarwinInitializationSettings(),
       ),
     );
@@ -72,6 +84,23 @@ class NotificationService {
     await prefs.setBool(_permissionRequestedKey, true);
   }
 
+  /// Same "asked once, never re-prompt automatically" tracking as
+  /// [hasRequestedPermission]/[markPermissionRequested], for the exact-alarm
+  /// permission specifically (Stage 12).
+  Future<bool> hasRequestedExactAlarmPermission() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(_exactAlarmPermissionRequestedKey) ?? false;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  Future<void> markExactAlarmPermissionRequested() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_exactAlarmPermissionRequestedKey, true);
+  }
+
   /// The actual OS permission prompt — call only after the caller's own
   /// contextual rationale dialog (TS 7.3: "с предварительным пояснительным
   /// диалогом").
@@ -91,6 +120,27 @@ class NotificationService {
         ?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
+  /// Whether the OS will let [scheduleRestTimerEndNotification]'s
+  /// `AndroidScheduleMode.alarmClock` call succeed. Always `true` on iOS
+  /// (this is an Android-only special access, `permission_handler` reports
+  /// `granted` there by default). On Android this is normally auto-granted,
+  /// except Android 14+ (API 34), which requires the user to flip it on
+  /// manually via the "Alarms & reminders" settings screen (owner-reported,
+  /// Stage 12 -- see the AndroidManifest.xml comment on this permission for
+  /// how that was diagnosed).
+  Future<bool> hasExactAlarmPermission() async {
+    final status = await permission_handler.Permission.scheduleExactAlarm.status;
+    return status.isGranted;
+  }
+
+  /// Opens the OS "Alarms & reminders" settings screen for this app (no
+  /// runtime dialog exists for this permission, unlike
+  /// [requestPermission]) -- call only after the caller's own contextual
+  /// rationale, same as that method.
+  Future<void> requestExactAlarmPermission() async {
+    await permission_handler.Permission.scheduleExactAlarm.request();
+  }
+
   /// Drives the "Уведомления выключены" hint (TS 7.3) — assumed enabled on
   /// platforms/versions where this plugin exposes no reliable check, since
   /// the hint is meant to be unobtrusive, not a hard gate on the in-app
@@ -107,10 +157,26 @@ class NotificationService {
   }
 
   /// Schedules (replacing any previously pending one) the "Отдых окончен —
-  /// следующий подход" notification for [endsAtUtc] — inexact
-  /// (`AndroidScheduleMode.inexactAllowWhileIdle`, TS 7.3: exact scheduling
-  /// needs a separate permission this app doesn't request; ~1 min slop is
-  /// accepted, and the in-app timer itself stays exact, anchor-based).
+  /// следующий подход" notification for [endsAtUtc].
+  ///
+  /// `AndroidScheduleMode.alarmClock` (`AlarmManager.setAlarmClock()`), not
+  /// `inexactAllowWhileIdle` (TS 7.3's original choice): confirmed
+  /// owner-reported on a real MIUI/HyperOS device, live-tested via the
+  /// diagnostic buttons in Settings ("Уведомления") -- an immediate
+  /// `.show()` notification always appeared, but a `zonedSchedule` call with
+  /// `inexactAllowWhileIdle` never did, scheduled 10s ahead or as the real
+  /// rest timer, screen locked or not, autostart granted or not. The alarm
+  /// itself always fired on time (confirmed via `dumpsys alarm`/logcat --
+  /// the app process woke specifically for it every time); the OS-level
+  /// delivery of a notification posted from that background-woken receiver
+  /// was what silently never reached the tray. `alarmClock` is exempt from
+  /// Doze/battery-optimization restrictions on all Android versions without
+  /// any extra permission (unlike `exact`/`exactAllowWhileIdle`, which need
+  /// `SCHEDULE_EXACT_ALARM` on API 31+) -- the standard, most reliable
+  /// delivery mode precisely for this failure pattern on OEM skins.
+  /// Trade-off, accepted by the owner before switching: Android shows a
+  /// small alarm-clock glyph in the status bar while the alarm is pending,
+  /// which reads as fitting for a running timer rather than out of place.
   Future<void> scheduleRestTimerEndNotification({
     required String title,
     required String body,
@@ -130,12 +196,68 @@ class NotificationService {
         ),
         iOS: DarwinNotificationDetails(),
       ),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.alarmClock,
     );
   }
 
   Future<void> cancelRestTimerEndNotification() =>
       _plugin.cancel(id: _restTimerNotificationId);
+
+  /// Diagnostic twin of [scheduleRestTimerEndNotification] -- same
+  /// `zonedSchedule` call and `androidScheduleMode`, a fixed short [delay]
+  /// instead of the rest timer's real end time, and its own id so it can
+  /// never collide with a genuine pending rest-timer notification.
+  /// [showTestNotification] already proved posting works at all on a given
+  /// device; this isolates whether the *scheduled* (`AlarmManager` +
+  /// background broadcast receiver) delivery path specifically is what's
+  /// broken there (owner-reported, Stage 12 -- this is exactly how the
+  /// `inexactAllowWhileIdle` -> `alarmClock` switch above was diagnosed and
+  /// confirmed fixed on a real device).
+  Future<void> scheduleTestNotification({
+    required String title,
+    required String body,
+    required Duration delay,
+  }) => _plugin.zonedSchedule(
+    id: _scheduledTestNotificationId,
+    title: title,
+    body: body,
+    scheduledDate: tz.TZDateTime.now(tz.local).add(delay),
+    notificationDetails: const NotificationDetails(
+      android: AndroidNotificationDetails(
+        _restTimerChannelId,
+        _restTimerChannelName,
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+      iOS: DarwinNotificationDetails(),
+    ),
+    androidScheduleMode: AndroidScheduleMode.alarmClock,
+  );
+
+  /// Shows a notification immediately (no `AlarmManager` scheduling
+  /// involved) -- a diagnostic for the "Отдых окончен" notification not
+  /// appearing on some devices (owner-reported): isolates whether posting a
+  /// notification works *at all* from whether the specific scheduled-alarm
+  /// delivery path is what's broken. Same channel/importance as the rest
+  /// timer notification, deliberately a different id so it can't collide
+  /// with (or get silently replaced/cancelled by) a real pending one.
+  Future<void> showTestNotification({
+    required String title,
+    required String body,
+  }) => _plugin.show(
+    id: _testNotificationId,
+    title: title,
+    body: body,
+    notificationDetails: const NotificationDetails(
+      android: AndroidNotificationDetails(
+        _restTimerChannelId,
+        _restTimerChannelName,
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+      iOS: DarwinNotificationDetails(),
+    ),
+  );
 
   /// Opens the OS-level app settings screen (S-17, 04_UI_UX_SPEC.md,
   /// section 5: "Уведомления" -- статус + переход в системные настройки),

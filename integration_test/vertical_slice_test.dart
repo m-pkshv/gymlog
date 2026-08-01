@@ -67,7 +67,7 @@ void main() {
 
     // Add an existing catalog exercise (seeded by SeedRunner, DM 12). The
     // picker (Stage 1 scope: no search, unlike the main catalog's S-06) is a
-    // plain `ListView.builder` over the full 199-exercise seed (Stage 2),
+    // plain `ListView.builder` over the full 359-exercise seed (Stage 2),
     // sorted newest-created-first with every seeded row sharing one
     // timestamp -- so the target tile isn't guaranteed to already be built
     // within the initial viewport and has to be scrolled into view first.

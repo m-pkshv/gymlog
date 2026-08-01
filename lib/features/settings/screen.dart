@@ -288,23 +288,110 @@ class _NotificationsSection extends ConsumerWidget {
     }
   }
 
+  Future<void> _sendTestNotification(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    var succeeded = true;
+    try {
+      await ref
+          .read(notificationServiceProvider)
+          .showTestNotification(
+            title: l10n.restTimerNotificationTitle,
+            body: l10n.restTimerNotificationBody,
+          );
+    } catch (error, stackTrace) {
+      succeeded = false;
+      ref
+          .read(loggerProvider)
+          .error(
+            'Failed to show a test notification',
+            error: error,
+            stackTrace: stackTrace,
+          );
+    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          succeeded
+              ? l10n.settingsNotificationsTestSent
+              : l10n.settingsNotificationsTestError,
+        ),
+      ),
+    );
+  }
+
+  /// Diagnostic twin of [_sendTestNotification] using
+  /// `NotificationService.scheduleTestNotification` -- the same scheduled
+  /// (`AlarmManager`) delivery path the real rest timer notification uses,
+  /// instead of an immediate `.show()` -- to isolate whether that specific
+  /// path is what's broken on a given device (owner-reported, Stage 12).
+  Future<void> _scheduleTestNotification(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    var succeeded = true;
+    try {
+      await ref
+          .read(notificationServiceProvider)
+          .scheduleTestNotification(
+            title: l10n.restTimerNotificationTitle,
+            body: l10n.restTimerNotificationBody,
+            delay: const Duration(seconds: 10),
+          );
+    } catch (error, stackTrace) {
+      succeeded = false;
+      ref
+          .read(loggerProvider)
+          .error(
+            'Failed to schedule a test notification',
+            error: error,
+            stackTrace: stackTrace,
+          );
+    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          succeeded
+              ? l10n.settingsNotificationsScheduledTestSent
+              : l10n.settingsNotificationsTestError,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final enabled = ref
         .watch(notificationsEnabledProvider)
         .maybeWhen(data: (value) => value, orElse: () => true);
-    return ListTile(
-      title: Text(l10n.settingsNotificationsLabel),
-      subtitle: Text(
-        enabled
-            ? l10n.settingsNotificationsEnabled
-            : l10n.settingsNotificationsDisabled,
-      ),
-      trailing: TextButton(
-        onPressed: () => _openSettings(context, ref),
-        child: Text(l10n.settingsNotificationsOpenSettingsAction),
-      ),
+    return Column(
+      children: [
+        ListTile(
+          title: Text(l10n.settingsNotificationsLabel),
+          subtitle: Text(
+            enabled
+                ? l10n.settingsNotificationsEnabled
+                : l10n.settingsNotificationsDisabled,
+          ),
+          trailing: TextButton(
+            onPressed: () => _openSettings(context, ref),
+            child: Text(l10n.settingsNotificationsOpenSettingsAction),
+          ),
+        ),
+        ListTile(
+          title: Text(l10n.settingsNotificationsTestAction),
+          trailing: const Icon(Icons.send_outlined),
+          onTap: () => _sendTestNotification(context, ref),
+        ),
+        ListTile(
+          title: Text(l10n.settingsNotificationsScheduledTestAction),
+          trailing: const Icon(Icons.alarm_outlined),
+          onTap: () => _scheduleTestNotification(context, ref),
+        ),
+      ],
     );
   }
 }

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dedicated notification small icon (rest timer). Android notification
+     icons must be a simple, single-layer silhouette: the app's launcher
+     icon (@mipmap/ic_launcher) became an adaptive icon (foreground and
+     background layers, mipmap-anydpi-v26/ic_launcher.xml) on Stage 12,
+     and referencing an adaptive icon as a notification's small icon is not
+     supported. Several OEM skins (MIUI observed) silently drop the
+     notification instead of falling back to something visible or erroring.
+     A plain hourglass silhouette, straight lines only (no risk of malformed
+     bezier control points at this tiny render size, where fine detail is
+     invisible anyway); only the alpha channel matters, since Android tints
+     notification icons itself, so the fill color here is irrelevant. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+  <path
+      android:fillColor="#FFFFFFFF"
+      android:pathData="M5,3 L19,3 L19,5 L13,12 L19,19 L19,21 L5,21 L5,19 L11,12 L5,5 Z" />
+</vector>

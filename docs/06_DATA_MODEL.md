@@ -24,8 +24,6 @@
 | `BodySide` | `none`, `left`, `right`, `both` |
 | `MeasurementSource` | `manual` (MVP), зарезервировано: `import`, `health` |
 | `RecordType` | `maxWeight`, `maxRepsAtWeight`, `max1RM`, `maxVolumeWorkout`, `maxDistance`, `bestPace`, `longestDuration` |
-| `OperationType` | `export` (MVP), зарезервировано: `import` |
-| `OperationStatus` | `inProgress`, `success`, `failed` |
 | `UnitSystem` | `metric`, `imperial` |
 | `AppTheme` | `system`, `light`, `dark` |
 | `AppLocale` | `system`, `ru`, `en` |
@@ -192,7 +190,7 @@
 | exerciseSetId | TEXT FK→ExerciseSet | Подход-источник (NULL для `maxVolumeWorkout`) |
 | achievedAt | TEXT `YYYY-MM-DD` | Дата тренировки |
 | computedAt | TEXT UTC | Момент пересчёта |
-PK: (`exerciseId`, `recordType`, `keyValue`). Триггеры пересчёта: завершение/возобновление/удаление тренировки, изменение подхода завершённой тренировки, архивация упражнения — пересчёт затронутого `exerciseId`. Источник — только рабочие подходы завершённых (`completed`) тренировок с `isCompleted = 1`.
+PK: (`exerciseId`, `recordType`, `keyValue`). Триггеры пересчёта затронутого `exerciseId`: завершение тренировки, возобновление уже завершённой (`completed→inProgress`), правка подхода уже завершённой тренировки, удаление/восстановление завершённой тренировки. Архивация упражнения **не** триггерит пересчёт — алгоритм нигде не фильтрует по `isArchived`, так что архивный статус доказуемо не меняет ни один вход формулы; подключение было бы бесполезным no-op (решение зафиксировано на Этапе 7, применено симметрично к `ExerciseProgressionState` ниже). Источник — только подходы завершённых (`completed`) тренировок с `isCompleted = 1` (понятие «рабочего»/«разминочного» подхода удалено, раздел 6.7).
 
 ### 6.11. `ExerciseProgressionState` (кэш счётчика стагнации, D-7)
 | Поле | Тип | Описание |
@@ -318,4 +316,4 @@ Exercise 1─* PersonalRecord (кэш)           Exercise 1─1 ExerciseProgress
 - [x] Метрики всех 5 типов упражнений отображены в схему `ExerciseSet`.
 - [x] Правила D-5, D-8, D-13, D-16, D-19 реализованы схемой.
 - [x] Определён формат сида и процедура его обновления.
-- [ ] Получен контент 20 упражнений (Q-1) — не блокирует Этапы 0–1.
+- [x] Получен контент упражнений (Q-1) — закрыт 2026-07-20: 199 упражнений вместо исходного ориентира в 20, импортированы (`seedVersion: 3`); расширен 2026-08-01 до 359 вторым списком владельца (`currentSeedVersion: 6`).

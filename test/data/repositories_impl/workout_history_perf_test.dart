@@ -112,7 +112,7 @@ void main() {
       final exercises = await exerciseRepository.getAllForExport();
       exerciseQueryStopwatch.stop();
       // ignore: avoid_print
-      print('ExerciseRepository.getAllForExport() for the 199-exercise seed: ${exerciseQueryStopwatch.elapsedMilliseconds} ms (${exercises.length} rows)');
+      print('ExerciseRepository.getAllForExport() for the 359-exercise seed: ${exerciseQueryStopwatch.elapsedMilliseconds} ms (${exercises.length} rows)');
     },
     timeout: const Timeout(Duration(minutes: 2)),
   );

@@ -6,8 +6,10 @@ import 'package:flutter/services.dart' show rootBundle;
 import '../database.dart';
 
 /// Path to the built-in exercise seed file (06_DATA_MODEL.md, section 12).
-/// `D-4`/Q-1: as of v3 this holds the owner's full base list (199
-/// exercises, 2026-07-20).
+/// `D-4`/Q-1: v3 held the owner's full base list (199 exercises,
+/// 2026-07-20); as of the 2026-08-01 update it holds 359 — 160 more grip/
+/// stance/equipment variants and functional/cardio movements from a second
+/// owner-supplied list, deduplicated by English name against the base list.
 const String exerciseSeedAssetPath = 'assets/seed/exercises_v1.json';
 
 /// Parses [exerciseSeedAssetPath] and upserts the built-in exercises, their

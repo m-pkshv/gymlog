@@ -669,6 +669,26 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось открыть системные настройки';
 
   @override
+  String get settingsNotificationsTestAction =>
+      'Отправить тестовое уведомление';
+
+  @override
+  String get settingsNotificationsTestSent =>
+      'Отправлено — проверьте шторку уведомлений';
+
+  @override
+  String get settingsNotificationsTestError =>
+      'Не удалось отправить уведомление';
+
+  @override
+  String get settingsNotificationsScheduledTestAction =>
+      'Запланировать через 10 секунд';
+
+  @override
+  String get settingsNotificationsScheduledTestSent =>
+      'Запланировано — подождите 10 секунд и проверьте шторку';
+
+  @override
   String get settingsAboutLabel => 'О приложении';
 
   @override
@@ -876,6 +896,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get notificationPermissionAllowAction => 'Разрешить';
+
+  @override
+  String get exactAlarmPermissionRationaleTitle =>
+      'Разрешить точные напоминания?';
+
+  @override
+  String get exactAlarmPermissionRationaleMessage =>
+      'На вашем устройстве без разрешения «Будильники и напоминания» уведомление об окончании отдыха может вообще не показаться. Откройте настройки и включите его для IronBook — это займёт один тап.';
+
+  @override
+  String get exactAlarmPermissionOpenSettingsAction => 'Открыть настройки';
 
   @override
   String get restTimerNotificationTitle => 'Таймер отдыха';
