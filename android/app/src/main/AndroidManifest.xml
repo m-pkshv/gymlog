@@ -20,6 +20,22 @@
          POST_NOTIFICATIONS, same as that one, not at app startup. -->
     <uses-permission
         android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <!-- Rest-timer notification delivery, root-cause fix (Stage 12,
+         owner-reported "notifications never arrive" on a real MIUI/HyperOS
+         device). Diagnosed via `adb shell dumpsys package dev.ironbook.app`:
+         the app's Receiver Resolver Table contained no
+         ScheduledNotificationReceiver at all, so AlarmManager's broadcast
+         had nowhere to go, silently and with no exception anywhere in
+         logcat. AndroidScheduleMode.alarmClock and SCHEDULE_EXACT_ALARM
+         above were both red herrings found and fixed first; this is the
+         actual root cause. flutter_local_notifications 22.1.0's own AAR
+         manifest declares no receiver at all; its README (section "To
+         schedule notifications") requires the app to declare both
+         receivers below itself. Without RECEIVE_BOOT_COMPLETED, the boot
+         receiver could never fire, so a rest-timer alarm scheduled before
+         a device reboot would silently never arrive after it. -->
+    <uses-permission
+        android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <!-- Profile avatar "Take photo" action (Stage 11, image_picker's
          ImageSource.camera). android.hardware.camera is marked not required
          so devices without a camera can still install the app: "Take
@@ -54,6 +70,29 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Rest-timer notification delivery, root-cause fix (see the
+             RECEIVE_BOOT_COMPLETED comment above for the full diagnosis).
+             flutter_local_notifications 22.1.0 does not declare these in
+             its own AAR manifest; the app must declare them itself
+             (plugin README, "To schedule notifications"). Without these,
+             AlarmManager's scheduled broadcast has no registered target
+             to deliver to at all. This is why the rest-timer notification
+             never arrived, on any Android version, regardless of the
+             exact-alarm permission or notification-icon fixes tried
+             earlier. -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"/>
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
