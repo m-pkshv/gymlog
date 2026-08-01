@@ -778,7 +778,7 @@ void main() {
   );
 
   testWidgets('the rest timer starts automatically when a set is marked done, '
-      '"+15 s" extends it, and "Skip" clears it (Stage 4, TS 7.2 step 2)', (
+      '"+10 s" extends it, and "Skip" clears it (Stage 4, TS 7.2 step 2)', (
     tester,
   ) async {
     // Production seeds this singleton row at app startup (main.dart);
@@ -821,13 +821,13 @@ void main() {
     expect(state.restTimerDurationSec, 120); // Q-4 default
     final endsAtBeforeAdjust = state.restTimerEndsAtUtc!;
 
-    await tester.tap(find.byTooltip('+15 s'));
+    await tester.tap(find.byTooltip('+10 s'));
     await tester.pumpAndSettle();
     state = await (db.select(
       db.activeWorkoutStates,
     )..where((s) => s.workoutId.equals(workoutId))).getSingle();
     // Stage 10, owner-reported: `restTimerDurationSec` (RestTimerCard's
-    // fixed fill-speed denominator) no longer grows with "+15 s" -- only
+    // fixed fill-speed denominator) no longer grows with "+10 s" -- only
     // the deadline moves, so the bar's current position shifts instead
     // of its future fill speed changing.
     expect(state.restTimerDurationSec, 120);
@@ -835,7 +835,7 @@ void main() {
       DateTime.parse(
         state.restTimerEndsAtUtc!,
       ).difference(DateTime.parse(endsAtBeforeAdjust)).inSeconds,
-      15,
+      10,
     );
 
     // Stage 10 redesign: "Skip" is now an icon-only button (Icons.
@@ -851,6 +851,76 @@ void main() {
 
     await _unmountAndFlush(tester);
   });
+
+  testWidgets(
+    'the rest timer bar disappears on its own once time runs out, without '
+    'tapping "Skip" (Stage 12, owner-reported: it used to linger showing '
+    '"00:00" until skipped)',
+    (tester) async {
+      await db
+          .into(db.appSettingsTable)
+          .insert(
+            AppSettingsTableCompanion.insert(
+              id: 'singleton',
+              // DM 6.12/Q-4's minimum valid value -- keeps this test from
+              // having to pump 120 (virtual) seconds to reach expiry.
+              defaultRestTimerSec: const Value(10),
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      await _seedExercise(db);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add set'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(_statusCta);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(CompletionToggle).last);
+      await tester.pumpAndSettle();
+      expect(find.text('REST'), findsOneWidget);
+
+      // `remainingRestSeconds` computes against a real `DateTime.now()`
+      // (`ActiveWorkoutTimerService`, no `clock` package indirection), so
+      // `tester.pump`'s fake time can't make the deadline actually pass --
+      // only the widget's own 1s ticker fires on fake time. Simulating
+      // expiry means moving the persisted deadline into the past directly,
+      // the same real-world state a device reaches after genuinely waiting
+      // out the countdown.
+      final workoutId = (await db.select(db.workouts).get()).single.id;
+      await (db.update(
+        db.activeWorkoutStates,
+      )..where((s) => s.workoutId.equals(workoutId))).write(
+        ActiveWorkoutStatesCompanion(
+          restTimerEndsAtUtc: Value(
+            DateTime.now()
+                .toUtc()
+                .subtract(const Duration(seconds: 1))
+                .toIso8601String(),
+          ),
+        ),
+      );
+      // One tick of the shared 1s ticker is enough to rebuild _RestTimerBar
+      // against the now-past deadline.
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.text('REST'), findsNothing);
+      final state = await (db.select(
+        db.activeWorkoutStates,
+      )..where((s) => s.workoutId.equals(workoutId))).getSingle();
+      // Purely a display decision, not a "Skip" -- the underlying row is
+      // untouched (see _RestTimerBar's doc comment).
+      expect(state.restTimerEndsAtUtc, isNotNull);
+
+      await _unmountAndFlush(tester);
+    },
+  );
 
   group('notifications (Stage 4, TS 7.3)', () {
     late MockNotificationService notificationService;
@@ -1066,12 +1136,12 @@ void main() {
       },
     );
 
-    testWidgets('"+15 s" reschedules the notification', (tester) async {
+    testWidgets('"+10 s" reschedules the notification', (tester) async {
       await startWorkoutWithOneSet(tester);
       await tester.tap(find.byType(CompletionToggle).last);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('+15 s'));
+      await tester.tap(find.byTooltip('+10 s'));
       await tester.pumpAndSettle();
 
       verify(

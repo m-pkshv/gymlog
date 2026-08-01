@@ -1676,17 +1676,17 @@ abstract class AppLocalizations {
   /// **'Rest'**
   String get restTimerLabel;
 
-  /// Tooltip on the rest-timer bar's shorten button (S-04, Stage 4).
+  /// Tooltip on the rest-timer bar's shorten (fast-forward) button (S-04, Stage 4; Stage 12: changed from 15s to 10s and moved to the right of the skip button).
   ///
   /// In en, this message translates to:
-  /// **'-15 s'**
-  String get restTimerMinus15Tooltip;
+  /// **'-10 s'**
+  String get restTimerMinus10Tooltip;
 
-  /// Tooltip on the rest-timer bar's extend button (S-04, Stage 4).
+  /// Tooltip on the rest-timer bar's extend (rewind) button (S-04, Stage 4; Stage 12: changed from 15s to 10s and moved to the left of the skip button).
   ///
   /// In en, this message translates to:
-  /// **'+15 s'**
-  String get restTimerPlus15Tooltip;
+  /// **'+10 s'**
+  String get restTimerPlus10Tooltip;
 
   /// Button on the rest-timer bar (S-04, Stage 4) that cancels the running rest timer early.
   ///

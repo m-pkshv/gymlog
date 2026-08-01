@@ -985,13 +985,13 @@
   "@restTimerLabel": {
     "description": "Label on the rest-timer bar (S-04, Stage 4, TS 7.2), shown only while a rest timer is running."
   },
-  "restTimerMinus15Tooltip": "-15 s",
-  "@restTimerMinus15Tooltip": {
-    "description": "Tooltip on the rest-timer bar's shorten button (S-04, Stage 4)."
+  "restTimerMinus10Tooltip": "-10 s",
+  "@restTimerMinus10Tooltip": {
+    "description": "Tooltip on the rest-timer bar's shorten (fast-forward) button (S-04, Stage 4; Stage 12: changed from 15s to 10s and moved to the right of the skip button)."
   },
-  "restTimerPlus15Tooltip": "+15 s",
-  "@restTimerPlus15Tooltip": {
-    "description": "Tooltip on the rest-timer bar's extend button (S-04, Stage 4)."
+  "restTimerPlus10Tooltip": "+10 s",
+  "@restTimerPlus10Tooltip": {
+    "description": "Tooltip on the rest-timer bar's extend (rewind) button (S-04, Stage 4; Stage 12: changed from 15s to 10s and moved to the left of the skip button)."
   },
   "restTimerSkipAction": "Skip",
   "@restTimerSkipAction": {

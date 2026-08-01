@@ -34,37 +34,61 @@ void main() {
     expect(find.text('01:24'), findsOneWidget);
   });
 
-  testWidgets('tapping "-15 s" calls onAdjust with -15', (tester) async {
-    int? delta;
-    await tester.pumpWidget(
-      _appUnderTest(
-        remainingSeconds: 84,
-        totalSeconds: 120,
-        onAdjust: (d) => delta = d,
-      ),
-    );
+  testWidgets(
+    'tapping the fast-forward (⏩) button calls onAdjust with -10 '
+    '(Stage 12, owner-reported: tape-deck icons, right side shortens '
+    'the wait)',
+    (tester) async {
+      int? delta;
+      await tester.pumpWidget(
+        _appUnderTest(
+          remainingSeconds: 84,
+          totalSeconds: 120,
+          onAdjust: (d) => delta = d,
+        ),
+      );
 
-    await tester.tap(find.byTooltip('-15 s'));
-    await tester.pump();
+      await tester.tap(find.byTooltip('-10 s'));
+      await tester.pump();
 
-    expect(delta, -15);
-  });
+      expect(delta, -10);
+    },
+  );
 
-  testWidgets('tapping "+15 s" calls onAdjust with +15', (tester) async {
-    int? delta;
-    await tester.pumpWidget(
-      _appUnderTest(
-        remainingSeconds: 84,
-        totalSeconds: 120,
-        onAdjust: (d) => delta = d,
-      ),
-    );
+  testWidgets(
+    'tapping the rewind (⏪) button calls onAdjust with +10 '
+    '(Stage 12, owner-reported: tape-deck icons, left side extends '
+    'the wait)',
+    (tester) async {
+      int? delta;
+      await tester.pumpWidget(
+        _appUnderTest(
+          remainingSeconds: 84,
+          totalSeconds: 120,
+          onAdjust: (d) => delta = d,
+        ),
+      );
 
-    await tester.tap(find.byTooltip('+15 s'));
-    await tester.pump();
+      await tester.tap(find.byTooltip('+10 s'));
+      await tester.pump();
 
-    expect(delta, 15);
-  });
+      expect(delta, 10);
+    },
+  );
+
+  testWidgets(
+    'the seek buttons use plain fast-forward/rewind icons, no digit '
+    'overlay (Stage 12, owner-reported: like old tape/cassette-player '
+    'buttons)',
+    (tester) async {
+      await tester.pumpWidget(_appUnderTest(remainingSeconds: 84, totalSeconds: 120));
+
+      expect(find.byIcon(Icons.fast_forward), findsOneWidget);
+      expect(find.byIcon(Icons.fast_rewind), findsOneWidget);
+      expect(find.text('10'), findsNothing);
+      expect(find.text('15'), findsNothing);
+    },
+  );
 
   testWidgets('tapping the skip button calls onSkip', (tester) async {
     var skipped = false;

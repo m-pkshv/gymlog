@@ -839,10 +839,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restTimerLabel => 'Rest';
 
   @override
-  String get restTimerMinus15Tooltip => '-15 s';
+  String get restTimerMinus10Tooltip => '-10 s';
 
   @override
-  String get restTimerPlus15Tooltip => '+15 s';
+  String get restTimerPlus10Tooltip => '+10 s';
 
   @override
   String get restTimerSkipAction => 'Skip';

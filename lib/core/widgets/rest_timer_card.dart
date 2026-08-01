@@ -12,7 +12,7 @@ import '../../l10n/app_localizations.dart';
 /// supply; the workout editor screen still owns querying
 /// `ActiveWorkoutTimerService`/rescheduling the notification (Stage 4, TS
 /// 7.2/7.3), same as `_RestTimerBar` already did. Keeps all three existing
-/// controls (±15 с/Пропустить) rather than the mockup's single button --
+/// controls (±10 с/Пропустить) rather than the mockup's single button --
 /// dropping any of them would be a functional regression nobody asked for,
 /// the mockup's simplification there reads as a space constraint of the
 /// static image, not a deliberate cut.
@@ -119,18 +119,18 @@ class RestTimerCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                // -15с shortens the remaining wait (`endsAt` moves earlier)
-                // -- the same effect as fast-forwarding through the
-                // countdown, so it gets a forward-pointing scrub icon;
-                // +15с lengthens it (`endsAt` moves later), matching a
-                // rewind (owner-reported: replace the generic +/- circles
-                // with player-style seek arrows for clarity).
-                _SeekSecondsButton(
-                  seconds: 15,
-                  forward: true,
+                // Tape-deck layout, left-to-right along the timeline: ⏪ on
+                // the left rewinds (adds time back, `endsAt` moves later),
+                // ⏩ on the right fast-forwards (cuts the wait short,
+                // `endsAt` moves earlier) -- owner-reported, replacing the
+                // earlier circular-arrow-with-digit icons (Stage 12), which
+                // also swaps which side does which relative to that
+                // earlier layout.
+                _SeekButton(
+                  icon: Icons.fast_rewind,
                   color: semantic.onAccentContainer,
-                  tooltip: l10n.restTimerMinus15Tooltip,
-                  onPressed: () => onAdjust(-15),
+                  tooltip: l10n.restTimerPlus10Tooltip,
+                  onPressed: () => onAdjust(10),
                 ),
                 Container(
                   width: 40,
@@ -145,12 +145,11 @@ class RestTimerCard extends StatelessWidget {
                     icon: Icon(Icons.skip_next, color: semantic.onAccent),
                   ),
                 ),
-                _SeekSecondsButton(
-                  seconds: 15,
-                  forward: false,
+                _SeekButton(
+                  icon: Icons.fast_forward,
                   color: semantic.onAccentContainer,
-                  tooltip: l10n.restTimerPlus15Tooltip,
-                  onPressed: () => onAdjust(15),
+                  tooltip: l10n.restTimerMinus10Tooltip,
+                  onPressed: () => onAdjust(-10),
                 ),
               ],
             ),
@@ -161,25 +160,20 @@ class RestTimerCard extends StatelessWidget {
   }
 }
 
-/// A player-style "seek ±N seconds" control -- a circular arrow (Material
-/// has no built-in glyph for 15 specifically, only `replay_10`/`forward_10`/
-/// `_30`, whose forward variants are themselves just the rewind glyph
-/// mirrored) with the second count overlaid in its center, the same visual
-/// idiom podcast/video players use for skip buttons.
-class _SeekSecondsButton extends StatelessWidget {
-  const _SeekSecondsButton({
-    required this.seconds,
-    required this.forward,
+/// A tape-deck-style seek control -- plain double-triangle rewind/
+/// fast-forward glyphs (owner-reported: like old cassette/tape-player
+/// buttons), no digit overlay -- the amount is described by [tooltip]
+/// alone, the same way a real tape deck's ⏪/⏩ buttons carry no printed
+/// number either.
+class _SeekButton extends StatelessWidget {
+  const _SeekButton({
+    required this.icon,
     required this.color,
     required this.tooltip,
     required this.onPressed,
   });
 
-  final int seconds;
-
-  /// `true` mirrors the rewind glyph into a forward one; `false` leaves it
-  /// as the rewind glyph.
-  final bool forward;
+  final IconData icon;
   final Color color;
   final String tooltip;
   final VoidCallback onPressed;
@@ -189,30 +183,7 @@ class _SeekSecondsButton extends StatelessWidget {
     return IconButton(
       tooltip: tooltip,
       onPressed: onPressed,
-      icon: Transform.flip(
-        flipX: forward,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Icon(Icons.replay, color: color, size: 26),
-            Padding(
-              // Nudges the digits down/into the arrow's circular sweep, off
-              // its default vertical center -- matching where Material's
-              // own `replay_10`/`replay_30` glyphs place their digits.
-              padding: const EdgeInsets.only(top: 3),
-              child: Text(
-                '$seconds',
-                style: TextStyle(
-                  color: color,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                  height: 1,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      icon: Icon(icon, color: color, size: 26),
     );
   }
 }

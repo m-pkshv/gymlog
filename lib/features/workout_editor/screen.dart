@@ -1253,15 +1253,20 @@ class _WorkoutTimerAction extends ConsumerWidget {
 }
 
 /// Rest timer bar (S-04, Stage 4, TS 7.2 step 2): shown only while a rest
-/// timer is running (`ActiveWorkoutState.restTimerEndsAtUtc != null`),
-/// started automatically when a set is marked done (if
-/// `AppSettings.restTimerAutoStart` — see
-/// `_WorkoutEditorScreenState._onSetCompletedChanged`). "±15 с"
+/// timer is running (`ActiveWorkoutState.restTimerEndsAtUtc != null` *and*
+/// still counting down), started automatically when a set is marked done
+/// (if `AppSettings.restTimerAutoStart` — see
+/// `_WorkoutEditorScreenState._onSetCompletedChanged`). "±10 с"
 /// adjusts the running countdown and reschedules its notification
 /// (TS 7.2 step 3: "отмена/перезапуск таймера — отмена/перепланирование
 /// уведомления"); "Пропустить" cancels both the timer and the
-/// notification. Once the remaining time goes negative this just shows
-/// `00:00` until skipped or a new set starts a fresh timer.
+/// notification. Once the remaining time reaches zero the card disappears
+/// on its own (owner-reported: it used to linger showing "00:00" until the
+/// user tapped "Пропустить") -- purely a display decision, made fresh each
+/// tick from the still-unchanged `ActiveWorkoutState` row, not a database
+/// write: the row itself is only ever cleared by an explicit skip or by
+/// the next set starting a fresh timer (`startRestTimer` always overwrites
+/// it outright), so there is nothing to reconcile here.
 class _RestTimerBar extends ConsumerWidget {
   const _RestTimerBar({required this.workoutId, required this.controller});
 
@@ -1319,6 +1324,9 @@ class _RestTimerBar extends ConsumerWidget {
         }
         final timerService = ref.read(activeWorkoutTimerServiceProvider);
         final remaining = timerService.remainingRestSeconds(state) ?? 0;
+        if (remaining <= 0) {
+          return const SizedBox.shrink();
+        }
         // `restTimerDurationSec` is the original planned duration, fixed
         // once at start (Stage 10 redesign, owner-reported: `adjustRestTimer`
         // no longer changes it) -- exactly the denominator RestTimerCard's

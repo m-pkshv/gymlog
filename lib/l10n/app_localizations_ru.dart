@@ -846,10 +846,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get restTimerLabel => 'Отдых';
 
   @override
-  String get restTimerMinus15Tooltip => '-15 с';
+  String get restTimerMinus10Tooltip => '-10 с';
 
   @override
-  String get restTimerPlus15Tooltip => '+15 с';
+  String get restTimerPlus10Tooltip => '+10 с';
 
   @override
   String get restTimerSkipAction => 'Пропустить';
