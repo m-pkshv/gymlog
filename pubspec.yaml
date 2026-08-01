@@ -33,7 +33,6 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
-  cupertino_icons: ^1.0.8
   # State management (D-17).
   flutter_riverpod: ^3.3.2
   # Navigation (D-17).
@@ -58,7 +57,6 @@ dependencies:
   share_plus: ^13.2.1
   path_provider: ^2.1.6
   archive: ^4.0.9
-  csv: ^8.0.0
   uuid: ^4.6.0
   # Opens the OS notification-settings screen from S-17 (04_UI_UX_SPEC.md,
   # section 5: "Уведомления" -- статус + переход в системные настройки) --
