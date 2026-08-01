@@ -1254,19 +1254,23 @@ class _WorkoutTimerAction extends ConsumerWidget {
 
 /// Rest timer bar (S-04, Stage 4, TS 7.2 step 2): shown only while a rest
 /// timer is running (`ActiveWorkoutState.restTimerEndsAtUtc != null` *and*
-/// still counting down), started automatically when a set is marked done
-/// (if `AppSettings.restTimerAutoStart` — see
+/// within one extra second of it), started automatically when a set is
+/// marked done (if `AppSettings.restTimerAutoStart` — see
 /// `_WorkoutEditorScreenState._onSetCompletedChanged`). "±10 с"
 /// adjusts the running countdown and reschedules its notification
 /// (TS 7.2 step 3: "отмена/перезапуск таймера — отмена/перепланирование
 /// уведомления"); "Пропустить" cancels both the timer and the
-/// notification. Once the remaining time reaches zero the card disappears
-/// on its own (owner-reported: it used to linger showing "00:00" until the
-/// user tapped "Пропустить") -- purely a display decision, made fresh each
-/// tick from the still-unchanged `ActiveWorkoutState` row, not a database
-/// write: the row itself is only ever cleared by an explicit skip or by
-/// the next set starting a fresh timer (`startRestTimer` always overwrites
-/// it outright), so there is nothing to reconcile here.
+/// notification. Once the remaining time reaches zero the card keeps
+/// showing "00:00" (fully filled) for one more second before disappearing
+/// on its own (Stage 12, owner-reported: the notification/etc. still fire
+/// right at the true deadline, unchanged -- but hiding the card at that
+/// same instant cut off both the "00" label and the fill's own glide to
+/// 100% before either could ever actually be seen). Purely a display
+/// decision, made fresh each tick from the still-unchanged
+/// `ActiveWorkoutState` row, not a database write: the row itself is only
+/// ever cleared by an explicit skip or by the next set starting a fresh
+/// timer (`startRestTimer` always overwrites it outright), so there is
+/// nothing to reconcile here.
 class _RestTimerBar extends ConsumerWidget {
   const _RestTimerBar({required this.workoutId, required this.controller});
 
@@ -1323,14 +1327,22 @@ class _RestTimerBar extends ConsumerWidget {
           return const SizedBox.shrink();
         }
         final timerService = ref.read(activeWorkoutTimerServiceProvider);
-        final remaining = timerService.remainingRestSeconds(state) ?? 0;
-        if (remaining <= 0) {
+        // Millisecond precision throughout -- see this class's doc comment
+        // for why the card now lingers on "00:00" for a second past the
+        // true deadline instead of vanishing right at it.
+        final remainingMs = timerService.remainingRestMilliseconds(state) ?? 0;
+        if (remainingMs <= -1000) {
           return const SizedBox.shrink();
         }
+        // The label never shows a negative countdown -- once truly expired
+        // it's pinned at "00:00" (via `formatElapsedTime`'s own <0 clamp)
+        // for that extra lingering second, same as `RestTimerCard`'s fill
+        // clamps to fully filled (see its own `elapsedMs` clamp).
+        final remaining = remainingMs > 0 ? (remainingMs / 1000).ceil() : 0;
         // `restTimerDurationSec` is the original planned duration, fixed
         // once at start (Stage 10 redesign, owner-reported: `adjustRestTimer`
         // no longer changes it) -- exactly the denominator RestTimerCard's
-        // progress fill needs to keep a constant fill speed across ±15с
+        // progress fill needs to keep a constant fill speed across ±10с
         // adjustments.
         final totalSeconds = state.restTimerDurationSec ?? remaining;
         final notificationsEnabled = ref
@@ -1344,7 +1356,8 @@ class _RestTimerBar extends ConsumerWidget {
             children: [
               RestTimerCard(
                 remainingSeconds: remaining,
-                totalSeconds: totalSeconds,
+                remainingMilliseconds: remainingMs,
+                totalMilliseconds: totalSeconds * 1000,
                 onAdjust: (delta) => _adjust(context, ref, delta),
                 onSkip: () => _skip(ref),
               ),

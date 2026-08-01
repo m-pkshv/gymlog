@@ -6,7 +6,8 @@ import 'package:gymlog/l10n/app_localizations.dart';
 
 Widget _appUnderTest({
   required int remainingSeconds,
-  required int totalSeconds,
+  int? remainingMilliseconds,
+  required int totalMilliseconds,
   ValueChanged<int>? onAdjust,
   VoidCallback? onSkip,
 }) {
@@ -17,7 +18,10 @@ Widget _appUnderTest({
     home: Scaffold(
       body: RestTimerCard(
         remainingSeconds: remainingSeconds,
-        totalSeconds: totalSeconds,
+        // Defaults to the whole-second value in ms for tests that don't
+        // care about sub-second precision specifically.
+        remainingMilliseconds: remainingMilliseconds ?? remainingSeconds * 1000,
+        totalMilliseconds: totalMilliseconds,
         onAdjust: onAdjust ?? (_) {},
         onSkip: onSkip ?? () {},
       ),
@@ -28,7 +32,7 @@ Widget _appUnderTest({
 void main() {
   testWidgets('shows the remaining time as mm:ss', (tester) async {
     await tester.pumpWidget(
-      _appUnderTest(remainingSeconds: 84, totalSeconds: 120),
+      _appUnderTest(remainingSeconds: 84, totalMilliseconds: 120000),
     );
 
     expect(find.text('01:24'), findsOneWidget);
@@ -43,7 +47,7 @@ void main() {
       await tester.pumpWidget(
         _appUnderTest(
           remainingSeconds: 84,
-          totalSeconds: 120,
+          totalMilliseconds: 120000,
           onAdjust: (d) => delta = d,
         ),
       );
@@ -64,7 +68,7 @@ void main() {
       await tester.pumpWidget(
         _appUnderTest(
           remainingSeconds: 84,
-          totalSeconds: 120,
+          totalMilliseconds: 120000,
           onAdjust: (d) => delta = d,
         ),
       );
@@ -81,7 +85,9 @@ void main() {
     'overlay (Stage 12, owner-reported: like old tape/cassette-player '
     'buttons)',
     (tester) async {
-      await tester.pumpWidget(_appUnderTest(remainingSeconds: 84, totalSeconds: 120));
+      await tester.pumpWidget(
+        _appUnderTest(remainingSeconds: 84, totalMilliseconds: 120000),
+      );
 
       expect(find.byIcon(Icons.fast_forward), findsOneWidget);
       expect(find.byIcon(Icons.fast_rewind), findsOneWidget);
@@ -95,7 +101,7 @@ void main() {
     await tester.pumpWidget(
       _appUnderTest(
         remainingSeconds: 84,
-        totalSeconds: 120,
+        totalMilliseconds: 120000,
         onSkip: () => skipped = true,
       ),
     );
@@ -110,7 +116,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      _appUnderTest(remainingSeconds: -5, totalSeconds: 120),
+      _appUnderTest(remainingSeconds: -5, totalMilliseconds: 120000),
     );
 
     expect(find.text('00:00'), findsOneWidget);
@@ -123,7 +129,7 @@ void main() {
     'glide backwards)',
     (tester) async {
       await tester.pumpWidget(
-        _appUnderTest(remainingSeconds: 120, totalSeconds: 120),
+        _appUnderTest(remainingSeconds: 120, totalMilliseconds: 120000),
       );
 
       final animatedFill = tester.widget<TweenAnimationBuilder<double>>(
@@ -134,16 +140,70 @@ void main() {
   );
 
   testWidgets(
+    'a genuine fresh start (a few ms elapsed, well within the fresh-restart '
+    'tolerance) renders the fill as essentially 0% -- not the ~2% a whole '
+    'seconds-based calculation used to show immediately '
+    '(Stage 12, owner-reported: "число сразу отображает 44" -- the bar '
+    'used to already be visibly filled and stuck at the very first frame)',
+    (tester) async {
+      // 50ms have elapsed out of a 45s timer -- the kind of gap that
+      // naturally exists between `startRestTimer`'s DB write and this
+      // widget's first read of it, nowhere near a whole second.
+      await tester.pumpWidget(
+        _appUnderTest(
+          remainingSeconds: 45,
+          remainingMilliseconds: 44950,
+          totalMilliseconds: 45000,
+        ),
+      );
+
+      final animatedFill = tester.widget<TweenAnimationBuilder<double>>(
+        find.byType(TweenAnimationBuilder<double>),
+      );
+      // Snapped (not glided), and negligibly close to empty -- not the old
+      // whole-second-truncated ~1/45 (≈2.2%).
+      expect(animatedFill.duration, Duration.zero);
+      expect(animatedFill.tween.begin, lessThan(0.01));
+      expect(animatedFill.tween.end, lessThan(0.01));
+    },
+  );
+
+  testWidgets(
     'a mid-countdown update still animates the fill smoothly',
     (tester) async {
       await tester.pumpWidget(
-        _appUnderTest(remainingSeconds: 84, totalSeconds: 120),
+        _appUnderTest(remainingSeconds: 84, totalMilliseconds: 120000),
       );
 
       final animatedFill = tester.widget<TweenAnimationBuilder<double>>(
         find.byType(TweenAnimationBuilder<double>),
       );
       expect(animatedFill.duration, isNot(Duration.zero));
+    },
+  );
+
+  testWidgets(
+    'right before the timer disappears (last displayed second, only '
+    'milliseconds truly left) the fill is essentially at the full edge -- '
+    'not capped a whole second short '
+    '(Stage 12, owner-reported: "не доходит до конца, видно, что остается '
+    'ещё место")',
+    (tester) async {
+      // The label still reads "1" (rounded up), but only 50ms of the 45s
+      // timer are truly left.
+      await tester.pumpWidget(
+        _appUnderTest(
+          remainingSeconds: 1,
+          remainingMilliseconds: 50,
+          totalMilliseconds: 45000,
+        ),
+      );
+
+      final animatedFill = tester.widget<TweenAnimationBuilder<double>>(
+        find.byType(TweenAnimationBuilder<double>),
+      );
+      // Old whole-second math capped this at (45-1)/45 ≈ 0.978 forever.
+      expect(animatedFill.tween.end, greaterThan(0.99));
     },
   );
 
@@ -156,7 +216,8 @@ void main() {
         home: Scaffold(
           body: RestTimerCard(
             remainingSeconds: 30,
-            totalSeconds: 120,
+            remainingMilliseconds: 30000,
+            totalMilliseconds: 120000,
             onAdjust: (_) {},
             onSkip: () {},
           ),

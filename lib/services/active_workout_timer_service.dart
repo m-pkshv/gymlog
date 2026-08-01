@@ -159,13 +159,36 @@ class ActiveWorkoutTimerService {
     );
   }
 
-  /// The TS 7.1 rest-timer formula: `endsAt - now`. `null` when no rest
-  /// timer is running; negative once it has expired (the caller decides
-  /// how to display that — this step doesn't fire a notification, TS 7.3).
+  /// The TS 7.1 rest-timer formula: `endsAt - now`, in whole seconds,
+  /// **rounded up** rather than truncated (Stage 12, owner-reported: a
+  /// 45s timer used to display "44" from its very first rendered frame,
+  /// since any processing delay at all between writing the deadline and
+  /// the next paint truncates 44.9xxs down to 44 -- rounding up instead
+  /// shows the configured duration itself for that whole first second,
+  /// which reads as correct even though it technically overstates the
+  /// remaining time by a fraction of a second; the owner explicitly
+  /// accepted that trade-off). This is purely the *display* value --
+  /// `RestTimerCard`'s progress fill uses [remainingRestMilliseconds]
+  /// instead, precisely because whole-second granularity can't render a
+  /// fill that starts genuinely empty and ends genuinely full. `null`
+  /// when no rest timer is running; non-positive once it has expired (the
+  /// caller decides how to display that — this step doesn't fire a
+  /// notification, TS 7.3).
   int? remainingRestSeconds(ActiveWorkoutState state, {DateTime? now}) {
+    final ms = remainingRestMilliseconds(state, now: now);
+    if (ms == null) return null;
+    return (ms / 1000).ceil();
+  }
+
+  /// Millisecond-precision twin of [remainingRestSeconds] (Stage 12,
+  /// owner-reported): drives `RestTimerCard`'s progress fill, which needs
+  /// sub-second precision to start at genuinely 0% and reach genuinely
+  /// 100% rather than being capped a fraction short at either end by
+  /// whole-second rounding. `null` when no rest timer is running.
+  int? remainingRestMilliseconds(ActiveWorkoutState state, {DateTime? now}) {
     final endsAt = state.restTimerEndsAtUtc;
     if (endsAt == null) return null;
     final n = now ?? DateTime.now().toUtc();
-    return endsAt.difference(n).inSeconds;
+    return endsAt.difference(n).inMilliseconds;
   }
 }

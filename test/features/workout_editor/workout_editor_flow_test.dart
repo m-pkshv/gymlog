@@ -9,6 +9,7 @@ import 'package:gymlog/core/constants.dart';
 import 'package:gymlog/core/date_format.dart';
 import 'package:gymlog/core/widgets/completion_toggle.dart';
 import 'package:gymlog/core/widgets/numeric_stepper_field.dart';
+import 'package:gymlog/core/widgets/rest_timer_card.dart';
 import 'package:gymlog/data/database.dart' hide Exercise;
 import 'package:gymlog/data/repositories_impl/app_settings_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
@@ -899,9 +900,14 @@ void main() {
       )..where((s) => s.workoutId.equals(workoutId))).write(
         ActiveWorkoutStatesCompanion(
           restTimerEndsAtUtc: Value(
+            // Stage 12, owner-reported: the card now lingers on "00:00"
+            // for a further second past the true deadline (see the
+            // dedicated test below) -- comfortably clearing that grace
+            // window is what actually demonstrates "disappears", as
+            // opposed to riding right on its edge.
             DateTime.now()
                 .toUtc()
-                .subtract(const Duration(seconds: 1))
+                .subtract(const Duration(seconds: 2))
                 .toIso8601String(),
           ),
         ),
@@ -917,6 +923,89 @@ void main() {
       // Purely a display decision, not a "Skip" -- the underlying row is
       // untouched (see _RestTimerBar's doc comment).
       expect(state.restTimerEndsAtUtc, isNotNull);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'the rest timer bar lingers on "00:00" (fully filled) for one more '
+    'second past the true deadline before disappearing (Stage 12, '
+    'owner-reported: notifications/etc. still fire right at the deadline, '
+    'unchanged -- but the card itself should give "00" and the fill\'s '
+    'final glide a chance to actually be seen)',
+    (tester) async {
+      await db
+          .into(db.appSettingsTable)
+          .insert(
+            AppSettingsTableCompanion.insert(
+              id: 'singleton',
+              defaultRestTimerSec: const Value(10),
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      await _seedExercise(db);
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await _createDraftViaFab(tester);
+      await tester.tap(find.text('Add exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add set'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(_statusCta);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(CompletionToggle).last);
+      await tester.pumpAndSettle();
+      expect(find.text('REST'), findsOneWidget);
+
+      final workoutId = (await db.select(db.workouts).get()).single.id;
+
+      // Just past the true deadline -- well short of the 1s grace window.
+      await (db.update(
+        db.activeWorkoutStates,
+      )..where((s) => s.workoutId.equals(workoutId))).write(
+        ActiveWorkoutStatesCompanion(
+          restTimerEndsAtUtc: Value(
+            DateTime.now()
+                .toUtc()
+                .subtract(const Duration(milliseconds: 300))
+                .toIso8601String(),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.text('REST'), findsOneWidget);
+      // Scoped to RestTimerCard -- the workout timer up top can
+      // legitimately also read "00:00" this early into the workout.
+      expect(
+        find.descendant(
+          of: find.byType(RestTimerCard),
+          matching: find.text('00:00'),
+        ),
+        findsOneWidget,
+      );
+
+      // Comfortably past the 1s grace window now.
+      await (db.update(
+        db.activeWorkoutStates,
+      )..where((s) => s.workoutId.equals(workoutId))).write(
+        ActiveWorkoutStatesCompanion(
+          restTimerEndsAtUtc: Value(
+            DateTime.now()
+                .toUtc()
+                .subtract(const Duration(seconds: 2))
+                .toIso8601String(),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.text('REST'), findsNothing);
 
       await _unmountAndFlush(tester);
     },

@@ -304,6 +304,72 @@ void main() {
 
         expect(service.remainingRestSeconds(state, now: now), -5);
       });
+
+      test(
+        'remainingRestSeconds rounds up rather than truncating (Stage 12, '
+        'owner-reported: a 45s timer must display "45" for the whole first '
+        'second, not "44" the instant any processing delay has passed)',
+        () {
+          final now = DateTime.utc(2026, 7, 21, 10, 0, 0);
+          final state = ActiveWorkoutState(
+            workoutId: workoutId,
+            startedAtUtc: now,
+            // 50ms of processing delay since the deadline was written --
+            // truncating (the old `.inSeconds`) would show 44 here.
+            restTimerEndsAtUtc: now.add(
+              const Duration(seconds: 45, milliseconds: -50),
+            ),
+            restTimerDurationSec: 45,
+            updatedAt: now,
+          );
+
+          expect(service.remainingRestSeconds(state, now: now), 45);
+        },
+      );
+
+      test(
+        'remainingRestSeconds on an exact whole-second boundary is '
+        'unaffected by rounding up (ceil of an integer is itself)',
+        () {
+          final now = DateTime.utc(2026, 7, 21, 10, 0, 0);
+          final state = ActiveWorkoutState(
+            workoutId: workoutId,
+            startedAtUtc: now,
+            restTimerEndsAtUtc: now.add(const Duration(seconds: 45)),
+            restTimerDurationSec: 45,
+            updatedAt: now,
+          );
+
+          expect(service.remainingRestSeconds(state, now: now), 45);
+        },
+      );
+
+      test('remainingRestMilliseconds is null when no rest timer is running', () async {
+        await service.start(workoutId);
+        final state = await repository.getByWorkoutId(workoutId);
+
+        expect(service.remainingRestMilliseconds(state!), isNull);
+      });
+
+      test(
+        'remainingRestMilliseconds gives RestTimerCard the sub-second '
+        'precision remainingRestSeconds deliberately discards (Stage 12, '
+        'owner-reported)',
+        () {
+          final now = DateTime.utc(2026, 7, 21, 10, 0, 0);
+          final state = ActiveWorkoutState(
+            workoutId: workoutId,
+            startedAtUtc: now,
+            restTimerEndsAtUtc: now.add(
+              const Duration(seconds: 45, milliseconds: -50),
+            ),
+            restTimerDurationSec: 45,
+            updatedAt: now,
+          );
+
+          expect(service.remainingRestMilliseconds(state, now: now), 44950);
+        },
+      );
     });
   });
 }
