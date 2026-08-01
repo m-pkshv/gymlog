@@ -62,7 +62,12 @@ class NumericStepperField extends StatelessWidget {
     // Unfocusing the real primary focus node clears that memory.
     FocusManager.instance.primaryFocus?.unfocus();
     final l10n = AppLocalizations.of(context)!;
-    final controller = TextEditingController(text: _display);
+    // Empty, not pre-filled with `_display` (Stage 12, owner-reported):
+    // typing a new value shouldn't require first deleting the old one.
+    // Submitting without typing anything (`parseDecimal('')` -> null) is
+    // treated as a no-op below, same as Cancel -- the current value is
+    // never lost by accident.
+    final controller = TextEditingController();
     final entered = await showDialog<double>(
       context: context,
       builder: (dialogContext) => AlertDialog(

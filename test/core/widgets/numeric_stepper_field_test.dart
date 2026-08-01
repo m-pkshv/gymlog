@@ -113,6 +113,43 @@ void main() {
     },
   );
 
+  testWidgets(
+    'the precise-entry dialog opens with an empty field, not pre-filled '
+    'with the current value (Stage 12, owner-reported: typing a new '
+    'number shouldn\'t require deleting the old one first)',
+    (tester) async {
+      await tester.pumpWidget(_appUnderTest(value: 80, onChanged: (_) {}));
+
+      await tester.tap(find.text('80'));
+      await tester.pumpAndSettle();
+
+      final field = tester.widget<TextField>(find.byType(TextField));
+      expect(field.controller!.text, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'submitting the precise-entry dialog without typing anything is a '
+    'no-op, not a crash or a silent reset to 0 -- the current value is '
+    'never lost by leaving the now-empty field untouched',
+    (tester) async {
+      var called = false;
+      await tester.pumpWidget(
+        _appUnderTest(value: 80, onChanged: (_) => called = true),
+      );
+
+      await tester.tap(find.text('80'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      expect(called, isFalse);
+      // The value shown behind the (now-closed) dialog is still the
+      // original one, not blanked or zeroed.
+      expect(find.text('80'), findsOneWidget);
+    },
+  );
+
   testWidgets('cancelling the precise-entry dialog does not call onChanged', (
     tester,
   ) async {
