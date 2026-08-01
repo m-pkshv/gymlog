@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stage 12, owner-reported real-device crash on a release build:
+     `flutter_local_notifications`'s `AndroidInitializationSettings`
+     (see NotificationService.initialize) resolves the notification's
+     small icon by name at runtime (`Resources.getIdentifier("ic_notification",
+     "drawable", ...)`), not through a static `R.drawable.ic_notification`
+     reference anywhere in this project's Kotlin/XML. Android's release-build
+     resource shrinker only sees direct references, so it silently removed
+     `drawable/ic_notification.xml` from the compiled resource table
+     entirely, confirmed missing from `aapt dump resources` on the built
+     release APK. The plugin then crashed with `IllegalArgumentException:
+     Invalid notification (no valid small icon)` inside
+     `ScheduledNotificationReceiver.onReceive`, right when the rest timer's
+     notification tried to fire, exactly the "app closes when the timer
+     ends" the owner reported. `tools:keep` is the standard, documented way
+     to tell the resource shrinker about resources it can't discover
+     statically: https://developer.android.com/build/shrink-code#keep-resources -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_notification" />
