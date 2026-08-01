@@ -669,26 +669,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось открыть системные настройки';
 
   @override
-  String get settingsNotificationsTestAction =>
-      'Отправить тестовое уведомление';
-
-  @override
-  String get settingsNotificationsTestSent =>
-      'Отправлено — проверьте шторку уведомлений';
-
-  @override
-  String get settingsNotificationsTestError =>
-      'Не удалось отправить уведомление';
-
-  @override
-  String get settingsNotificationsScheduledTestAction =>
-      'Запланировать через 10 секунд';
-
-  @override
-  String get settingsNotificationsScheduledTestSent =>
-      'Запланировано — подождите 10 секунд и проверьте шторку';
-
-  @override
   String get settingsAboutLabel => 'О приложении';
 
   @override

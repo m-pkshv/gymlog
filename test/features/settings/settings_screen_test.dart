@@ -45,10 +45,6 @@ Future<void> _unmountAndFlush(WidgetTester tester) async {
 Finder _switchTile(String title) => find.widgetWithText(SwitchListTile, title);
 
 void main() {
-  setUpAll(() {
-    registerFallbackValue(Duration.zero);
-  });
-
   late AppDatabase db;
 
   setUp(() {
@@ -409,124 +405,6 @@ void main() {
       },
     );
 
-    testWidgets(
-      'tapping "Send a test notification" calls '
-      'NotificationService.showTestNotification and confirms via snackbar '
-      '(Stage 12, owner-reported: isolates whether posting a notification '
-      'works at all from the rest timer\'s specific scheduled-alarm '
-      'delivery path)',
-      (tester) async {
-        when(
-          () => notificationService.areNotificationsEnabled(),
-        ).thenAnswer((_) async => true);
-        when(
-          () => notificationService.showTestNotification(
-            title: any(named: 'title'),
-            body: any(named: 'body'),
-          ),
-        ).thenAnswer((_) async {});
-        tester.view.physicalSize = const Size(1080, 3000);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
-        await AppSettingsRepositoryImpl(db).ensureInitialized();
-        await tester.pumpWidget(
-          _appUnderTest(db, notificationService: notificationService),
-        );
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text('Send a test notification'));
-        await tester.pumpAndSettle();
-
-        verify(
-          () => notificationService.showTestNotification(
-            title: any(named: 'title'),
-            body: any(named: 'body'),
-          ),
-        ).called(1);
-        expect(
-          find.text('Sent — check your notification shade'),
-          findsOneWidget,
-        );
-
-        await _unmountAndFlush(tester);
-      },
-    );
-
-    testWidgets(
-      'shows an error snackbar when the test notification fails to send',
-      (tester) async {
-        when(
-          () => notificationService.areNotificationsEnabled(),
-        ).thenAnswer((_) async => true);
-        when(
-          () => notificationService.showTestNotification(
-            title: any(named: 'title'),
-            body: any(named: 'body'),
-          ),
-        ).thenThrow(Exception('boom'));
-        tester.view.physicalSize = const Size(1080, 3000);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
-        await AppSettingsRepositoryImpl(db).ensureInitialized();
-        await tester.pumpWidget(
-          _appUnderTest(db, notificationService: notificationService),
-        );
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text('Send a test notification'));
-        await tester.pumpAndSettle();
-
-        expect(find.text("Couldn't send the notification"), findsOneWidget);
-
-        await _unmountAndFlush(tester);
-      },
-    );
-
-    testWidgets(
-      'tapping "Schedule one for 10 seconds from now" calls '
-      'NotificationService.scheduleTestNotification with a 10s delay '
-      '(Stage 12, owner-reported: isolates the same zonedSchedule/'
-      'AlarmManager path the real rest timer notification uses from '
-      'showTestNotification\'s immediate .show() path)',
-      (tester) async {
-        when(
-          () => notificationService.areNotificationsEnabled(),
-        ).thenAnswer((_) async => true);
-        when(
-          () => notificationService.scheduleTestNotification(
-            title: any(named: 'title'),
-            body: any(named: 'body'),
-            delay: any(named: 'delay'),
-          ),
-        ).thenAnswer((_) async {});
-        tester.view.physicalSize = const Size(1080, 3000);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
-        await AppSettingsRepositoryImpl(db).ensureInitialized();
-        await tester.pumpWidget(
-          _appUnderTest(db, notificationService: notificationService),
-        );
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text('Schedule one for 10 seconds from now'));
-        await tester.pumpAndSettle();
-
-        final captured = verify(
-          () => notificationService.scheduleTestNotification(
-            title: any(named: 'title'),
-            body: any(named: 'body'),
-            delay: captureAny(named: 'delay'),
-          ),
-        ).captured;
-        expect(captured.single, const Duration(seconds: 10));
-        expect(
-          find.text('Scheduled — wait 10 seconds and check your notification shade'),
-          findsOneWidget,
-        );
-
-        await _unmountAndFlush(tester);
-      },
-    );
   });
 
   testWidgets(

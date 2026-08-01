@@ -760,26 +760,6 @@
   "@settingsNotificationsOpenSettingsError": {
     "description": "Snackbar shown when NotificationService.openNotificationSettings() reports it could not open the OS settings screen."
   },
-  "settingsNotificationsTestAction": "Send a test notification",
-  "@settingsNotificationsTestAction": {
-    "description": "Button on the S-17 notifications row that fires NotificationService.showTestNotification() immediately (no AlarmManager scheduling), to isolate whether posting a notification works at all from whether the rest timer's specific scheduled-alarm delivery path is broken (owner-reported, Stage 12: the rest timer notification never appeared on a MIUI device)."
-  },
-  "settingsNotificationsTestSent": "Sent — check your notification shade",
-  "@settingsNotificationsTestSent": {
-    "description": "Snackbar shown after showTestNotification() completes without throwing. Confirms the call succeeded, not that the notification was actually seen."
-  },
-  "settingsNotificationsTestError": "Couldn't send the notification",
-  "@settingsNotificationsTestError": {
-    "description": "Snackbar shown when showTestNotification() throws. Also reused for scheduleTestNotification()'s failure case."
-  },
-  "settingsNotificationsScheduledTestAction": "Schedule one for 10 seconds from now",
-  "@settingsNotificationsScheduledTestAction": {
-    "description": "Button on the S-17 notifications row that fires NotificationService.scheduleTestNotification() -- the same zonedSchedule/AlarmManager delivery path the rest timer notification uses, with a fixed 10s delay -- to isolate whether that specific path is broken from whether posting works at all (owner-reported, Stage 12)."
-  },
-  "settingsNotificationsScheduledTestSent": "Scheduled — wait 10 seconds and check your notification shade",
-  "@settingsNotificationsScheduledTestSent": {
-    "description": "Snackbar shown after scheduleTestNotification() completes without throwing. Confirms the call succeeded, not that the notification was actually delivered 10 seconds later."
-  },
   "settingsAboutLabel": "About",
   "@settingsAboutLabel": {
     "description": "Header above the S-17 'About' rows (04_UI_UX_SPEC.md, section 5: version, export format version)."

@@ -665,25 +665,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t open system settings';
 
   @override
-  String get settingsNotificationsTestAction => 'Send a test notification';
-
-  @override
-  String get settingsNotificationsTestSent =>
-      'Sent — check your notification shade';
-
-  @override
-  String get settingsNotificationsTestError =>
-      'Couldn\'t send the notification';
-
-  @override
-  String get settingsNotificationsScheduledTestAction =>
-      'Schedule one for 10 seconds from now';
-
-  @override
-  String get settingsNotificationsScheduledTestSent =>
-      'Scheduled — wait 10 seconds and check your notification shade';
-
-  @override
   String get settingsAboutLabel => 'About';
 
   @override

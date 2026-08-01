@@ -26,8 +26,6 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _plugin;
 
   static const _restTimerNotificationId = 1;
-  static const _testNotificationId = 2;
-  static const _scheduledTestNotificationId = 3;
   static const _restTimerChannelId = 'rest_timer';
   static const _restTimerChannelName = 'Rest timer';
   static const _permissionRequestedKey = 'notifications_permission_requested';
@@ -202,62 +200,6 @@ class NotificationService {
 
   Future<void> cancelRestTimerEndNotification() =>
       _plugin.cancel(id: _restTimerNotificationId);
-
-  /// Diagnostic twin of [scheduleRestTimerEndNotification] -- same
-  /// `zonedSchedule` call and `androidScheduleMode`, a fixed short [delay]
-  /// instead of the rest timer's real end time, and its own id so it can
-  /// never collide with a genuine pending rest-timer notification.
-  /// [showTestNotification] already proved posting works at all on a given
-  /// device; this isolates whether the *scheduled* (`AlarmManager` +
-  /// background broadcast receiver) delivery path specifically is what's
-  /// broken there (owner-reported, Stage 12 -- this is exactly how the
-  /// `inexactAllowWhileIdle` -> `alarmClock` switch above was diagnosed and
-  /// confirmed fixed on a real device).
-  Future<void> scheduleTestNotification({
-    required String title,
-    required String body,
-    required Duration delay,
-  }) => _plugin.zonedSchedule(
-    id: _scheduledTestNotificationId,
-    title: title,
-    body: body,
-    scheduledDate: tz.TZDateTime.now(tz.local).add(delay),
-    notificationDetails: const NotificationDetails(
-      android: AndroidNotificationDetails(
-        _restTimerChannelId,
-        _restTimerChannelName,
-        importance: Importance.high,
-        priority: Priority.high,
-      ),
-      iOS: DarwinNotificationDetails(),
-    ),
-    androidScheduleMode: AndroidScheduleMode.alarmClock,
-  );
-
-  /// Shows a notification immediately (no `AlarmManager` scheduling
-  /// involved) -- a diagnostic for the "Отдых окончен" notification not
-  /// appearing on some devices (owner-reported): isolates whether posting a
-  /// notification works *at all* from whether the specific scheduled-alarm
-  /// delivery path is what's broken. Same channel/importance as the rest
-  /// timer notification, deliberately a different id so it can't collide
-  /// with (or get silently replaced/cancelled by) a real pending one.
-  Future<void> showTestNotification({
-    required String title,
-    required String body,
-  }) => _plugin.show(
-    id: _testNotificationId,
-    title: title,
-    body: body,
-    notificationDetails: const NotificationDetails(
-      android: AndroidNotificationDetails(
-        _restTimerChannelId,
-        _restTimerChannelName,
-        importance: Importance.high,
-        priority: Priority.high,
-      ),
-      iOS: DarwinNotificationDetails(),
-    ),
-  );
 
   /// Opens the OS-level app settings screen (S-17, 04_UI_UX_SPEC.md,
   /// section 5: "Уведомления" -- статус + переход в системные настройки),
