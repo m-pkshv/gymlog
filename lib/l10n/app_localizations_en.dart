@@ -919,6 +919,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get workoutSummaryNewRecordsTitle => 'New records';
 
   @override
+  String get workoutSummaryCompletedTitle => 'Workout completed';
+
+  @override
+  String workoutSummaryExerciseSetsRatio(int completed, int total) {
+    return '— $completed/$total';
+  }
+
+  @override
+  String get workoutSummaryCommentLabel => 'Workout comment';
+
+  @override
+  String get workoutSummaryCommentHint =>
+      'E.g.: shoulder hurt during the bench press, consider lowering the weight next time';
+
+  @override
   String get workoutSummaryDoneAction => 'Done';
 
   @override

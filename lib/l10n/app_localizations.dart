@@ -1796,7 +1796,7 @@ abstract class AppLocalizations {
   /// **'Duration'**
   String get workoutSummaryDurationLabel;
 
-  /// Caption under the exercise-count figure on S-05.
+  /// Caption under the exercise-count figure in the PDF export (services/pdf/workout_pdf_service.dart); also reused as the exercise-list card's section title on S-05 (Stage: design/redesign_v2 -- the on-screen stat row no longer has a separate exercise-count tile, see workoutSummaryCompletedTitle).
   ///
   /// In en, this message translates to:
   /// **'Exercises'**
@@ -1825,6 +1825,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New records'**
   String get workoutSummaryNewRecordsTitle;
+
+  /// Headline inside S-05's hero card (Stage: design/redesign_v2, owner-supplied mockup) -- the workout's name/fallback title is shown as a subtitle underneath it (workoutDefaultNamePrefix).
+  ///
+  /// In en, this message translates to:
+  /// **'Workout completed'**
+  String get workoutSummaryCompletedTitle;
+
+  /// Trailing part of an exercise row on S-05's exercise list (Stage: design/redesign_v2, owner-supplied mockup), e.g. "— 3/3" -- how many of this exercise's sets were marked done out of how many were planned.
+  ///
+  /// In en, this message translates to:
+  /// **'— {completed}/{total}'**
+  String workoutSummaryExerciseSetsRatio(int completed, int total);
+
+  /// Label on S-05's comment field (Stage: design/redesign_v2, owner-supplied mockup) -- more descriptive than the editor's plain "Comment" (workoutCommentLabel), since this screen has no other context to say which comment this is.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout comment'**
+  String get workoutSummaryCommentLabel;
+
+  /// Placeholder text inside S-05's empty comment field (Stage: design/redesign_v2, owner-supplied mockup) -- an example prompt, not a real suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'E.g.: shoulder hurt during the bench press, consider lowering the weight next time'**
+  String get workoutSummaryCommentHint;
 
   /// Button on S-05 that returns to History.
   ///

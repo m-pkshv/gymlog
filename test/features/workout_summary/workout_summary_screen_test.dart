@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:gymlog/app/design_tokens.dart';
 import 'package:gymlog/app/providers.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/domain/enums.dart';
@@ -189,22 +190,28 @@ void main() {
     await db.close();
   });
 
-  testWidgets('shows duration, exercise/set counts and tonnage (S-05)', (
-    tester,
-  ) async {
-    await _seedCompletedWorkout(db);
+  testWidgets(
+    'shows the hero card (title + workout name) and the duration/exercise-'
+    'count/set-count stat row (Stage: design/redesign_v2, owner-supplied '
+    'mockup -- the middle tile used to be tonnage, replaced with exercise '
+    'count per owner follow-up feedback)',
+    (tester) async {
+      await _seedCompletedWorkout(db);
 
-    await tester.pumpWidget(_appUnderTest(db));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Workout summary'), findsOneWidget);
-    expect(find.text('45:12'), findsOneWidget); // duration
-    expect(find.text('1'), findsOneWidget); // exerciseCount
-    expect(find.text('3'), findsOneWidget); // setCount (all 3 sets)
-    expect(find.text('900.0 kg'), findsOneWidget); // tonnage: 400 + 500
+      expect(find.text('Workout summary'), findsOneWidget); // AppBar title
+      expect(find.text('Workout completed'), findsOneWidget); // hero headline
+      expect(find.text('Workout'), findsOneWidget); // unnamed -> default title
+      expect(find.text('45:12'), findsOneWidget); // duration
+      expect(find.text('1'), findsOneWidget); // exerciseCount (only "Squat")
+      expect(find.text('3'), findsOneWidget); // setCount (all 3 sets)
+      expect(find.text('900.0 kg'), findsNothing); // tonnage tile is gone
 
-    await _unmountAndFlush(tester);
-  });
+      await _unmountAndFlush(tester);
+    },
+  );
 
   testWidgets(
     'shows an "Export as PDF" action in the AppBar (Stage 11) -- not tapped '
@@ -223,23 +230,96 @@ void main() {
     },
   );
 
-  testWidgets('shows and persists the exercise progression segment', (
-    tester,
-  ) async {
-    await _seedCompletedWorkout(db);
+  group(
+    'exercise list (Stage: design/redesign_v2, owner-supplied mockup, '
+    'read-only -- editing a progression decision stays in the workout '
+    'editor\'s exercise cards)',
+    () {
+      testWidgets(
+        'shows the exercise name and its completed/planned set ratio, with '
+        'no progression badge when none was set (the default)',
+        (tester) async {
+          await _seedCompletedWorkout(db); // 2 of 3 sets completed, s3 not
 
-    await tester.pumpWidget(_appUnderTest(db));
-    await tester.pumpAndSettle();
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
 
-    expect(find.text('Squat'), findsOneWidget);
-    await tester.tap(find.text('↑'));
-    await tester.pumpAndSettle();
+          expect(find.text('Squat — 2/3'), findsOneWidget);
+          expect(find.text('↑'), findsNothing);
+          expect(find.text('='), findsNothing);
+          expect(find.text('↓'), findsNothing);
 
-    final workoutExercises = await db.select(db.workoutExercises).get();
-    expect(workoutExercises.single.progressionDecision, 'increase');
+          await _unmountAndFlush(tester);
+        },
+      );
 
-    await _unmountAndFlush(tester);
-  });
+      testWidgets(
+        'shows the "increase" badge in the success (green) color (Stage: '
+        'design/redesign_v2, owner-confirmed -- was the error/red family)',
+        (tester) async {
+          await _seedCompletedWorkout(db);
+          await (db.update(
+            db.workoutExercises,
+          )..where((row) => row.id.equals('we1'))).write(
+            const WorkoutExercisesCompanion(
+              progressionDecision: Value('increase'),
+            ),
+          );
+
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
+
+          expect(find.text('↑'), findsOneWidget);
+          final semantic = Theme.of(
+            tester.element(find.text('↑')),
+          ).extension<AppSemanticColors>()!;
+          final badge = tester.widget<Container>(
+            find.ancestor(of: find.text('↑'), matching: find.byType(Container)),
+          );
+          expect(
+            (badge.decoration! as BoxDecoration).color,
+            semantic.successContainer,
+          );
+
+          await _unmountAndFlush(tester);
+        },
+      );
+
+      testWidgets(
+        'shows the "decrease" badge in the accent (orange) color, not '
+        'success/green (Stage: design/redesign_v2, owner-reported)',
+        (tester) async {
+          await _seedCompletedWorkout(db);
+          await (db.update(
+            db.workoutExercises,
+          )..where((row) => row.id.equals('we1'))).write(
+            const WorkoutExercisesCompanion(
+              progressionDecision: Value('decrease'),
+            ),
+          );
+
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
+
+          final semantic = Theme.of(
+            tester.element(find.text('↓')),
+          ).extension<AppSemanticColors>()!;
+          final badge = tester.widget<Container>(
+            find.ancestor(
+              of: find.text('↓'),
+              matching: find.byType(Container),
+            ),
+          );
+          expect(
+            (badge.decoration! as BoxDecoration).color,
+            semantic.accentContainer,
+          );
+
+          await _unmountAndFlush(tester);
+        },
+      );
+    },
+  );
 
   testWidgets('the comment field autosaves after the debounce', (
     tester,

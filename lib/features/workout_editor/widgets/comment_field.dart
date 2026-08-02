@@ -18,6 +18,7 @@ class CommentField extends StatefulWidget {
     this.maxLines = 3,
     this.minLines = 1,
     this.textCapitalization = TextCapitalization.sentences,
+    this.hint,
   });
 
   final String? value;
@@ -25,6 +26,12 @@ class CommentField extends StatefulWidget {
   final int maxLength;
   final ValueChanged<String> onChanged;
   final VoidCallback onCommit;
+
+  /// An example placeholder shown only while the field is empty (Stage:
+  /// design/redesign_v2, owner-supplied mockup for the workout summary
+  /// screen's comment field) -- `null` (the default) omits it, matching
+  /// every other caller's existing look exactly.
+  final String? hint;
 
   /// Defaults preserve the multi-line comment box every existing caller
   /// uses; a single-line caller (e.g. the template name field, S-13) can
@@ -84,6 +91,7 @@ class _CommentFieldState extends State<CommentField> {
       textCapitalization: widget.textCapitalization,
       decoration: InputDecoration(
         labelText: widget.label,
+        hintText: widget.hint,
         alignLabelWithHint: true,
         isDense: true,
       ),

@@ -1067,7 +1067,7 @@
   },
   "workoutSummaryExercisesLabel": "Exercises",
   "@workoutSummaryExercisesLabel": {
-    "description": "Caption under the exercise-count figure on S-05."
+    "description": "Caption under the exercise-count figure in the PDF export (services/pdf/workout_pdf_service.dart); also reused as the exercise-list card's section title on S-05 (Stage: design/redesign_v2 -- the on-screen stat row no longer has a separate exercise-count tile, see workoutSummaryCompletedTitle)."
   },
   "workoutSummarySetsLabel": "Sets",
   "@workoutSummarySetsLabel": {
@@ -1087,6 +1087,26 @@
   "workoutSummaryNewRecordsTitle": "New records",
   "@workoutSummaryNewRecordsTitle": {
     "description": "S-05 section title shown only when this workout set at least one PersonalRecord (Stage 7)."
+  },
+  "workoutSummaryCompletedTitle": "Workout completed",
+  "@workoutSummaryCompletedTitle": {
+    "description": "Headline inside S-05's hero card (Stage: design/redesign_v2, owner-supplied mockup) -- the workout's name/fallback title is shown as a subtitle underneath it (workoutDefaultNamePrefix)."
+  },
+  "workoutSummaryExerciseSetsRatio": "— {completed}/{total}",
+  "@workoutSummaryExerciseSetsRatio": {
+    "description": "Trailing part of an exercise row on S-05's exercise list (Stage: design/redesign_v2, owner-supplied mockup), e.g. \"— 3/3\" -- how many of this exercise's sets were marked done out of how many were planned.",
+    "placeholders": {
+      "completed": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "workoutSummaryCommentLabel": "Workout comment",
+  "@workoutSummaryCommentLabel": {
+    "description": "Label on S-05's comment field (Stage: design/redesign_v2, owner-supplied mockup) -- more descriptive than the editor's plain \"Comment\" (workoutCommentLabel), since this screen has no other context to say which comment this is."
+  },
+  "workoutSummaryCommentHint": "E.g.: shoulder hurt during the bench press, consider lowering the weight next time",
+  "@workoutSummaryCommentHint": {
+    "description": "Placeholder text inside S-05's empty comment field (Stage: design/redesign_v2, owner-supplied mockup) -- an example prompt, not a real suggestion."
   },
   "workoutSummaryDoneAction": "Done",
   "@workoutSummaryDoneAction": {

@@ -927,6 +927,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get workoutSummaryNewRecordsTitle => 'Новые рекорды';
 
   @override
+  String get workoutSummaryCompletedTitle => 'Тренировка завершена';
+
+  @override
+  String workoutSummaryExerciseSetsRatio(int completed, int total) {
+    return '— $completed/$total';
+  }
+
+  @override
+  String get workoutSummaryCommentLabel => 'Комментарий к тренировке';
+
+  @override
+  String get workoutSummaryCommentHint =>
+      'Например: болело плечо на жиме, стоит снизить вес в следующий раз';
+
+  @override
   String get workoutSummaryDoneAction => 'Готово';
 
   @override

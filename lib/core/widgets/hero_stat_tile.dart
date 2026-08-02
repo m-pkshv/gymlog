@@ -9,6 +9,13 @@ import '../../app/design_tokens.dart';
 /// widget so Phase 2 can reuse it on both screens without duplicating the
 /// "hero number" text style. [icon] is optional -- the stats screen's
 /// mockup shows plain number+label tiles with no icon at all.
+///
+/// [value] is forced onto a single line, shrinking its font (not wrapping
+/// or clipping) if it doesn't fit at the normal hero size (Stage: design/
+/// redesign_v2, owner-reported: a long value -- e.g. a workout with a
+/// title long enough to force wrapping, or a large tonnage figure -- used
+/// to make its tile taller than its neighbors in a row of equal-width
+/// tiles).
 class HeroStatTile extends StatelessWidget {
   const HeroStatTile({
     super.key,
@@ -40,11 +47,16 @@ class HeroStatTile extends StatelessWidget {
           Icon(icon, color: iconColor ?? scheme.primary),
           const SizedBox(height: AppSpacing.xs),
         ],
-        Text(
-          value,
-          style: AppNumberTextStyles.heroStat(
-            context,
-          ).copyWith(color: valueColor ?? scheme.primary),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            value,
+            maxLines: 1,
+            style: AppNumberTextStyles.heroStat(
+              context,
+            ).copyWith(color: valueColor ?? scheme.primary),
+          ),
         ),
         Text(
           label,

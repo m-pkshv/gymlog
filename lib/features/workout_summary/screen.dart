@@ -8,7 +8,9 @@ import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
 import '../../core/constants.dart';
 import '../../core/duration_format.dart';
+import '../../core/widgets/confetti_overlay.dart';
 import '../../core/widgets/error_retry_state.dart';
+import '../../core/widgets/grouped_section.dart';
 import '../../core/widgets/hero_stat_tile.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/personal_record.dart';
@@ -19,14 +21,17 @@ import '../stats/record_value_format.dart';
 import '../workout_editor/controller.dart';
 import '../workout_editor/export_workout_pdf_flow.dart';
 import '../workout_editor/widgets/comment_field.dart';
-import '../workout_editor/widgets/progression_segmented_button.dart';
 import 'workout_summary_stats.dart';
 
 /// S-05 workout summary: shown once, right after "Завершить" moves a
 /// workout to `completed` (TS 7.2 step 6: "... → итоговый экран"). Reuses
 /// [WorkoutEditorController] (same `workoutId`, a fresh `.autoDispose`
-/// instance) for the comment field and progression decisions -- they're the
-/// same underlying fields the editor already exposes, not a separate copy.
+/// instance) for the comment field -- the same underlying field the editor
+/// already exposes, not a separate copy. Each exercise's progression
+/// decision (Stage: design/redesign_v2, owner-confirmed) is read-only here
+/// -- a small badge next to its row, shown only when one was actually set --
+/// editing it stays in the workout editor's exercise cards, matching the
+/// owner-supplied mockup, which shows no controls for it on this screen.
 /// "Новые рекорды (если есть)" (Stage 7): a `PersonalRecord` counts as "new"
 /// here when its cached `workoutId` equals this workout's id -- since
 /// `RecordsService` only overwrites a record's `workoutId` when a value is
@@ -98,17 +103,33 @@ class _WorkoutSummaryScreenState extends ConsumerState<WorkoutSummaryScreen>
         ],
       ),
       body: detailsAsync.when(
-        data: (details) => _SummaryBody(
-          details: details,
-          controller: controller,
-          // Owner-reported: this used to hardcode `context.go('/history')`,
-          // which always landed on History regardless of which tab the
-          // workout was actually opened from (Today, a template, etc.).
-          // The editor `pushReplacement`s this screen in its own spot in
-          // the stack (see the editor's `_changeStatus`), so popping reveals
-          // exactly what was there before -- same invariant as
-          // `app/router.dart`'s top comment for the editor route itself.
-          onDone: () => context.pop(),
+        // Owner-requested: a short confetti burst on arrival -- layered
+        // over the body in a `Stack` rather than inside it, so it isn't
+        // just another scrollable item and doesn't shift on scroll. Keyed
+        // by workoutId, not `const`, so Riverpod rebuilding this branch for
+        // a *different* workout (shouldn't normally happen -- this screen
+        // is a one-shot destination per finish -- but keeps the guarantee
+        // explicit) replays the burst instead of reusing stale particles.
+        data: (details) => Stack(
+          children: [
+            _SummaryBody(
+              details: details,
+              controller: controller,
+              // Owner-reported: this used to hardcode
+              // `context.go('/history')`, which always landed on History
+              // regardless of which tab the workout was actually opened
+              // from (Today, a template, etc.). The editor
+              // `pushReplacement`s this screen in its own spot in the
+              // stack (see the editor's `_changeStatus`), so popping
+              // reveals exactly what was there before -- same invariant
+              // as `app/router.dart`'s top comment for the editor route
+              // itself.
+              onDone: () => context.pop(),
+            ),
+            Positioned.fill(
+              child: ConfettiOverlay(key: ValueKey(widget.workoutId)),
+            ),
+          ],
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => ErrorRetryState(
@@ -135,7 +156,6 @@ class _SummaryBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final semantic = Theme.of(context).extension<AppSemanticColors>()!;
     final stats = computeWorkoutSummaryStats(details);
 
     // Owner-reported: the "Готово" button (the list's last item) used to
@@ -150,58 +170,36 @@ class _SummaryBody extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
-          // Duration is this screen's hero number (Stage 10 redesign,
-          // AUDIT.md section 1.7: "probably the most emotionally significant
-          // number right after finishing", but pre-redesign it carried the
-          // same visual weight as exercises/sets/tonnage). Given its own
-          // accent-tinted card, full width, above a plain row of the other
-          // three. ASSUMPTION(summary-hero-layout): no mockup reference was
-          // available for this screen specifically; this exact split (hero
-          // duration + a row of secondary tiles, replacing the audited 2x2
-          // grid) is a cosmetic call following AUDIT's explicit critique, not
-          // a literal copy of a reference design.
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: semantic.accentContainer,
-              borderRadius: BorderRadius.circular(AppRadius.card),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: HeroStatTile(
-                icon: Icons.timer_outlined,
-                iconColor: semantic.onAccentContainer,
-                value: formatElapsedTime(
-                  details.workout.actualDurationSec ?? 0,
-                ),
-                label: l10n.workoutSummaryDurationLabel,
-                valueColor: semantic.onAccentContainer,
-              ),
-            ),
+          // Stage: design/redesign_v2, owner-supplied mockup ("Тренировка
+          // завершена" hero card + name, replacing the previous accent-
+          // tinted duration hero -- duration moved into the plain stat row
+          // below, alongside exercise/set counts).
+          _CompletedHeroCard(
+            workoutName: details.workout.name ?? l10n.workoutDefaultNamePrefix,
           ),
           const SizedBox(height: AppSpacing.lg),
           Row(
             children: [
               Expanded(
-                child: HeroStatTile(
-                  icon: Icons.fitness_center,
+                child: _SummaryStatCard(
+                  value: formatElapsedTime(
+                    details.workout.actualDurationSec ?? 0,
+                  ),
+                  label: l10n.workoutSummaryDurationLabel,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: _SummaryStatCard(
                   value: stats.exerciseCount.toString(),
                   label: l10n.workoutSummaryExercisesLabel,
                 ),
               ),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
-                child: HeroStatTile(
-                  icon: Icons.checklist,
+                child: _SummaryStatCard(
                   value: stats.setCount.toString(),
                   label: l10n.workoutSummarySetsLabel,
-                ),
-              ),
-              Expanded(
-                child: HeroStatTile(
-                  icon: Icons.scale_outlined,
-                  value: l10n.workoutSummaryTonnageValue(
-                    stats.tonnageKg.toStringAsFixed(1),
-                  ),
-                  label: l10n.workoutSummaryTonnageLabel,
                 ),
               ),
             ],
@@ -211,29 +209,28 @@ class _SummaryBody extends StatelessWidget {
             workoutId: details.workout.id,
             exercises: details.exercises,
           ),
+          if (details.exercises.isNotEmpty) ...[
+            GroupedSection(
+              title: l10n.workoutSummaryExercisesLabel,
+              children: [
+                for (var i = 0; i < details.exercises.length; i++) ...[
+                  if (i > 0)
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                  _ExerciseSummaryRow(details: details.exercises[i]),
+                ],
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xl),
+          ],
           CommentField(
             key: ValueKey('workout-comment-${details.workout.id}'),
             value: details.workout.comment,
-            label: l10n.workoutCommentLabel,
+            label: l10n.workoutSummaryCommentLabel,
+            hint: l10n.workoutSummaryCommentHint,
             maxLength: CommentLengthLimits.workout,
             onChanged: controller.editWorkoutComment,
             onCommit: controller.flushWorkoutComment,
           ),
-          if (details.exercises.isNotEmpty) ...[
-            const SizedBox(height: 24),
-            Text(
-              l10n.progressionDecisionLabel,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            for (final exerciseDetails in details.exercises)
-              _ExerciseProgressionRow(
-                details: exerciseDetails,
-                onChanged: (decision) => controller.setProgressionDecision(
-                  exerciseDetails.workoutExercise.id,
-                  decision,
-                ),
-              ),
-          ],
           const SizedBox(height: 24),
           FilledButton(
             onPressed: onDone,
@@ -245,46 +242,237 @@ class _SummaryBody extends StatelessWidget {
   }
 }
 
-class _ExerciseProgressionRow extends ConsumerWidget {
-  const _ExerciseProgressionRow({
-    required this.details,
-    required this.onChanged,
-  });
+/// The hero card at the top of S-05 (Stage: design/redesign_v2, owner-
+/// supplied mockup): a filled checkmark badge, "Тренировка завершена", and
+/// the workout's own name (or the shared default title) underneath as a
+/// subtitle. Reuses [ColorScheme.primaryContainer]/[primary] rather than a
+/// new token -- the mockup's pale-blue (light)/deep-navy (dark) card with a
+/// solid-blue badge is exactly that role pairing already.
+class _CompletedHeroCard extends StatelessWidget {
+  const _CompletedHeroCard({required this.workoutName});
 
-  final WorkoutExerciseDetails details;
-  final ValueChanged<ProgressionDecision> onChanged;
+  final String workoutName;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final stagnationCount = ref
-        .watch(progressionStateProvider(details.exercise.id))
-        .value
-        ?.stagnationCount;
+    final scheme = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            details.exercise.name,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 4),
-          ProgressionSegmentedButton(
-            selected: details.workoutExercise.progressionDecision,
-            onChanged: onChanged,
-          ),
-          if (stagnationCount != null && stagnationCount > 0)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                l10n.stagnationHint(stagnationCount),
-                style: Theme.of(context).textTheme.bodySmall,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: scheme.primary,
+              child: Icon(Icons.check, color: scheme.onPrimary, size: 28),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              l10n.workoutSummaryCompletedTitle,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: scheme.onPrimaryContainer,
+                fontWeight: FontWeight.w700,
               ),
             ),
+            Text(
+              workoutName,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: scheme.onPrimaryContainer,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One of the three plain figure tiles under the hero card (duration,
+/// exercise count, set count -- Stage: design/redesign_v2, owner-supplied
+/// mockup). No icon, unlike [HeroStatTile]'s other uses -- the mockup's
+/// tiles are just a big number and a caption, each in its own outlined
+/// card matching [GroupedSection]'s own card recipe below, so the two
+/// card styles on this screen read as the same visual language.
+class _SummaryStatCard extends StatelessWidget {
+  const _SummaryStatCard({required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
+      margin: EdgeInsets.zero,
+      child: Padding(
+        // Owner-reported: the original padding read too tight against the
+        // card's border.
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.lg,
+        ),
+        child: HeroStatTile(value: value, label: label),
+      ),
+    );
+  }
+}
+
+/// One exercise row inside the "Упражнения" card (Stage: design/
+/// redesign_v2, owner-supplied mockup): a status badge (all planned sets
+/// done vs. not), the exercise name, how many sets were completed out of
+/// how many were planned, and -- only if the owner actually set one
+/// (DM 6.11 "ручная отметка", `ProgressionDecision.none` otherwise) -- a
+/// small badge on the trailing edge showing that decision. Read-only (see
+/// the class-level doc comment on [WorkoutSummaryScreen]).
+class _ExerciseSummaryRow extends StatelessWidget {
+  const _ExerciseSummaryRow({required this.details});
+
+  final WorkoutExerciseDetails details;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    final total = details.sets.length;
+    final completed = details.sets.where((set) => set.isCompleted).length;
+    final decision = details.workoutExercise.progressionDecision;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      child: Row(
+        children: [
+          _ExerciseStatusBadge(isFullyCompleted: completed >= total),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: details.exercise.name,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  TextSpan(
+                    text: ' ${l10n.workoutSummaryExerciseSetsRatio(completed, total)}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (decision != ProgressionDecision.none) ...[
+            const SizedBox(width: AppSpacing.sm),
+            _ProgressionBadge(decision: decision),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+/// Left-hand circular status marker on an [_ExerciseSummaryRow]: a solid
+/// green check when every planned set was completed, a solid orange "!"
+/// otherwise -- the same success/accent color pairing [CompletionToggle]
+/// and the "not fully completed" workout status already use, not new
+/// tokens.
+class _ExerciseStatusBadge extends StatelessWidget {
+  const _ExerciseStatusBadge({required this.isFullyCompleted});
+
+  final bool isFullyCompleted;
+
+  static const double _diameter = 28;
+
+  @override
+  Widget build(BuildContext context) {
+    final semantic = Theme.of(context).extension<AppSemanticColors>()!;
+    return Container(
+      width: _diameter,
+      height: _diameter,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isFullyCompleted ? semantic.success : semantic.accent,
+      ),
+      child: Icon(
+        isFullyCompleted ? Icons.check : Icons.priority_high,
+        size: 16,
+        color: isFullyCompleted ? semantic.onSuccess : semantic.onAccent,
+      ),
+    );
+  }
+}
+
+/// Right-hand circular badge on an [_ExerciseSummaryRow] showing a
+/// non-`none` [ProgressionDecision] as the same glyph used by
+/// `ProgressionSegmentedButton` ("↑"/"="/"↓") -- a softer container-tier
+/// tint rather than the status badge's solid fill, so the two don't compete
+/// for attention on the same row. "Increase" reads as
+/// [AppSemanticColors.success] (owner-confirmed: was the error/red family),
+/// "decrease" as [AppSemanticColors.accent] (owner-reported: was the
+/// success/green family, replaced with the same orange the "not fully
+/// completed" status badge already uses), and "repeat" is neutral gray,
+/// unchanged.
+class _ProgressionBadge extends StatelessWidget {
+  const _ProgressionBadge({required this.decision});
+
+  final ProgressionDecision decision;
+
+  static const double _diameter = 28;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    final semantic = Theme.of(context).extension<AppSemanticColors>()!;
+
+    final (Color background, Color foreground, String glyph) = switch (decision) {
+      ProgressionDecision.increase => (
+        semantic.successContainer,
+        semantic.onSuccessContainer,
+        l10n.progressionDecisionIncrease,
+      ),
+      ProgressionDecision.repeat => (
+        scheme.surfaceContainerHighest,
+        scheme.onSurfaceVariant,
+        l10n.progressionDecisionRepeat,
+      ),
+      ProgressionDecision.decrease => (
+        semantic.accentContainer,
+        semantic.onAccentContainer,
+        l10n.progressionDecisionDecrease,
+      ),
+      ProgressionDecision.none => (Colors.transparent, Colors.transparent, ''),
+    };
+
+    return Semantics(
+      label: glyph,
+      child: Container(
+        width: _diameter,
+        height: _diameter,
+        decoration: BoxDecoration(shape: BoxShape.circle, color: background),
+        alignment: Alignment.center,
+        child: Text(
+          glyph,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: foreground,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
       ),
     );
   }

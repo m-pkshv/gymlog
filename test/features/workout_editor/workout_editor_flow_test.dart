@@ -2638,8 +2638,8 @@ void main() {
     );
 
     testWidgets(
-      'the stagnation hint appears after finishing a workout that did not '
-      'improve on the last completed occurrence',
+      'the stagnation hint appears back in the editor after finishing a '
+      'workout that did not improve on the last completed occurrence',
       (tester) async {
         await _seedExercise(db);
         await _seedPastCompletedOccurrence(db);
@@ -2676,6 +2676,16 @@ void main() {
             matching: find.text('Finish'),
           ),
         );
+        await tester.pumpAndSettle();
+
+        // Stage: design/redesign_v2, owner-supplied mockup -- the summary
+        // screen's exercise rows are read-only now (no stagnation hint,
+        // just a progression badge shown only when one was manually set);
+        // the hint itself still lives on the editor's own exercise card,
+        // reached again from History after "Done".
+        await tester.tap(find.text('Done'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(Card).first);
         await tester.pumpAndSettle();
 
         expect(find.text('1 workout without growth'), findsOneWidget);

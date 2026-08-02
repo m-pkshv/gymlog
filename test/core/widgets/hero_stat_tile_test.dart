@@ -47,4 +47,31 @@ void main() {
 
     expect(find.byType(Icon), findsNothing);
   });
+
+  testWidgets(
+    'keeps the value on a single line -- shrinking its font instead of '
+    'wrapping (Stage: design/redesign_v2, owner-reported: a long value '
+    'used to make its tile taller than its neighbors in a row of '
+    'equal-width tiles)',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildLightTheme(),
+          home: const Scaffold(
+            body: SizedBox(
+              width: 100, // narrow enough to force shrinking
+              child: HeroStatTile(
+                value: '123 456.7 kg',
+                label: 'Very long value',
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final text = tester.widget<Text>(find.text('123 456.7 kg'));
+      expect(text.maxLines, 1);
+      expect(find.byType(FittedBox), findsOneWidget);
+    },
+  );
 }
