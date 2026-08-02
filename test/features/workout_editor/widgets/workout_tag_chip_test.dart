@@ -40,5 +40,50 @@ void main() {
         expect(workoutTagLabel(AppLocalizationsRu(), tag), 'Leg day');
       },
     );
+
+    test('the standalone "Legs" and "Crossfit" tags translate directly', () {
+      final legs = _tag('legs', 'Legs');
+      final crossfit = _tag('crossfit', 'Crossfit');
+
+      expect(workoutTagLabel(AppLocalizationsEn(), legs), 'Legs');
+      expect(workoutTagLabel(AppLocalizationsRu(), legs), 'Ноги');
+      expect(workoutTagLabel(AppLocalizationsEn(), crossfit), 'Crossfit');
+      expect(workoutTagLabel(AppLocalizationsRu(), crossfit), 'Кроссфит');
+    });
   });
+
+  group(
+    'sortedWorkoutTags (Stage 12, owner-confirmed 2026-08-02: alphabetical '
+    'by displayed label, built-in and user-created tags mixed together, '
+    'computed on screen rather than stored/queried by position)',
+    () {
+      test(
+        'sorts by translated label, not by id/insertion order, and ignores '
+        'case',
+        () {
+          final tags = [
+            _tag('chest', 'Chest'), // -> "Chest"
+            _tag('user-tag', 'middle'), // shown as-is, lowercase on purpose
+            _tag('back', 'Back'), // -> "Back"
+          ];
+
+          final sorted = sortedWorkoutTags(tags, AppLocalizationsEn());
+
+          expect(
+            sorted.map((t) => workoutTagLabel(AppLocalizationsEn(), t)),
+            ['Back', 'Chest', 'middle'],
+          );
+        },
+      );
+
+      test('does not mutate the list passed in', () {
+        final original = [_tag('chest', 'Chest'), _tag('back', 'Back')];
+        final originalOrder = List.of(original);
+
+        sortedWorkoutTags(original, AppLocalizationsEn());
+
+        expect(original.map((t) => t.id), originalOrder.map((t) => t.id));
+      });
+    },
+  );
 }

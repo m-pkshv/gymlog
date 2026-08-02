@@ -524,6 +524,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get workoutTagsLoadError => 'Не удалось загрузить теги';
 
   @override
+  String get workoutTagLegsLabel => 'Ноги';
+
+  @override
+  String get workoutTagCrossfitLabel => 'Кроссфит';
+
+  @override
   String get tagsMenuTitle => 'Теги';
 
   @override

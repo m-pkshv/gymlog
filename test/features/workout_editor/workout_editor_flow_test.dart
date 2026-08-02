@@ -214,16 +214,20 @@ Finder get _secondaryStatusCta =>
 
 /// Taps set [setIndex] (0-based, in list order) to expand it, revealing its
 /// `NumericStepperField`s (Stage 10 redesign: replaced the old always-
-/// visible plan/fact `TextField` pair per field). A no-op if it's already
-/// expanded is fine for these tests -- each only expands a given set once.
+/// visible plan/fact `TextField` pair per field). A genuine no-op if it's
+/// already expanded (Stage 12, owner-reported: a brand-new set now starts
+/// expanded on its own, so this can no longer assume it's tapping a
+/// collapsed row -- the tap toggles, and blindly tapping an
+/// already-expanded row would collapse it instead).
 Future<void> _expandSet(WidgetTester tester, {int setIndex = 0}) async {
+  final row = find.byType(SetRow).at(setIndex);
+  final alreadyExpanded = find
+      .descendant(of: row, matching: find.byType(NumericStepperField))
+      .evaluate()
+      .isNotEmpty;
+  if (alreadyExpanded) return;
   await tester.tap(
-    find
-        .descendant(
-          of: find.byType(SetRow).at(setIndex),
-          matching: find.byType(InkWell),
-        )
-        .first,
+    find.descendant(of: row, matching: find.byType(InkWell)).first,
   );
   await tester.pumpAndSettle();
 }
@@ -1682,8 +1686,16 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Workout name'), findsOneWidget);
+        // Stage 12, owner-reported: an unnamed workout pre-fills the
+        // field with the real fallback label (not just a hint) so the
+        // caret has somewhere to sit -- and sits at the end of it, ready
+        // to append or backspace.
         final field = tester.widget<TextField>(_renameDialogField);
-        expect(field.controller?.text, '');
+        expect(field.controller?.text, 'Workout');
+        expect(
+          field.controller?.selection,
+          const TextSelection.collapsed(offset: 'Workout'.length),
+        );
 
         await _unmountAndFlush(tester);
       },

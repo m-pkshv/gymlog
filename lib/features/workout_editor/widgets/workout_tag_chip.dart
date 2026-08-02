@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/color_hex.dart';
+import '../../../core/constants.dart';
 import '../../../core/reference_data_ids.dart';
 import '../../../domain/models/workout_tag.dart';
 import '../../../l10n/app_localizations.dart';
@@ -17,11 +18,37 @@ Color tagColor(String colorHex) => colorFromHex(colorHex);
 /// language via the same lookup the exercise catalog's muscle-group
 /// filters already use -- there's no separate "built-in" schema flag on
 /// `WorkoutTag`, the id match *is* what makes it a built-in tag for display
-/// purposes. User-created tags show their fixed `name` as typed
+/// purposes. The built-in tags that aren't muscle groups ([legsWorkoutTagId]/
+/// [crossfitWorkoutTagId], Stage 12) get their own direct translation
+/// instead. User-created tags show their fixed `name` as typed
 /// (owner-confirmed: no localization for those).
 String workoutTagLabel(AppLocalizations l10n, WorkoutTag tag) {
+  if (tag.id == legsWorkoutTagId) return l10n.workoutTagLegsLabel;
+  if (tag.id == crossfitWorkoutTagId) return l10n.workoutTagCrossfitLabel;
   if (muscleGroupIds.contains(tag.id)) return muscleGroupLabel(l10n, tag.id);
   return tag.name;
+}
+
+/// Sorts a list of tags by their displayed label (Stage 12, owner-
+/// confirmed 2026-08-02): alphabetical, built-in and user-created tags
+/// mixed together in one list, computed here rather than stored as a DB
+/// column or `ORDER BY` clause -- a built-in tag's label is only known
+/// after translation (`workoutTagLabel`, above), which needs
+/// [AppLocalizations], not something a repository query can reach.
+/// Case-insensitive so a user-typed tag's capitalization doesn't jumble
+/// the order. Returns a new list; doesn't mutate [tags].
+List<WorkoutTag> sortedWorkoutTags(
+  List<WorkoutTag> tags,
+  AppLocalizations l10n,
+) {
+  final sorted = [...tags];
+  sorted.sort(
+    (a, b) => workoutTagLabel(
+      l10n,
+      a,
+    ).toLowerCase().compareTo(workoutTagLabel(l10n, b).toLowerCase()),
+  );
+  return sorted;
 }
 
 /// A read-only display chip for a tag assigned to a workout (S-03 header

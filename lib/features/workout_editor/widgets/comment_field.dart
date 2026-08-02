@@ -17,6 +17,7 @@ class CommentField extends StatefulWidget {
     required this.onCommit,
     this.maxLines = 3,
     this.minLines = 1,
+    this.textCapitalization = TextCapitalization.sentences,
   });
 
   final String? value;
@@ -31,6 +32,10 @@ class CommentField extends StatefulWidget {
   /// either way.
   final int maxLines;
   final int minLines;
+
+  /// Defaults to `.sentences` (fits free-text comments); a name-like
+  /// single-line caller should pass `.words` instead.
+  final TextCapitalization textCapitalization;
 
   @override
   State<CommentField> createState() => _CommentFieldState();
@@ -76,6 +81,7 @@ class _CommentFieldState extends State<CommentField> {
       maxLines: widget.maxLines,
       minLines: widget.minLines,
       maxLength: widget.maxLength,
+      textCapitalization: widget.textCapitalization,
       decoration: InputDecoration(
         labelText: widget.label,
         alignLabelWithHint: true,

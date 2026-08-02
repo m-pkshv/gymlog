@@ -124,15 +124,17 @@ Future<void> _createTemplateViaFab(WidgetTester tester, {String name = 'Leg day'
 
 /// Taps set [setIndex] (0-based, in list order) to expand it, revealing its
 /// `NumericStepperField`s -- mirrors `workout_editor_flow_test.dart`'s
-/// `_expandSet`.
+/// `_expandSet`, including its genuine-no-op guard for an already-expanded
+/// row (Stage 12, owner-reported: a brand-new set now starts expanded).
 Future<void> _expandTemplateSet(WidgetTester tester, {int setIndex = 0}) async {
+  final row = find.byType(TemplateSetRow).at(setIndex);
+  final alreadyExpanded = find
+      .descendant(of: row, matching: find.byType(NumericStepperField))
+      .evaluate()
+      .isNotEmpty;
+  if (alreadyExpanded) return;
   await tester.tap(
-    find
-        .descendant(
-          of: find.byType(TemplateSetRow).at(setIndex),
-          matching: find.byType(InkWell),
-        )
-        .first,
+    find.descendant(of: row, matching: find.byType(InkWell)).first,
   );
   await tester.pumpAndSettle();
 }

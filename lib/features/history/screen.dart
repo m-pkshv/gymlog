@@ -522,7 +522,10 @@ class _HistoryFilterSheetState extends ConsumerState<_HistoryFilterSheet> {
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            for (final WorkoutTag tag in tags)
+                            for (final WorkoutTag tag in sortedWorkoutTags(
+                              tags,
+                              l10n,
+                            ))
                               FilterChip(
                                 label: Text(workoutTagLabel(l10n, tag)),
                                 selected: _tagIds.contains(tag.id),

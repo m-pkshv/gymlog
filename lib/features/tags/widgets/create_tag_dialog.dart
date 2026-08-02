@@ -59,6 +59,7 @@ class _CreateTagDialogState extends ConsumerState<CreateTagDialog> {
             controller: _nameController,
             autofocus: true,
             maxLength: WorkoutTagRules.maxNameLength,
+            textCapitalization: TextCapitalization.words,
             decoration: InputDecoration(
               labelText: l10n.tagNameLabel,
               errorText: _error,

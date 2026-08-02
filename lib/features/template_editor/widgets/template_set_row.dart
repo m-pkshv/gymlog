@@ -38,7 +38,19 @@ class TemplateSetRow extends StatefulWidget {
 }
 
 class _TemplateSetRowState extends State<TemplateSetRow> {
-  bool _expanded = false;
+  // Stage 12, owner-reported: mirrors `SetRow`'s same fix -- a brand-new
+  // set starts expanded (one fewer tap to see the steppers), a duplicated
+  // one (already carrying a copied planned value) starts collapsed.
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    final hasValue = widget.fields.any(
+      (field) => field.getPlanned(widget.set) != null,
+    );
+    _expanded = !hasValue;
+  }
 
   void _updateField(TemplateSetFieldSpec field, double value) {
     widget.onFieldChanged(field, value);

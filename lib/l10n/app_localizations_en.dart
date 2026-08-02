@@ -521,6 +521,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get workoutTagsLoadError => 'Couldn\'t load tags';
 
   @override
+  String get workoutTagLegsLabel => 'Legs';
+
+  @override
+  String get workoutTagCrossfitLabel => 'Crossfit';
+
+  @override
   String get tagsMenuTitle => 'Tags';
 
   @override

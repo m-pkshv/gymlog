@@ -44,6 +44,26 @@ const List<String> workoutTagColorPalette = [
   '#7B8794',
 ];
 
+/// Ids of the built-in workout tags (Stage 12, owner-reported) that aren't
+/// muscle groups. Not a `MuscleGroup` row (06_DATA_MODEL.md, section 5.1)
+/// and never offered as an exercise's primary/secondary muscle -- purely a
+/// workout-tag concept, so they live here rather than in
+/// `core/reference_data_ids.dart`'s `muscleGroupIds`. Shared between
+/// `data/seed/workout_tag_seed.dart` (what gets seeded) and
+/// `workoutTagLabel` (how it's translated) so the id references can never
+/// drift apart.
+///
+/// [legsWorkoutTagId] ("Ноги"/"Legs") replaced six separate muscle-group
+/// tags (Rear Delts/Obliques/Hip Flexors/Quads/Adductors/Hamstrings,
+/// owner-confirmed 2026-08-02): a broad leg/torso-detail tag is enough,
+/// the finer-grained muscle groups the exercise catalog still tracks
+/// don't need their own tag each.
+const String legsWorkoutTagId = 'legs';
+
+/// [crossfitWorkoutTagId] ("Кроссфит"/"Crossfit", owner-requested
+/// 2026-08-02): a workout-style tag, not tied to any muscle group at all.
+const String crossfitWorkoutTagId = 'crossfit';
+
 /// Comment field length limits (06_DATA_MODEL.md, sections 6.4/6.6/6.8),
 /// enforced via `maxLength` on the S-03/S-13 comment fields.
 class CommentLengthLimits {

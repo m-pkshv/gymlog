@@ -67,33 +67,37 @@ class TagListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.tagsMenuTitle)),
       body: tagsAsync.when(
-        data: (tags) => tags.isEmpty
-            ? _EmptyState(l10n: l10n, onCreate: () => _create(context, ref))
-            : ListView.builder(
-                itemCount: tags.length,
-                itemBuilder: (context, index) {
-                  final tag = tags[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.xs,
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: tagColor(tag.colorHex),
-                        radius: 10,
-                      ),
-                      title: Text(workoutTagLabel(l10n, tag)),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        tooltip: l10n.deleteTagAction,
-                        onPressed: () => _delete(context, ref, tag),
-                      ),
-                    ),
-                  );
-                },
-              ),
+        data: (tags) {
+          if (tags.isEmpty) {
+            return _EmptyState(l10n: l10n, onCreate: () => _create(context, ref));
+          }
+          final sorted = sortedWorkoutTags(tags, l10n);
+          return ListView.builder(
+            itemCount: sorted.length,
+            itemBuilder: (context, index) {
+              final tag = sorted[index];
+              return Card(
+                margin: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.xs,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: tagColor(tag.colorHex),
+                    radius: 10,
+                  ),
+                  title: Text(workoutTagLabel(l10n, tag)),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    tooltip: l10n.deleteTagAction,
+                    onPressed: () => _delete(context, ref, tag),
+                  ),
+                ),
+              );
+            },
+          );
+        },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => ErrorRetryState(
           message: l10n.workoutTagsLoadError,

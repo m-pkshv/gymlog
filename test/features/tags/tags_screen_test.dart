@@ -167,6 +167,58 @@ void main() {
     },
   );
 
+  testWidgets(
+    'built-in and user-created tags are sorted alphabetically by their '
+    'displayed label together, not by insertion/createdAt order (Stage 12, '
+    'owner-confirmed 2026-08-02)',
+    (tester) async {
+      // Seeded oldest-to-newest as chest, then the user tag, then back --
+      // the opposite of alphabetical order. The old `createdAt DESC`
+      // sort would show them back/middle/chest; this proves it doesn't.
+      await db
+          .into(db.workoutTags)
+          .insert(
+            WorkoutTagsCompanion.insert(
+              id: 'chest',
+              name: 'Chest',
+              createdAt: '2026-08-01T00:00:00Z',
+              updatedAt: '2026-08-01T00:00:00Z',
+            ),
+          );
+      await db
+          .into(db.workoutTags)
+          .insert(
+            WorkoutTagsCompanion.insert(
+              id: 'user-tag',
+              name: 'Middle',
+              createdAt: '2026-08-02T00:00:00Z',
+              updatedAt: '2026-08-02T00:00:00Z',
+            ),
+          );
+      await db
+          .into(db.workoutTags)
+          .insert(
+            WorkoutTagsCompanion.insert(
+              id: 'back',
+              name: 'Back',
+              createdAt: '2026-08-03T00:00:00Z',
+              updatedAt: '2026-08-03T00:00:00Z',
+            ),
+          );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      final backY = tester.getTopLeft(find.text('Back')).dy;
+      final chestY = tester.getTopLeft(find.text('Chest')).dy;
+      final middleY = tester.getTopLeft(find.text('Middle')).dy;
+      expect(backY, lessThan(chestY));
+      expect(chestY, lessThan(middleY));
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
   testWidgets('cancelling the delete confirmation leaves the tag untouched', (
     tester,
   ) async {

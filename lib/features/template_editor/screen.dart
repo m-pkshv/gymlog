@@ -194,6 +194,7 @@ class _EditorBody extends StatelessWidget {
               maxLength: WorkoutTemplateRules.maxNameLength,
               maxLines: 1,
               minLines: 1,
+              textCapitalization: TextCapitalization.words,
               onChanged: controller.editName,
               onCommit: controller.flushName,
             ),

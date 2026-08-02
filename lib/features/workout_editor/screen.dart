@@ -556,10 +556,10 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
   /// date (DM 6.4.1 only forbids moving the date while `inProgress`;
   /// renaming has no such conflict, same as the comment field which is
   /// already editable in any status).
-  Future<void> _renameWorkout(String? currentName) async {
+  Future<void> _renameWorkout(String currentName) async {
     final newName = await showDialog<String>(
       context: context,
-      builder: (_) => _RenameWorkoutDialog(initialName: currentName ?? ''),
+      builder: (_) => _RenameWorkoutDialog(initialName: currentName),
     );
     if (newName == null || !mounted) return;
     await ref
@@ -603,7 +603,9 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
               label: l10n.renameWorkoutTooltip,
               child: InkWell(
                 borderRadius: BorderRadius.circular(AppRadius.control),
-                onTap: () => _renameWorkout(workout.name),
+                onTap: () => _renameWorkout(
+                  workout.name ?? l10n.workoutDefaultNamePrefix,
+                ),
                 child: Tooltip(
                   message: workout.name ?? l10n.workoutDefaultNamePrefix,
                   child: Text(
@@ -669,9 +671,17 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
 
 /// Rename dialog opened by tapping the AppBar title (Stage 10, owner-
 /// reported). Unlike `CreateTemplateDialog`, a blank result is a valid,
-/// meaningful answer here (DM 6.4: clears `name` back to the "Тренировка +
-/// date" fallback), so there's no "Save" validation gate to speak of --
-/// this just returns whatever's typed, trimmed, on "Сохранить".
+/// meaningful answer here (DM 6.4: clears `name` back to the "Тренировка"
+/// fallback), so there's no "Save" validation gate to speak of -- this
+/// just returns whatever's typed, trimmed, on "Сохранить".
+///
+/// For an unnamed workout, the caller passes the localized fallback label
+/// itself as [initialName] (Stage 12, owner-reported) instead of leaving
+/// the field empty with just a hint: the placeholder text isn't real,
+/// selectable text, so a user trying to tap past its end to append
+/// something found the caret stuck at the only position an empty field
+/// has (offset 0). Pre-filling with the real label gives the caret
+/// somewhere to actually sit.
 class _RenameWorkoutDialog extends StatefulWidget {
   const _RenameWorkoutDialog({required this.initialName});
 
@@ -687,7 +697,19 @@ class _RenameWorkoutDialogState extends State<_RenameWorkoutDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.initialName);
+    // `TextEditingController(text: ...)` alone leaves the selection
+    // unset, which places the caret at the very start of the text on
+    // first focus rather than the end -- a well-known Flutter gotcha.
+    // Set it explicitly so the caret starts right after the pre-filled
+    // name, ready to append or backspace it away.
+    _nameController = TextEditingController.fromValue(
+      TextEditingValue(
+        text: widget.initialName,
+        selection: TextSelection.collapsed(
+          offset: widget.initialName.length,
+        ),
+      ),
+    );
   }
 
   @override
@@ -705,6 +727,7 @@ class _RenameWorkoutDialogState extends State<_RenameWorkoutDialog> {
         controller: _nameController,
         autofocus: true,
         maxLength: WorkoutNameRules.maxNameLength,
+        textCapitalization: TextCapitalization.words,
         decoration: InputDecoration(
           labelText: l10n.workoutNameLabel,
           hintText: l10n.workoutDefaultNamePrefix,

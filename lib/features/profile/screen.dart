@@ -304,6 +304,7 @@ class _ProfileNameFieldsState extends ConsumerState<_ProfileNameFields> {
             controller: _nicknameController,
             focusNode: _nicknameFocus,
             maxLength: UserProfileRules.maxNameLength,
+            textCapitalization: TextCapitalization.words,
             decoration: InputDecoration(labelText: l10n.profileNicknameLabel),
             textInputAction: TextInputAction.next,
           ),
@@ -314,6 +315,7 @@ class _ProfileNameFieldsState extends ConsumerState<_ProfileNameFields> {
             controller: _firstNameController,
             focusNode: _firstNameFocus,
             maxLength: UserProfileRules.maxNameLength,
+            textCapitalization: TextCapitalization.words,
             decoration: InputDecoration(
               labelText: l10n.profileFirstNameLabel,
             ),
@@ -326,6 +328,7 @@ class _ProfileNameFieldsState extends ConsumerState<_ProfileNameFields> {
             controller: _lastNameController,
             focusNode: _lastNameFocus,
             maxLength: UserProfileRules.maxNameLength,
+            textCapitalization: TextCapitalization.words,
             decoration: InputDecoration(
               labelText: l10n.profileLastNameLabel,
               errorText: _error,

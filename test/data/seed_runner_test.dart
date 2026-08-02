@@ -1,12 +1,32 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gymlog/core/constants.dart';
 import 'package:gymlog/data/database.dart';
 import 'package:gymlog/data/seed/exercise_seed.dart';
 import 'package:gymlog/data/seed/reference_data_seed.dart';
 import 'package:gymlog/data/seed/seed_runner.dart';
 import 'package:gymlog/data/seed/workout_tag_seed.dart';
 import 'package:gymlog/data/seed/workout_template_seed.dart';
+
+/// The Stage 12 (2026-08-02) curated built-in tag set -- mirrors
+/// `workout_tag_seed.dart`'s `_seedTagIds` (private to that library, so
+/// spelled out here rather than imported).
+const Set<String> _expectedBuiltInTagIds = {
+  'chest',
+  'back',
+  legsWorkoutTagId,
+  'shoulders',
+  'biceps',
+  'triceps',
+  'forearms',
+  'abs',
+  'glutes',
+  'calves',
+  'full_body',
+  crossfitWorkoutTagId,
+  'cardio_system',
+};
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -46,12 +66,13 @@ void main() {
       expect(muscleGroups, hasLength(17));
       expect(equipments, hasLength(9));
       expect(measurementTypes, hasLength(15));
-      // Stage 10, owner-reported: one built-in tag per muscle group.
-      expect(workoutTags, hasLength(17));
-      expect(
-        workoutTags.map((t) => t.id).toSet(),
-        muscleGroups.map((m) => m.id).toSet(),
-      );
+      // Stage 10, owner-reported, trimmed/generalized Stage 12
+      // (2026-08-02): a curated 13-tag set, not a 1:1 mirror of every
+      // muscle group -- Rear Delts/Obliques/Hip Flexors/Quads/Adductors/
+      // Hamstrings were dropped in favor of the single "Legs" tag, and
+      // "Crossfit" was added.
+      expect(workoutTags, hasLength(13));
+      expect(workoutTags.map((t) => t.id).toSet(), _expectedBuiltInTagIds);
       expect(workoutTags.every((t) => !t.isDeleted), isTrue);
 
       // Q-1: the owner's full base list (199 exercises, 2026-07-20) plus a
@@ -101,7 +122,7 @@ void main() {
     expect(muscleGroups, hasLength(17));
     expect(exercises, hasLength(359));
     expect(l10n, hasLength(718));
-    expect(workoutTags, hasLength(17));
+    expect(workoutTags, hasLength(13));
     expect(workoutTemplates, hasLength(5));
     final templateExerciseCountAfterTwoRuns = templateExercises.length;
     final templateSetCountAfterTwoRuns = templateSets.length;
@@ -183,7 +204,98 @@ void main() {
       expect(chest.isDeleted, isTrue);
 
       final tags = await db.select(db.workoutTags).get();
-      expect(tags, hasLength(17));
+      expect(tags, hasLength(13));
+    },
+  );
+
+  test(
+    'insertWorkoutTagSeed soft-deletes the six retired muscle-group tags '
+    'and drops their existing assignments (Stage 12, 2026-08-02)',
+    () async {
+      // Simulate an already-seeded install from before Stage 12: the old
+      // 18-tag set, one of them ("hip_flexors") assigned to a workout.
+      await insertReferenceDataSeed(db);
+      await insertExerciseSeed(db);
+      const oldTagIds = [
+        'chest',
+        'back',
+        'shoulders',
+        'rear_delts',
+        'biceps',
+        'triceps',
+        'forearms',
+        'abs',
+        'obliques',
+        'hip_flexors',
+        'glutes',
+        'quads',
+        'adductors',
+        'hamstrings',
+        'calves',
+        'full_body',
+        'cardio_system',
+      ];
+      final now = DateTime.now().toUtc().toIso8601String();
+      await db.batch((batch) {
+        for (final id in oldTagIds) {
+          batch.insert(
+            db.workoutTags,
+            WorkoutTagsCompanion.insert(
+              id: id,
+              name: id,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+        }
+      });
+      await db
+          .into(db.workouts)
+          .insert(
+            WorkoutsCompanion.insert(
+              id: 'workout-1',
+              date: '2026-08-02',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+      await db
+          .into(db.workoutTagLinks)
+          .insert(
+            const WorkoutTagLinksCompanion(
+              workoutId: Value('workout-1'),
+              tagId: Value('hip_flexors'),
+            ),
+          );
+
+      // Re-running the seed (the Stage 12 content update) must retire the
+      // six dropped tags and silently untag the workout that had one of
+      // them assigned (owner-confirmed 2026-08-02) -- not error, and not
+      // touch any of the 11 tags this update keeps.
+      await insertWorkoutTagSeed(db);
+
+      final retired = await (db.select(db.workoutTags)..where(
+        (t) => t.id.isIn([
+          'rear_delts',
+          'obliques',
+          'hip_flexors',
+          'quads',
+          'adductors',
+          'hamstrings',
+        ]),
+      )).get();
+      expect(retired, hasLength(6));
+      expect(retired.every((t) => t.isDeleted), isTrue);
+
+      final links = await (db.select(
+        db.workoutTagLinks,
+      )..where((l) => l.workoutId.equals('workout-1'))).get();
+      expect(links, isEmpty);
+
+      final kept = await (db.select(
+        db.workoutTags,
+      )..where((t) => t.id.equals('chest'))).getSingle();
+      expect(kept.isDeleted, isFalse);
     },
   );
 

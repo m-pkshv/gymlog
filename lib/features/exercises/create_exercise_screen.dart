@@ -329,6 +329,7 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
                     controller: _nameController,
                     autofocus: true,
                     textInputAction: TextInputAction.next,
+                    textCapitalization: TextCapitalization.words,
                     decoration: InputDecoration(
                       labelText: l10n.exerciseNameLabel,
                       errorText: _nameError,
@@ -476,6 +477,7 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
                     controller: _descriptionController,
                     maxLines: 4,
                     maxLength: 2000,
+                    textCapitalization: TextCapitalization.sentences,
                     decoration: InputDecoration(
                       labelText: l10n.exerciseDescriptionLabel,
                       alignLabelWithHint: true,
@@ -622,6 +624,7 @@ class _LocalizationEntryCard extends StatelessWidget {
             TextField(
               controller: entry.nameController,
               maxLength: 80,
+              textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(
                 labelText: l10n.exerciseNameLabel,
                 helperText: nameMissing
@@ -635,6 +638,7 @@ class _LocalizationEntryCard extends StatelessWidget {
               controller: entry.descriptionController,
               maxLines: 3,
               maxLength: 2000,
+              textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
                 labelText: l10n.exerciseDescriptionLabel,
                 alignLabelWithHint: true,

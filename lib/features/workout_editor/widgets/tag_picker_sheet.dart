@@ -81,7 +81,7 @@ class TagPickerSheet extends ConsumerWidget {
                         spacing: 8,
                         runSpacing: 8,
                         children: [
-                          for (final tag in tags)
+                          for (final tag in sortedWorkoutTags(tags, l10n))
                             FilterChip(
                               avatar: CircleAvatar(
                                 backgroundColor: tagColor(tag.colorHex),

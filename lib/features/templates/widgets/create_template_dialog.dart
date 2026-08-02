@@ -72,6 +72,7 @@ class _CreateTemplateDialogState extends State<CreateTemplateDialog> {
         controller: _nameController,
         autofocus: true,
         maxLength: WorkoutTemplateRules.maxNameLength,
+        textCapitalization: TextCapitalization.words,
         decoration: InputDecoration(
           labelText: l10n.templateNameLabel,
           errorText: _error,

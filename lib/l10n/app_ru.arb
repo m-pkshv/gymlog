@@ -165,6 +165,8 @@
   "workoutTagsSheetTitle": "Теги тренировки",
   "workoutTagsEmpty": "Тегов пока нет. Добавьте их в «Ещё → Теги».",
   "workoutTagsLoadError": "Не удалось загрузить теги",
+  "workoutTagLegsLabel": "Ноги",
+  "workoutTagCrossfitLabel": "Кроссфит",
   "tagsMenuTitle": "Теги",
   "tagsEmptyTitle": "Тегов пока нет",
   "createTagAction": "Создать тег",

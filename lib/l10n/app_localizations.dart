@@ -1088,6 +1088,18 @@ abstract class AppLocalizations {
   /// **'Couldn\'t load tags'**
   String get workoutTagsLoadError;
 
+  /// Display label for the built-in "Legs" tag (Stage 12, owner-confirmed 2026-08-02): a broad leg tag that replaced six separate muscle-group tags (Rear Delts/Obliques/Hip Flexors/Quads/Adductors/Hamstrings), not a muscle group itself (`legsWorkoutTagId`, core/constants.dart).
+  ///
+  /// In en, this message translates to:
+  /// **'Legs'**
+  String get workoutTagLegsLabel;
+
+  /// Display label for the built-in "Crossfit" tag (Stage 12, owner-requested 2026-08-02): a workout-style tag, not tied to any muscle group (`crossfitWorkoutTagId`, core/constants.dart).
+  ///
+  /// In en, this message translates to:
+  /// **'Crossfit'**
+  String get workoutTagCrossfitLabel;
+
   /// "Ещё" menu item and AppBar title for the app-wide tag management screen (Stage 10, owner-reported) -- create/delete tags, separate from assigning them to a workout.
   ///
   /// In en, this message translates to:

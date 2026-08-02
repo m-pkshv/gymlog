@@ -579,6 +579,14 @@
   "@workoutTagsLoadError": {
     "description": "Error state inside the tag picker sheet (S-03), and reused for the tag management screen's error state."
   },
+  "workoutTagLegsLabel": "Legs",
+  "@workoutTagLegsLabel": {
+    "description": "Display label for the built-in \"Legs\" tag (Stage 12, owner-confirmed 2026-08-02): a broad leg tag that replaced six separate muscle-group tags (Rear Delts/Obliques/Hip Flexors/Quads/Adductors/Hamstrings), not a muscle group itself (`legsWorkoutTagId`, core/constants.dart)."
+  },
+  "workoutTagCrossfitLabel": "Crossfit",
+  "@workoutTagCrossfitLabel": {
+    "description": "Display label for the built-in \"Crossfit\" tag (Stage 12, owner-requested 2026-08-02): a workout-style tag, not tied to any muscle group (`crossfitWorkoutTagId`, core/constants.dart)."
+  },
   "tagsMenuTitle": "Tags",
   "@tagsMenuTitle": {
     "description": "\"Ещё\" menu item and AppBar title for the app-wide tag management screen (Stage 10, owner-reported) -- create/delete tags, separate from assigning them to a workout."

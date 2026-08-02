@@ -61,6 +61,7 @@ class _CreateMeasurementTypeDialogState
             controller: _nameController,
             autofocus: true,
             maxLength: MeasurementTypeRules.maxNameLength,
+            textCapitalization: TextCapitalization.words,
             decoration: InputDecoration(
               labelText: l10n.measurementTypeNameLabel,
               errorText: _error,

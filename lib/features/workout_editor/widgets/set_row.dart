@@ -49,7 +49,29 @@ class SetRow extends StatefulWidget {
 }
 
 class _SetRowState extends State<SetRow> {
-  bool _expanded = false;
+  // Stage 12, owner-reported: a brand-new set (added "from scratch", not
+  // duplicated) starts expanded so the steppers are visible right away --
+  // one fewer tap than expanding it by hand. Computed once, from whatever
+  // the set looked like the moment this row was first mounted (this
+  // widget is keyed by set id, so that's exactly "when the set was
+  // created" for a fresh add, and reused thereafter within this screen
+  // instance): a duplicated set already carries copied planned values, so
+  // it starts collapsed just like reopening the editor on an existing
+  // set does.
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    final hasValue = widget.fields.any(
+      (field) =>
+          (widget.isActive
+              ? field.getActual(widget.set)
+              : field.getPlanned(widget.set)) !=
+          null,
+    );
+    _expanded = !hasValue;
+  }
 
   void _updateField(SetFieldSpec field, double value) {
     widget.onFieldChanged(field, widget.isActive, value);

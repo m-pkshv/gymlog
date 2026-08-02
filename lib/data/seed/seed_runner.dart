@@ -31,7 +31,18 @@ import 'workout_template_seed.dart';
 /// the v3 base list — 197 of the owner's ~358 supplied rows already matched
 /// an existing exercise by English name and were skipped rather than
 /// duplicated; catalog grows from 199 to 359.
-const int currentSeedVersion = 6;
+/// v7 (2026-08-02, owner-reported): one more built-in workout tag, "Legs"
+/// (`legsWorkoutTagId`, core/constants.dart) — not a muscle group, spliced
+/// into `workout_tag_seed.dart`'s seeded order right after Obliques and
+/// before Hip Flexors, the owner's requested position.
+/// v8 (2026-08-02, owner-confirmed): the built-in tag list is trimmed from
+/// 18 to 13 and the display order switched to alphabetical-by-translated-
+/// label (computed on screen, not stored) — Rear Delts/Obliques/Hip
+/// Flexors/Quads/Adductors/Hamstrings are dropped (soft-deleted, any
+/// existing assignment silently removed) in favor of the single "Legs"
+/// tag, and a new standalone "Crossfit" tag (`crossfitWorkoutTagId`) is
+/// added.
+const int currentSeedVersion = 8;
 
 /// Loads built-in reference data and the placeholder exercise catalog
 /// (06_DATA_MODEL.md, section 12) on first run, tracked by
