@@ -59,6 +59,74 @@ final RoundedRectangleBorder _buttonShape = RoundedRectangleBorder(
   borderRadius: BorderRadius.circular(AppRadius.button),
 );
 
+/// Darkens a filled button's own color for its pressed state (owner-
+/// supplied mockup, "Нажатые состояния": a solid, noticeably darker fill,
+/// not Material's default faint ripple overlay). A flat 18% black blend
+/// reads as "the same color, one shade deeper" for both the blue primary
+/// button and the orange accent/timer button without needing a second,
+/// hand-picked color per button.
+Color _darkenForPress(Color color) {
+  return Color.alphaBlend(Colors.black.withValues(alpha: 0.18), color);
+}
+
+/// A filled button's `backgroundColor`, darkened on press (see
+/// [_darkenForPress]). Setting `backgroundColor` at all on a
+/// `ButtonStyle` replaces Material's own per-state resolution wholesale
+/// (there's no partial fallback to the button's defaults for states this
+/// property doesn't mention), so the disabled state is replicated here
+/// too, matching Material 3's own default disabled treatment
+/// (`onSurface` at 12% opacity) rather than accidentally losing it.
+WidgetStateProperty<Color?> _pressableFilledBackground(
+  Color base,
+  ColorScheme colorScheme,
+) {
+  return WidgetStateProperty.resolveWith((states) {
+    if (states.contains(WidgetState.disabled)) {
+      return colorScheme.onSurface.withValues(alpha: 0.12);
+    }
+    if (states.contains(WidgetState.pressed)) {
+      return _darkenForPress(base);
+    }
+    return base;
+  });
+}
+
+/// An outlined ("Вторичная") button's `backgroundColor`: transparent at
+/// rest (matching Material 3's own default, so this is a no-op change
+/// there), a light, translucent tint of [ColorScheme.primary] while
+/// pressed (owner-supplied mockup: a filled pale-blue pill, not just a
+/// ripple).
+WidgetStateProperty<Color?> _pressableOutlinedBackground(
+  ColorScheme colorScheme,
+) {
+  return WidgetStateProperty.resolveWith((states) {
+    if (states.contains(WidgetState.pressed)) {
+      return colorScheme.primary.withValues(alpha: 0.12);
+    }
+    return Colors.transparent;
+  });
+}
+
+/// Shared style for the accent-colored ("Таймер / акцент") filled CTA
+/// buttons -- finishing a workout, restoring a backup -- so both share
+/// the same pressed-state darkening ([_darkenForPress]) instead of each
+/// call site re-deriving its own flat, unpressable accent color.
+ButtonStyle accentFilledButtonStyle(
+  BuildContext context, {
+  EdgeInsetsGeometry? padding,
+}) {
+  final semantic = Theme.of(context).extension<AppSemanticColors>()!;
+  return FilledButton.styleFrom(padding: padding).copyWith(
+    backgroundColor: WidgetStateProperty.resolveWith((states) {
+      if (states.contains(WidgetState.pressed)) {
+        return _darkenForPress(semantic.accent);
+      }
+      return semantic.accent;
+    }),
+    foregroundColor: WidgetStatePropertyAll(semantic.onAccent),
+  );
+}
+
 /// Light theme derived from [seedColor]. Colors must always be read from
 /// `Theme.of(context).colorScheme` in widgets, never hardcoded (UX 9).
 ThemeData buildLightTheme() {
@@ -68,13 +136,20 @@ ThemeData buildLightTheme() {
     useMaterial3: true,
     appBarTheme: _appBarTheme(colorScheme),
     filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(shape: _buttonShape),
+      style: FilledButton.styleFrom(shape: _buttonShape).copyWith(
+        backgroundColor: _pressableFilledBackground(
+          colorScheme.primary,
+          colorScheme,
+        ),
+      ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(shape: _buttonShape),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(shape: _buttonShape),
+      style: OutlinedButton.styleFrom(shape: _buttonShape).copyWith(
+        backgroundColor: _pressableOutlinedBackground(colorScheme),
+      ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(shape: _buttonShape),
@@ -95,13 +170,20 @@ ThemeData buildDarkTheme() {
     useMaterial3: true,
     appBarTheme: _appBarTheme(colorScheme),
     filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(shape: _buttonShape),
+      style: FilledButton.styleFrom(shape: _buttonShape).copyWith(
+        backgroundColor: _pressableFilledBackground(
+          colorScheme.primary,
+          colorScheme,
+        ),
+      ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(shape: _buttonShape),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(shape: _buttonShape),
+      style: OutlinedButton.styleFrom(shape: _buttonShape).copyWith(
+        backgroundColor: _pressableOutlinedBackground(colorScheme),
+      ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(shape: _buttonShape),

@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
+import '../../app/theme.dart';
 import '../../core/date_format.dart';
 import '../../core/widgets/grouped_section.dart';
 import '../../data/database.dart';
@@ -223,11 +224,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              style: FilledButton.styleFrom(
-                backgroundColor: semantic.accent,
-                foregroundColor: semantic.onAccent,
-                padding: bigButtonPadding,
-              ),
+              style: accentFilledButtonStyle(context, padding: bigButtonPadding),
               onPressed: busyWithBackup ? null : _restoreBackup,
               icon: _isRestoringBackup
                   ? SizedBox(

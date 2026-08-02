@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
+import '../../app/theme.dart';
 import '../../core/constants.dart';
 import '../../core/date_format.dart';
 import '../../core/duration_format.dart';
@@ -1099,19 +1100,19 @@ class _StatusCtaButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final target = primaryStatusCtaTransition(status);
-    final semantic = Theme.of(context).extension<AppSemanticColors>()!;
     final isFinishing = target == WorkoutStatus.completed;
+    const padding = EdgeInsets.symmetric(vertical: 14);
 
     return SizedBox(
       width: double.infinity,
       child: FilledButton(
         // Shape comes from the app-wide FilledButtonThemeData
-        // (app/theme.dart) -- no need to repeat it here.
-        style: FilledButton.styleFrom(
-          backgroundColor: isFinishing ? semantic.accent : null,
-          foregroundColor: isFinishing ? semantic.onAccent : null,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-        ),
+        // (app/theme.dart) -- no need to repeat it here. Not-finishing
+        // (blue) also gets the theme's own pressed-state darkening for
+        // free by passing no override at all.
+        style: isFinishing
+            ? accentFilledButtonStyle(context, padding: padding)
+            : FilledButton.styleFrom(padding: padding),
         onPressed: onPressed,
         child: Text(workoutTransitionActionLabel(l10n, status, target)),
       ),
