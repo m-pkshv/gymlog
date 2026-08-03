@@ -252,10 +252,17 @@ class _ExerciseRow extends _ListRow {
 /// same fixed order the filter sheet's dropdown and the seeded per-
 /// muscle-group tags already use), not alphabetically -- alphabetical
 /// order would reshuffle by locale, this doesn't. The "no group" bucket,
-/// if non-empty, sorts last. Purely a display-layer regrouping of
-/// whatever order the (already filtered/searched) provider returned --
-/// doesn't change the query itself, so within each section exercises stay
-/// in that same order (Stage 2's existing `createdAt DESC`).
+/// if non-empty, sorts last.
+///
+/// *Within* each section, exercises sort alphabetically by (already-
+/// localized, DM 12) name, case-insensitively -- owner-reported
+/// (redesign_v2): previously left in whatever order the provider
+/// returned (Stage 2's `createdAt DESC`). No separate "shorter name
+/// wins" rule is needed for the case the owner called out ("Жим штанги"
+/// above "Жим штанги лёжа"): plain string comparison already sorts a
+/// name before any longer name it's a prefix of -- there's no character
+/// at that position to compare against, so the shorter string is
+/// `compareTo`'s "smaller" by definition.
 List<_ListRow> _groupByMuscleGroup(List<Exercise> exercises) {
   final byGroup = <String?, List<Exercise>>{};
   for (final exercise in exercises) {
@@ -267,6 +274,9 @@ List<_ListRow> _groupByMuscleGroup(List<Exercise> exercises) {
   for (final id in [...muscleGroupIds, null]) {
     final group = byGroup[id];
     if (group == null || group.isEmpty) continue;
+    group.sort(
+      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    );
     rows.add(_SectionHeaderRow(id, group.length));
     rows.addAll(group.map(_ExerciseRow.new));
   }

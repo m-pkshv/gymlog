@@ -337,6 +337,75 @@ void main() {
   );
 
   testWidgets(
+    'sorts exercises alphabetically within a muscle-group section, '
+    'case-insensitively, regardless of insertion order (Stage 10 redesign, '
+    'owner-reported: "Жим штанги" should sort above "Жим штанги лёжа")',
+    (tester) async {
+      await db
+          .into(db.muscleGroups)
+          .insert(MuscleGroupsCompanion.insert(id: 'chest', sortOrder: 0));
+
+      // Inserted deliberately out of alphabetical order (and with mixed
+      // case on one name) -- if this still fell back to createdAt DESC
+      // (the pre-redesign_v2 order), "жим штанги на наклонной" would sort
+      // first, not last.
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'incline-press',
+              name: 'жим штанги на наклонной',
+              exerciseType: ExerciseType.strength.name,
+              primaryMuscleGroupId: const Value('chest'),
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'bench-lying',
+              name: 'Жим штанги лёжа',
+              exerciseType: ExerciseType.strength.name,
+              primaryMuscleGroupId: const Value('chest'),
+              createdAt: '2026-07-19T00:01:00Z',
+              updatedAt: '2026-07-19T00:01:00Z',
+            ),
+          );
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'bench',
+              name: 'Жим штанги',
+              exerciseType: ExerciseType.strength.name,
+              primaryMuscleGroupId: const Value('chest'),
+              createdAt: '2026-07-19T00:02:00Z',
+              updatedAt: '2026-07-19T00:02:00Z',
+            ),
+          );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      final shortY = tester.getTopLeft(find.text('Жим штанги')).dy;
+      final lyingY = tester.getTopLeft(find.text('Жим штанги лёжа')).dy;
+      final inclineY = tester
+          .getTopLeft(find.text('жим штанги на наклонной'))
+          .dy;
+
+      // "Жим штанги" is a prefix of both other names -- plain
+      // case-insensitive string comparison already puts it first, no
+      // separate "shorter name wins" rule needed.
+      expect(shortY, lessThan(lyingY));
+      expect(lyingY, lessThan(inclineY));
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
     'the jump rail shows one dot per section and dragging it scrolls to a '
     'later section (Stage 10, owner-reported: "точки быстрого перемещения '
     '... как алфавитный переход в контактах")',
