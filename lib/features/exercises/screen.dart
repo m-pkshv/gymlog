@@ -513,10 +513,26 @@ class _ExerciseListTile extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: avatarColor,
-          foregroundColor: avatarForeground,
-          child: Icon(exerciseTypeIcon(exercise.exerciseType)),
+        // Owner-reported (redesign_v2): the app's own design language is
+        // rounded squares/rectangles (buttons, cards, chips -- see
+        // `AppRadius`), not circles -- a plain `CircleAvatar` here didn't
+        // match. Sized up from an initial 40dp/`AppRadius.control`
+        // (owner-reported follow-up: "increase it a bit") to 48dp -- the
+        // app's own min touch-target size elsewhere -- paired with
+        // `AppRadius.button`, the radius already used at that scale.
+        leading: Container(
+          width: 48,
+          height: 48,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: avatarColor,
+            borderRadius: BorderRadius.circular(AppRadius.button),
+          ),
+          child: Icon(
+            exerciseTypeIcon(exercise.exerciseType),
+            color: avatarForeground,
+            size: 26,
+          ),
         ),
         title: Text(exercise.name),
         subtitle: Text(subtitleParts.join(' · ')),

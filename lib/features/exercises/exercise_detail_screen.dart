@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
 import '../../core/date_format.dart';
 import '../../core/widgets/error_retry_state.dart';
@@ -266,23 +267,33 @@ class _AboutTab extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         Center(
-          child: Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
+          // Owner-reported (redesign_v2): rounded square, not a circle --
+          // matches the app's own design language (`AppRadius`) and the
+          // list row's leading icon (`screen.dart`'s `_ExerciseListTile`).
+          // `ClipRRect` around the whole box, not just the image branch,
+          // so the plain-color placeholder (no `imageAsset` yet) and a
+          // future real image share the exact same clipped shape.
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            child: Container(
+              width: 120,
+              height: 120,
+              alignment: Alignment.center,
               color: theme.colorScheme.surfaceContainerHighest,
-              shape: BoxShape.circle,
+              // Built-in exercises get a real image once the full seed
+              // pipeline lands (D-3); until then, and always for
+              // user-created ones, this placeholder icon stands in. A
+              // square source image fits this square mask almost exactly
+              // (`BoxFit.cover` just fills the box) -- unlike the old
+              // circular mask, which cropped a square image's corners.
+              child: exercise.imageAsset != null
+                  ? Image.asset(exercise.imageAsset!, fit: BoxFit.cover)
+                  : Icon(
+                      exerciseTypeIcon(exercise.exerciseType),
+                      size: 56,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
             ),
-            // Built-in exercises get a real image once the full seed
-            // pipeline lands (D-3); until then, and always for
-            // user-created ones, this placeholder icon stands in.
-            child: exercise.imageAsset != null
-                ? ClipOval(child: Image.asset(exercise.imageAsset!))
-                : Icon(
-                    exerciseTypeIcon(exercise.exerciseType),
-                    size: 56,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
           ),
         ),
         if (exercise.isArchived) ...[
