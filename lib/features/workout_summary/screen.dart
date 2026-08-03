@@ -535,18 +535,36 @@ class _NewRecordsSection extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Icon(Icons.emoji_events, color: semantic.onAccentContainer),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    l10n.workoutSummaryNewRecordsTitle,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: semantic.onAccentContainer,
-                      fontWeight: FontWeight.w700,
+              // Owner-reported: match the hero card above ("Тренировка
+              // завершена", `_CompletedHeroCard`) instead of a small
+              // inline icon+text row -- same badge size (28dp circle,
+              // solid `accent`/`onAccent`, the same "pale container +
+              // solid badge" pairing `_CompletedHeroCard` already uses
+              // with `primary`/`primaryContainer`) and the same title
+              // text style, centered, with the title below the badge
+              // rather than beside it.
+              Center(
+                child: Column(
+                  children: [
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundColor: semantic.accent,
+                      child: Icon(
+                        Icons.emoji_events,
+                        color: semantic.onAccent,
+                        size: 28,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      l10n.workoutSummaryNewRecordsTitle,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: semantic.onAccentContainer,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               for (final group in groups)
                 Padding(
