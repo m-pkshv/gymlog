@@ -21,6 +21,7 @@ import '../../domain/models/exercise.dart';
 import '../../domain/models/workout_details.dart';
 import '../../domain/models/workout_tag.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/workout_service.dart';
 import '../history/active_workout_conflict.dart';
 import '../history/copy_workout_flow.dart';
 import '../history/create_template_from_workout_flow.dart';
@@ -1031,6 +1032,18 @@ class _EditorBody extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: Builder(
               builder: (context) {
+                // Owner-reported: "Возобновить" past DM 6.4.1's resume
+                // window is guaranteed to fail (`WorkoutService.
+                // changeStatus` itself rejects it) -- showing it anyway
+                // looked like a bug, not a deliberate restriction.
+                // "Копировать" is the only action left in this row once
+                // that's true (unlike a status transition, copying never
+                // depends on the resume window), so it takes over the
+                // primary slot instead of sitting next to a dead button.
+                if (workout.status == WorkoutStatus.completed &&
+                    !WorkoutService.canResume(workout)) {
+                  return _CopyOnlyCtaButton(onPressed: onCopyToNewDate);
+                }
                 final primaryButton = _StatusCtaButton(
                   key: const ValueKey('workout-status-cta'),
                   status: workout.status,
@@ -1106,7 +1119,11 @@ WorkoutStatus? secondaryStatusCtaTransition(WorkoutStatus status) {
 /// found only through History's own card "⋮" menu before, awkward when
 /// you're already looking at the workout you want copied -- see
 /// [copyWorkoutFlow]) -- copying isn't a status transition at all, so it
-/// can't fit [secondaryStatusCtaTransition]'s `WorkoutStatus?` shape.
+/// can't fit [secondaryStatusCtaTransition]'s `WorkoutStatus?` shape. The
+/// caller only reaches this function's `completed` branch once
+/// `WorkoutService.canResume` is true -- once the resume window has
+/// passed, [_CopyOnlyCtaButton] replaces the whole row instead (this
+/// function is never even called in that case).
 Widget? _secondaryStatusCtaButton({
   required BuildContext context,
   required WorkoutStatus status,
@@ -1170,6 +1187,40 @@ class _StatusCtaButton extends StatelessWidget {
             : FilledButton.styleFrom(padding: padding),
         onPressed: onPressed,
         child: Text(workoutTransitionActionLabel(l10n, status, target)),
+      ),
+    );
+  }
+}
+
+/// Replaces [_StatusCtaButton] entirely once "Возобновить" is off the
+/// table (owner-reported, redesign_v2: `!WorkoutService.canResume`, see
+/// this screen's `build` method) -- "Копировать" is the sole remaining
+/// action for a completed workout past its resume window, so it takes
+/// over the primary (filled, full-width) slot rather than sitting as a
+/// half-width secondary next to a button that's been removed. Plain blue
+/// [FilledButton.styleFrom], not [accentFilledButtonStyle]: copying
+/// isn't a "finishing" action, same color rule [_StatusCtaButton] already
+/// applies to every non-finishing transition. Reuses the same
+/// `workout-status-secondary-cta` key the "Копировать" button already
+/// used when it sat next to "Возобновить" -- same action, same identity,
+/// regardless of which layout it's currently rendered in.
+class _CopyOnlyCtaButton extends StatelessWidget {
+  const _CopyOnlyCtaButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton(
+        key: const ValueKey('workout-status-secondary-cta'),
+        style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+        ),
+        onPressed: onPressed,
+        child: Text(l10n.copyWorkoutAction),
       ),
     );
   }

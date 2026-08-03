@@ -57,6 +57,22 @@ class WorkoutService {
     return allowedTransitions[from]?.contains(to) ?? false;
   }
 
+  /// Whether resuming [workout] (`completed -> inProgress`) is currently
+  /// allowed under [resumeWindow] -- a pure predicate (no repository
+  /// access needed, so it's `static`, callable from the UI without a
+  /// `WorkoutService` instance) shared by [changeStatus]'s own
+  /// enforcement below and the editor's "Возобновить" CTA
+  /// (owner-reported, redesign_v2: showing a button that's guaranteed to
+  /// fail once the window has passed looked like a bug -- the CTA should
+  /// know not to offer it in the first place, using the exact same check
+  /// that rejects it).
+  static bool canResume(Workout workout) {
+    if (workout.status != WorkoutStatus.completed) return false;
+    final finishedAt = workout.finishedAt;
+    if (finishedAt == null) return false;
+    return DateTime.now().toUtc().difference(finishedAt) <= resumeWindow;
+  }
+
   /// Changes [workout]'s status, enforcing DM 6.4.1: the transition must be
   /// on [allowedTransitions], at most one workout may be `inProgress`
   /// (invariant), and resuming a completed workout is only allowed within
@@ -75,9 +91,7 @@ class WorkoutService {
 
     if (workout.status == WorkoutStatus.completed &&
         newStatus == WorkoutStatus.inProgress) {
-      final finishedAt = workout.finishedAt;
-      if (finishedAt == null ||
-          DateTime.now().toUtc().difference(finishedAt) > resumeWindow) {
+      if (!canResume(workout)) {
         return const Err(
           ValidationError('The resume window for this workout has passed'),
         );

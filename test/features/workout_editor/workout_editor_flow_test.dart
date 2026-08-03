@@ -1632,7 +1632,15 @@ void main() {
     'menu -- now sits next to "Resume" on the workout itself, so it can be '
     'confirmed as the right one before copying it)',
     () {
-      Future<void> seedCompletedWorkoutWithFacts(AppDatabase db) async {
+      Future<void> seedCompletedWorkoutWithFacts(
+        AppDatabase db, {
+        // Owner-reported (redesign_v2): "Возобновить" only renders at all
+        // once `WorkoutService.canResume` allows it -- defaults to "1
+        // hour ago" (comfortably inside the 24h window) so this shared
+        // fixture keeps representing an ordinary, still-resumable
+        // completed workout unless a test explicitly asks otherwise.
+        DateTime? finishedAt,
+      }) async {
         await _seedExercise(db);
         await db
             .into(db.workouts)
@@ -1642,6 +1650,13 @@ void main() {
                 date: '2026-07-01',
                 name: const Value('Leg day'),
                 status: const Value('completed'),
+                finishedAt: Value(
+                  (finishedAt ??
+                          DateTime.now().toUtc().subtract(
+                            const Duration(hours: 1),
+                          ))
+                      .toIso8601String(),
+                ),
                 createdAt: '2026-07-01T00:00:00Z',
                 updatedAt: '2026-07-01T00:00:00Z',
               ),
@@ -1690,6 +1705,48 @@ void main() {
 
         await _unmountAndFlush(tester);
       });
+
+      testWidgets(
+        'once the resume window has passed, "Resume" is hidden entirely '
+        'and "Copy" alone takes the full-width primary slot '
+        '(owner-reported: a "Resume" button guaranteed to fail looked '
+        'like a bug)',
+        (tester) async {
+          await seedCompletedWorkoutWithFacts(
+            db,
+            finishedAt: DateTime.now().toUtc().subtract(
+              const Duration(hours: 25),
+            ),
+          );
+
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Leg day'));
+          await tester.pumpAndSettle();
+
+          expect(_statusCta, findsNothing);
+          expect(_secondaryStatusCta, findsOneWidget);
+          expect(find.text('Copy'), findsOneWidget);
+          // Filled (primary), not outlined (secondary) -- it's the sole
+          // remaining action now, not a half-width companion to "Resume".
+          expect(
+            find.ancestor(
+              of: find.text('Copy'),
+              matching: find.byType(FilledButton),
+            ),
+            findsOneWidget,
+          );
+          expect(
+            find.ancestor(
+              of: find.text('Copy'),
+              matching: find.byType(OutlinedButton),
+            ),
+            findsNothing,
+          );
+
+          await _unmountAndFlush(tester);
+        },
+      );
 
       testWidgets(
         'copies the workout to a new date without its facts, leaving the '

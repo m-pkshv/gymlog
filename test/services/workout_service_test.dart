@@ -378,6 +378,46 @@ void main() {
     );
   });
 
+  group(
+    'canResume (redesign_v2, owner-reported: shares the exact check '
+    'changeStatus enforces, so the editor CTA can decide whether to even '
+    'offer "Возобновить" instead of showing one guaranteed to fail)',
+    () {
+      test('true within the window', () {
+        final workout = _workout(
+          status: WorkoutStatus.completed,
+          finishedAt: DateTime.now().toUtc().subtract(
+            const Duration(hours: 1),
+          ),
+        );
+        expect(WorkoutService.canResume(workout), isTrue);
+      });
+
+      test('false once the window has passed', () {
+        final workout = _workout(
+          status: WorkoutStatus.completed,
+          finishedAt: DateTime.now().toUtc().subtract(
+            const Duration(hours: 25),
+          ),
+        );
+        expect(WorkoutService.canResume(workout), isFalse);
+      });
+
+      test('false for a completed workout with no finishedAt', () {
+        final workout = _workout(status: WorkoutStatus.completed);
+        expect(WorkoutService.canResume(workout), isFalse);
+      });
+
+      test('false for a status other than completed', () {
+        final workout = _workout(
+          status: WorkoutStatus.inProgress,
+          finishedAt: DateTime.now().toUtc(),
+        );
+        expect(WorkoutService.canResume(workout), isFalse);
+      });
+    },
+  );
+
   group('delete (S-02, DM 10)', () {
     test('rejects an inProgress workout without touching storage', () async {
       final workout = _workout(status: WorkoutStatus.inProgress);
