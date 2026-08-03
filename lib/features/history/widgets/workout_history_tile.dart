@@ -74,6 +74,23 @@ class WorkoutHistoryTile extends ConsumerWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: ListTile(
+        // Owner-reported: the "⋮" sat much further from the card's right
+        // edge than it looked like it should. Measured it directly
+        // (a throwaway widget test, comparing rendered rects) rather than
+        // guess twice: `ListTile`'s own default `contentPadding`
+        // (`EdgeInsets.symmetric(horizontal: 16)`) accounted for most of
+        // that gap (measured ~36dp from the tile's own right edge to the
+        // icon glyph, default padding included) -- the `PopupMenuButton`'s
+        // `style` below (compact density, its own fix for a *different*
+        // problem: matching the workout editor's own "⋮" size) only ever
+        // moved the icon 4dp, not the 24+ it looked like it should. Ended
+        // up shrinking `contentPadding`'s end inset specifically (title/
+        // subtitle keep the normal 16dp start), which cut that measured
+        // gap to 12dp -- the actual effective lever, not the button style.
+        contentPadding: const EdgeInsetsDirectional.only(
+          start: 16,
+          end: 4,
+        ),
         title: Text(name),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,7 +117,16 @@ class WorkoutHistoryTile extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             StatusBadge(status: workout.status),
+            // Compact density: same fix already used for
+            // `WorkoutStatusMenu`'s "⋮" (the workout editor's header
+            // row) -- shrinks the default 48dp touch target to 40dp, a
+            // smaller, secondary contributor to the edge-distance fix
+            // above (`ListTile.contentPadding`'s the main lever; this
+            // alone only measured ~4dp on its own, see that comment).
             PopupMenuButton<_HistoryCardAction>(
+              style: IconButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+              ),
               onSelected: (action) {
                 switch (action) {
                   case _HistoryCardAction.copy:

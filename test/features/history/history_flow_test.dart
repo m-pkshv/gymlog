@@ -345,6 +345,41 @@ void main() {
     await _unmountAndFlush(tester);
   });
 
+  testWidgets(
+    'the card\'s "⋮" menu sits close to the card\'s own right edge '
+    '(redesign_v2, owner-reported: it used to look much further left, '
+    'confirmed by measuring the rendered rect)',
+    (tester) async {
+      await _insertCompletedWorkout(
+        db,
+        id: 'w1',
+        date: '2026-07-20',
+        name: 'Leg day',
+      );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      // `ListTile`'s own rect, not `Card`'s: inside a `ListView`, `Card`
+      // (a `Padding` around a `Material`, no sizing behavior of its own)
+      // is stretched to the full tight viewport width by its parent --
+      // its *reported* rect is the viewport, not the visually-margined
+      // card boundary. `ListTile` correctly reflects the card's own
+      // content box (post-margin), confirmed by direct measurement while
+      // building this fix.
+      final tileRight = tester.getRect(find.byType(ListTile).first).right;
+      final iconRight = tester.getRect(find.byIcon(Icons.more_vert)).right;
+
+      // Was ~36dp before this fix (ListTile's default contentPadding
+      // alone) -- comfortably under half of that confirms the fix is
+      // actually in effect, without pinning the test to an exact pixel
+      // value that'd break on the next unrelated tweak.
+      expect(tileRight - iconRight, lessThan(16));
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
   group('"Copy" (Stage 3, S-02, TS 8 section 8)', () {
     testWidgets(
       'copies exercises/order/planned values into a new draft, without '
