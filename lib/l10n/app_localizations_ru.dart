@@ -455,6 +455,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchExercisesHint => 'Поиск по названию';
 
   @override
+  String get searchExercisesClearTooltip => 'Очистить поиск';
+
+  @override
   String get filterExercisesTooltip => 'Фильтры';
 
   @override
@@ -713,6 +716,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get searchHistoryHint => 'Поиск по названию';
+
+  @override
+  String get searchHistoryClearTooltip => 'Очистить поиск';
 
   @override
   String get filterDateFromLabel => 'С';

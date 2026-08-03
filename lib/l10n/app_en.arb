@@ -491,6 +491,10 @@
   "@searchExercisesHint": {
     "description": "Placeholder text in the search field on the Exercises list (S-06)."
   },
+  "searchExercisesClearTooltip": "Clear search",
+  "@searchExercisesClearTooltip": {
+    "description": "UX 11 accessibility: label for the icon-only \"clear\" button that appears in the Exercises catalog's search field once it has text (redesign_v2, owner-reported)."
+  },
   "filterExercisesTooltip": "Filters",
   "@filterExercisesTooltip": {
     "description": "Tooltip on the AppBar filter icon that opens the filter bottom sheet on the Exercises list (S-06)."
@@ -819,6 +823,10 @@
   "searchHistoryHint": "Search by name",
   "@searchHistoryHint": {
     "description": "Hint text of History's persistent search field (S-02, Stage 3)."
+  },
+  "searchHistoryClearTooltip": "Clear search",
+  "@searchHistoryClearTooltip": {
+    "description": "UX 11 accessibility: label for the icon-only \"clear\" button that appears in History's search field once it has text (redesign_v2, owner-reported)."
   },
   "filterDateFromLabel": "From",
   "@filterDateFromLabel": {

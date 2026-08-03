@@ -173,6 +173,19 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               decoration: InputDecoration(
                 hintText: l10n.searchHistoryHint,
                 prefixIcon: const Icon(Icons.search),
+                // Owner-reported: a quick way to clear the search text
+                // without selecting/backspacing it by hand -- only shown
+                // once there's something to clear; `_searchController`
+                // already has a listener that calls `setState` on every
+                // change (this screen's `initState`), so clearing it here
+                // makes the icon disappear on its own, no extra state.
+                suffixIcon: _searchController.text.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: l10n.searchHistoryClearTooltip,
+                        icon: const Icon(Icons.clear),
+                        onPressed: _searchController.clear,
+                      ),
                 isDense: true,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),

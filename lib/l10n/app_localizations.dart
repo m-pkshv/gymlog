@@ -956,6 +956,12 @@ abstract class AppLocalizations {
   /// **'Search by name'**
   String get searchExercisesHint;
 
+  /// UX 11 accessibility: label for the icon-only "clear" button that appears in the Exercises catalog's search field once it has text (redesign_v2, owner-reported).
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get searchExercisesClearTooltip;
+
   /// Tooltip on the AppBar filter icon that opens the filter bottom sheet on the Exercises list (S-06).
   ///
   /// In en, this message translates to:
@@ -1441,6 +1447,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search by name'**
   String get searchHistoryHint;
+
+  /// UX 11 accessibility: label for the icon-only "clear" button that appears in History's search field once it has text (redesign_v2, owner-reported).
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get searchHistoryClearTooltip;
 
   /// Label for the range-start date picker in History's filter sheet (S-02, Stage 3).
   ///

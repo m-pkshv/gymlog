@@ -454,6 +454,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchExercisesHint => 'Search by name';
 
   @override
+  String get searchExercisesClearTooltip => 'Clear search';
+
+  @override
   String get filterExercisesTooltip => 'Filters';
 
   @override
@@ -708,6 +711,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchHistoryHint => 'Search by name';
+
+  @override
+  String get searchHistoryClearTooltip => 'Clear search';
 
   @override
   String get filterDateFromLabel => 'From';

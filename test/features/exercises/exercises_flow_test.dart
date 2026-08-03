@@ -851,6 +851,56 @@ void main() {
   });
 
   testWidgets(
+    'a "clear" button appears in the search field once it has text, and '
+    'clears it on tap (redesign_v2, owner-reported)',
+    (tester) async {
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'bench',
+              name: 'Bench Press',
+              exerciseType: ExerciseType.strength.name,
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'squat',
+              name: 'Squat',
+              exerciseType: ExerciseType.strength.name,
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.clear), findsNothing);
+
+      await tester.enterText(find.byType(TextField), 'bench');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bench Press'), findsOneWidget);
+      expect(find.text('Squat'), findsNothing);
+      expect(find.byIcon(Icons.clear), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.clear));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.clear), findsNothing);
+      expect(find.text('Bench Press'), findsOneWidget);
+      expect(find.text('Squat'), findsOneWidget);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
     'a search with no matches shows "No matches found" and a reset action',
     (tester) async {
       await db

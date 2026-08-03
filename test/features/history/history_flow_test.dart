@@ -720,6 +720,46 @@ void main() {
     });
 
     testWidgets(
+      'a "clear" button appears in the search field once it has text, and '
+      'clears it on tap (redesign_v2, owner-reported)',
+      (tester) async {
+        await _insertCompletedWorkout(
+          db,
+          id: 'w1',
+          date: '2026-07-01',
+          name: 'Legs',
+        );
+        await _insertCompletedWorkout(
+          db,
+          id: 'w2',
+          date: '2026-07-02',
+          name: 'Push',
+        );
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+
+        expect(find.byIcon(Icons.clear), findsNothing);
+
+        await tester.enterText(find.byType(TextField), 'leg');
+        await tester.pumpAndSettle();
+
+        expect(find.text('Legs'), findsOneWidget);
+        expect(find.text('Push'), findsNothing);
+        expect(find.byIcon(Icons.clear), findsOneWidget);
+
+        await tester.tap(find.byIcon(Icons.clear));
+        await tester.pumpAndSettle();
+
+        expect(find.byIcon(Icons.clear), findsNothing);
+        expect(find.text('Legs'), findsOneWidget);
+        expect(find.text('Push'), findsOneWidget);
+
+        await _unmountAndFlush(tester);
+      },
+    );
+
+    testWidgets(
       'a draft workout is hidden by default but shown once "Draft" is '
       'selected in the status filter',
       (tester) async {
