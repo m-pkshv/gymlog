@@ -700,11 +700,12 @@ void main() {
 
   group('copyWorkout (Stage 3, S-02, TS 8 section 8)', () {
     test(
-      'copies exercises, order, comment, planned values and the last '
-      'progression decision into a new draft dated by the caller -- '
-      'actuals and completion are never copied (Stage 10, owner-reported: '
-      'the progression call now carries forward as a starting point, '
-      'instead of always resetting to "not set")',
+      'copies the workout name (Stage 12/redesign_v2, owner-reported), '
+      'exercises, order, comment, planned values and the last progression '
+      'decision into a new draft dated by the caller -- actuals and '
+      'completion are never copied (Stage 10, owner-reported: the '
+      'progression call now carries forward as a starting point, instead '
+      'of always resetting to "not set")',
       () async {
         final exercise = await exercises.create(
           name: 'Squat',
@@ -739,7 +740,10 @@ void main() {
           ),
         );
         await workouts.updateWorkout(
-          source.copyWith(status: WorkoutStatus.completed),
+          source.copyWith(
+            status: WorkoutStatus.completed,
+            name: 'Leg day',
+          ),
         );
 
         final copy = await workouts.copyWorkout(
@@ -750,6 +754,7 @@ void main() {
         expect(copy.date, DateTime(2026, 7, 20));
         expect(copy.status, WorkoutStatus.draft);
         expect(copy.id, isNot(source.id));
+        expect(copy.name, 'Leg day');
 
         final details = await workouts.getDetails(copy.id);
         expect(details!.exercises, hasLength(1));

@@ -22,6 +22,7 @@ import '../../domain/models/workout_details.dart';
 import '../../domain/models/workout_tag.dart';
 import '../../l10n/app_localizations.dart';
 import '../history/active_workout_conflict.dart';
+import '../history/copy_workout_flow.dart';
 import '../history/create_template_from_workout_flow.dart';
 import 'controller.dart';
 import 'export_workout_pdf_flow.dart';
@@ -501,6 +502,35 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
     await exportWorkoutPdfFlow(context, ref, details);
   }
 
+  /// Secondary bottom CTA for a completed workout, next to "Возобновить"
+  /// (Stage 12/redesign_v2, owner-reported): "Копировать" already existed,
+  /// but only from History's own card "⋮" menu -- open the workout first
+  /// to confirm it's the right one, then copy it to a new date with one
+  /// button right here, no trip back to History needed. Reuses the exact
+  /// same [copyWorkoutFlow] History's own menu calls, so the date prompt/
+  /// error handling/opening the copy can't drift out of sync between the
+  /// two entry points.
+  ///
+  /// `replaceCurrentRoute: true` (owner-reported follow-up): this editor
+  /// is itself already pushed on top of Today/History, so a plain `push`
+  /// for the copy would leave *this* (the source) editor sitting in the
+  /// stack underneath it -- scheduling/finishing/deleting the copy would
+  /// then just pop back onto the source workout instead of all the way
+  /// out to whichever tab root the source was opened from. Replacing
+  /// this route with the copy's is the exact same fix already applied to
+  /// the "Копией" *picker* (`copy_workout_flow.dart`'s own doc comment):
+  /// once the source has done its one job (confirming it's the right
+  /// workout to copy), it's replaced in the stack rather than left
+  /// underneath.
+  Future<void> _copyToNewDate() async {
+    final workout = ref
+        .read(workoutEditorControllerProvider(widget.workoutId))
+        .value
+        ?.workout;
+    if (workout == null) return;
+    await copyWorkoutFlow(context, ref, workout, replaceCurrentRoute: true);
+  }
+
   /// "⋮ → Удалить" in the redesigned status menu (Stage 10 redesign) --
   /// the editor never had its own delete action before (only History did,
   /// Stage 3/Step 9); reuses the exact same `WorkoutService.delete`/
@@ -644,6 +674,7 @@ class _WorkoutEditorScreenState extends ConsumerState<WorkoutEditorScreen>
                   onSaveAsTemplate: _saveAsTemplate,
                   onDeleteWorkout: _deleteWorkout,
                   onExportPdf: _exportPdf,
+                  onCopyToNewDate: _copyToNewDate,
                 )
               : const Center(child: CircularProgressIndicator()),
         );
@@ -764,6 +795,7 @@ class _EditorBody extends StatelessWidget {
     required this.onSaveAsTemplate,
     required this.onDeleteWorkout,
     required this.onExportPdf,
+    required this.onCopyToNewDate,
   });
 
   final WorkoutDetails details;
@@ -779,6 +811,7 @@ class _EditorBody extends StatelessWidget {
   final VoidCallback onSaveAsTemplate;
   final VoidCallback onDeleteWorkout;
   final VoidCallback onExportPdf;
+  final VoidCallback onCopyToNewDate;
 
   @override
   Widget build(BuildContext context) {
@@ -998,7 +1031,6 @@ class _EditorBody extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: Builder(
               builder: (context) {
-                final secondary = secondaryStatusCtaTransition(workout.status);
                 final primaryButton = _StatusCtaButton(
                   key: const ValueKey('workout-status-cta'),
                   status: workout.status,
@@ -1006,36 +1038,18 @@ class _EditorBody extends StatelessWidget {
                     primaryStatusCtaTransition(workout.status),
                   ),
                 );
-                if (secondary == null) {
+                final secondaryButton = _secondaryStatusCtaButton(
+                  context: context,
+                  status: workout.status,
+                  onSelectStatus: onChangeStatus,
+                  onCopyToNewDate: onCopyToNewDate,
+                );
+                if (secondaryButton == null) {
                   return primaryButton;
                 }
-                // Owner-reported: "Запланировать" (draft -> planned) used to
-                // be reachable only from the "⋮" menu, which was awkward for
-                // something this common right after creating a workout. Now
-                // sits next to "Начать" as its own secondary CTA, but only
-                // for the one status that actually has this second option
-                // (DM 6.4.1: draft -> {planned, inProgress}).
                 return Row(
                   children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        key: const ValueKey('workout-status-secondary-cta'),
-                        // Same vertical padding as _StatusCtaButton's
-                        // FilledButton so both buttons come out the same
-                        // height side by side.
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                        onPressed: () => onChangeStatus(secondary),
-                        child: Text(
-                          workoutTransitionActionLabel(
-                            AppLocalizations.of(context)!,
-                            workout.status,
-                            secondary,
-                          ),
-                        ),
-                      ),
-                    ),
+                    Expanded(child: secondaryButton),
                     const SizedBox(width: 12),
                     Expanded(child: primaryButton),
                   ],
@@ -1080,6 +1094,47 @@ WorkoutStatus primaryStatusCtaTransition(WorkoutStatus status) {
 /// already covers "the one obvious next step".
 WorkoutStatus? secondaryStatusCtaTransition(WorkoutStatus status) {
   return status == WorkoutStatus.draft ? WorkoutStatus.planned : null;
+}
+
+/// Builds the second bottom CTA button, if [status] has one -- `null` if
+/// not, so the caller falls back to the primary button alone.
+///
+/// Two independent reasons a status might have a second button, handled
+/// as separate branches rather than one: [secondaryStatusCtaTransition]
+/// (draft -> "Запланировать", still a `WorkoutStatus` transition) and,
+/// for `completed`, "Копировать" (Stage 12/redesign_v2, owner-reported:
+/// found only through History's own card "⋮" menu before, awkward when
+/// you're already looking at the workout you want copied -- see
+/// [copyWorkoutFlow]) -- copying isn't a status transition at all, so it
+/// can't fit [secondaryStatusCtaTransition]'s `WorkoutStatus?` shape.
+Widget? _secondaryStatusCtaButton({
+  required BuildContext context,
+  required WorkoutStatus status,
+  required ValueChanged<WorkoutStatus> onSelectStatus,
+  required VoidCallback onCopyToNewDate,
+}) {
+  final l10n = AppLocalizations.of(context)!;
+  // Same vertical padding as _StatusCtaButton's FilledButton so both
+  // buttons come out the same height side by side.
+  const style = ButtonStyle(
+    padding: WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 14)),
+  );
+  if (status == WorkoutStatus.completed) {
+    return OutlinedButton(
+      key: const ValueKey('workout-status-secondary-cta'),
+      style: style,
+      onPressed: onCopyToNewDate,
+      child: Text(l10n.copyWorkoutAction),
+    );
+  }
+  final secondary = secondaryStatusCtaTransition(status);
+  if (secondary == null) return null;
+  return OutlinedButton(
+    key: const ValueKey('workout-status-secondary-cta'),
+    style: style,
+    onPressed: () => onSelectStatus(secondary),
+    child: Text(workoutTransitionActionLabel(l10n, status, secondary)),
+  );
 }
 
 /// Big full-width CTA button for [primaryStatusCtaTransition] (DESIGN.md,

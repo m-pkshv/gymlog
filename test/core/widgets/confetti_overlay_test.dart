@@ -15,7 +15,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(CustomPaint), findsWidgets);
 
-      // pumpAndSettle waits out the (finite, ~1.6s) animation rather than
+      // pumpAndSettle waits out the (finite, ~2.24s) animation rather than
       // hanging -- unlike the Row/CrossAxisAlignment.stretch bug found
       // earlier in this same redesign pass, a real bounded
       // AnimationController is exactly what pumpAndSettle is for.

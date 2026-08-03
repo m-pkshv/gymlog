@@ -97,11 +97,11 @@ abstract class WorkoutRepository {
   });
 
   /// "Скопировать прошлую" (S-02, TS 8 section 8): duplicates
-  /// [sourceWorkoutId]'s exercises (order, comment, and each one's last
-  /// recorded `progressionDecision`, Stage 10 owner-reported) and each
-  /// set's planned values into a brand-new `draft` workout dated [date].
-  /// Actuals and
-  /// `isCompleted` are never copied — the copy starts with nothing
+  /// [sourceWorkoutId]'s name (Stage 12/redesign_v2, owner-reported),
+  /// exercises (order, comment, and each one's last recorded
+  /// `progressionDecision`, Stage 10 owner-reported) and each set's
+  /// planned values into a brand-new `draft` workout dated [date]. Actuals
+  /// and `isCompleted` are never copied — the copy starts with nothing
   /// performed yet, but the progression call (—/↑/=/↓) the owner already
   /// made on the source carries forward as a starting point for the new
   /// occurrence rather than resetting to "not set". Throws `ArgumentError`

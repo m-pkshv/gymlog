@@ -578,6 +578,11 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
     final copy = Workout(
       id: const Uuid().v4(),
       date: date,
+      // Owner-reported (Stage 12/redesign_v2): the copy used to leave
+      // `name` unset entirely, always falling back to "Тренировка" on
+      // screen -- carries the source's own name forward instead, same as
+      // `createFromTemplate` below already does with a template's name.
+      name: source.workout.name,
       status: WorkoutStatus.draft,
       createdAt: now,
       updatedAt: now,

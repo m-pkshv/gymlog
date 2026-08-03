@@ -10,11 +10,14 @@ import '../constants.dart';
 /// screen): simple shapes (circle/square/triangle) in the app's own tag
 /// palette (`workoutTagColorPalette`, core/constants.dart), so this
 /// doesn't introduce a second arbitrary color set. Each particle
-/// decelerates as it falls (ease-out) and fades out around the middle of
-/// the screen rather than reaching the bottom (owner-reported). Self-
-/// contained -- an [AnimationController] driving a [CustomPainter], no
-/// external package (05_AI_INSTRUCTIONS.md forbids adding a dependency
-/// not already in TS 3 without asking first, and this doesn't need one).
+/// decelerates as it falls (ease-out) and fades out around 35% down the
+/// screen rather than reaching the bottom or the middle (owner-reported,
+/// twice: first mid-screen, then explicitly 35% at half the translation
+/// speed -- see [_duration]/`targetHeightFraction` below for the math).
+/// Self-contained -- an [AnimationController] driving a [CustomPainter],
+/// no external package (05_AI_INSTRUCTIONS.md forbids adding a
+/// dependency not already in TS 3 without asking first, and this doesn't
+/// need one).
 ///
 /// Purely decorative: [IgnorePointer]-wrapped so it never blocks taps on
 /// whatever it's layered over, and stops painting anything at all once the
@@ -29,7 +32,11 @@ class ConfettiOverlay extends StatefulWidget {
 
 class _ConfettiOverlayState extends State<ConfettiOverlay>
     with SingleTickerProviderStateMixin {
-  static const _duration = Duration(milliseconds: 1600);
+  // Owner: halve the fall speed, even if that means a longer time on
+  // screen -- the fall distance also shrank (0.5 -> 0.35 average target
+  // height, a 0.7x factor), so hitting exactly half speed needs the
+  // total duration scaled by 0.7 / 0.5 = 1.4x (1600ms -> 2240ms), not 2x.
+  static const _duration = Duration(milliseconds: 2240);
   static const _particleCount = 36;
 
   late final AnimationController _controller;
@@ -101,7 +108,7 @@ class _ConfettiParticle {
       swaySpeed: 2 + random.nextDouble() * 3,
       rotationSpeed: 2 + random.nextDouble() * 4,
       rotationDirection: random.nextBool() ? 1 : -1,
-      targetHeightFraction: 0.42 + random.nextDouble() * 0.16,
+      targetHeightFraction: 0.294 + random.nextDouble() * 0.112,
     );
   }
 
@@ -140,8 +147,48 @@ class _ConfettiParticle {
   final int rotationDirection;
 
   /// Where this particle finishes falling, as a fraction of the canvas
-  /// height (~0.42..0.58 -- around the middle, not the very bottom).
+  /// height (~0.294..0.406, averaging 0.35 -- owner-requested, down from
+  /// an earlier ~0.5/mid-screen average).
   final double targetHeightFraction;
+}
+
+/// Fall progress `f(t)` is a cubic Hermite ease: `f(0)=0`, `f(1)=1`, with
+/// the derivative (fall speed, as a multiple of the *average* speed)
+/// pinned independently at each end -- [_fallStartVelocity] at `t=0` and
+/// [_fallEndVelocity] at `t=1`. A single-exponent power curve
+/// (`1-(1-t)^p`, the previous implementation) can't do this: its two ends
+/// are coupled (`p` at the start, always exactly `0` at the end), so
+/// lowering the start speed automatically raised the practical end
+/// speed. Hermite decouples them, at the cost of a small (~12%, around
+/// `t~=0.26`) non-monotonic bump in the middle -- accepted as
+/// imperceptible next to the sway/spin already going on.
+///
+/// [_fallStartVelocity]: carried over from the previous owner-reported
+/// ask ("reduce the starting speed by about a third") -- `1.7241 * 2/3`,
+/// where `1.7241` approximates the pre-redesign [Curves.easeOut]'s own
+/// initial slope (a cubic bezier, `Cubic(0.0, 0.0, 0.58, 1.0)`; its
+/// tangent at `t=0` gives `dY/dX -> 6/3.48 ~= 1.7241`).
+const _fallStartVelocity = 1.15;
+
+/// [_fallEndVelocity]: owner-reported follow-up -- reduce the ending
+/// speed too, by about a third, "so they stop harder." Particles fade
+/// out over the last 15% of the fall (`localT > 0.85` below), so the
+/// *practical*, perceived ending speed is the derivative right at that
+/// fade point, not the literal (invisible-by-then) derivative at `t=1`.
+/// With the previous curve (a power ease, `p=1.15`), that fade-point
+/// derivative was `p*(1-0.85)^(p-1) ~= 0.865`; two-thirds of that is
+/// `~=0.577`. Solving the Hermite derivative formula below for the
+/// [_fallEndVelocity] that puts `f'(0.85) ~= 0.577` (given
+/// [_fallStartVelocity] above) gives `~=0.17`.
+const _fallEndVelocity = 0.17;
+
+double _fallEase(double t) {
+  final t2 = t * t;
+  final t3 = t2 * t;
+  return -2 * t3 +
+      3 * t2 +
+      _fallStartVelocity * (t3 - 2 * t2 + t) +
+      _fallEndVelocity * (t3 - t2);
 }
 
 class _ConfettiPainter extends CustomPainter {
@@ -157,13 +204,12 @@ class _ConfettiPainter extends CustomPainter {
           .clamp(0.0, 1.0);
       if (localT <= 0) continue;
 
-      // Owner-reported: slow down a bit while falling (ease-out, fast at
-      // the top and gently braking) and fade out around the middle of the
-      // screen instead of falling all the way to the bottom -- only the
-      // vertical position eases; sway/rotation stay on the raw (linear)
-      // `localT` below so the flutter/spin doesn't visibly freeze as the
-      // fall decelerates.
-      final fallT = Curves.easeOut.transform(localT);
+      // Owner-reported: slow down while falling (ease-out, gently
+      // braking) and fade out around 35% down the screen instead of
+      // falling all the way to the bottom -- only the vertical position
+      // eases; sway/rotation stay on the raw (linear) `localT` below so
+      // the flutter/spin doesn't visibly freeze as the fall decelerates.
+      final fallT = _fallEase(localT);
       final targetY = particle.targetHeightFraction * size.height;
       final y = -20 + fallT * (targetY + 20);
       final sway =

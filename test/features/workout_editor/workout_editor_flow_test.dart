@@ -1626,6 +1626,168 @@ void main() {
     },
   );
 
+  group(
+    'secondary "Copy" CTA on a completed workout (Stage 12/redesign_v2, '
+    'owner-reported: previously reachable only from History\'s own "⋮" '
+    'menu -- now sits next to "Resume" on the workout itself, so it can be '
+    'confirmed as the right one before copying it)',
+    () {
+      Future<void> seedCompletedWorkoutWithFacts(AppDatabase db) async {
+        await _seedExercise(db);
+        await db
+            .into(db.workouts)
+            .insert(
+              WorkoutsCompanion.insert(
+                id: 'w1',
+                date: '2026-07-01',
+                name: const Value('Leg day'),
+                status: const Value('completed'),
+                createdAt: '2026-07-01T00:00:00Z',
+                updatedAt: '2026-07-01T00:00:00Z',
+              ),
+            );
+        await db
+            .into(db.workoutExercises)
+            .insert(
+              WorkoutExercisesCompanion.insert(
+                id: 'we1',
+                workoutId: 'w1',
+                exerciseId: 'squat',
+                orderIndex: 0,
+                createdAt: '2026-07-01T00:00:00Z',
+                updatedAt: '2026-07-01T00:00:00Z',
+              ),
+            );
+        await db
+            .into(db.exerciseSets)
+            .insert(
+              ExerciseSetsCompanion.insert(
+                id: 's1',
+                workoutExerciseId: 'we1',
+                setNumber: 1,
+                isCompleted: const Value(true),
+                plannedWeightKg: const Value(60),
+                plannedReps: const Value(8),
+                actualWeightKg: const Value(60),
+                actualReps: const Value(8),
+                createdAt: '2026-07-01T00:00:00Z',
+                updatedAt: '2026-07-01T00:00:00Z',
+              ),
+            );
+      }
+
+      testWidgets('shows next to the primary "Resume" CTA', (tester) async {
+        await seedCompletedWorkoutWithFacts(db);
+
+        await tester.pumpWidget(_appUnderTest(db));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Leg day'));
+        await tester.pumpAndSettle();
+
+        expect(_statusCta, findsOneWidget);
+        expect(_secondaryStatusCta, findsOneWidget);
+        expect(find.text('Copy'), findsOneWidget);
+
+        await _unmountAndFlush(tester);
+      });
+
+      testWidgets(
+        'copies the workout to a new date without its facts, leaving the '
+        'source untouched',
+        (tester) async {
+          await seedCompletedWorkoutWithFacts(db);
+
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Leg day'));
+          await tester.pumpAndSettle();
+
+          await tester.tap(_secondaryStatusCta);
+          await tester.pumpAndSettle();
+          expect(find.byType(DatePickerDialog), findsOneWidget);
+          await tester.tap(find.text('OK'));
+          await tester.pumpAndSettle();
+
+          expect(find.byType(WorkoutEditorScreen), findsOneWidget);
+          expect(find.text('Draft'), findsOneWidget);
+          expect(find.text('Squat'), findsOneWidget);
+
+          final workouts = await db.select(db.workouts).get();
+          expect(workouts, hasLength(2));
+          final source = workouts.firstWhere((w) => w.id == 'w1');
+          expect(source.status, 'completed');
+          final copy = workouts.firstWhere((w) => w.id != 'w1');
+          expect(copy.status, 'draft');
+
+          final copiedWorkoutExercises = await (db.select(
+            db.workoutExercises,
+          )..where((we) => we.workoutId.equals(copy.id))).get();
+          expect(copiedWorkoutExercises, hasLength(1));
+
+          final copiedSets = await (db.select(
+            db.exerciseSets,
+          )..where(
+            (s) => s.workoutExerciseId.equals(copiedWorkoutExercises.single.id),
+          )).get();
+          expect(copiedSets.single.plannedWeightKg, 60.0);
+          expect(copiedSets.single.plannedReps, 8);
+          expect(copiedSets.single.actualWeightKg, isNull);
+          expect(copiedSets.single.actualReps, isNull);
+          expect(copiedSets.single.isCompleted, isFalse);
+
+          // The source workout's own set is untouched.
+          final sourceSet = await (db.select(
+            db.exerciseSets,
+          )..where((s) => s.id.equals('s1'))).getSingle();
+          expect(sourceSet.actualWeightKg, 60.0);
+          expect(sourceSet.isCompleted, isTrue);
+
+          await _unmountAndFlush(tester);
+        },
+      );
+
+      testWidgets(
+        'scheduling the copy leaves the source editor behind entirely, '
+        'landing on History (not back on the source workout)',
+        (tester) async {
+          await seedCompletedWorkoutWithFacts(db);
+
+          await tester.pumpWidget(_appUnderTest(db));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Leg day'));
+          await tester.pumpAndSettle();
+
+          // "Копировать" on the *source* (completed) workout's own editor.
+          await tester.tap(_secondaryStatusCta);
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('OK'));
+          await tester.pumpAndSettle();
+          expect(find.byType(WorkoutEditorScreen), findsOneWidget);
+          expect(find.text('Draft'), findsOneWidget);
+
+          // "Запланировать" on the *copy's* own draft editor.
+          await tester.tap(_secondaryStatusCta);
+          await tester.pumpAndSettle();
+
+          // Owner-reported: replacing the source editor's route with the
+          // copy's (`copyWorkoutFlow`'s `replaceCurrentRoute: true`)
+          // should mean there's no source editor left underneath to pop
+          // back onto -- leaving the copy's editor should land straight
+          // on wherever the source was opened from (History here), not
+          // back on the source workout.
+          expect(find.byType(WorkoutEditorScreen), findsNothing);
+          expect(find.byType(HistoryScreen), findsOneWidget);
+
+          final workouts = await db.select(db.workouts).get();
+          final copy = workouts.firstWhere((w) => w.id != 'w1');
+          expect(copy.status, 'planned');
+
+          await _unmountAndFlush(tester);
+        },
+      );
+    },
+  );
+
   testWidgets(
     'tapping the date opens a date picker, movable except while inProgress '
     '(DM 6.4.1)',

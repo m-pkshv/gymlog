@@ -1237,7 +1237,11 @@ void main() {
           await tester.pumpAndSettle();
 
           // The source is untouched; the copy shows up completed, dated.
-          expect(find.text('Leg day'), findsOneWidget);
+          // Both cards read "Leg day" now (Stage 12/redesign_v2,
+          // owner-reported: the copy's name carries over from the source
+          // too, not just its structure/plan) -- disambiguated below by
+          // date/status straight from the database instead.
+          expect(find.text('Leg day'), findsNWidgets(2));
           final workouts = await db.select(db.workouts).get();
           expect(workouts, hasLength(2));
           final source = workouts.firstWhere((w) => w.id == 'w1');

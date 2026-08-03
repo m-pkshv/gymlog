@@ -21,7 +21,13 @@ import '../../l10n/app_localizations.dart';
 /// the picker (Today or History), not back on a now-pointless picker
 /// screen. History's own "⋮ → Копировать" on an existing card (not through
 /// the picker) keeps the default `push`, since going back to History's own
-/// list afterward is exactly what's wanted there.
+/// list afterward is exactly what's wanted there. The workout editor's own
+/// "Копировать" secondary CTA on a completed workout
+/// (`workout_editor/screen.dart`'s `_copyToNewDate`, Stage 12/redesign_v2,
+/// owner-reported follow-up) also passes `true`, for the same reason as
+/// the picker: the *source workout's own editor* is what's on screen when
+/// this runs, and it's done its one job (confirming it's the right
+/// workout) the moment the date is picked.
 Future<void> copyWorkoutFlow(
   BuildContext context,
   WidgetRef ref,
