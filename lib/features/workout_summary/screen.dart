@@ -12,6 +12,7 @@ import '../../core/widgets/confetti_overlay.dart';
 import '../../core/widgets/error_retry_state.dart';
 import '../../core/widgets/grouped_section.dart';
 import '../../core/widgets/hero_stat_tile.dart';
+import '../../core/widgets/shine_sweep.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/personal_record.dart';
 import '../../domain/models/workout_details.dart';
@@ -546,13 +547,23 @@ class _NewRecordsSection extends ConsumerWidget {
               Center(
                 child: Column(
                   children: [
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundColor: semantic.accent,
-                      child: Icon(
-                        Icons.emoji_events,
-                        color: semantic.onAccent,
-                        size: 28,
+                    ShineSweep(
+                      // Owner-reported: start at the midpoint of the
+                      // confetti burst (`ConfettiOverlay`'s own 2240ms
+                      // duration) -- was a fixed pause after it finished,
+                      // then a pause before it finished; now tied
+                      // directly to that duration instead of a separate
+                      // hand-tuned constant, so the two stay in sync if
+                      // the confetti timing ever changes again.
+                      delay: const Duration(milliseconds: 2240 ~/ 2),
+                      child: CircleAvatar(
+                        radius: 28,
+                        backgroundColor: semantic.accent,
+                        child: Icon(
+                          Icons.emoji_events,
+                          color: semantic.onAccent,
+                          size: 28,
+                        ),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
