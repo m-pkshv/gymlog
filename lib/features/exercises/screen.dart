@@ -540,13 +540,17 @@ class _ExerciseListTile extends StatelessWidget {
         // Owner-reported (redesign_v2): the app's own design language is
         // rounded squares/rectangles (buttons, cards, chips -- see
         // `AppRadius`), not circles -- a plain `CircleAvatar` here didn't
-        // match. Sized up from an initial 40dp/`AppRadius.control`
-        // (owner-reported follow-up: "increase it a bit") to 48dp -- the
-        // app's own min touch-target size elsewhere -- paired with
-        // `AppRadius.button`, the radius already used at that scale.
+        // match. Sized up twice since: first from an initial
+        // 40dp/`AppRadius.control` to 48dp (the app's own min touch-target
+        // size elsewhere), then to 56dp -- owner-reported: room for this
+        // to read well once real per-exercise icon art replaces the plain
+        // type glyph here (D-3, still not delivered). `AppRadius.button`
+        // (16) kept as-is at the larger size too -- close enough to the
+        // same radius-to-box ratio as before (16/48 -> 16/56) that it
+        // wasn't worth changing on its own.
         leading: Container(
-          width: 48,
-          height: 48,
+          width: 56,
+          height: 56,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: avatarColor,
@@ -555,7 +559,7 @@ class _ExerciseListTile extends StatelessWidget {
           child: Icon(
             exerciseTypeIcon(exercise.exerciseType),
             color: avatarForeground,
-            size: 26,
+            size: 30,
           ),
         ),
         title: Text(exercise.name),
