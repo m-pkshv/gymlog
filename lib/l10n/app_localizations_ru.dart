@@ -290,6 +290,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get muscleGroupObliques => 'Косые мышцы';
 
   @override
+  String get muscleGroupLegs => 'Ноги';
+
+  @override
   String get muscleGroupHipFlexors => 'Сгибатели бедра';
 
   @override

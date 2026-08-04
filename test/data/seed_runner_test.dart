@@ -60,10 +60,12 @@ void main() {
       final templateSets = await db.select(db.templateSets).get();
       final seedInfo = await db.select(db.seedInfoTable).getSingle();
 
-      // 17 groups: the original 13 (DM 5.1) plus rear_delts/obliques/
+      // 18 groups: the original 13 (DM 5.1) plus rear_delts/obliques/
       // hip_flexors/adductors, added once the owner's full list (Q-1)
-      // showed they're needed as primary-muscle assignments.
-      expect(muscleGroups, hasLength(17));
+      // showed they're needed as primary-muscle assignments, plus "legs"
+      // (redesign_v2, 2026-08-04, purely additive -- no existing
+      // exercise's muscle assignment changes).
+      expect(muscleGroups, hasLength(18));
       expect(equipments, hasLength(9));
       expect(measurementTypes, hasLength(15));
       // Stage 10, owner-reported, trimmed/generalized Stage 12
@@ -119,7 +121,7 @@ void main() {
     final templateExercises = await db.select(db.templateExercises).get();
     final templateSets = await db.select(db.templateSets).get();
 
-    expect(muscleGroups, hasLength(17));
+    expect(muscleGroups, hasLength(18));
     expect(exercises, hasLength(359));
     expect(l10n, hasLength(718));
     expect(workoutTags, hasLength(13));

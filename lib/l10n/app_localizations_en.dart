@@ -289,6 +289,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get muscleGroupObliques => 'Obliques';
 
   @override
+  String get muscleGroupLegs => 'Legs';
+
+  @override
   String get muscleGroupHipFlexors => 'Hip Flexors';
 
   @override

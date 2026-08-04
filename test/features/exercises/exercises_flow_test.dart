@@ -317,8 +317,8 @@ void main() {
       await tester.pumpWidget(_appUnderTest(db));
       await tester.pumpAndSettle();
 
-      // "Chest" (index 0 in muscleGroupIds) sorts before "Quads" (index 11)
-      // regardless of insertion order.
+      // "Chest" (index 0 in muscleGroupIds) sorts before "Quads" (a later
+      // index) regardless of insertion order.
       final chestHeaderY = tester.getTopLeft(find.text('Chest')).dy;
       final quadsHeaderY = tester.getTopLeft(find.text('Quads')).dy;
       final noGroupHeaderY = tester

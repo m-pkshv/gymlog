@@ -45,10 +45,11 @@
 ### 5.1. `MuscleGroup`
 | Поле | Тип | Обяз. | Описание |
 |---|---|---|---|
-| id | TEXT PK | да | Стабильный слаг: `chest`, `back`, `shoulders`, `rear_delts`, `biceps`, `triceps`, `forearms`, `abs`, `obliques`, `hip_flexors`, `glutes`, `quads`, `adductors`, `hamstrings`, `calves`, `full_body`, `cardio_system` |
+| id | TEXT PK | да | Стабильный слаг: `chest`, `back`, `shoulders`, `rear_delts`, `biceps`, `triceps`, `forearms`, `abs`, `obliques`, `legs`, `hip_flexors`, `glutes`, `quads`, `adductors`, `hamstrings`, `calves`, `full_body`, `cardio_system` |
 | sortOrder | INTEGER | да | Порядок в фильтрах |
 Локализованные названия — в ARB-файлах по ключу `muscleGroup.<id>`, не в БД.
 `rear_delts`/`obliques`/`hip_flexors`/`adductors` добавлены на Этапе 2 (2026-07-20) при импорте полного списка упражнений владельца (Q-1): исходно 13 групп не покрывали часть упражнений, где эти мышцы — основная (не дополнительная) группа, и их нельзя было без потери информации свести к более широким категориям. Решение владельца.
+`legs` добавлен в редизайне v2 (2026-08-04, решение владельца) как общий вариант выбора основной/доп. группы мышц наравне с уже существующими конкретными группами ног (Сгибатели бедра/Ягодицы/Квадрицепсы/Приводящие/Задняя поверхность бедра/Икры) — чисто добавление в список, ни одно из 359 засеянных упражнений не переклассифицировано. Не путать с одноимённым встроенным **тегом тренировки** «Ноги» (`WorkoutTag`, раздел 6.3) — это другая таблица, совпадение id/названия не создаёт связи между ними.
 
 ### 5.2. `Equipment`
 Аналогично: `barbell`, `dumbbell`, `kettlebell`, `machine`, `cable`, `bodyweight`, `band`, `cardio_machine`, `other`. Поля: `id`, `sortOrder`; названия в ARB.

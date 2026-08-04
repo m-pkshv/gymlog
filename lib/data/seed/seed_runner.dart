@@ -42,7 +42,12 @@ import 'workout_template_seed.dart';
 /// existing assignment silently removed) in favor of the single "Legs"
 /// tag, and a new standalone "Crossfit" tag (`crossfitWorkoutTagId`) is
 /// added.
-const int currentSeedVersion = 8;
+/// v9 (2026-08-04, redesign_v2, owner-requested): a new "Legs" muscle
+/// group (`reference_data_ids.dart`'s `muscleGroupIds`, 17→18) — purely
+/// additive, owner confirmed no existing exercise's primary/secondary
+/// muscle changes. Not the same row as the "Legs" *workout tag* seeded in
+/// v7/v8 (`WorkoutTags` is a different table).
+const int currentSeedVersion = 9;
 
 /// Loads built-in reference data and the placeholder exercise catalog
 /// (06_DATA_MODEL.md, section 12) on first run, tracked by

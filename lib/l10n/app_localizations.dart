@@ -632,6 +632,12 @@ abstract class AppLocalizations {
   /// **'Obliques'**
   String get muscleGroupObliques;
 
+  /// No description provided for @muscleGroupLegs.
+  ///
+  /// In en, this message translates to:
+  /// **'Legs'**
+  String get muscleGroupLegs;
+
   /// No description provided for @muscleGroupHipFlexors.
   ///
   /// In en, this message translates to:

@@ -45,6 +45,8 @@ String muscleGroupLabel(AppLocalizations l10n, String id) {
       return l10n.muscleGroupAbs;
     case 'obliques':
       return l10n.muscleGroupObliques;
+    case 'legs':
+      return l10n.muscleGroupLegs;
     case 'hip_flexors':
       return l10n.muscleGroupHipFlexors;
     case 'glutes':

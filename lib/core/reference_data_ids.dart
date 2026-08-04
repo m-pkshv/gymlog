@@ -12,6 +12,15 @@ library;
 /// muscle (e.g. Machine Hip Adduction -> adductors), so they couldn't be
 /// folded into a broader existing group without losing that exercise's
 /// primary-muscle assignment.
+///
+/// `legs` (redesign_v2, 2026-08-04, owner-requested) is a purely additive
+/// 18th entry, not a consolidation of the existing leg-specific groups
+/// below it (owner confirmed: none of the 359 seeded exercises' primary/
+/// secondary muscle changes) — unlike the *workout tag* of the same name
+/// (`legsWorkoutTagId`, core/constants.dart), which did replace six
+/// muscle-group tags. Different table, same id string is a coincidence,
+/// not a reused concept: `MuscleGroup.id` and `WorkoutTag.id` don't share
+/// a namespace or foreign key.
 const List<String> muscleGroupIds = [
   'chest',
   'back',
@@ -22,6 +31,7 @@ const List<String> muscleGroupIds = [
   'forearms',
   'abs',
   'obliques',
+  'legs',
   'hip_flexors',
   'glutes',
   'quads',
