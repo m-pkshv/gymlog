@@ -92,6 +92,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exerciseCopySourcePickerTitle => 'Copy from';
 
   @override
+  String get exerciseIconLabel => 'Icon';
+
+  @override
+  String get exerciseImageLabel => 'Photo';
+
+  @override
+  String get exerciseChooseFromGalleryAction => 'Choose from gallery';
+
+  @override
+  String get exerciseTakePhotoAction => 'Take photo';
+
+  @override
+  String get exerciseRemovePhotoAction => 'Remove photo';
+
+  @override
+  String get exercisePhotoError => 'Couldn\'t set the photo';
+
+  @override
   String get editWorkoutExerciseAction => 'Edit exercise';
 
   @override

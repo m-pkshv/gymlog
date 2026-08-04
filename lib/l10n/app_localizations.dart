@@ -260,6 +260,42 @@ abstract class AppLocalizations {
   /// **'Copy from'**
   String get exerciseCopySourcePickerTitle;
 
+  /// Label above the small icon picker on the create/edit exercise form (S-08, Stage 12/redesign_v2, owner-requested) -- shown in the catalog list (S-06). Also doubles as the picker bottom sheet's title.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get exerciseIconLabel;
+
+  /// Label above the large photo picker on the create/edit exercise form (S-08, Stage 12/redesign_v2, owner-requested) -- shown on the exercise's own detail card (S-07). Also doubles as the picker bottom sheet's title.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get exerciseImageLabel;
+
+  /// Bottom sheet action for picking the exercise icon/photo from the device gallery (Stage 12/redesign_v2).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get exerciseChooseFromGalleryAction;
+
+  /// Bottom sheet action for capturing the exercise icon/photo with the camera (Stage 12/redesign_v2).
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get exerciseTakePhotoAction;
+
+  /// Bottom sheet action that clears the exercise's icon/photo (Stage 12/redesign_v2). Shared text for both slots -- the sheet only ever has one image in play at a time.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get exerciseRemovePhotoAction;
+
+  /// Snackbar shown when picking or reading an exercise icon/photo fails unexpectedly (Stage 12/redesign_v2) -- cancelling the picker is not an error and shows nothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t set the photo'**
+  String get exercisePhotoError;
+
   /// Menu action on an exercise card in the workout/template editor (S-03/S-13, Stage 10, owner-reported) that opens the same full edit form the exercise catalog uses (S-08 in edit mode) for the underlying user-created Exercise, without leaving the editor -- only offered when Exercise.isBuiltIn is false (DM 10: built-in exercises can't be edited). Named distinctly from the catalog's own editExerciseAction ("Edit", a different screen) to avoid the same kind of ARB key collision already found once this session.
   ///
   /// In en, this message translates to:

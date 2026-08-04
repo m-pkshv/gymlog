@@ -26,6 +26,20 @@ class Exercises extends Table with SoftDeleteColumns {
   /// Asset path; only ever populated for built-in exercises (D-3).
   TextColumn get imageAsset => text().nullable()();
 
+  /// Small icon shown in the catalog list (S-06) -- a device file path
+  /// (`Image.file`), not a bundled asset like [imageAsset] above. Stage 12/
+  /// redesign_v2, owner-requested: user-created exercises can upload their
+  /// own icon. Only ever populated for user-created exercises in practice
+  /// (built-in ones have no edit form to set it from, DM 10), but nothing
+  /// in the schema enforces that.
+  TextColumn get customIconPath => text().nullable()();
+
+  /// Large photo shown on the exercise's own card (S-07) -- same file-path
+  /// vs. bundled-asset distinction as [customIconPath] above, just the
+  /// "big picture" slot instead of the list icon. The two are independent:
+  /// setting one doesn't imply or require the other.
+  TextColumn get customImagePath => text().nullable()();
+
   TextColumn get exerciseType => text().customConstraint(
     "NOT NULL CHECK (exerciseType IN ('strength', 'cardio', 'reps', 'time', 'stretch'))",
   )();

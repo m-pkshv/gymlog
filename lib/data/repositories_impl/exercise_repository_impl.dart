@@ -118,6 +118,7 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
 
   @override
   Future<Exercise> create({
+    String? id,
     required String name,
     required ExerciseType exerciseType,
     String? description,
@@ -126,14 +127,18 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
     String? equipmentId,
     EffortMetric effortMetric = EffortMetric.none,
     List<String> secondaryMuscleGroupIds = const [],
+    String? customIconPath,
+    String? customImagePath,
   }) async {
     final now = DateTime.now().toUtc();
     final exercise = Exercise(
-      id: const Uuid().v4(),
+      id: id ?? const Uuid().v4(),
       name: name,
       exerciseType: exerciseType,
       description: description,
       youtubeUrl: youtubeUrl,
+      customIconPath: customIconPath,
+      customImagePath: customImagePath,
       primaryMuscleGroupId: primaryMuscleGroupId,
       equipmentId: equipmentId,
       effortMetric: effortMetric,
@@ -171,6 +176,8 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
     String? equipmentId,
     EffortMetric effortMetric = EffortMetric.none,
     List<String> secondaryMuscleGroupIds = const [],
+    String? customIconPath,
+    String? customImagePath,
   }) async {
     await _db.transaction(() async {
       await (_db.update(
@@ -181,6 +188,8 @@ class ExerciseRepositoryImpl implements ExerciseRepository {
           exerciseType: Value(exerciseType.name),
           description: Value(description),
           youtubeUrl: Value(youtubeUrl),
+          customIconPath: Value(customIconPath),
+          customImagePath: Value(customImagePath),
           primaryMuscleGroupId: Value(primaryMuscleGroupId),
           equipmentId: Value(equipmentId),
           effortMetric: Value(effortMetric.name),

@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymlog/core/app_error.dart';
@@ -6,7 +9,9 @@ import 'package:gymlog/data/mappers/exercise_mapper.dart';
 import 'package:gymlog/data/repositories_impl/exercise_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/domain/models/exercise.dart';
+import 'package:gymlog/services/exercise_image_service.dart';
 import 'package:gymlog/services/exercise_service.dart';
+import 'package:image_picker/image_picker.dart';
 
 Exercise _builtIn(String id, {required String name}) {
   final now = DateTime.utc(2026, 7, 19);
@@ -32,7 +37,10 @@ void main() {
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
     repository = ExerciseRepositoryImpl(db);
-    service = ExerciseService(repository);
+    // A real ImagePicker is fine here -- nothing in these tests actually
+    // invokes it (only `delete`'s file cleanup, which is plain `dart:io`),
+    // see `exercise_image_service_test.dart` for picker-touching coverage.
+    service = ExerciseService(repository, ExerciseImageService(ImagePicker()));
   });
 
   tearDown(() async {
@@ -579,5 +587,55 @@ void main() {
       expect(result.isOk, isTrue);
       expect(await repository.getById(exercise.id), isNull);
     });
+
+    test(
+      'deletes the exercise\'s own icon/photo files, if any (Stage 12/redesign_v2)',
+      () async {
+        final tempDir = await Directory.systemTemp.createTemp(
+          'gymlog_exercise_delete_test_',
+        );
+        addTearDown(() async {
+          if (await tempDir.exists()) await tempDir.delete(recursive: true);
+        });
+        final imageService = ExerciseImageService(ImagePicker());
+        final iconPath = await imageService.writeIcon(
+          tempDir,
+          'ex1',
+          Uint8List.fromList([1]),
+        );
+        final photoPath = await imageService.writeImage(
+          tempDir,
+          'ex1',
+          Uint8List.fromList([2]),
+        );
+        final exercise = await repository.create(
+          id: 'ex1',
+          name: 'Custom Move',
+          exerciseType: ExerciseType.reps,
+          customIconPath: iconPath,
+          customImagePath: photoPath,
+        );
+
+        final result = await service.delete(exercise);
+
+        expect(result.isOk, isTrue);
+        expect(await File(iconPath).exists(), isFalse);
+        expect(await File(photoPath).exists(), isFalse);
+      },
+    );
+
+    test(
+      'deleting an exercise without a custom icon/photo does not error',
+      () async {
+        final exercise = await repository.create(
+          name: 'Plain Move',
+          exerciseType: ExerciseType.reps,
+        );
+
+        final result = await service.delete(exercise);
+
+        expect(result.isOk, isTrue);
+      },
+    );
   });
 }

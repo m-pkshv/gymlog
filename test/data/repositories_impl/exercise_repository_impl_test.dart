@@ -146,6 +146,74 @@ void main() {
     expect(reloaded.primaryMuscleGroupId, isNull);
   });
 
+  test(
+    'create honors an explicit id instead of generating one (Stage 12/'
+    'redesign_v2: the create form needs the final id before the file '
+    'write that sets customIconPath/customImagePath)',
+    () async {
+      final exercise = await repository.create(
+        id: 'my-fixed-id',
+        name: 'Custom Move',
+        exerciseType: ExerciseType.reps,
+        customIconPath: '/tmp/my-fixed-id_icon.jpg',
+        customImagePath: '/tmp/my-fixed-id_photo.jpg',
+      );
+
+      expect(exercise.id, 'my-fixed-id');
+      expect(exercise.customIconPath, '/tmp/my-fixed-id_icon.jpg');
+      expect(exercise.customImagePath, '/tmp/my-fixed-id_photo.jpg');
+
+      final reloaded = await repository.getById('my-fixed-id');
+      expect(reloaded!.customIconPath, '/tmp/my-fixed-id_icon.jpg');
+      expect(reloaded.customImagePath, '/tmp/my-fixed-id_photo.jpg');
+    },
+  );
+
+  test('create without an id still generates one (unchanged default)', () async {
+    final exercise = await repository.create(
+      name: 'Auto Id Move',
+      exerciseType: ExerciseType.reps,
+    );
+
+    expect(exercise.id, isNotEmpty);
+    expect(exercise.customIconPath, isNull);
+    expect(exercise.customImagePath, isNull);
+  });
+
+  test(
+    'update overwrites customIconPath/customImagePath, clearing them when '
+    'omitted (Stage 12/redesign_v2)',
+    () async {
+      final exercise = await repository.create(
+        name: 'Custom Move',
+        exerciseType: ExerciseType.reps,
+        customIconPath: '/old/icon.jpg',
+        customImagePath: '/old/photo.jpg',
+      );
+
+      final replaced = await repository.update(
+        id: exercise.id,
+        name: 'Custom Move',
+        exerciseType: ExerciseType.reps,
+        customIconPath: '/new/icon.jpg',
+        customImagePath: '/new/photo.jpg',
+      );
+      expect(replaced.customIconPath, '/new/icon.jpg');
+      expect(replaced.customImagePath, '/new/photo.jpg');
+
+      final cleared = await repository.update(
+        id: exercise.id,
+        name: 'Custom Move',
+        exerciseType: ExerciseType.reps,
+      );
+      expect(cleared.customIconPath, isNull);
+      expect(cleared.customImagePath, isNull);
+      final reloaded = await repository.getById(exercise.id);
+      expect(reloaded!.customIconPath, isNull);
+      expect(reloaded.customImagePath, isNull);
+    },
+  );
+
   test('update replaces the secondary muscle links wholesale', () async {
     await db
         .into(db.muscleGroups)

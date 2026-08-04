@@ -60,6 +60,7 @@ import '../services/app_settings_service.dart';
 import '../services/backup/backup_service.dart';
 import '../services/body_measurement_service.dart';
 import '../services/pdf/workout_pdf_service.dart';
+import '../services/exercise_image_service.dart';
 import '../services/exercise_service.dart';
 import '../services/export/export_service.dart';
 import '../services/measurement_type_service.dart';
@@ -244,7 +245,16 @@ final appSettingsServiceProvider = Provider<AppSettingsService>((ref) {
 /// The single point of truth for the catalog's archive/delete rules and
 /// exerciseType lock (DM 10, DM 6.1).
 final exerciseServiceProvider = Provider<ExerciseService>((ref) {
-  return ExerciseService(ref.watch(exerciseRepositoryProvider));
+  return ExerciseService(
+    ref.watch(exerciseRepositoryProvider),
+    ref.watch(exerciseImageServiceProvider),
+  );
+});
+
+/// Picker + on-disk lifecycle for a user-created exercise's own icon/photo
+/// (Stage 12/redesign_v2, owner-requested).
+final exerciseImageServiceProvider = Provider<ExerciseImageService>((ref) {
+  return ExerciseImageService(ImagePicker());
 });
 
 /// The current display language for `ExerciseL10n`-aware reads (Stage 10,

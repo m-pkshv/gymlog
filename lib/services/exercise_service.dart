@@ -3,6 +3,7 @@ import '../core/result.dart';
 import '../domain/enums.dart';
 import '../domain/models/exercise.dart';
 import '../domain/repositories/exercise_repository.dart';
+import 'exercise_image_service.dart';
 
 /// Deletion/archiving rules (06_DATA_MODEL.md, section 10) and the
 /// exerciseType lock (section 6.1) for the exercise catalog. The single
@@ -10,9 +11,10 @@ import '../domain/repositories/exercise_repository.dart';
 /// no other layer decides this (03_TECHNICAL_SPEC.md, section 4, mirroring
 /// `workout_service`'s role for `Workout.status`).
 class ExerciseService {
-  ExerciseService(this._exerciseRepository);
+  ExerciseService(this._exerciseRepository, this._imageService);
 
   final ExerciseRepository _exerciseRepository;
+  final ExerciseImageService _imageService;
 
   /// DM 6.1: exerciseType is locked once at least one set has been logged
   /// against the exercise, regardless of whether it was ever added to a
@@ -28,6 +30,7 @@ class ExerciseService {
   /// [update]'s re-check below; `CreateExerciseScreen` also pre-checks via
   /// [isNameTaken] for an inline error, but this is the authoritative check.
   Future<Result<Exercise, AppError>> create({
+    String? id,
     required String name,
     required ExerciseType exerciseType,
     String? description,
@@ -36,6 +39,8 @@ class ExerciseService {
     String? equipmentId,
     EffortMetric effortMetric = EffortMetric.none,
     List<String> secondaryMuscleGroupIds = const [],
+    String? customIconPath,
+    String? customImagePath,
   }) async {
     final trimmed = name.trim();
     if (trimmed.isEmpty) {
@@ -47,6 +52,7 @@ class ExerciseService {
       );
     }
     final created = await _exerciseRepository.create(
+      id: id,
       name: trimmed,
       exerciseType: exerciseType,
       description: description,
@@ -55,6 +61,8 @@ class ExerciseService {
       equipmentId: equipmentId,
       effortMetric: effortMetric,
       secondaryMuscleGroupIds: secondaryMuscleGroupIds,
+      customIconPath: customIconPath,
+      customImagePath: customImagePath,
     );
     return Ok(created);
   }
@@ -74,6 +82,8 @@ class ExerciseService {
     String? equipmentId,
     EffortMetric effortMetric = EffortMetric.none,
     List<String> secondaryMuscleGroupIds = const [],
+    String? customIconPath,
+    String? customImagePath,
   }) async {
     if (exerciseType != current.exerciseType &&
         !(await canChangeType(current.id))) {
@@ -103,6 +113,8 @@ class ExerciseService {
       equipmentId: equipmentId,
       effortMetric: effortMetric,
       secondaryMuscleGroupIds: secondaryMuscleGroupIds,
+      customIconPath: customIconPath,
+      customImagePath: customImagePath,
     );
     return Ok(updated);
   }
@@ -179,6 +191,12 @@ class ExerciseService {
       );
     }
     await _exerciseRepository.delete(exercise.id);
+    // The row is gone; its icon/photo files (if any) would otherwise sit
+    // orphaned on disk forever -- clean them up here rather than in the
+    // repository, since [exercise] (with the paths already loaded) is
+    // right here and no extra query is needed.
+    await _imageService.deleteFile(exercise.customIconPath);
+    await _imageService.deleteFile(exercise.customImagePath);
     return Ok(exercise);
   }
 }

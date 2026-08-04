@@ -149,6 +149,20 @@ class UserProfileRules {
   static const int avatarQualityPercent = 85;
 }
 
+/// Caps on a user-created exercise's own uploaded icon (catalog list,
+/// S-06) and photo (detail card, S-07) -- Stage 12/redesign_v2, owner-
+/// requested. Same downsampling rationale as [UserProfileRules]'s avatar
+/// caps (`ExerciseImageService.pickBytes`). The icon is capped smaller
+/// than the photo since it only ever renders at 56dp in the catalog list,
+/// never larger.
+class ExerciseImageRules {
+  const ExerciseImageRules._();
+
+  static const int iconMaxDimensionPx = 256;
+  static const int imageMaxDimensionPx = 1024;
+  static const int qualityPercent = 85;
+}
+
 /// Full-database backup format (Stage 11) -- a ZIP containing
 /// `manifest.json` + a raw copy of `gymlog.sqlite`. A separate
 /// format/version space from [ExportFormat] (the human-readable CSV

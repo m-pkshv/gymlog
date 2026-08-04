@@ -1,4 +1,6 @@
-﻿import 'package:drift/drift.dart' show Value;
+﻿import 'dart:io';
+
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -93,6 +95,7 @@ class _ToggleableExerciseRepository implements ExerciseRepository {
 
   @override
   Future<Exercise> create({
+    String? id,
     required String name,
     required ExerciseType exerciseType,
     String? description,
@@ -101,7 +104,10 @@ class _ToggleableExerciseRepository implements ExerciseRepository {
     String? equipmentId,
     EffortMetric effortMetric = EffortMetric.none,
     List<String> secondaryMuscleGroupIds = const [],
+    String? customIconPath,
+    String? customImagePath,
   }) => _real.create(
+    id: id,
     name: name,
     exerciseType: exerciseType,
     description: description,
@@ -110,6 +116,8 @@ class _ToggleableExerciseRepository implements ExerciseRepository {
     equipmentId: equipmentId,
     effortMetric: effortMetric,
     secondaryMuscleGroupIds: secondaryMuscleGroupIds,
+    customIconPath: customIconPath,
+    customImagePath: customImagePath,
   );
 
   @override
@@ -123,6 +131,8 @@ class _ToggleableExerciseRepository implements ExerciseRepository {
     String? equipmentId,
     EffortMetric effortMetric = EffortMetric.none,
     List<String> secondaryMuscleGroupIds = const [],
+    String? customIconPath,
+    String? customImagePath,
   }) => _real.update(
     id: id,
     name: name,
@@ -133,6 +143,8 @@ class _ToggleableExerciseRepository implements ExerciseRepository {
     equipmentId: equipmentId,
     effortMetric: effortMetric,
     secondaryMuscleGroupIds: secondaryMuscleGroupIds,
+    customIconPath: customIconPath,
+    customImagePath: customImagePath,
   );
 
   @override
@@ -263,6 +275,48 @@ void main() {
 
     await _unmountAndFlush(tester);
   });
+
+  testWidgets(
+    'a custom icon (Stage 12/redesign_v2, owner-requested) renders as the '
+    'list tile\'s leading image instead of the muscle-group-color glyph -- '
+    'the path just has to be *set*, not a real decodable file (same '
+    '"no real bytes needed" approach the profile avatar tests already use: '
+    'checking the widget node Image.file was actually built with, not '
+    'whether the async decode itself succeeds)',
+    (tester) async {
+      final iconPath =
+          '${Directory.systemTemp.path}${Platform.pathSeparator}'
+          'gymlog_exercise_list_icon_test.jpg';
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'squat',
+              name: 'Squat',
+              exerciseType: ExerciseType.strength.name,
+              customIconPath: Value(iconPath),
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pump();
+
+      // `tester.widget<Image>` itself throws if the finder doesn't match
+      // exactly one widget -- reaching the next line is the assertion.
+      tester.widget<Image>(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Image &&
+              widget.image is FileImage &&
+              (widget.image as FileImage).file.path == iconPath,
+        ),
+      );
+
+      await _unmountAndFlush(tester);
+    },
+  );
 
   testWidgets(
     'groups exercises into muscle-group sections, in canonical order, with '
@@ -618,6 +672,35 @@ void main() {
       expect(exercises.single.name, 'Push-Up');
       expect(exercises.single.exerciseType, ExerciseType.strength.name);
 
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'the icon/photo slots show placeholders and no "Remove photo" option '
+    'in create mode, since nothing is set yet (Stage 12/redesign_v2, '
+    'owner-requested)',
+    (tester) async {
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.image_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.landscape_outlined), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('exercise-icon-slot')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Choose from gallery'), findsOneWidget);
+      expect(find.text('Take photo'), findsOneWidget);
+      expect(find.text('Remove photo'), findsNothing);
+
+      // Dismiss the sheet before unmounting -- same pattern the profile
+      // avatar's equivalent test already uses.
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
       await _unmountAndFlush(tester);
     },
   );

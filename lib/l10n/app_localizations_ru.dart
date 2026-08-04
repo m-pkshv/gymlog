@@ -91,6 +91,24 @@ class AppLocalizationsRu extends AppLocalizations {
   String get exerciseCopySourcePickerTitle => 'Копировать из';
 
   @override
+  String get exerciseIconLabel => 'Иконка';
+
+  @override
+  String get exerciseImageLabel => 'Картинка';
+
+  @override
+  String get exerciseChooseFromGalleryAction => 'Выбрать из галереи';
+
+  @override
+  String get exerciseTakePhotoAction => 'Сделать фото';
+
+  @override
+  String get exerciseRemovePhotoAction => 'Удалить фото';
+
+  @override
+  String get exercisePhotoError => 'Не удалось загрузить фото';
+
+  @override
   String get editWorkoutExerciseAction => 'Редактировать упражнение';
 
   @override

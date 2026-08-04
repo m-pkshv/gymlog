@@ -1,14 +1,28 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
+import '../../app/design_tokens.dart';
 import '../../app/providers.dart';
+import '../../core/constants.dart';
 import '../../core/reference_data_ids.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/exercise.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/exercise_image_service.dart';
 import 'exercise_type_labels.dart';
 import 'reference_data_labels.dart';
+
+/// Bottom-sheet actions for the icon/photo picker (Stage 12/redesign_v2,
+/// owner-requested): gallery/camera pick a fresh image, "remove" clears
+/// whatever's currently set (existing saved path or a not-yet-saved pick).
+enum _PhotoPickAction { gallery, camera, remove }
 
 /// The two locales `ExerciseL10n` supports (DM 12) -- same set the table's
 /// `CHECK` constraint enforces, kept as plain strings rather than mapped
@@ -81,6 +95,22 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
   final List<_LocalizationEntry> _localizations = [];
   Set<String> _initialLocales = const {};
 
+  // Icon/photo (Stage 12/redesign_v2, owner-requested): mirrors the rest of
+  // the form -- nothing is written to disk or the DB until "Create"/"Save"
+  // (see [_submit]). `_pickedIconBytes`/`_pickedImageBytes` hold a freshly
+  // picked replacement not yet persisted; `_iconRemoved`/`_imageRemoved`
+  // record an explicit "Remove photo" tap; `_existingIconPath`/
+  // `_existingImagePath` are whatever was already saved (edit mode only).
+  // A picked replacement always wins over "removed", which always wins
+  // over the existing path -- exactly one of the three states applies at
+  // save time (see [_resolveIconPath]/[_resolveImagePath]).
+  Uint8List? _pickedIconBytes;
+  bool _iconRemoved = false;
+  String? _existingIconPath;
+  Uint8List? _pickedImageBytes;
+  bool _imageRemoved = false;
+  String? _existingImagePath;
+
   bool get _isEditing => widget.exercise != null;
 
   @override
@@ -96,6 +126,8 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
       _primaryMuscleGroupId = exercise.primaryMuscleGroupId;
       _equipmentId = exercise.equipmentId;
       _secondaryMuscleGroupIds.addAll(exercise.secondaryMuscleGroupIds);
+      _existingIconPath = exercise.customIconPath;
+      _existingImagePath = exercise.customImagePath;
       _loadTypeLock(exercise.id);
       _loadLocalizations(exercise.id);
     }
@@ -203,7 +235,11 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
   /// button instead of automatically at open. Localizations are
   /// deliberately not copied (a brand-new exercise doesn't inherit the
   /// source's translations); `_typeLocked` stays `false`, as it always is
-  /// in create mode, so the type dropdown remains editable.
+  /// in create mode, so the type dropdown remains editable. Icon/photo
+  /// (Stage 12/redesign_v2) aren't copied either, for the same reason --
+  /// left untouched here, so a "tweaked variant" of an exercise starts
+  /// with no image of its own rather than silently sharing the source's
+  /// file.
   Future<void> _copyFrom() async {
     final ownRoute = widget.ownRoute;
     if (ownRoute == null) return;
@@ -222,6 +258,199 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
         ..addAll(source.secondaryMuscleGroupIds);
       _nameError = null;
     });
+  }
+
+  /// Opens a bottom sheet (gallery/camera, plus "remove" when there's
+  /// something to remove) for one of the two image slots and applies the
+  /// result to local state via [onPicked]/[onRemoved] -- nothing touches
+  /// disk or the DB here, matching the rest of the form (see the state
+  /// fields' doc comment above).
+  Future<void> _pickPhoto({
+    required String title,
+    required bool hasExisting,
+    required int maxDimensionPx,
+    required ValueChanged<Uint8List> onPicked,
+    required VoidCallback onRemoved,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final action = await showModalBottomSheet<_PhotoPickAction>(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    title,
+                    style: Theme.of(sheetContext).textTheme.titleMedium,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: Text(l10n.exerciseChooseFromGalleryAction),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_PhotoPickAction.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: Text(l10n.exerciseTakePhotoAction),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_PhotoPickAction.camera),
+              ),
+              if (hasExisting)
+                ListTile(
+                  leading: const Icon(Icons.delete_outline),
+                  title: Text(l10n.exerciseRemovePhotoAction),
+                  onTap: () =>
+                      Navigator.of(sheetContext).pop(_PhotoPickAction.remove),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+    if (!mounted || action == null) return;
+    if (action == _PhotoPickAction.remove) {
+      onRemoved();
+      return;
+    }
+    final source = action == _PhotoPickAction.gallery
+        ? ImageSource.gallery
+        : ImageSource.camera;
+    final result = await ref
+        .read(exerciseImageServiceProvider)
+        .pickBytes(
+          source: source,
+          maxDimensionPx: maxDimensionPx,
+          qualityPercent: ExerciseImageRules.qualityPercent,
+        );
+    if (!mounted) return;
+    final error = result.errorOrNull();
+    if (error != null) {
+      ref
+          .read(loggerProvider)
+          .error('Failed to pick an exercise image', error: error);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.exercisePhotoError)));
+      return;
+    }
+    final bytes = result.getOrNull();
+    if (bytes != null) onPicked(bytes);
+  }
+
+  Future<void> _pickIcon() => _pickPhoto(
+    title: AppLocalizations.of(context)!.exerciseIconLabel,
+    hasExisting:
+        _pickedIconBytes != null ||
+        (!_iconRemoved && _existingIconPath != null),
+    maxDimensionPx: ExerciseImageRules.iconMaxDimensionPx,
+    onPicked: (bytes) => setState(() {
+      _pickedIconBytes = bytes;
+      _iconRemoved = false;
+    }),
+    onRemoved: () => setState(() {
+      _pickedIconBytes = null;
+      _iconRemoved = true;
+    }),
+  );
+
+  Future<void> _pickImage() => _pickPhoto(
+    title: AppLocalizations.of(context)!.exerciseImageLabel,
+    hasExisting:
+        _pickedImageBytes != null ||
+        (!_imageRemoved && _existingImagePath != null),
+    maxDimensionPx: ExerciseImageRules.imageMaxDimensionPx,
+    onPicked: (bytes) => setState(() {
+      _pickedImageBytes = bytes;
+      _imageRemoved = false;
+    }),
+    onRemoved: () => setState(() {
+      _pickedImageBytes = null;
+      _imageRemoved = true;
+    }),
+  );
+
+  /// A tappable, rounded-square image slot -- picked bytes (not yet saved)
+  /// take priority over an explicit removal, which takes priority over
+  /// whatever was already saved; a missing/corrupt existing file falls
+  /// back to the placeholder icon instead of an uncaught decode error
+  /// (same principle as the profile avatar's `onBackgroundImageError`).
+  Widget _photoSlot({
+    required Uint8List? pickedBytes,
+    required bool removed,
+    required String? existingPath,
+    required double size,
+    required IconData placeholderIcon,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    Widget child;
+    if (pickedBytes != null) {
+      child = Image.memory(
+        pickedBytes,
+        fit: BoxFit.cover,
+        width: size,
+        height: size,
+      );
+    } else if (!removed && existingPath != null) {
+      child = Image.file(
+        File(existingPath),
+        fit: BoxFit.cover,
+        width: size,
+        height: size,
+        errorBuilder: (context, error, stackTrace) =>
+            Icon(placeholderIcon, size: size * 0.45, color: scheme.onSurfaceVariant),
+      );
+    } else {
+      child = Icon(placeholderIcon, size: size * 0.45, color: scheme.onSurfaceVariant);
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadius.card),
+      child: Container(
+        width: size,
+        height: size,
+        alignment: Alignment.center,
+        color: scheme.surfaceContainerHighest,
+        child: child,
+      ),
+    );
+  }
+
+  /// Resolves what [customIconPath]/[customImagePath] should be saved as,
+  /// applying exactly one of: a freshly picked replacement (written to
+  /// disk under [exerciseId], evicting the image cache so a same-path
+  /// overwrite shows up immediately -- the same fix already applied to
+  /// the profile avatar, Stage 11), an explicit removal (deletes the old
+  /// file, if any), or leaving [existingPath] untouched. [resolveImagesDir]
+  /// is only actually called (and so only ever touches
+  /// `getApplicationDocumentsDirectory()`) when there's a fresh image to
+  /// write -- the overwhelming majority of saves touch neither slot, and
+  /// shouldn't pay for a directory lookup they don't need.
+  Future<String?> _resolveImagePath({
+    required ExerciseImageService imageService,
+    required Future<Directory> Function() resolveImagesDir,
+    required String exerciseId,
+    required Uint8List? pickedBytes,
+    required bool removed,
+    required String? existingPath,
+    required Future<String> Function(Directory, String, Uint8List) write,
+  }) async {
+    if (pickedBytes != null) {
+      final imagesDir = await resolveImagesDir();
+      final path = await write(imagesDir, exerciseId, pickedBytes);
+      await FileImage(File(path)).evict();
+      return path;
+    }
+    if (removed) {
+      await imageService.deleteFile(existingPath);
+      return null;
+    }
+    return existingPath;
   }
 
   Future<void> _submit() async {
@@ -251,8 +480,40 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
 
     setState(() => _isSubmitting = true);
     try {
+      // Computed once here rather than left to the repository (Stage 12/
+      // redesign_v2): a freshly picked icon/photo needs the exercise's
+      // final id *before* create() returns, to name the file on disk.
+      final exerciseId = existing?.id ?? const Uuid().v4();
+      final imageService = ref.read(exerciseImageServiceProvider);
+      Directory? imagesDirCache;
+      Future<Directory> resolveImagesDir() async {
+        return imagesDirCache ??= Directory(
+          '${(await getApplicationDocumentsDirectory()).path}/exercise_images',
+        );
+      }
+
+      final iconPath = await _resolveImagePath(
+        imageService: imageService,
+        resolveImagesDir: resolveImagesDir,
+        exerciseId: exerciseId,
+        pickedBytes: _pickedIconBytes,
+        removed: _iconRemoved,
+        existingPath: _existingIconPath,
+        write: imageService.writeIcon,
+      );
+      final imagePath = await _resolveImagePath(
+        imageService: imageService,
+        resolveImagesDir: resolveImagesDir,
+        exerciseId: exerciseId,
+        pickedBytes: _pickedImageBytes,
+        removed: _imageRemoved,
+        existingPath: _existingImagePath,
+        write: imageService.writeImage,
+      );
+
       final result = existing == null
           ? await service.create(
+              id: exerciseId,
               name: name,
               exerciseType: _selectedType,
               description: description.isEmpty ? null : description,
@@ -261,6 +522,8 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
               equipmentId: _equipmentId,
               effortMetric: effortMetric,
               secondaryMuscleGroupIds: _secondaryMuscleGroupIds.toList(),
+              customIconPath: iconPath,
+              customImagePath: imagePath,
             )
           : await service.update(
               current: existing,
@@ -272,6 +535,8 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
               equipmentId: _equipmentId,
               effortMetric: effortMetric,
               secondaryMuscleGroupIds: _secondaryMuscleGroupIds.toList(),
+              customIconPath: iconPath,
+              customImagePath: imagePath,
             );
       final saved = result.getOrNull();
       if (saved != null) {
@@ -351,6 +616,52 @@ class _CreateExerciseScreenState extends ConsumerState<CreateExerciseScreen> {
                       ),
                     ),
                   ],
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Column(
+                        children: [
+                          GestureDetector(
+                            key: const Key('exercise-icon-slot'),
+                            onTap: _pickIcon,
+                            child: _photoSlot(
+                              pickedBytes: _pickedIconBytes,
+                              removed: _iconRemoved,
+                              existingPath: _existingIconPath,
+                              size: 56,
+                              placeholderIcon: Icons.image_outlined,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.exerciseIconLabel,
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 24),
+                      Column(
+                        children: [
+                          GestureDetector(
+                            key: const Key('exercise-image-slot'),
+                            onTap: _pickImage,
+                            child: _photoSlot(
+                              pickedBytes: _pickedImageBytes,
+                              removed: _imageRemoved,
+                              existingPath: _existingImagePath,
+                              size: 96,
+                              placeholderIcon: Icons.landscape_outlined,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.exerciseImageLabel,
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<ExerciseType>(
                     isExpanded: true,

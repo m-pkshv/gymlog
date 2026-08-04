@@ -43,7 +43,12 @@ part 'database.g.dart';
 /// no user-facing value, and CSV export already gives immediate
 /// success/failure feedback via a snackbar/share sheet without needing a
 /// persisted log). No migration can bring back old journal rows -- the
-/// table is gone for good.
+/// table is gone for good. Version 9 (Stage 12/redesign_v2, owner-requested
+/// 2026-08-04) adds `Exercises.customIconPath`/`customImagePath` (06_
+/// DATA_MODEL.md, section 6.1) -- a user-created exercise can now upload
+/// its own small catalog icon and large detail-card photo, both device
+/// file paths (`Image.file`), independent of `imageAsset` (a bundled
+/// asset, `Image.asset`, only ever populated for built-in exercises).
 @DriftDatabase(
   tables: [
     MuscleGroups,
@@ -73,7 +78,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration {
@@ -130,6 +135,13 @@ class AppDatabase extends _$AppDatabase {
           // value). `deleteTable` takes a plain string, not a `TableInfo`,
           // precisely because the Dart table class is gone by this point.
           await m.deleteTable('ImportExportOperations');
+        }
+        if (from < 9) {
+          // v8 -> v9 (Stage 12/redesign_v2, 2026-08-04): a user-created
+          // exercise can now upload its own catalog icon and detail-card
+          // photo. Plain `addColumn`s, always NULL for existing rows.
+          await m.addColumn(exercises, exercises.customIconPath);
+          await m.addColumn(exercises, exercises.customImagePath);
         }
       },
       beforeOpen: (details) async {

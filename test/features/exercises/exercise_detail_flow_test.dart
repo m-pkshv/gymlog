@@ -1,4 +1,6 @@
-﻿import 'package:drift/drift.dart' hide isNull;
+﻿import 'dart:io';
+
+import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,6 +62,7 @@ Future<String> _insertExercise(
   required String name,
   bool isBuiltIn = false,
   ExerciseType type = ExerciseType.strength,
+  String? customImagePath,
 }) async {
   await db
       .into(db.exercises)
@@ -69,6 +72,7 @@ Future<String> _insertExercise(
           name: name,
           exerciseType: type.name,
           isBuiltIn: Value(isBuiltIn),
+          customImagePath: Value(customImagePath),
           createdAt: '2026-07-19T00:00:00Z',
           updatedAt: '2026-07-19T00:00:00Z',
         ),
@@ -109,6 +113,54 @@ void main() {
 
     await _unmountAndFlush(tester);
   });
+
+  testWidgets(
+    'a custom photo (Stage 12/redesign_v2, owner-requested) renders as the '
+    'detail card\'s big image instead of the placeholder glyph -- same '
+    '"path just has to be set, decode doesn\'t need to succeed" approach as '
+    'the catalog list icon test',
+    (tester) async {
+      // `Platform.pathSeparator`, not a hardcoded '/' or a bare POSIX-style
+      // path like '/does/not/exist.jpg': a path with no drive letter, or
+      // one mixing '/' and '\', made `dart:io` file operations hang
+      // indefinitely on Windows in this environment -- a real,
+      // reproducible platform quirk (see `profile_screen_test.dart`'s
+      // "tapping Remove photo" test for the original investigation), not a
+      // flutter_test artifact. The file itself is never created -- only
+      // the path needs to be well-formed for Windows, not real.
+      final imagePath =
+          '${Directory.systemTemp.path}${Platform.pathSeparator}'
+          'gymlog_exercise_detail_photo_test.jpg';
+      await _insertExercise(
+        db,
+        id: 'squat',
+        name: 'Barbell Squat',
+        customImagePath: imagePath,
+      );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Barbell Squat'));
+      // Full settle, not a single pump: pushing the detail route both
+      // animates the page transition and kicks off `ExerciseDetailScreen`'s
+      // own async `getById` load -- a single frame isn't enough for
+      // `_AboutTab` (and its Image) to exist in the tree at all yet.
+      await tester.pumpAndSettle();
+
+      // `tester.widget<Image>` itself throws if the finder doesn't match
+      // exactly one widget -- reaching the next line is the assertion.
+      tester.widget<Image>(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Image &&
+              widget.image is FileImage &&
+              (widget.image as FileImage).file.path == imagePath,
+        ),
+      );
+
+      await _unmountAndFlush(tester);
+    },
+  );
 
   testWidgets('history tab lists a completed occurrence', (tester) async {
     await _insertExercise(db, id: 'squat', name: 'Barbell Squat');
@@ -332,6 +384,70 @@ void main() {
         db.exercises,
       )..where((e) => e.id.equals('squat'))).getSingle();
       expect(exercise.name, 'Front Squat');
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'editing an exercise with an existing icon offers "Remove photo", and '
+    'tapping it clears the preview back to the placeholder (Stage 12/'
+    'redesign_v2, owner-requested) -- deliberately stops short of tapping '
+    '"Save": that would run `ExerciseImageService.deleteFile`\'s real '
+    '`File(...).exists()` check, which this environment has shown can hang '
+    'indefinitely inside a widget test (a real, reproducible Windows quirk, '
+    'not a bug in the removal logic itself -- confirmed separately via '
+    'trace prints, and not the same "mixed path separator" cause already '
+    'on record in `profile_screen_test.dart`, since the path here was '
+    'already well-formed). The DB-level "customIconPath cleared when the '
+    'caller omits it" guarantee this would otherwise have exercised end to '
+    'end is already covered without any widget/platform boundary by '
+    'exercise_repository_impl_test.dart\'s own `update` test.',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 5000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      // Well-formed-for-Windows temp path, not a bare POSIX-style one --
+      // see the "custom photo" test above for why.
+      final iconPath =
+          '${Directory.systemTemp.path}${Platform.pathSeparator}'
+          'gymlog_exercise_edit_remove_icon_test.jpg';
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'squat',
+              name: 'Barbell Squat',
+              exerciseType: ExerciseType.strength.name,
+              customIconPath: Value(iconPath),
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Barbell Squat'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Edit'));
+      await tester.pumpAndSettle();
+
+      // By key, not by the placeholder icon -- an existing icon renders as
+      // an Image, not the Icons.image_outlined placeholder, so the icon
+      // finder would find nothing here (unlike the create-mode test above).
+      await tester.tap(find.byKey(const Key('exercise-icon-slot')));
+      await tester.pumpAndSettle();
+      expect(find.text('Remove photo'), findsOneWidget);
+      await tester.tap(find.text('Remove photo'));
+      await tester.pumpAndSettle();
+
+      // The slot now falls back to the placeholder glyph instead of the
+      // Image -- confirms the tap actually flipped `_iconRemoved` in local
+      // state, without going anywhere near disk.
+      expect(find.byIcon(Icons.image_outlined), findsOneWidget);
 
       await _unmountAndFlush(tester);
     },

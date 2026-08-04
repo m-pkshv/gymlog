@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -548,20 +550,48 @@ class _ExerciseListTile extends StatelessWidget {
         // (16) kept as-is at the larger size too -- close enough to the
         // same radius-to-box ratio as before (16/48 -> 16/56) that it
         // wasn't worth changing on its own.
-        leading: Container(
-          width: 56,
-          height: 56,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: avatarColor,
-            borderRadius: BorderRadius.circular(AppRadius.button),
-          ),
-          child: Icon(
-            exerciseTypeIcon(exercise.exerciseType),
-            color: avatarForeground,
-            size: 30,
-          ),
-        ),
+        // Owner-uploaded icon (Stage 12/redesign_v2) takes over this whole
+        // box when set, replacing the muscle-group color + type glyph
+        // fallback below -- `errorBuilder` falls back to that same glyph
+        // (on `avatarColor`, not `surfaceContainerHighest` -- picking a
+        // custom icon doesn't erase the muscle-group color coding) if the
+        // file is missing/corrupt, same "fail quietly" principle as the
+        // profile avatar's `onBackgroundImageError`.
+        leading: exercise.customIconPath != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.button),
+                child: Image.file(
+                  File(exercise.customIconPath!),
+                  width: 56,
+                  height: 56,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: 56,
+                    height: 56,
+                    alignment: Alignment.center,
+                    color: avatarColor,
+                    child: Icon(
+                      exerciseTypeIcon(exercise.exerciseType),
+                      color: avatarForeground,
+                      size: 30,
+                    ),
+                  ),
+                ),
+              )
+            : Container(
+                width: 56,
+                height: 56,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: avatarColor,
+                  borderRadius: BorderRadius.circular(AppRadius.button),
+                ),
+                child: Icon(
+                  exerciseTypeIcon(exercise.exerciseType),
+                  color: avatarForeground,
+                  size: 30,
+                ),
+              ),
         title: Text(exercise.name),
         subtitle: Text(subtitleParts.join(' · ')),
         trailing: exercise.isArchived

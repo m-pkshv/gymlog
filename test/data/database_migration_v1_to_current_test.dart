@@ -45,6 +45,11 @@ import 'package:gymlog/domain/enums.dart';
 /// `createAll()` (reflecting the *current*, post-drop schema) no longer
 /// creates it, so the fixture has to add it back by hand via raw SQL to
 /// genuinely represent a v1 shape.
+/// v8 -> v9 (2026-08-04, owner-requested): `Exercises.customIconPath`/
+/// `customImagePath` added -- same shape as v6 -> v7's dropped-column
+/// cases (`createAll()` already reflects the *current* schema, which
+/// includes these two new columns, so the fixture drops them back out via
+/// raw SQL before forcing `user_version = 1`).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -195,6 +200,14 @@ void main() {
       // of the *current* schema) -- drop it so the fixture genuinely
       // matches a v1 install, which never had this table.
       await firstRun.customStatement('DROP TABLE "UserProfileTable"');
+      // Same reasoning for the two columns added in v9 -- `createAll()`
+      // already builds them, but a real v1 install never had them.
+      await firstRun.customStatement(
+        'ALTER TABLE "Exercises" DROP COLUMN "customIconPath"',
+      );
+      await firstRun.customStatement(
+        'ALTER TABLE "Exercises" DROP COLUMN "customImagePath"',
+      );
       // The opposite situation: a real v1 install DID have
       // `ImportExportOperations`, but `createAll()` (reflecting the
       // *current*, post-drop schema) no longer creates it -- add it back by
@@ -287,15 +300,30 @@ void main() {
           .get();
       expect(journalTables, isEmpty);
 
+      final exerciseColumns = await secondRun
+          .customSelect('PRAGMA table_info("Exercises")')
+          .get();
+      expect(
+        exerciseColumns.map((r) => r.data['name']),
+        containsAll(['customIconPath', 'customImagePath']),
+      );
+
       final versionRow = await secondRun
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(versionRow.data['user_version'], 8);
+      expect(versionRow.data['user_version'], 9);
 
       final fkRows = await secondRun.customSelect('PRAGMA foreign_keys').get();
       expect(fkRows.single.data['foreign_keys'], 1);
 
       // The pre-migration data survived, untouched apart from the columns.
+      final storedExercises = await secondRun.select(secondRun.exercises).get();
+      expect(storedExercises.single.id, 'squat');
+      // v9's addColumn only brings back an empty column -- there's no old
+      // value to lose here since this pair never existed before v9.
+      expect(storedExercises.single.customIconPath, isNull);
+      expect(storedExercises.single.customImagePath, isNull);
+
       final storedSets = await secondRun.select(secondRun.exerciseSets).get();
       expect(storedSets.single.id, 's1');
       expect(storedSets.single.actualWeightKg, 100.0);

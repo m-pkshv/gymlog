@@ -16,6 +16,8 @@ class Exercise {
     this.description,
     this.youtubeUrl,
     this.imageAsset,
+    this.customIconPath,
+    this.customImagePath,
     this.primaryMuscleGroupId,
     this.equipmentId,
   });
@@ -25,6 +27,16 @@ class Exercise {
   final String? description;
   final String? youtubeUrl;
   final String? imageAsset;
+
+  /// User-uploaded catalog-list icon (Stage 12/redesign_v2) -- a device
+  /// file path, not a bundled asset like [imageAsset]. See
+  /// `Exercises.customIconPath`'s doc comment for the full rationale.
+  final String? customIconPath;
+
+  /// User-uploaded detail-card photo (Stage 12/redesign_v2) -- same
+  /// file-path-vs-bundled-asset distinction as [customIconPath], just the
+  /// large "big picture" slot instead of the list icon.
+  final String? customImagePath;
   final ExerciseType exerciseType;
   final String? primaryMuscleGroupId;
   final String? equipmentId;
@@ -55,6 +67,12 @@ class Exercise {
       description: description ?? this.description,
       youtubeUrl: youtubeUrl ?? this.youtubeUrl,
       imageAsset: imageAsset ?? this.imageAsset,
+      // Not settable through copyWith (nothing needs to change them this
+      // way yet -- archive/unarchive are its only callers) but still
+      // carried over, or a copy would silently drop the exercise's own
+      // uploaded icon/photo.
+      customIconPath: customIconPath,
+      customImagePath: customImagePath,
       exerciseType: exerciseType,
       primaryMuscleGroupId: primaryMuscleGroupId ?? this.primaryMuscleGroupId,
       equipmentId: equipmentId ?? this.equipmentId,

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -281,13 +283,28 @@ class _AboutTab extends StatelessWidget {
               alignment: Alignment.center,
               color: theme.colorScheme.surfaceContainerHighest,
               // Built-in exercises get a real image once the full seed
-              // pipeline lands (D-3); until then, and always for
-              // user-created ones, this placeholder icon stands in. A
+              // pipeline lands (D-3); until then, a user-created exercise's
+              // own uploaded photo (Stage 12/redesign_v2) takes the same
+              // slot; failing both, this placeholder icon stands in. A
               // square source image fits this square mask almost exactly
               // (`BoxFit.cover` just fills the box) -- unlike the old
-              // circular mask, which cropped a square image's corners.
+              // circular mask, which cropped a square image's corners. The
+              // two image sources never coexist in practice (built-in
+              // exercises have no edit form to set customImagePath from,
+              // DM 10), so checking imageAsset first is just a tie-break,
+              // not a real priority decision.
               child: exercise.imageAsset != null
                   ? Image.asset(exercise.imageAsset!, fit: BoxFit.cover)
+                  : exercise.customImagePath != null
+                  ? Image.file(
+                      File(exercise.customImagePath!),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Icon(
+                        exerciseTypeIcon(exercise.exerciseType),
+                        size: 56,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    )
                   : Icon(
                       exerciseTypeIcon(exercise.exerciseType),
                       size: 56,

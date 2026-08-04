@@ -932,6 +932,28 @@ class $ExercisesTable extends Exercises
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _customIconPathMeta = const VerificationMeta(
+    'customIconPath',
+  );
+  @override
+  late final GeneratedColumn<String> customIconPath = GeneratedColumn<String>(
+    'customIconPath',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _customImagePathMeta = const VerificationMeta(
+    'customImagePath',
+  );
+  @override
+  late final GeneratedColumn<String> customImagePath = GeneratedColumn<String>(
+    'customImagePath',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _exerciseTypeMeta = const VerificationMeta(
     'exerciseType',
   );
@@ -1038,6 +1060,8 @@ class $ExercisesTable extends Exercises
     description,
     youtubeUrl,
     imageAsset,
+    customIconPath,
+    customImagePath,
     exerciseType,
     primaryMuscleGroupId,
     equipmentId,
@@ -1112,6 +1136,24 @@ class $ExercisesTable extends Exercises
       context.handle(
         _imageAssetMeta,
         imageAsset.isAcceptableOrUnknown(data['imageAsset']!, _imageAssetMeta),
+      );
+    }
+    if (data.containsKey('customIconPath')) {
+      context.handle(
+        _customIconPathMeta,
+        customIconPath.isAcceptableOrUnknown(
+          data['customIconPath']!,
+          _customIconPathMeta,
+        ),
+      );
+    }
+    if (data.containsKey('customImagePath')) {
+      context.handle(
+        _customImagePathMeta,
+        customImagePath.isAcceptableOrUnknown(
+          data['customImagePath']!,
+          _customImagePathMeta,
+        ),
       );
     }
     if (data.containsKey('exerciseType')) {
@@ -1214,6 +1256,14 @@ class $ExercisesTable extends Exercises
         DriftSqlType.string,
         data['${effectivePrefix}imageAsset'],
       ),
+      customIconPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customIconPath'],
+      ),
+      customImagePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customImagePath'],
+      ),
       exerciseType: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}exerciseType'],
@@ -1265,6 +1315,20 @@ class Exercise extends DataClass implements Insertable<Exercise> {
 
   /// Asset path; only ever populated for built-in exercises (D-3).
   final String? imageAsset;
+
+  /// Small icon shown in the catalog list (S-06) -- a device file path
+  /// (`Image.file`), not a bundled asset like [imageAsset] above. Stage 12/
+  /// redesign_v2, owner-requested: user-created exercises can upload their
+  /// own icon. Only ever populated for user-created exercises in practice
+  /// (built-in ones have no edit form to set it from, DM 10), but nothing
+  /// in the schema enforces that.
+  final String? customIconPath;
+
+  /// Large photo shown on the exercise's own card (S-07) -- same file-path
+  /// vs. bundled-asset distinction as [customIconPath] above, just the
+  /// "big picture" slot instead of the list icon. The two are independent:
+  /// setting one doesn't imply or require the other.
+  final String? customImagePath;
   final String exerciseType;
   final String? primaryMuscleGroupId;
   final String? equipmentId;
@@ -1283,6 +1347,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     this.description,
     this.youtubeUrl,
     this.imageAsset,
+    this.customIconPath,
+    this.customImagePath,
     required this.exerciseType,
     this.primaryMuscleGroupId,
     this.equipmentId,
@@ -1307,6 +1373,12 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     }
     if (!nullToAbsent || imageAsset != null) {
       map['imageAsset'] = Variable<String>(imageAsset);
+    }
+    if (!nullToAbsent || customIconPath != null) {
+      map['customIconPath'] = Variable<String>(customIconPath);
+    }
+    if (!nullToAbsent || customImagePath != null) {
+      map['customImagePath'] = Variable<String>(customImagePath);
     }
     map['exerciseType'] = Variable<String>(exerciseType);
     if (!nullToAbsent || primaryMuscleGroupId != null) {
@@ -1340,6 +1412,12 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       imageAsset: imageAsset == null && nullToAbsent
           ? const Value.absent()
           : Value(imageAsset),
+      customIconPath: customIconPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customIconPath),
+      customImagePath: customImagePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customImagePath),
       exerciseType: Value(exerciseType),
       primaryMuscleGroupId: primaryMuscleGroupId == null && nullToAbsent
           ? const Value.absent()
@@ -1370,6 +1448,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       description: serializer.fromJson<String?>(json['description']),
       youtubeUrl: serializer.fromJson<String?>(json['youtubeUrl']),
       imageAsset: serializer.fromJson<String?>(json['imageAsset']),
+      customIconPath: serializer.fromJson<String?>(json['customIconPath']),
+      customImagePath: serializer.fromJson<String?>(json['customImagePath']),
       exerciseType: serializer.fromJson<String>(json['exerciseType']),
       primaryMuscleGroupId: serializer.fromJson<String?>(
         json['primaryMuscleGroupId'],
@@ -1393,6 +1473,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       'description': serializer.toJson<String?>(description),
       'youtubeUrl': serializer.toJson<String?>(youtubeUrl),
       'imageAsset': serializer.toJson<String?>(imageAsset),
+      'customIconPath': serializer.toJson<String?>(customIconPath),
+      'customImagePath': serializer.toJson<String?>(customImagePath),
       'exerciseType': serializer.toJson<String>(exerciseType),
       'primaryMuscleGroupId': serializer.toJson<String?>(primaryMuscleGroupId),
       'equipmentId': serializer.toJson<String?>(equipmentId),
@@ -1412,6 +1494,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     Value<String?> description = const Value.absent(),
     Value<String?> youtubeUrl = const Value.absent(),
     Value<String?> imageAsset = const Value.absent(),
+    Value<String?> customIconPath = const Value.absent(),
+    Value<String?> customImagePath = const Value.absent(),
     String? exerciseType,
     Value<String?> primaryMuscleGroupId = const Value.absent(),
     Value<String?> equipmentId = const Value.absent(),
@@ -1428,6 +1512,12 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     description: description.present ? description.value : this.description,
     youtubeUrl: youtubeUrl.present ? youtubeUrl.value : this.youtubeUrl,
     imageAsset: imageAsset.present ? imageAsset.value : this.imageAsset,
+    customIconPath: customIconPath.present
+        ? customIconPath.value
+        : this.customIconPath,
+    customImagePath: customImagePath.present
+        ? customImagePath.value
+        : this.customImagePath,
     exerciseType: exerciseType ?? this.exerciseType,
     primaryMuscleGroupId: primaryMuscleGroupId.present
         ? primaryMuscleGroupId.value
@@ -1456,6 +1546,12 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       imageAsset: data.imageAsset.present
           ? data.imageAsset.value
           : this.imageAsset,
+      customIconPath: data.customIconPath.present
+          ? data.customIconPath.value
+          : this.customIconPath,
+      customImagePath: data.customImagePath.present
+          ? data.customImagePath.value
+          : this.customImagePath,
       exerciseType: data.exerciseType.present
           ? data.exerciseType.value
           : this.exerciseType,
@@ -1489,6 +1585,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           ..write('description: $description, ')
           ..write('youtubeUrl: $youtubeUrl, ')
           ..write('imageAsset: $imageAsset, ')
+          ..write('customIconPath: $customIconPath, ')
+          ..write('customImagePath: $customImagePath, ')
           ..write('exerciseType: $exerciseType, ')
           ..write('primaryMuscleGroupId: $primaryMuscleGroupId, ')
           ..write('equipmentId: $equipmentId, ')
@@ -1510,6 +1608,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     description,
     youtubeUrl,
     imageAsset,
+    customIconPath,
+    customImagePath,
     exerciseType,
     primaryMuscleGroupId,
     equipmentId,
@@ -1530,6 +1630,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           other.description == this.description &&
           other.youtubeUrl == this.youtubeUrl &&
           other.imageAsset == this.imageAsset &&
+          other.customIconPath == this.customIconPath &&
+          other.customImagePath == this.customImagePath &&
           other.exerciseType == this.exerciseType &&
           other.primaryMuscleGroupId == this.primaryMuscleGroupId &&
           other.equipmentId == this.equipmentId &&
@@ -1548,6 +1650,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
   final Value<String?> description;
   final Value<String?> youtubeUrl;
   final Value<String?> imageAsset;
+  final Value<String?> customIconPath;
+  final Value<String?> customImagePath;
   final Value<String> exerciseType;
   final Value<String?> primaryMuscleGroupId;
   final Value<String?> equipmentId;
@@ -1565,6 +1669,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     this.description = const Value.absent(),
     this.youtubeUrl = const Value.absent(),
     this.imageAsset = const Value.absent(),
+    this.customIconPath = const Value.absent(),
+    this.customImagePath = const Value.absent(),
     this.exerciseType = const Value.absent(),
     this.primaryMuscleGroupId = const Value.absent(),
     this.equipmentId = const Value.absent(),
@@ -1583,6 +1689,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     this.description = const Value.absent(),
     this.youtubeUrl = const Value.absent(),
     this.imageAsset = const Value.absent(),
+    this.customIconPath = const Value.absent(),
+    this.customImagePath = const Value.absent(),
     required String exerciseType,
     this.primaryMuscleGroupId = const Value.absent(),
     this.equipmentId = const Value.absent(),
@@ -1605,6 +1713,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     Expression<String>? description,
     Expression<String>? youtubeUrl,
     Expression<String>? imageAsset,
+    Expression<String>? customIconPath,
+    Expression<String>? customImagePath,
     Expression<String>? exerciseType,
     Expression<String>? primaryMuscleGroupId,
     Expression<String>? equipmentId,
@@ -1623,6 +1733,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
       if (description != null) 'description': description,
       if (youtubeUrl != null) 'youtubeUrl': youtubeUrl,
       if (imageAsset != null) 'imageAsset': imageAsset,
+      if (customIconPath != null) 'customIconPath': customIconPath,
+      if (customImagePath != null) 'customImagePath': customImagePath,
       if (exerciseType != null) 'exerciseType': exerciseType,
       if (primaryMuscleGroupId != null)
         'primaryMuscleGroupId': primaryMuscleGroupId,
@@ -1644,6 +1756,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     Value<String?>? description,
     Value<String?>? youtubeUrl,
     Value<String?>? imageAsset,
+    Value<String?>? customIconPath,
+    Value<String?>? customImagePath,
     Value<String>? exerciseType,
     Value<String?>? primaryMuscleGroupId,
     Value<String?>? equipmentId,
@@ -1662,6 +1776,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
       description: description ?? this.description,
       youtubeUrl: youtubeUrl ?? this.youtubeUrl,
       imageAsset: imageAsset ?? this.imageAsset,
+      customIconPath: customIconPath ?? this.customIconPath,
+      customImagePath: customImagePath ?? this.customImagePath,
       exerciseType: exerciseType ?? this.exerciseType,
       primaryMuscleGroupId: primaryMuscleGroupId ?? this.primaryMuscleGroupId,
       equipmentId: equipmentId ?? this.equipmentId,
@@ -1699,6 +1815,12 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     }
     if (imageAsset.present) {
       map['imageAsset'] = Variable<String>(imageAsset.value);
+    }
+    if (customIconPath.present) {
+      map['customIconPath'] = Variable<String>(customIconPath.value);
+    }
+    if (customImagePath.present) {
+      map['customImagePath'] = Variable<String>(customImagePath.value);
     }
     if (exerciseType.present) {
       map['exerciseType'] = Variable<String>(exerciseType.value);
@@ -1740,6 +1862,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
           ..write('description: $description, ')
           ..write('youtubeUrl: $youtubeUrl, ')
           ..write('imageAsset: $imageAsset, ')
+          ..write('customIconPath: $customIconPath, ')
+          ..write('customImagePath: $customImagePath, ')
           ..write('exerciseType: $exerciseType, ')
           ..write('primaryMuscleGroupId: $primaryMuscleGroupId, ')
           ..write('equipmentId: $equipmentId, ')
@@ -11383,6 +11507,8 @@ typedef $$ExercisesTableCreateCompanionBuilder =
       Value<String?> description,
       Value<String?> youtubeUrl,
       Value<String?> imageAsset,
+      Value<String?> customIconPath,
+      Value<String?> customImagePath,
       required String exerciseType,
       Value<String?> primaryMuscleGroupId,
       Value<String?> equipmentId,
@@ -11402,6 +11528,8 @@ typedef $$ExercisesTableUpdateCompanionBuilder =
       Value<String?> description,
       Value<String?> youtubeUrl,
       Value<String?> imageAsset,
+      Value<String?> customIconPath,
+      Value<String?> customImagePath,
       Value<String> exerciseType,
       Value<String?> primaryMuscleGroupId,
       Value<String?> equipmentId,
@@ -11629,6 +11757,16 @@ class $$ExercisesTableFilterComposer
 
   ColumnFilters<String> get imageAsset => $composableBuilder(
     column: $table.imageAsset,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customIconPath => $composableBuilder(
+    column: $table.customIconPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customImagePath => $composableBuilder(
+    column: $table.customImagePath,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11907,6 +12045,16 @@ class $$ExercisesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get customIconPath => $composableBuilder(
+    column: $table.customIconPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customImagePath => $composableBuilder(
+    column: $table.customImagePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get exerciseType => $composableBuilder(
     column: $table.exerciseType,
     builder: (column) => ColumnOrderings(column),
@@ -12015,6 +12163,16 @@ class $$ExercisesTableAnnotationComposer
 
   GeneratedColumn<String> get imageAsset => $composableBuilder(
     column: $table.imageAsset,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get customIconPath => $composableBuilder(
+    column: $table.customIconPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get customImagePath => $composableBuilder(
+    column: $table.customImagePath,
     builder: (column) => column,
   );
 
@@ -12288,6 +12446,8 @@ class $$ExercisesTableTableManager
                 Value<String?> description = const Value.absent(),
                 Value<String?> youtubeUrl = const Value.absent(),
                 Value<String?> imageAsset = const Value.absent(),
+                Value<String?> customIconPath = const Value.absent(),
+                Value<String?> customImagePath = const Value.absent(),
                 Value<String> exerciseType = const Value.absent(),
                 Value<String?> primaryMuscleGroupId = const Value.absent(),
                 Value<String?> equipmentId = const Value.absent(),
@@ -12305,6 +12465,8 @@ class $$ExercisesTableTableManager
                 description: description,
                 youtubeUrl: youtubeUrl,
                 imageAsset: imageAsset,
+                customIconPath: customIconPath,
+                customImagePath: customImagePath,
                 exerciseType: exerciseType,
                 primaryMuscleGroupId: primaryMuscleGroupId,
                 equipmentId: equipmentId,
@@ -12324,6 +12486,8 @@ class $$ExercisesTableTableManager
                 Value<String?> description = const Value.absent(),
                 Value<String?> youtubeUrl = const Value.absent(),
                 Value<String?> imageAsset = const Value.absent(),
+                Value<String?> customIconPath = const Value.absent(),
+                Value<String?> customImagePath = const Value.absent(),
                 required String exerciseType,
                 Value<String?> primaryMuscleGroupId = const Value.absent(),
                 Value<String?> equipmentId = const Value.absent(),
@@ -12341,6 +12505,8 @@ class $$ExercisesTableTableManager
                 description: description,
                 youtubeUrl: youtubeUrl,
                 imageAsset: imageAsset,
+                customIconPath: customIconPath,
+                customImagePath: customImagePath,
                 exerciseType: exerciseType,
                 primaryMuscleGroupId: primaryMuscleGroupId,
                 equipmentId: equipmentId,

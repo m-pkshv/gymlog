@@ -25,8 +25,12 @@ abstract class ExerciseRepository {
 
   /// Creates a user-created exercise (S-08, full form — DM 6.1). Only
   /// [name] and [exerciseType] are required; the rest default to "not set"
-  /// the same way a fresh `Exercise` row does.
+  /// the same way a fresh `Exercise` row does. [id], when given, is used
+  /// as-is instead of generating a fresh UUID -- the create form (Stage
+  /// 12/redesign_v2) needs the final id *before* this call returns, to
+  /// name a freshly-picked icon/photo file on disk after it.
   Future<Exercise> create({
+    String? id,
     required String name,
     required ExerciseType exerciseType,
     String? description,
@@ -35,6 +39,8 @@ abstract class ExerciseRepository {
     String? equipmentId,
     EffortMetric effortMetric = EffortMetric.none,
     List<String> secondaryMuscleGroupIds = const [],
+    String? customIconPath,
+    String? customImagePath,
   });
 
   /// Overwrites the full DM 6.1 field set of an existing exercise (S-07
@@ -54,6 +60,8 @@ abstract class ExerciseRepository {
     String? equipmentId,
     EffortMetric effortMetric = EffortMetric.none,
     List<String> secondaryMuscleGroupIds = const [],
+    String? customIconPath,
+    String? customImagePath,
   });
 
   /// Whether [exerciseId] appears in any non-deleted `WorkoutExercise`
