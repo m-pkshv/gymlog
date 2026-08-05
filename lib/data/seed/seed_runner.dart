@@ -47,7 +47,17 @@ import 'workout_template_seed.dart';
 /// additive, owner confirmed no existing exercise's primary/secondary
 /// muscle changes. Not the same row as the "Legs" *workout tag* seeded in
 /// v7/v8 (`WorkoutTags` is a different table).
-const int currentSeedVersion = 9;
+/// v10 (2026-08-05, redesign_v2, owner-requested): two new equipment ids,
+/// "Pull-up bar" and "Dip bars" (`equipmentIds`, 9→11), split out of the
+/// catch-all "Other" bucket (icon-by-equipment planning found it was a
+/// ~49-exercise grab bag) — 11 pull-up/chin-up/hanging exercises and 2
+/// dip exercises reclassified accordingly in `exercises_v1.json`. Also
+/// fixes a real pre-existing data bug found in the same review: 17
+/// exercises with "cable" literally in their name/id (e.g.
+/// `cable_crossover`, `high_cable_curl`) had been misclassified as
+/// `machine` instead of `cable` since the v6 (2026-08-01) full-list
+/// import — corrected in the same seed update.
+const int currentSeedVersion = 10;
 
 /// Loads built-in reference data and the placeholder exercise catalog
 /// (06_DATA_MODEL.md, section 12) on first run, tracked by

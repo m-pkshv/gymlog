@@ -1,5 +1,5 @@
 {
-  "seedVersion": 4,
+  "seedVersion": 5,
   "exercises": [
     {
       "id": "barbell_bench_press",
@@ -230,7 +230,7 @@
         "triceps",
         "shoulders"
       ],
-      "equipment": "other",
+      "equipment": "dip_bars",
       "effortMetric": "none"
     },
     {
@@ -310,7 +310,7 @@
       "secondaryMuscles": [
         "shoulders"
       ],
-      "equipment": "machine",
+      "equipment": "cable",
       "effortMetric": "rpe"
     },
     {
@@ -330,7 +330,7 @@
       "secondaryMuscles": [
         "shoulders"
       ],
-      "equipment": "machine",
+      "equipment": "cable",
       "effortMetric": "rpe"
     },
     {
@@ -350,7 +350,7 @@
       "secondaryMuscles": [
         "shoulders"
       ],
-      "equipment": "machine",
+      "equipment": "cable",
       "effortMetric": "rpe"
     },
     {
@@ -564,7 +564,7 @@
         "biceps",
         "forearms"
       ],
-      "equipment": "other",
+      "equipment": "pull_up_bar",
       "effortMetric": "none"
     },
     {
@@ -585,7 +585,7 @@
         "biceps",
         "forearms"
       ],
-      "equipment": "other",
+      "equipment": "pull_up_bar",
       "effortMetric": "none"
     },
     {
@@ -606,7 +606,7 @@
         "biceps",
         "forearms"
       ],
-      "equipment": "other",
+      "equipment": "pull_up_bar",
       "effortMetric": "none"
     },
     {
@@ -1053,7 +1053,7 @@
       "type": "strength",
       "primaryMuscle": "shoulders",
       "secondaryMuscles": [],
-      "equipment": "machine",
+      "equipment": "cable",
       "effortMetric": "rpe"
     },
     {
@@ -1210,7 +1210,7 @@
       "secondaryMuscles": [
         "back"
       ],
-      "equipment": "machine",
+      "equipment": "cable",
       "effortMetric": "rpe"
     },
     {
@@ -1450,7 +1450,7 @@
       "secondaryMuscles": [
         "forearms"
       ],
-      "equipment": "machine",
+      "equipment": "cable",
       "effortMetric": "rpe"
     },
     {
@@ -1692,7 +1692,7 @@
         "chest",
         "shoulders"
       ],
-      "equipment": "other",
+      "equipment": "dip_bars",
       "effortMetric": "none"
     },
     {
@@ -1889,7 +1889,7 @@
         "back",
         "shoulders"
       ],
-      "equipment": "other",
+      "equipment": "pull_up_bar",
       "effortMetric": "none"
     },
     {
@@ -2514,7 +2514,7 @@
       "secondaryMuscles": [
         "hamstrings"
       ],
-      "equipment": "machine",
+      "equipment": "cable",
       "effortMetric": "rpe"
     },
     {
@@ -2778,7 +2778,7 @@
         "hip_flexors",
         "forearms"
       ],
-      "equipment": "other",
+      "equipment": "pull_up_bar",
       "effortMetric": "none"
     },
     {
@@ -2799,7 +2799,7 @@
         "hip_flexors",
         "forearms"
       ],
-      "equipment": "other",
+      "equipment": "pull_up_bar",
       "effortMetric": "none"
     },
     {
@@ -4620,7 +4620,7 @@
       "secondaryMuscles": [
         "shoulders"
       ],
-      "equipment": "machine",
+      "equipment": "cable",
       "effortMetric": "rpe"
     },
     {
@@ -4835,7 +4835,7 @@
         "biceps",
         "forearms"
       ],
-      "equipment": "other",
+      "equipment": "pull_up_bar",
       "effortMetric": "none"
     },
     {
@@ -4856,7 +4856,7 @@
         "biceps",
         "forearms"
       ],
-      "equipment": "other",
+      "equipment": "pull_up_bar",
       "effortMetric": "none"
     },
     {
@@ -4877,7 +4877,7 @@
         "biceps",
         "forearms"
       ],
-      "equipment": "other",
+      "equipment": "pull_up_bar",
       "effortMetric": "none"
     },
     {
@@ -4898,7 +4898,7 @@
         "biceps",
         "forearms"
       ],
-      "equipment": "other",
+      "equipment": "pull_up_bar",
       "effortMetric": "none"
     },
     {
@@ -5411,7 +5411,7 @@
       "type": "strength",
       "primaryMuscle": "shoulders",
       "secondaryMuscles": [],
-      "equipment": "machine",
+      "equipment": "cable",
       "effortMetric": "rpe"
     },
     {
@@ -5447,7 +5447,7 @@
       "type": "strength",
       "primaryMuscle": "shoulders",
       "secondaryMuscles": [],
-      "equipment": "machine",
+      "equipment": "cable",
       "effortMetric": "rpe"
     },
     {
@@ -5529,7 +5529,7 @@
       "secondaryMuscles": [
         "back"
       ],
-      "equipment": "machine",
+      "equipment": "cable",
       "effortMetric": "rpe"
     },
     {
@@ -5547,7 +5547,7 @@
       "type": "strength",
       "primaryMuscle": "shoulders",
       "secondaryMuscles": [],
-      "equipment": "machine",
+      "equipment": "cable",
       "effortMetric": "rpe"
     },
     {
@@ -5565,7 +5565,7 @@
       "type": "strength",
       "primaryMuscle": "shoulders",
       "secondaryMuscles": [],
-      "equipment": "machine",
+      "equipment": "cable",
       "effortMetric": "rpe"
     },
     {
@@ -5925,7 +5925,7 @@
       "secondaryMuscles": [
         "shoulders"
       ],
-      "equipment": "machine",
+      "equipment": "cable",
       "effortMetric": "rpe"
     },
     {
@@ -6005,7 +6005,7 @@
         "back",
         "shoulders"
       ],
-      "equipment": "other",
+      "equipment": "pull_up_bar",
       "effortMetric": "none"
     },
     {
@@ -6797,7 +6797,7 @@
       "secondaryMuscles": [
         "hamstrings"
       ],
-      "equipment": "machine",
+      "equipment": "cable",
       "effortMetric": "rpe"
     },
     {
@@ -6835,7 +6835,7 @@
       "type": "strength",
       "primaryMuscle": "glutes",
       "secondaryMuscles": [],
-      "equipment": "machine",
+      "equipment": "cable",
       "effortMetric": "rpe"
     },
     {
@@ -6855,7 +6855,7 @@
       "secondaryMuscles": [
         "quads"
       ],
-      "equipment": "machine",
+      "equipment": "cable",
       "effortMetric": "rpe"
     },
     {

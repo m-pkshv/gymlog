@@ -352,6 +352,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get equipmentBodyweight => 'Bodyweight';
 
   @override
+  String get equipmentPullUpBar => 'Pull-up bar';
+
+  @override
+  String get equipmentDipBars => 'Dip bars';
+
+  @override
   String get equipmentBand => 'Resistance band';
 
   @override

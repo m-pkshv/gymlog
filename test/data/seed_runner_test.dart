@@ -66,7 +66,9 @@ void main() {
       // (redesign_v2, 2026-08-04, purely additive -- no existing
       // exercise's muscle assignment changes).
       expect(muscleGroups, hasLength(18));
-      expect(equipments, hasLength(9));
+      // 11 equipment types: the original 9 plus pull_up_bar/dip_bars,
+      // split out of "other" (redesign_v2, 2026-08-05, owner-requested).
+      expect(equipments, hasLength(11));
       expect(measurementTypes, hasLength(15));
       // Stage 10, owner-reported, trimmed/generalized Stage 12
       // (2026-08-02): a curated 13-tag set, not a 1:1 mirror of every

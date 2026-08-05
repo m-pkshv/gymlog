@@ -83,6 +83,10 @@ String equipmentLabel(AppLocalizations l10n, String id) {
       return l10n.equipmentCable;
     case 'bodyweight':
       return l10n.equipmentBodyweight;
+    case 'pull_up_bar':
+      return l10n.equipmentPullUpBar;
+    case 'dip_bars':
+      return l10n.equipmentDipBars;
     case 'band':
       return l10n.equipmentBand;
     case 'cardio_machine':

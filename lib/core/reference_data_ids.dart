@@ -43,6 +43,13 @@ const List<String> muscleGroupIds = [
 ];
 
 /// Order matches DM 5.2 and becomes `Equipment.sortOrder` at seed time.
+/// `pull_up_bar`/`dip_bars` (redesign_v2, 2026-08-05, owner-requested) were
+/// split out of `other` once icon-by-equipment planning showed `other` was
+/// a ~49-exercise grab bag of visually unrelated things -- pull-up-bar and
+/// dip-bar exercises were the two large enough (11 and 2, respectively) and
+/// visually distinct enough sub-groups to earn their own bucket; the rest
+/// of `other` (battle ropes, sled, ab wheel, box jumps, Swiss ball, etc.)
+/// stayed merged, each too small on its own.
 const List<String> equipmentIds = [
   'barbell',
   'dumbbell',
@@ -50,6 +57,8 @@ const List<String> equipmentIds = [
   'machine',
   'cable',
   'bodyweight',
+  'pull_up_bar',
+  'dip_bars',
   'band',
   'cardio_machine',
   'other',

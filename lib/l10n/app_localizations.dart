@@ -758,6 +758,18 @@ abstract class AppLocalizations {
   /// **'Bodyweight'**
   String get equipmentBodyweight;
 
+  /// No description provided for @equipmentPullUpBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull-up bar'**
+  String get equipmentPullUpBar;
+
+  /// No description provided for @equipmentDipBars.
+  ///
+  /// In en, this message translates to:
+  /// **'Dip bars'**
+  String get equipmentDipBars;
+
   /// No description provided for @equipmentBand.
   ///
   /// In en, this message translates to:

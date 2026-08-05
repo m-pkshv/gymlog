@@ -374,6 +374,8 @@
   "equipmentMachine": "Machine",
   "equipmentCable": "Cable machine",
   "equipmentBodyweight": "Bodyweight",
+  "equipmentPullUpBar": "Pull-up bar",
+  "equipmentDipBars": "Dip bars",
   "equipmentBand": "Resistance band",
   "equipmentCardioMachine": "Cardio machine",
   "equipmentOther": "Other",

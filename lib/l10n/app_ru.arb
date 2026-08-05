@@ -110,6 +110,8 @@
   "equipmentMachine": "Тренажёр",
   "equipmentCable": "Блочный тренажёр",
   "equipmentBodyweight": "Свой вес",
+  "equipmentPullUpBar": "Турник",
+  "equipmentDipBars": "Брусья",
   "equipmentBand": "Резинка-эспандер",
   "equipmentCardioMachine": "Кардиотренажёр",
   "equipmentOther": "Другое",

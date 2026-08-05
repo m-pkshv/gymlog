@@ -353,6 +353,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get equipmentBodyweight => 'Свой вес';
 
   @override
+  String get equipmentPullUpBar => 'Турник';
+
+  @override
+  String get equipmentDipBars => 'Брусья';
+
+  @override
   String get equipmentBand => 'Резинка-эспандер';
 
   @override
