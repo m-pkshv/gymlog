@@ -536,6 +536,78 @@ void main() {
   );
 
   testWidgets(
+    'dragging to a dot lands the target section header exactly at the top '
+    'of the list, not just somewhere in its rough neighborhood '
+    '(redesign_v2, owner-reported: "верхним упражнение на экране должно '
+    'отобразится верхнее упражнение этой категории")',
+    (tester) async {
+      await db
+          .into(db.muscleGroups)
+          .insert(MuscleGroupsCompanion.insert(id: 'chest', sortOrder: 0));
+      await db
+          .into(db.muscleGroups)
+          .insert(MuscleGroupsCompanion.insert(id: 'back', sortOrder: 1));
+      await db
+          .into(db.muscleGroups)
+          .insert(MuscleGroupsCompanion.insert(id: 'quads', sortOrder: 11));
+
+      var counter = 0;
+      for (final groupId in ['chest', 'back', 'quads']) {
+        for (var n = 0; n < 6; n++) {
+          counter++;
+          await db
+              .into(db.exercises)
+              .insert(
+                ExercisesCompanion.insert(
+                  id: 'ex$counter',
+                  name: 'Exercise $counter',
+                  exerciseType: ExerciseType.strength.name,
+                  primaryMuscleGroupId: Value(groupId),
+                  createdAt: '2026-07-19T00:00:00Z',
+                  updatedAt: '2026-07-19T00:00:00Z',
+                ),
+              );
+        }
+      }
+
+      await tester.pumpWidget(_appUnderTest(db));
+      await tester.pumpAndSettle();
+
+      final rail = find.byKey(const Key('exercise-index-rail'));
+      final dots = find.descendant(
+        of: rail,
+        matching: find.byType(AnimatedContainer),
+      );
+      expect(dots, findsNWidgets(3));
+
+      // Same drag pattern as the test above -- lands on the last dot
+      // ("quads").
+      final firstDotCenter = tester.getCenter(dots.first);
+      final lastDotCenter = tester.getCenter(dots.last);
+      await tester.dragFrom(
+        firstDotCenter,
+        (lastDotCenter - firstDotCenter) + const Offset(0, 40),
+      );
+      await tester.pumpAndSettle();
+
+      // Not just "quads exists somewhere on screen" (the old proportional-
+      // only jump already satisfied that) -- its section header must sit
+      // right at the very top of the scrollable viewport, the same way a
+      // Contacts-style jump lands on the letter's own row, not near it.
+      final header = find.text('Quads');
+      expect(header, findsOneWidget);
+      final headerTop = tester.getTopLeft(header).dy;
+      final listTop = tester.getTopLeft(find.byType(ListView)).dy;
+      // The gap is the header's own leading padding (`AppSpacing.lg` =
+      // 16dp) plus a little slack for rounding -- not scroll-offset
+      // imprecision.
+      expect(headerTop - listTop, lessThan(24));
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
     'the jump rail dims to a hint when idle and turns fully opaque while '
     'actively being dragged (Stage 10, owner-reported: "если точки не '
     'использую они полупрозрачные")',

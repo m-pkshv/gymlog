@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart'
+    show RenderAbstractViewport, ScrollCacheExtent;
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -31,6 +33,13 @@ class ExercisesScreen extends ConsumerStatefulWidget {
 class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
+
+  /// Bumped on every [_jumpToSection] call so a stale correction (from an
+  /// earlier dot touched mid-drag, whose post-frame callback hasn't fired
+  /// yet by the time the finger moves to a later dot) can recognize it's
+  /// been superseded and skip itself instead of yanking the list back.
+  int _jumpGeneration = 0;
+
   ExerciseType? _type;
   String? _muscleGroupId;
   String? _equipmentId;
@@ -50,24 +59,53 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
     super.dispose();
   }
 
-  /// Jumps the list to [rowIndex] out of [totalRows] (S-06, Stage 10,
-  /// owner-reported: "точки быстрого перемещения... как алфавитный переход
-  /// в контактах"). `ListView.builder` never knows every row's exact pixel
-  /// height up front (section headers and exercise cards differ, and a
-  /// lazily-built sliver only has an *estimate* of its total scroll extent
-  /// until every item has been laid out at least once) — rather than try to
-  /// track real per-row heights, this jumps to the *proportional* offset
-  /// `rowIndex / totalRows` of however much scroll extent is currently
-  /// known. That's the same trade-off every "no exact heights" jump-list
-  /// implementation makes: it lands close to the right section, not
-  /// necessarily pixel-exact, same as tapping a letter in Contacts doesn't
-  /// promise the very first matching row sits at the very top.
-  void _jumpToRow(int rowIndex, int totalRows) {
-    if (!_scrollController.hasClients || totalRows <= 1) return;
+  /// Estimates the proportional scroll offset for [rowIndex] out of
+  /// [totalRows] — `ListView.builder` never knows every row's exact pixel
+  /// height up front (section headers and exercise cards differ, and text
+  /// scale/locale can change a row's height too), so this can't be exact.
+  /// It's only the *first*, coarse pass of [_jumpToSection]; kept as a
+  /// small helper because it doesn't touch a header's [GlobalKey], unlike
+  /// the correction pass.
+  double? _estimateOffset(int rowIndex, int totalRows) {
+    if (!_scrollController.hasClients || totalRows <= 1) return null;
     final maxExtent = _scrollController.position.maxScrollExtent;
-    if (maxExtent <= 0) return;
+    if (maxExtent <= 0) return null;
     final target = (rowIndex / (totalRows - 1)) * maxExtent;
-    _scrollController.jumpTo(target.clamp(0.0, maxExtent));
+    return target.clamp(0.0, maxExtent);
+  }
+
+  /// Jumps so [headerKey]'s section header lands *exactly* at the top of
+  /// the list (S-06, redesign_v2, owner-reported: "верхним упражнение на
+  /// экране должно отобразится верхнее упражнение этой категории" — the
+  /// section header itself, not just something in its rough
+  /// neighborhood). Two passes: a coarse proportional jump
+  /// ([_estimateOffset], the same `rowIndex / totalRows` estimate the rail
+  /// always used) gets the target section's header built by the next frame
+  /// — [ExercisesScreen.build]'s `ListView.builder` uses a generous
+  /// `cacheExtent` specifically so the estimate's error margin doesn't
+  /// leave the header outside what gets laid out — then [headerKey]'s real
+  /// `RenderBox` position is measured and a second, *exact* jump lands the
+  /// header precisely at the top via `RenderAbstractViewport.
+  /// getOffsetToReveal` (the same primitive `Scrollable.ensureVisible`
+  /// uses internally). If the header still isn't built after the coarse
+  /// jump (should be rare given the cache extent margin), this falls back
+  /// to the coarse position rather than retrying indefinitely — a near-miss
+  /// beats hanging, same trade-off the old single-pass jump always made.
+  void _jumpToSection(int rowIndex, int totalRows, GlobalKey headerKey) {
+    final estimate = _estimateOffset(rowIndex, totalRows);
+    if (estimate == null) return;
+    _scrollController.jumpTo(estimate);
+    final generation = ++_jumpGeneration;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || generation != _jumpGeneration) return;
+      if (!_scrollController.hasClients) return;
+      final renderObject = headerKey.currentContext?.findRenderObject();
+      if (renderObject == null) return;
+      final viewport = RenderAbstractViewport.of(renderObject);
+      final revealed = viewport.getOffsetToReveal(renderObject, 0.0).offset;
+      final maxExtent = _scrollController.position.maxScrollExtent;
+      _scrollController.jumpTo(revealed.clamp(0.0, maxExtent));
+    });
   }
 
   ExerciseCatalogFilter get _filter => (
@@ -184,13 +222,32 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                 }
                 final rows = _groupByMuscleGroup(exercises);
                 final sections = _sectionAnchors(rows);
+                // One GlobalKey per section header, keyed by its row index
+                // -- `_jumpToSection`'s correction pass needs the header's
+                // real, laid-out position, which only a key (not the row
+                // index alone) can find. Redesign_v2, owner-reported.
+                final headerKeys = <int, GlobalKey>{
+                  for (final section in sections) section.rowIndex: GlobalKey(),
+                };
                 final list = ListView.builder(
                   controller: _scrollController,
+                  // Wider than the default ~250dp cache margin so the
+                  // section-jump rail's target header is (almost) always
+                  // already built by the time `_jumpToSection`'s
+                  // post-frame correction measures it, even when the
+                  // coarse row-count-proportional jump lands a section or
+                  // two off (headers and exercise cards don't weigh the
+                  // same in pixels, so "same row count" isn't "same pixel
+                  // distance"). Same scrollCacheExtent build-ahead
+                  // trade-off already made for History/the workout editor
+                  // on Stage 10.
+                  scrollCacheExtent: const ScrollCacheExtent.pixels(2600),
                   itemCount: rows.length,
                   itemBuilder: (context, index) {
                     final row = rows[index];
                     return switch (row) {
                       _SectionHeaderRow() => _MuscleGroupSectionHeader(
+                        key: headerKeys[index],
                         muscleGroupId: row.muscleGroupId,
                         count: row.count,
                       ),
@@ -214,8 +271,11 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                         key: const Key('exercise-index-rail'),
                         sections: sections,
                         totalRows: rows.length,
-                        onSelect: (rowIndex) =>
-                            _jumpToRow(rowIndex, rows.length),
+                        onSelect: (rowIndex) => _jumpToSection(
+                          rowIndex,
+                          rows.length,
+                          headerKeys[rowIndex]!,
+                        ),
                       ),
                     ),
                   ],
@@ -301,7 +361,7 @@ List<_ListRow> _groupByMuscleGroup(List<Exercise> exercises) {
 
 /// One entry per section header in [rows], in the same order they appear
 /// (S-06, Stage 10, owner-reported: the jump rail's dots) — [rowIndex] is
-/// what [_ExercisesScreenState._jumpToRow] needs; [muscleGroupId] isn't
+/// what [_ExercisesScreenState._jumpToSection] needs; [muscleGroupId] isn't
 /// used for display anymore (the dots are neutral, see
 /// [_SectionIndexRail]'s doc comment) but stays on the record in case a
 /// future tweak wants it back.
@@ -451,6 +511,7 @@ class _RailDot extends StatelessWidget {
 
 class _MuscleGroupSectionHeader extends StatelessWidget {
   const _MuscleGroupSectionHeader({
+    super.key,
     required this.muscleGroupId,
     required this.count,
   });
