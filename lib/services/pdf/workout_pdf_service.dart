@@ -187,7 +187,7 @@ class WorkoutPdfService {
                 ),
               pw.Text(
                 title,
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                   fontSize: 20,
                   fontWeight: pw.FontWeight.bold,
                 ),
@@ -254,7 +254,10 @@ class WorkoutPdfService {
         children: [
           pw.Text(
             value,
-            style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            style: const pw.TextStyle(
+              fontSize: 16,
+              fontWeight: pw.FontWeight.bold,
+            ),
           ),
           pw.SizedBox(height: 2),
           pw.Text(

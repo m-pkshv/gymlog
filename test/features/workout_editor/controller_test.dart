@@ -997,7 +997,7 @@ void main() {
         await (db.update(
           db.appSettingsTable,
         )..where((t) => t.id.equals('singleton'))).write(
-          AppSettingsTableCompanion(restTimerAutoStart: Value(false)),
+          const AppSettingsTableCompanion(restTimerAutoStart: Value(false)),
         );
         final exercise = await exercises.create(
           name: 'Squat',

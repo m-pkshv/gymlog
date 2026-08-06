@@ -46,7 +46,7 @@ void main() {
 
   group('measurementValueToDisplay (D-5)', () {
     test('mass: a stored kg value round-trips through imperial display', () {
-      final storedKg = 75.5 * UnitConverter.kgPerLb;
+      const storedKg = 75.5 * UnitConverter.kgPerLb;
       final displayedLb = measurementValueToDisplay(
         storedKg,
         MeasurementUnitKind.mass,
@@ -56,7 +56,7 @@ void main() {
     });
 
     test('length: a stored cm value round-trips through imperial display', () {
-      final storedCm = 10 * UnitConverter.cmPerInch;
+      const storedCm = 10 * UnitConverter.cmPerInch;
       final displayedIn = measurementValueToDisplay(
         storedCm,
         MeasurementUnitKind.length,

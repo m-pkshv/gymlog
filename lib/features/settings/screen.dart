@@ -336,7 +336,7 @@ class _AboutSection extends StatelessWidget {
         ),
         ListTile(
           title: Text(l10n.settingsAboutExportFormatVersionLabel),
-          trailing: Text('${ExportFormat.formatVersion}'),
+          trailing: const Text('${ExportFormat.formatVersion}'),
         ),
       ],
     );

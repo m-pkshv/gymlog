@@ -19,7 +19,7 @@ class AppSettingsService {
   Future<Result<int, AppError>> setDefaultRestTimerSec(int seconds) async {
     if (seconds < RestTimerRules.minSeconds ||
         seconds > RestTimerRules.maxSeconds) {
-      return Err(
+      return const Err(
         ValidationError(
           'Rest timer must be ${RestTimerRules.minSeconds}-'
           '${RestTimerRules.maxSeconds} seconds',

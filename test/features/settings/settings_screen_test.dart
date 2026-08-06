@@ -27,10 +27,10 @@ Widget _appUnderTest(AppDatabase db, {NotificationService? notificationService})
       if (notificationService != null)
         notificationServiceProvider.overrideWithValue(notificationService),
     ],
-    child: MaterialApp(
+    child: const MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const SettingsScreen(),
+      home: SettingsScreen(),
     ),
   );
 }

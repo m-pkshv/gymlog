@@ -21,6 +21,10 @@ linter:
     avoid_dynamic_calls: true
     cancel_subscriptions: true
     close_sinks: true
+    prefer_const_constructors: true
+    prefer_const_constructors_in_immutables: true
+    prefer_const_declarations: true
+    prefer_const_literals_to_create_immutables: true
     prefer_final_locals: true
     prefer_final_in_for_each: true
     prefer_single_quotes: true

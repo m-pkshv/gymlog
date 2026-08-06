@@ -39,7 +39,7 @@ class UserProfileService {
       normalizedLastName,
     ]) {
       if (value != null && value.length > UserProfileRules.maxNameLength) {
-        return Err(
+        return const Err(
           ValidationError(
             'Each name field must be at most '
             '${UserProfileRules.maxNameLength} characters',

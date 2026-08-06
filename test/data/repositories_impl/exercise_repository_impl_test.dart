@@ -636,7 +636,7 @@ void main() {
       exerciseType: ExerciseType.reps,
     );
     await (db.update(db.exercises)..where((e) => e.id.equals(exercise.id)))
-        .write(ExercisesCompanion(isArchived: Value(true)));
+        .write(const ExercisesCompanion(isArchived: Value(true)));
 
     final all = await repository.watchAll().first;
     expect(all, isEmpty);

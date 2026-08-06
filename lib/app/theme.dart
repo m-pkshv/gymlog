@@ -129,7 +129,19 @@ ButtonStyle accentFilledButtonStyle(
 
 /// Light theme derived from [seedColor]. Colors must always be read from
 /// `Theme.of(context).colorScheme` in widgets, never hardcoded (UX 9).
-ThemeData buildLightTheme() {
+///
+/// Memoized: `ColorScheme.fromSeed` does real perceptual color-space (HCT)
+/// math, not a free constant lookup, and this used to run again on every
+/// `GymLogApp` rebuild — which `appSettingsProvider` triggers on *any*
+/// settings field changing (no `==` override on the `AppSettings` domain
+/// model, so a new row for e.g. the rest-timer default is just as much a
+/// "changed" value to Riverpod as an actual theme change), not only
+/// theme/locale ones. The seed color and brightness never change while the
+/// app is running, so caching the result is unconditionally safe.
+ThemeData? _lightTheme;
+ThemeData buildLightTheme() => _lightTheme ??= _buildLightTheme();
+
+ThemeData _buildLightTheme() {
   final colorScheme = ColorScheme.fromSeed(seedColor: seedColor);
   return ThemeData(
     colorScheme: colorScheme,
@@ -159,8 +171,11 @@ ThemeData buildLightTheme() {
 }
 
 /// Dark theme derived from the same [seedColor] (UX 9: light/dark share one
-/// seed).
-ThemeData buildDarkTheme() {
+/// seed). Memoized for the same reason as [buildLightTheme].
+ThemeData? _darkTheme;
+ThemeData buildDarkTheme() => _darkTheme ??= _buildDarkTheme();
+
+ThemeData _buildDarkTheme() {
   final colorScheme = ColorScheme.fromSeed(
     seedColor: seedColor,
     brightness: Brightness.dark,

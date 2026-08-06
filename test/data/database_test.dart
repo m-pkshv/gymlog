@@ -115,7 +115,7 @@ void main() {
             ),
           );
 
-      final now = '2026-07-19T00:00:00Z';
+      const now = '2026-07-19T00:00:00Z';
       await db
           .into(db.exercises)
           .insert(
@@ -157,7 +157,7 @@ void main() {
                 sortOrder: Value(1),
               ),
             );
-        final now = '2026-07-19T00:00:00Z';
+        const now = '2026-07-19T00:00:00Z';
         await db
             .into(db.exercises)
             .insert(
@@ -186,7 +186,7 @@ void main() {
     );
 
     test('AppSettingsTable stores the singleton row', () async {
-      final now = '2026-07-19T00:00:00Z';
+      const now = '2026-07-19T00:00:00Z';
       await db
           .into(db.appSettingsTable)
           .insert(

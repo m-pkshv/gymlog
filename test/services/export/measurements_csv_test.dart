@@ -29,14 +29,14 @@ void main() {
     'golden dataset: built-in vs custom type slug, unit mapping, date '
     'sorting, and RFC 4180 escaping in a custom type name',
     () {
-      final bodyWeight = const MeasurementType(
+      const bodyWeight = MeasurementType(
         id: 'body_weight',
         unitKind: MeasurementUnitKind.mass,
         isBuiltIn: true,
         isArchived: false,
         sortOrder: 0,
       );
-      final customWrist = const MeasurementType(
+      const customWrist = MeasurementType(
         id: 'custom-1',
         nameCustom: 'Wrist, left',
         unitKind: MeasurementUnitKind.length,
@@ -73,7 +73,7 @@ void main() {
   );
 
   test('percent unitKind maps to "percent"', () {
-    final bodyFat = const MeasurementType(
+    const bodyFat = MeasurementType(
       id: 'body_fat',
       unitKind: MeasurementUnitKind.percent,
       isBuiltIn: true,

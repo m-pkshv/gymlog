@@ -13,10 +13,10 @@ import 'package:gymlog/l10n/app_localizations.dart';
 Widget _appUnderTest(AppDatabase db) {
   return ProviderScope(
     overrides: [appDatabaseProvider.overrideWithValue(db)],
-    child: MaterialApp(
+    child: const MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const ProfileScreen(),
+      home: ProfileScreen(),
     ),
   );
 }
