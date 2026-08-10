@@ -7,6 +7,28 @@ import 'design_tokens.dart';
 /// UX-1 — confirmed by the owner at Stage 9, no change).
 const Color seedColor = Color(0xFF4C7BD9);
 
+/// The `primary` family, overridden after `ColorScheme.fromSeed` to match
+/// the `redesign_v3` UI-kit mockup's own rendered swatch pixels rather than
+/// what Flutter's default `tonalSpot` seed derivation produces on its own
+/// (owner-confirmed, "Primary цвет" question, 2026-08-10: the mockup's
+/// primary reads noticeably more saturated/vivid than the app's --
+/// `#3973C8`/`#85B3F7` sampled directly off `docs/design/ui_kit_reference.png`
+/// vs. the seed-derived `#465D91`/`#AFC6FF`). Deliberately not done by
+/// picking a different `DynamicSchemeVariant` or a different seed color --
+/// either would also shift every other seed-derived role (surface tints,
+/// tertiary, error's relationship to primary, etc.) in ways nobody asked
+/// for; a direct override only touches what was actually flagged as wrong.
+/// `onPrimary`/`onPrimaryContainer` are deliberately *not* overridden --
+/// the base scheme's own picks (white / a dark blue) still clear 4.5:1
+/// contrast against these new tones in both themes (checked numerically,
+/// not eyeballed: light onPrimary=white 4.71:1, dark onPrimary=the base
+/// scheme's dark navy 6.10:1 -- plain white on the *dark*-theme primary
+/// only reaches 2.15:1 and would fail).
+const Color _primaryLight = Color(0xFF3973C8);
+const Color _primaryContainerLight = Color(0xFFCAE0FF);
+const Color _primaryDark = Color(0xFF85B3F7);
+const Color _primaryContainerDark = Color(0xFF1E2E47);
+
 /// Maps the domain [AppTheme] setting (Flutter-free, so the settings layer
 /// stays testable without `package:flutter`) to Flutter's own `ThemeMode`,
 /// which `MaterialApp.router` actually consumes.
@@ -142,7 +164,11 @@ ThemeData? _lightTheme;
 ThemeData buildLightTheme() => _lightTheme ??= _buildLightTheme();
 
 ThemeData _buildLightTheme() {
-  final colorScheme = ColorScheme.fromSeed(seedColor: seedColor);
+  final colorScheme = ColorScheme.fromSeed(seedColor: seedColor).copyWith(
+    primary: _primaryLight,
+    primaryContainer: _primaryContainerLight,
+    surfaceTint: _primaryLight,
+  );
   return ThemeData(
     colorScheme: colorScheme,
     useMaterial3: true,
@@ -176,10 +202,15 @@ ThemeData? _darkTheme;
 ThemeData buildDarkTheme() => _darkTheme ??= _buildDarkTheme();
 
 ThemeData _buildDarkTheme() {
-  final colorScheme = ColorScheme.fromSeed(
-    seedColor: seedColor,
-    brightness: Brightness.dark,
-  );
+  final colorScheme =
+      ColorScheme.fromSeed(
+        seedColor: seedColor,
+        brightness: Brightness.dark,
+      ).copyWith(
+        primary: _primaryDark,
+        primaryContainer: _primaryContainerDark,
+        surfaceTint: _primaryDark,
+      );
   return ThemeData(
     colorScheme: colorScheme,
     useMaterial3: true,
