@@ -3,16 +3,31 @@ import 'package:flutter/material.dart';
 import '../domain/enums.dart';
 
 /// Semantic colors Material 3's seed-derived [ColorScheme] doesn't provide
-/// on its own: an energetic accent (CTA buttons, rest timer) and a success
+/// on its own: an energetic accent (CTA buttons, rest timer), a success
 /// green (done checkmarks, positive deltas, the "completed" workout
-/// status). "Skipped" and "cancelled" reuse [ColorScheme.tertiary] /
-/// [ColorScheme.error] respectively -- distinct hues already exist there,
-/// so a third and fourth custom family would just duplicate what the seed
-/// already generates. Values are derived from the Stage 10 redesign
-/// mockup's OKLCH palette, converted to sRGB; each `on*` color is chosen
-/// for contrast against its own container in its own theme (the mockup's
-/// dark-mode rest-timer text was too dark against its own container to be
-/// legible -- not copied literally, see `onAccentContainer` below).
+/// status), and a warning gold (the "cancelled" workout status --
+/// `redesign_v3`, owner-confirmed against the UI-kit mockup: the mockup's
+/// status chips pair "Отменена"/cancelled with gold and "Пропущена"/skipped
+/// with red, the opposite of what this file used to do). "Skipped" reuses
+/// [ColorScheme.error] instead of a fifth custom family -- red already
+/// exists there, and the mockup's own skipped-chip red is close enough to
+/// the seed-derived M3 error tone that duplicating it wasn't asked for.
+/// Values for accent/success are derived from the Stage 10 redesign
+/// mockup's OKLCH palette, converted to sRGB. `warning`'s light-theme
+/// values are sampled directly from the `redesign_v3` UI-kit screenshot
+/// (`docs/design/ui_kit_reference.png`) pixels; its dark-theme container
+/// pair has no on-screen dark-mode swatch to sample (the mockup only shows
+/// the status chips in light mode), so it's derived by applying the same
+/// light-main -> dark-container HSL transform already visible in the
+/// accent/success pairs above (lightness pinned to ~15.5%, the value both
+/// existing dark containers land on within half a point of each other).
+/// Every `on*` color here is computed for >= 4.5:1 contrast against its own
+/// background, not eyeballed -- gold is bright enough at both the light and
+/// dark tones sampled that *white* text fails contrast in both themes
+/// (unlike accent/success, where dark theme's lighter tone needs dark text
+/// but light theme's darker tone takes white fine), so `onWarning` is a
+/// near-black amber shared by both themes rather than white/near-black
+/// swapping by theme like the other two families.
 @immutable
 class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
   const AppSemanticColors({
@@ -24,6 +39,10 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     required this.onSuccess,
     required this.successContainer,
     required this.onSuccessContainer,
+    required this.warning,
+    required this.onWarning,
+    required this.warningContainer,
+    required this.onWarningContainer,
   });
 
   final Color accent;
@@ -36,6 +55,11 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
   final Color successContainer;
   final Color onSuccessContainer;
 
+  final Color warning;
+  final Color onWarning;
+  final Color warningContainer;
+  final Color onWarningContainer;
+
   static const light = AppSemanticColors(
     accent: Color(0xFFE76C2B),
     onAccent: Color(0xFFFFFFFF),
@@ -45,6 +69,10 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     onSuccess: Color(0xFFFFFFFF),
     successContainer: Color(0xFFC9F1D0),
     onSuccessContainer: Color(0xFF00481B),
+    warning: Color(0xFFD6A62E),
+    onWarning: Color(0xFF2B1D00),
+    warningContainer: Color(0xFFFBE9C6),
+    onWarningContainer: Color(0xFF523600),
   );
 
   static const dark = AppSemanticColors(
@@ -56,6 +84,10 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     onSuccess: Color(0xFF0C1016),
     successContainer: Color(0xFF163825),
     onSuccessContainer: Color(0xFF8FE3A6),
+    warning: Color(0xFFE4B750),
+    onWarning: Color(0xFF2B1D00),
+    warningContainer: Color(0xFF3B2F14),
+    onWarningContainer: Color(0xFFF0DAA8),
   );
 
   @override
@@ -68,6 +100,10 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     Color? onSuccess,
     Color? successContainer,
     Color? onSuccessContainer,
+    Color? warning,
+    Color? onWarning,
+    Color? warningContainer,
+    Color? onWarningContainer,
   }) {
     return AppSemanticColors(
       accent: accent ?? this.accent,
@@ -78,6 +114,10 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
       onSuccess: onSuccess ?? this.onSuccess,
       successContainer: successContainer ?? this.successContainer,
       onSuccessContainer: onSuccessContainer ?? this.onSuccessContainer,
+      warning: warning ?? this.warning,
+      onWarning: onWarning ?? this.onWarning,
+      warningContainer: warningContainer ?? this.warningContainer,
+      onWarningContainer: onWarningContainer ?? this.onWarningContainer,
     );
   }
 
@@ -105,6 +145,18 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
         other.onSuccessContainer,
         t,
       )!,
+      warning: Color.lerp(warning, other.warning, t)!,
+      onWarning: Color.lerp(onWarning, other.onWarning, t)!,
+      warningContainer: Color.lerp(
+        warningContainer,
+        other.warningContainer,
+        t,
+      )!,
+      onWarningContainer: Color.lerp(
+        onWarningContainer,
+        other.onWarningContainer,
+        t,
+      )!,
     );
   }
 }
@@ -129,7 +181,12 @@ class StatusColorSet {
 /// (Stage 10 redesign, AUDIT.md section 1.8: "no semantic color for the 6
 /// statuses" was a named problem). `draft`/`planned` intentionally share
 /// one neutral family -- neither is "in flight" yet, splitting them by
-/// color would suggest a difference that isn't there.
+/// color would suggest a difference that isn't there. `skipped` -> red and
+/// `cancelled` -> gold (`redesign_v3`, owner-confirmed): the UI-kit mockup
+/// pairs "Пропущена" with red and "Отменена" with gold, the reverse of
+/// what this function used to do (skipped was tertiary/purple, cancelled
+/// was error/red) -- there was no third status this could plausibly have
+/// been confused with, just a straight swap-and-fix.
 StatusColorSet workoutStatusColors(BuildContext context, WorkoutStatus status) {
   final scheme = Theme.of(context).colorScheme;
   final semantic = Theme.of(context).extension<AppSemanticColors>()!;
@@ -155,15 +212,15 @@ StatusColorSet workoutStatusColors(BuildContext context, WorkoutStatus status) {
       );
     case WorkoutStatus.skipped:
       return StatusColorSet(
-        container: scheme.tertiaryContainer,
-        onContainer: scheme.onTertiaryContainer,
-        border: scheme.tertiary,
-      );
-    case WorkoutStatus.cancelled:
-      return StatusColorSet(
         container: scheme.errorContainer,
         onContainer: scheme.onErrorContainer,
         border: scheme.error,
+      );
+    case WorkoutStatus.cancelled:
+      return StatusColorSet(
+        container: semantic.warningContainer,
+        onContainer: semantic.onWarningContainer,
+        border: semantic.warning,
       );
   }
 }
