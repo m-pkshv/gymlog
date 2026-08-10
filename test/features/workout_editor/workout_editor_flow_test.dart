@@ -1353,6 +1353,91 @@ void main() {
     await _unmountAndFlush(tester);
   });
 
+  testWidgets(
+    'a set with a plan but no facts stays collapsed on first render even '
+    'when the workout is already inProgress at that point '
+    '(redesign_v3, owner-reported: starting a workout before its editor is '
+    'pushed -- Today\'s "Start" card, `startWorkoutFlow` -- meant every '
+    'planned set\'s very first build already had `isActive: true`, which '
+    'used to expand it regardless of the plan sitting right there)',
+    (tester) async {
+      await _seedExercise(db);
+      await db
+          .into(db.workouts)
+          .insert(
+            WorkoutsCompanion.insert(
+              id: 'w1',
+              date: '2026-07-20',
+              status: const Value('inProgress'),
+              startedAt: Value(DateTime.now().toUtc().toIso8601String()),
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      await db
+          .into(db.workoutExercises)
+          .insert(
+            WorkoutExercisesCompanion.insert(
+              id: 'we1',
+              workoutId: 'w1',
+              exerciseId: 'squat',
+              orderIndex: 0,
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+      await db
+          .into(db.exerciseSets)
+          .insert(
+            ExerciseSetsCompanion.insert(
+              id: 's1',
+              workoutExerciseId: 'we1',
+              setNumber: 1,
+              plannedWeightKg: const Value(100),
+              plannedReps: const Value(5),
+              createdAt: '2026-07-19T00:00:00Z',
+              updatedAt: '2026-07-19T00:00:00Z',
+            ),
+          );
+
+      final router = GoRouter(
+        initialLocation: '/workout/w1',
+        routes: [
+          GoRoute(
+            path: '/workout/:workoutId',
+            builder: (_, state) => WorkoutEditorScreen(
+              workoutId: state.pathParameters['workoutId']!,
+            ),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [appDatabaseProvider.overrideWithValue(db)],
+          child: MaterialApp.router(
+            theme: buildLightTheme(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: router,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Squat'), findsOneWidget);
+      // Collapsed: the plan still shows as a small label ("Plan 100.0 × 5")
+      // -- the big value reads "— × —" since no facts exist yet (it tracks
+      // *actual* once `isActive`, same as a genuinely reopened in-progress
+      // workout would). Either way, the steppers must not be visible on
+      // first render -- that's what the bug got wrong, expanding every
+      // planned set instead of leaving it collapsed.
+      expect(find.text('Plan 100.0 × 5'), findsOneWidget);
+      expect(find.byType(NumericStepperField), findsNothing);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
   testWidgets('"Past results" shows the last completed occurrence (S-03)', (
     tester,
   ) async {

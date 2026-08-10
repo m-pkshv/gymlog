@@ -58,6 +58,18 @@ class _SetRowState extends State<SetRow> {
   // instance): a duplicated set already carries copied planned values, so
   // it starts collapsed just like reopening the editor on an existing
   // set does.
+  //
+  // Checks *both* planned and actual, not just whichever `isActive` says
+  // to edit right now (redesign_v3, owner-reported: starting a workout
+  // expanded every already-planned set instead of leaving it collapsed).
+  // A set this row is first mounted for can be planned but not yet
+  // performed -- true of every set the moment a workout moves to
+  // `inProgress`, and *always* true when the row's first-ever build
+  // already has `isActive: true` to begin with, which happens whenever a
+  // workout is started before its editor is even pushed (Today's "Start"
+  // card, `startWorkoutFlow`) rather than from the in-place CTA on an
+  // already-open draft. Gating solely on `getActual` in that case ignores
+  // a plan that's sitting right there and expands every row regardless.
   late bool _expanded;
 
   @override
@@ -65,10 +77,8 @@ class _SetRowState extends State<SetRow> {
     super.initState();
     final hasValue = widget.fields.any(
       (field) =>
-          (widget.isActive
-              ? field.getActual(widget.set)
-              : field.getPlanned(widget.set)) !=
-          null,
+          field.getPlanned(widget.set) != null ||
+          field.getActual(widget.set) != null,
     );
     _expanded = !hasValue;
   }
