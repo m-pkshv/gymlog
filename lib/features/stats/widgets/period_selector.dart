@@ -103,10 +103,22 @@ class _PeriodChip extends StatelessWidget {
     // platform's minimum tap target (UX 11: every control stays >= 48dp)
     // -- unlike `MaterialTapTargetSize.shrinkWrap`, which was deliberately
     // not used here for that reason.
+    //
+    // Owner-reported (redesign_v3): EN labels ("Week"/"Month"/"3M"/"Year"/
+    // "All") still summed wider than the row, wrapping "Custom" onto its
+    // own second line. Three more trims on top of the ones already here:
+    // a smaller label size than `labelSmall`'s default 11sp, tighter
+    // padding, and no checkmark icon (selection is already visible from
+    // the chip's own selected-color fill, which `showCheckmark: false`
+    // doesn't touch).
     return ChoiceChip(
       label: Text(label),
-      labelStyle: Theme.of(context).textTheme.labelSmall,
-      labelPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      labelStyle: Theme.of(
+        context,
+      ).textTheme.labelSmall?.copyWith(fontSize: 10, height: 1),
+      labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+      showCheckmark: false,
       visualDensity: VisualDensity.compact,
       selected: selected,
       onSelected: (_) => onSelected(),
