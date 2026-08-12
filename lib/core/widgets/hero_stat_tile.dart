@@ -39,25 +39,36 @@ class HeroStatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final valueText = FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Text(
+        value,
+        maxLines: 1,
+        style: AppNumberTextStyles.heroStat(
+          context,
+        ).copyWith(color: valueColor ?? scheme.primary),
+      ),
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (icon != null) ...[
-          Icon(icon, color: iconColor ?? scheme.primary),
-          const SizedBox(height: AppSpacing.xs),
-        ],
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Text(
-            value,
-            maxLines: 1,
-            style: AppNumberTextStyles.heroStat(
-              context,
-            ).copyWith(color: valueColor ?? scheme.primary),
-          ),
-        ),
+        // Owner-reported: icon-above-number made a row of tiles three lines
+        // tall (icon / number / label), forcing the third tile in
+        // `WorkoutStatsCard`'s narrower cards onto its own row. Icon
+        // beside the number instead -- same information, two lines tall.
+        if (icon != null)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: iconColor ?? scheme.primary),
+              const SizedBox(width: AppSpacing.xs),
+              valueText,
+            ],
+          )
+        else
+          valueText,
         Text(
           label,
           style: Theme.of(
