@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/chart_date_ticks.dart';
 import '../../../core/nice_axis_bounds.dart';
 import '../../../domain/models/body_measurement.dart';
 
@@ -30,26 +31,45 @@ class MeasurementChart extends StatelessWidget {
       values.reduce(math.min),
       values.reduce(math.max),
     );
-    final color = Theme.of(context).colorScheme.primary;
+    final dates = [for (final entry in entries) entry.date];
+    final ticks = dateAxisTicks(dates);
+    final locale = Localizations.localeOf(context).toString();
+    final scheme = Theme.of(context).colorScheme;
+    final color = scheme.primary;
+    final gridColor = scheme.outlineVariant;
     // Stage 10 redesign, AUDIT.md section 1.4: "the chart is small, cramped
-    // by padding". Taller (180 -> 220) with lighter side padding, and no
-    // horizontal grid lines -- AUDIT also flagged "an unlabeled dashed
-    // average line" on the pre-redesign screenshot, but no code here (or
-    // anywhere in `lib/`) ever drew one; the closest candidate is
-    // `FlGridData`'s default horizontal grid line, which this removes
-    // rather than trying to retroactively label something the app never
-    // actually rendered.
+    // by padding" -- taller (180 -> 220, then 240 once the X axis grew its
+    // own row of date labels below) with lighter side padding. Grid lines
+    // and X-axis date ticks (redesign_v3, owner-supplied reference image)
+    // replace the earlier "no grid at all" call, which was really just
+    // working around AUDIT.md's *other* complaint -- an unlabeled dashed
+    // average line no code here ever actually drew -- not a considered
+    // decision against having a grid.
     return SizedBox(
-      height: 220,
+      height: 240,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(4, 16, 12, 4),
         child: LineChart(
           LineChartData(
             minY: bounds.min,
             maxY: bounds.max,
-            gridData: const FlGridData(
-              drawVerticalLine: false,
-              drawHorizontalLine: false,
+            gridData: FlGridData(
+              drawHorizontalLine: true,
+              horizontalInterval: bounds.interval,
+              getDrawingHorizontalLine: (value) =>
+                  FlLine(color: gridColor, strokeWidth: 1),
+              drawVerticalLine: true,
+              // Without an explicit `verticalInterval`, fl_chart only ever
+              // offers `checkToShowVerticalLine` its own auto-computed
+              // "efficient interval" candidate positions -- usually not the
+              // (irregularly spaced) tick indexes this chart actually wants
+              // a line at. `1` makes every index a candidate, same as the
+              // bottom titles' own `interval: 1` right above.
+              verticalInterval: 1,
+              checkToShowVerticalLine: (value) =>
+                  ticks.indexes.contains(value.round()),
+              getDrawingVerticalLine: (value) =>
+                  FlLine(color: gridColor, strokeWidth: 1),
             ),
             borderData: FlBorderData(show: false),
             titlesData: FlTitlesData(
@@ -59,8 +79,37 @@ class MeasurementChart extends StatelessWidget {
               rightTitles: const AxisTitles(
                 sideTitles: SideTitles(showTitles: false),
               ),
-              bottomTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false),
+              // Monday ticks for a span of a month or less, first-of-month
+              // ticks for anything longer (owner-supplied reference image
+              // + explicit rule, redesign_v3) -- `dateAxisTicks` decides
+              // which dates qualify, this only hides/shows the label
+              // fl_chart would otherwise draw at every single index
+              // (`interval: 1`) down to that decision.
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 24,
+                  interval: 1,
+                  getTitlesWidget: (value, meta) {
+                    final index = value.round();
+                    if (index < 0 ||
+                        index >= dates.length ||
+                        !ticks.indexes.contains(index)) {
+                      return const SizedBox.shrink();
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        formatDateTick(
+                          dates[index],
+                          monthly: ticks.monthly,
+                          locale: locale,
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    );
+                  },
+                ),
               ),
               leftTitles: AxisTitles(
                 sideTitles: SideTitles(

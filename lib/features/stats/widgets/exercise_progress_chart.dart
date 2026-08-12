@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/design_tokens.dart';
+import '../../../core/chart_date_ticks.dart';
 import '../../../core/nice_axis_bounds.dart';
 import '../../../core/stats_period.dart';
 import '../../../domain/models/exercise_history_entry.dart';
@@ -96,23 +97,40 @@ class _Chart extends StatelessWidget {
       values.reduce(math.min),
       values.reduce(math.max),
     );
-    final color = Theme.of(context).colorScheme.primary;
-    // Same size/margin/no-gridline treatment as `MeasurementChart` (Stage
-    // 10 redesign, AUDIT.md section 1.4) -- kept as a separate, near-
-    // identical widget rather than merged into one shared chart component
-    // (an already-made call, Stage 7 Step 6: not worth the risk of
-    // touching a tested, working widget to save ~30 lines).
+    final dates = [for (final point in points) point.date];
+    final ticks = dateAxisTicks(dates);
+    final locale = Localizations.localeOf(context).toString();
+    final scheme = Theme.of(context).colorScheme;
+    final color = scheme.primary;
+    final gridColor = scheme.outlineVariant;
+    // Same size/margin/grid/X-axis-date-tick treatment as `MeasurementChart`
+    // (Stage 10 redesign, AUDIT.md section 1.4; redesign_v3 for the grid and
+    // ticks) -- kept as a separate, near-identical widget rather than merged
+    // into one shared chart component (an already-made call, Stage 7 Step
+    // 6: not worth the risk of touching a tested, working widget to save
+    // ~30 lines).
     return SizedBox(
-      height: 220,
+      height: 240,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(4, 16, 12, 4),
         child: LineChart(
           LineChartData(
             minY: bounds.min,
             maxY: bounds.max,
-            gridData: const FlGridData(
-              drawVerticalLine: false,
-              drawHorizontalLine: false,
+            gridData: FlGridData(
+              drawHorizontalLine: true,
+              horizontalInterval: bounds.interval,
+              getDrawingHorizontalLine: (value) =>
+                  FlLine(color: gridColor, strokeWidth: 1),
+              drawVerticalLine: true,
+              // See `MeasurementChart`'s identical comment -- without this,
+              // fl_chart only offers its own auto-computed candidate
+              // positions to `checkToShowVerticalLine`, not every index.
+              verticalInterval: 1,
+              checkToShowVerticalLine: (value) =>
+                  ticks.indexes.contains(value.round()),
+              getDrawingVerticalLine: (value) =>
+                  FlLine(color: gridColor, strokeWidth: 1),
             ),
             borderData: FlBorderData(show: false),
             titlesData: FlTitlesData(
@@ -122,8 +140,31 @@ class _Chart extends StatelessWidget {
               rightTitles: const AxisTitles(
                 sideTitles: SideTitles(showTitles: false),
               ),
-              bottomTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 24,
+                  interval: 1,
+                  getTitlesWidget: (value, meta) {
+                    final index = value.round();
+                    if (index < 0 ||
+                        index >= dates.length ||
+                        !ticks.indexes.contains(index)) {
+                      return const SizedBox.shrink();
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        formatDateTick(
+                          dates[index],
+                          monthly: ticks.monthly,
+                          locale: locale,
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    );
+                  },
+                ),
               ),
               leftTitles: AxisTitles(
                 sideTitles: SideTitles(
