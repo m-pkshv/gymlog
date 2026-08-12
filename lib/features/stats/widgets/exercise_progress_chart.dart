@@ -123,6 +123,12 @@ class _Chart extends StatelessWidget {
                 spots: spots,
                 color: color,
                 barWidth: 3,
+                // Same smoothing as `MeasurementChart` (owner-supplied
+                // reference image) -- see that file's comment for why
+                // 0.55 and `preventCurveOverShooting` specifically.
+                isCurved: true,
+                curveSmoothness: 0.55,
+                preventCurveOverShooting: true,
                 dotData: const FlDotData(),
                 belowBarData: BarAreaData(
                   show: true,

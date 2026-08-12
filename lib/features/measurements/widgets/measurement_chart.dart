@@ -60,6 +60,24 @@ class MeasurementChart extends StatelessWidget {
                 spots: spots,
                 color: color,
                 barWidth: 3,
+                // Owner-supplied reference image: smooth curves through each
+                // point instead of the sharp per-point corners a plain
+                // polyline draws. fl_chart's own default `curveSmoothness`
+                // (0.35) barely rounded a real, noisy multi-month weight
+                // series -- too many closely-spaced direction changes for a
+                // subtle curve to read as anything but "still mostly
+                // straight lines" -- so this is bumped to 0.55, matched
+                // on-device against the reference image at both a sparse
+                // (~13 points) and a dense (~50 points) zoom level.
+                // `preventCurveOverShooting` keeps the curve from bulging
+                // past a point when its neighbors are close together on
+                // screen (fl_chart's own fix for cubic-spline overshoot, not
+                // something built here) -- made no visible difference on
+                // this data but is the safer default for data shapes that
+                // would show it.
+                isCurved: true,
+                curveSmoothness: 0.55,
+                preventCurveOverShooting: true,
                 dotData: const FlDotData(),
                 belowBarData: BarAreaData(
                   show: true,
