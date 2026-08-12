@@ -40,6 +40,10 @@ class StatsScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.all(AppSpacing.lg),
             children: [
+              // Owner-reported: "Тренировки" moved to the very top of the
+              // screen, ahead of the measurement cards.
+              const WorkoutStatsCard(),
+              const SizedBox(height: AppSpacing.lg),
               if (weight != null)
                 StatsSectionCard(
                   title: l10n.statsWeightCardTitle,
@@ -54,8 +58,6 @@ class StatsScreen extends ConsumerWidget {
               ],
               const SizedBox(height: AppSpacing.lg),
               const MeasurementTypeDynamicsCard(),
-              const SizedBox(height: AppSpacing.lg),
-              const WorkoutStatsCard(),
               const SizedBox(height: AppSpacing.lg),
               const _ExerciseProgressEntryCard(),
             ],
