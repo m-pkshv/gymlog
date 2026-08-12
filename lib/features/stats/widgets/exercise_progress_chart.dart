@@ -1,7 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/design_tokens.dart';
+import '../../../core/nice_axis_bounds.dart';
 import '../../../core/stats_period.dart';
 import '../../../domain/models/exercise_history_entry.dart';
 import '../../../l10n/app_localizations.dart';
@@ -88,6 +91,11 @@ class _Chart extends StatelessWidget {
     final spots = [
       for (var i = 0; i < points.length; i++) FlSpot(i.toDouble(), points[i].value),
     ];
+    final values = spots.map((s) => s.y);
+    final bounds = niceAxisBounds(
+      values.reduce(math.min),
+      values.reduce(math.max),
+    );
     final color = Theme.of(context).colorScheme.primary;
     // Same size/margin/no-gridline treatment as `MeasurementChart` (Stage
     // 10 redesign, AUDIT.md section 1.4) -- kept as a separate, near-
@@ -100,21 +108,29 @@ class _Chart extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(4, 16, 12, 4),
         child: LineChart(
           LineChartData(
+            minY: bounds.min,
+            maxY: bounds.max,
             gridData: const FlGridData(
               drawVerticalLine: false,
               drawHorizontalLine: false,
             ),
             borderData: FlBorderData(show: false),
-            titlesData: const FlTitlesData(
-              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles: AxisTitles(
+            titlesData: FlTitlesData(
+              topTitles: const AxisTitles(
                 sideTitles: SideTitles(showTitles: false),
               ),
-              bottomTitles: AxisTitles(
+              rightTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              bottomTitles: const AxisTitles(
                 sideTitles: SideTitles(showTitles: false),
               ),
               leftTitles: AxisTitles(
-                sideTitles: SideTitles(showTitles: true, reservedSize: 44),
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 44,
+                  interval: bounds.interval,
+                ),
               ),
             ),
             lineTouchData: const LineTouchData(enabled: false),

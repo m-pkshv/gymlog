@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/nice_axis_bounds.dart';
 import '../../../domain/models/body_measurement.dart';
 
 /// Line chart of one measurement type's entries (S-14 "график сверху").
@@ -22,6 +25,11 @@ class MeasurementChart extends StatelessWidget {
       for (var i = 0; i < entries.length; i++)
         FlSpot(i.toDouble(), displayValue(entries[i])),
     ];
+    final values = spots.map((s) => s.y);
+    final bounds = niceAxisBounds(
+      values.reduce(math.min),
+      values.reduce(math.max),
+    );
     final color = Theme.of(context).colorScheme.primary;
     // Stage 10 redesign, AUDIT.md section 1.4: "the chart is small, cramped
     // by padding". Taller (180 -> 220) with lighter side padding, and no
@@ -37,21 +45,29 @@ class MeasurementChart extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(4, 16, 12, 4),
         child: LineChart(
           LineChartData(
+            minY: bounds.min,
+            maxY: bounds.max,
             gridData: const FlGridData(
               drawVerticalLine: false,
               drawHorizontalLine: false,
             ),
             borderData: FlBorderData(show: false),
-            titlesData: const FlTitlesData(
-              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles: AxisTitles(
+            titlesData: FlTitlesData(
+              topTitles: const AxisTitles(
                 sideTitles: SideTitles(showTitles: false),
               ),
-              bottomTitles: AxisTitles(
+              rightTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              bottomTitles: const AxisTitles(
                 sideTitles: SideTitles(showTitles: false),
               ),
               leftTitles: AxisTitles(
-                sideTitles: SideTitles(showTitles: true, reservedSize: 44),
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 44,
+                  interval: bounds.interval,
+                ),
               ),
             ),
             lineTouchData: const LineTouchData(enabled: false),
