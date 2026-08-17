@@ -11,6 +11,7 @@ import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/core/widgets/bottom_nav_bar.dart';
 import 'package:gymlog/features/history/screen.dart';
 import 'package:gymlog/features/history/template_picker_screen.dart';
+import 'package:gymlog/features/more/screen.dart';
 import 'package:gymlog/features/today/screen.dart';
 import 'package:gymlog/features/workout_editor/screen.dart';
 import 'package:gymlog/features/workout_summary/screen.dart';
@@ -293,6 +294,83 @@ void main() {
         findsOneWidget,
         reason: 'left the editor, back on the tab shell\'s own Scaffold',
       );
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'swiping left on the bottom nav bar switches to the next tab, one '
+    'swipe = one tab (redesign v3, owner-requested)',
+    (tester) async {
+      await tester.pumpWidget(appUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TodayScreen), findsOneWidget);
+
+      await tester.drag(find.byType(BottomNavBar), const Offset(-300, 0));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(HistoryScreen), findsOneWidget);
+      expect(find.byType(TodayScreen), findsNothing);
+
+      // One swipe only moves one tab over, not further.
+      await tester.drag(find.byType(BottomNavBar), const Offset(-300, 0));
+      await tester.pumpAndSettle();
+      final exercisesTab = tester.widget<BottomNavBarItem>(
+        find.widgetWithText(BottomNavBarItem, 'Exercises'),
+      );
+      expect(exercisesTab.selected, isTrue);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'swiping right on the bottom nav bar switches to the previous tab '
+    '(redesign v3, owner-requested)',
+    (tester) async {
+      await tester.pumpWidget(appUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('History'));
+      await tester.pumpAndSettle();
+      expect(find.byType(HistoryScreen), findsOneWidget);
+
+      await tester.drag(find.byType(BottomNavBar), const Offset(300, 0));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TodayScreen), findsOneWidget);
+      expect(find.byType(HistoryScreen), findsNothing);
+
+      await _unmountAndFlush(tester);
+    },
+  );
+
+  testWidgets(
+    'swiping right on the first tab, or left on the last tab, does '
+    'nothing -- no neighbor in that direction (redesign v3, '
+    'owner-requested)',
+    (tester) async {
+      await tester.pumpWidget(appUnderTest());
+      await tester.pumpAndSettle();
+
+      // First tab (Today): swipe right, toward a nonexistent "previous"
+      // tab.
+      await tester.drag(find.byType(BottomNavBar), const Offset(300, 0));
+      await tester.pumpAndSettle();
+      expect(find.byType(TodayScreen), findsOneWidget);
+
+      // Last tab (More): swipe left, toward a nonexistent "next" tab --
+      // must not wrap around to Today.
+      await tester.tap(find.text('More'));
+      await tester.pumpAndSettle();
+      expect(find.byType(MoreScreen), findsOneWidget);
+
+      await tester.drag(find.byType(BottomNavBar), const Offset(-300, 0));
+      await tester.pumpAndSettle();
+      expect(find.byType(MoreScreen), findsOneWidget);
+      expect(find.byType(TodayScreen), findsNothing);
 
       await _unmountAndFlush(tester);
     },

@@ -20,22 +20,73 @@ class BottomNavBarDestination {
 /// layout, not exposed as a style knob). The mockup wants a single
 /// rounded-rectangle indicator behind icon *and* label together, so this
 /// is a plain `Row` of tappable items instead.
-class BottomNavBar extends StatelessWidget {
+class BottomNavBar extends StatefulWidget {
   const BottomNavBar({
     super.key,
     required this.selectedIndex,
     required this.onDestinationSelected,
     required this.destinations,
+    this.onSwipeLeft,
+    this.onSwipeRight,
   });
 
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
   final List<BottomNavBarDestination> destinations;
 
+  /// A swipe anywhere on the bar switches to the neighboring tab -- one
+  /// swipe, one tab, not a multi-tab fling (redesign v3, owner-requested).
+  /// `null` when there's no neighbor in that direction (already on the
+  /// first/last tab); the drag recognizer still attaches either way, it
+  /// just has nothing to call. The `InkWell`s inside each
+  /// [BottomNavBarItem] keep working alongside this: a plain tap never
+  /// clears the gesture arena's touch-slop, so it's decided as a tap
+  /// before this recognizer would ever see it as a drag.
+  final VoidCallback? onSwipeLeft;
+  final VoidCallback? onSwipeRight;
+
   /// Matches the stock `NavigationBar`'s default total height (icon +
   /// label + padding), so swapping this in doesn't shift the rest of the
   /// screen's layout.
   static const double _height = 80;
+
+  @override
+  State<BottomNavBar> createState() => _BottomNavBarState();
+}
+
+class _BottomNavBarState extends State<BottomNavBar> {
+  // Below this cumulative horizontal travel (logical px), a drag that
+  // still cleared the gesture arena's touch-slop reads as too small to
+  // count as a deliberate swipe, not an actual "switch tabs" gesture.
+  //
+  // Deciding by *distance* covers the same ground `DragEndDetails.
+  // primaryVelocity` would, without depending on it: `flutter_test`'s
+  // synthetic `drag()` sends its move events with no reliable elapsed
+  // time between them, so the velocity `VelocityTracker` computes from
+  // them reads as ~0 regardless of how far the drag actually travelled --
+  // a velocity-gated version of this passed `flutter analyze` and looked
+  // right by inspection, but silently never fired in `flutter test`
+  // (caught by the swipe tests below, not by eyeballing the diff).
+  static const double _minSwipeDistance = 40;
+
+  double _dragDelta = 0;
+
+  void _handleDragStart(DragStartDetails details) {
+    _dragDelta = 0;
+  }
+
+  void _handleDragUpdate(DragUpdateDetails details) {
+    _dragDelta += details.delta.dx;
+  }
+
+  void _handleDragEnd(DragEndDetails details) {
+    if (_dragDelta <= -_minSwipeDistance) {
+      widget.onSwipeLeft?.call();
+    } else if (_dragDelta >= _minSwipeDistance) {
+      widget.onSwipeRight?.call();
+    }
+    _dragDelta = 0;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,17 +97,23 @@ class BottomNavBar extends StatelessWidget {
       surfaceTintColor: scheme.surfaceTint,
       child: SafeArea(
         top: false,
-        child: SizedBox(
-          height: _height,
-          child: Row(
-            children: [
-              for (var i = 0; i < destinations.length; i++)
-                BottomNavBarItem(
-                  destination: destinations[i],
-                  selected: i == selectedIndex,
-                  onTap: () => onDestinationSelected(i),
-                ),
-            ],
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onHorizontalDragStart: _handleDragStart,
+          onHorizontalDragUpdate: _handleDragUpdate,
+          onHorizontalDragEnd: _handleDragEnd,
+          child: SizedBox(
+            height: BottomNavBar._height,
+            child: Row(
+              children: [
+                for (var i = 0; i < widget.destinations.length; i++)
+                  BottomNavBarItem(
+                    destination: widget.destinations[i],
+                    selected: i == widget.selectedIndex,
+                    onTap: () => widget.onDestinationSelected(i),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

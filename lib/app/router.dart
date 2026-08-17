@@ -415,6 +415,11 @@ final GoRouter appRouter = GoRouter(
 /// (`WorkoutEditorScreen`) fully covers this one, for every workout status,
 /// not just while `inProgress` -- there's no bottom nav left to hide, and
 /// no URL-watching needed to decide when to hide it.
+///
+/// A swipe on the [BottomNavBar] itself switches to the neighboring tab,
+/// one swipe = one tab (redesign v3, owner-requested) -- not the current
+/// screen's own content area, so it never fights a screen's own horizontal
+/// gestures (e.g. a chart's period selector, a form field).
 class _MainTabScaffold extends StatelessWidget {
   const _MainTabScaffold({required this.navigationShell});
 
@@ -423,40 +428,48 @@ class _MainTabScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final currentIndex = navigationShell.currentIndex;
+    final destinations = [
+      BottomNavBarDestination(
+        icon: Icons.today_outlined,
+        label: l10n.tabToday,
+      ),
+      BottomNavBarDestination(
+        icon: Icons.history_outlined,
+        label: l10n.tabHistory,
+      ),
+      BottomNavBarDestination(
+        icon: Icons.fitness_center_outlined,
+        label: l10n.tabExercises,
+      ),
+      BottomNavBarDestination(
+        icon: Icons.bar_chart_outlined,
+        label: l10n.tabStats,
+      ),
+      BottomNavBarDestination(
+        icon: Icons.more_horiz_outlined,
+        label: l10n.tabMore,
+      ),
+    ];
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: BottomNavBar(
-        selectedIndex: navigationShell.currentIndex,
+        selectedIndex: currentIndex,
         onDestinationSelected: (index) => navigationShell.goBranch(
           index,
           // Stage 10, owner-reported: tapping the already-active tab while
           // deeper in its stack (e.g. "Ещё" -> "Шаблоны" -> tap "Ещё"
           // again) resets that branch back to its root instead of doing
           // nothing.
-          initialLocation: index == navigationShell.currentIndex,
+          initialLocation: index == currentIndex,
         ),
-        destinations: [
-          BottomNavBarDestination(
-            icon: Icons.today_outlined,
-            label: l10n.tabToday,
-          ),
-          BottomNavBarDestination(
-            icon: Icons.history_outlined,
-            label: l10n.tabHistory,
-          ),
-          BottomNavBarDestination(
-            icon: Icons.fitness_center_outlined,
-            label: l10n.tabExercises,
-          ),
-          BottomNavBarDestination(
-            icon: Icons.bar_chart_outlined,
-            label: l10n.tabStats,
-          ),
-          BottomNavBarDestination(
-            icon: Icons.more_horiz_outlined,
-            label: l10n.tabMore,
-          ),
-        ],
+        onSwipeLeft: currentIndex < destinations.length - 1
+            ? () => navigationShell.goBranch(currentIndex + 1)
+            : null,
+        onSwipeRight: currentIndex > 0
+            ? () => navigationShell.goBranch(currentIndex - 1)
+            : null,
+        destinations: destinations,
       ),
     );
   }
