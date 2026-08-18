@@ -181,12 +181,20 @@ class _Chart extends StatelessWidget {
                 color: color,
                 barWidth: 3,
                 // Same smoothing as `MeasurementChart` (owner-supplied
-                // reference image) -- see that file's comment for why
-                // 0.55 and `preventCurveOverShooting` specifically.
+                // reference image, then the redesign_v3 flat-run-bulge fix)
+                // -- see that file's comment for why 0.15 and not fl_chart's
+                // own default, and why `preventCurveOverShooting`'s
+                // threshold turned out not to matter.
                 isCurved: true,
-                curveSmoothness: 0.55,
+                curveSmoothness: 0.15,
                 preventCurveOverShooting: true,
-                dotData: const FlDotData(),
+                preventCurveOvershootingThreshold: 10,
+                // Same dot sizing as `MeasurementChart` -- see that file's
+                // comment.
+                dotData: FlDotData(
+                  getDotPainter: (spot, percent, barData, index) =>
+                      FlDotCirclePainter(radius: 2.5, color: color),
+                ),
                 belowBarData: BarAreaData(
                   show: true,
                   color: color.withValues(alpha: 0.12),

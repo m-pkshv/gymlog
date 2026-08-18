@@ -127,23 +127,41 @@ class MeasurementChart extends StatelessWidget {
                 barWidth: 3,
                 // Owner-supplied reference image: smooth curves through each
                 // point instead of the sharp per-point corners a plain
-                // polyline draws. fl_chart's own default `curveSmoothness`
-                // (0.35) barely rounded a real, noisy multi-month weight
-                // series -- too many closely-spaced direction changes for a
-                // subtle curve to read as anything but "still mostly
-                // straight lines" -- so this is bumped to 0.55, matched
-                // on-device against the reference image at both a sparse
-                // (~13 points) and a dense (~50 points) zoom level.
-                // `preventCurveOverShooting` keeps the curve from bulging
-                // past a point when its neighbors are close together on
-                // screen (fl_chart's own fix for cubic-spline overshoot, not
-                // something built here) -- made no visible difference on
-                // this data but is the safer default for data shapes that
-                // would show it.
+                // polyline draws. Started at fl_chart's default
+                // `curveSmoothness` (0.35), then bumped to 0.55 to make the
+                // curve read as more than "still mostly straight lines" on a
+                // real multi-month weight series -- but that overshot: on a
+                // near-flat run (day-to-day weight noise, no real trend),
+                // 0.55 draws visibly bulging humps between points that sit on
+                // essentially the same line (owner-reported, redesign_v3).
+                // `preventCurveOverShooting`/`preventCurveOvershootingThreshold`
+                // (fl_chart's own cubic-spline overshoot guard) does *not*
+                // fix this -- verified experimentally (threshold 10 vs. 60
+                // rendered identically) -- because it compares each pair of
+                // neighboring points' *signed* pixel-space delta against a
+                // positive threshold, so it only ever suppresses bulging on
+                // one side of a rising/falling run, never on a flat one.
+                // `curveSmoothness` is the only lever that actually helps:
+                // dropped to 0.15, which flattens near-flat runs back to
+                // essentially straight lines while still drawing a visibly
+                // curved arc through real peaks/troughs (verified against a
+                // synthetic 52-point two-cycle sine+noise series matching the
+                // shape of real weight data, plus the sparse/dense reference
+                // zoom levels from the original 0.55 pass). The overshoot
+                // guard is left on at its default threshold -- harmless, and
+                // still a reasonable safety clamp for a single large outlier
+                // even though it isn't what fixed the reported bug.
                 isCurved: true,
-                curveSmoothness: 0.55,
+                curveSmoothness: 0.15,
                 preventCurveOverShooting: true,
-                dotData: const FlDotData(),
+                preventCurveOvershootingThreshold: 10,
+                // fl_chart's default dot radius (4) reads as an oversized
+                // bulb next to a 3px line -- owner-reported (redesign_v3):
+                // shrink it to just a bit thicker than the line itself.
+                dotData: FlDotData(
+                  getDotPainter: (spot, percent, barData, index) =>
+                      FlDotCirclePainter(radius: 2.5, color: color),
+                ),
                 belowBarData: BarAreaData(
                   show: true,
                   color: color.withValues(alpha: 0.12),
