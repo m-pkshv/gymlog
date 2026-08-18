@@ -56,6 +56,31 @@ class _BottomNavBarState extends State<BottomNavBar> {
   double _pillDragLocalX = 0;
   int _pillTargetIndex = 0;
 
+  // Owner-reported: giving the flying pill's reveal window the full 80dp
+  // bar height (matching `BottomNavBar._height`, since that's what a
+  // `Positioned` needs *some* explicit height to size against) made its
+  // rounded shape stretch down well past a real pill's own bottom edge --
+  // rounded top, but a flat, unrounded bottom where the clip boundary cut
+  // across empty space below the actual content. A real pill's height is
+  // content-driven (icon + label + padding), not the bar's own -- rather
+  // than re-deriving that from scratch (and re-litigating exactly which
+  // constraint-propagation rule of `Stack`/`Positioned` governs it, which
+  // is precisely how the *previous* attempt at this same fix went wrong),
+  // this measures one directly off a real, already-laid-out pill slot and
+  // reuses that exact number, so the two can't help but match.
+  final GlobalKey _pillHeightMeasureKey = GlobalKey();
+  double? _pillHeight;
+
+  void _schedulePillHeightMeasurement() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final measured = _pillHeightMeasureKey.currentContext?.size?.height;
+      if (measured != null && measured != _pillHeight) {
+        setState(() => _pillHeight = measured);
+      }
+    });
+  }
+
   int _indexForX(double x, double barWidth) {
     final itemWidth = barWidth / widget.destinations.length;
     final index = (x / itemWidth).floor();
@@ -95,7 +120,13 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   @override
   Widget build(BuildContext context) {
+    _schedulePillHeightMeasurement();
     final scheme = Theme.of(context).colorScheme;
+    // Falls back to the full bar height only until the first post-frame
+    // measurement lands (a single frame, in practice) -- after that,
+    // `_pillHeight` always reflects a real pill's own content-driven
+    // height.
+    final pillHeight = _pillHeight ?? BottomNavBar._height;
     return Material(
       color: scheme.surface,
       elevation: 3,
@@ -123,6 +154,40 @@ class _BottomNavBarState extends State<BottomNavBar> {
                 height: BottomNavBar._height,
                 child: Stack(
                   children: [
+                    // A measuring instance -- `selected: true, glass:
+                    // true`, exactly matching what the reveal window's own
+                    // duplicate row actually renders -- laid out (for its
+                    // real size) but never painted or hit-tested
+                    // (`Offstage`). Owner-reported, twice over: measuring
+                    // whichever slot the row's own base items happened to
+                    // be in undershot by ~2px whenever that slot wasn't
+                    // both `selected: true` *and* `glass: true` at the
+                    // time -- a bold ("selected") label's line-height
+                    // measures very slightly taller than the regular-
+                    // weight one, and `glass`'s own `Border.all()` (its
+                    // default 1.0-width side) adds its own 1px top + 1px
+                    // bottom via the container's `decoration.padding`,
+                    // which a plain, non-glass "selected" measurement
+                    // (the first round of this same fix) doesn't carry
+                    // either. This is pinned to exactly what the reveal
+                    // window renders, not what the real row happens to be
+                    // showing at the moment, so the two can't help but
+                    // match.
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      width: itemWidth,
+                      child: Offstage(
+                        offstage: true,
+                        child: BottomNavBarItem(
+                          key: _pillHeightMeasureKey,
+                          destination: widget.destinations[0],
+                          selected: true,
+                          glass: true,
+                          onTap: () {},
+                        ),
+                      ),
+                    ),
                     Row(
                       children: [
                         for (var i = 0; i < widget.destinations.length; i++)
@@ -146,7 +211,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
                         left: pillLeft,
                         top: 0,
                         width: itemWidth,
-                        height: BottomNavBar._height,
+                        height: pillHeight,
                         // Never a tap/hit-test target of its own (the
                         // drag recognizer above already owns this whole
                         // gesture) -- also drops it from the semantics
@@ -154,33 +219,39 @@ class _BottomNavBarState extends State<BottomNavBar> {
                         // momentarily-duplicate "selected" tab alongside
                         // the one still in the row underneath.
                         child: IgnorePointer(
-                          // Owner-reported, twice over: a floating copy of
-                          // just the *origin* tab's icon read as "stuck" on
-                          // the wrong tab once dragged elsewhere; a
-                          // follow-up frosted-glass version (referencing
-                          // iOS 26's "Liquid Glass") fixed that by hiding
-                          // its own icon and relying on `BackdropFilter` to
-                          // blur the real row underneath -- but blurring
-                          // the real icons made them unreadable, which
-                          // defeats the point of a "preview".
-                          //
-                          // This is a reveal window instead, no blur: a
-                          // full second copy of the row, every tab drawn in
-                          // its "selected" look (bright icon/label on a
-                          // translucent glass-tinted pill), laid out at the
-                          // exact same x-offsets as the real row and then
-                          // clipped down to just this `itemWidth`-wide,
-                          // rounded slice at the pill's current position
-                          // (`Positioned(left: -pillLeft, width: barWidth)`
-                          // shifts the *whole* duplicate row left so the
-                          // correct slice of it lands inside the clip).
-                          // Whatever tab(s) the window is over -- even
-                          // straddling two of them mid-drag -- show through
-                          // sharp and fully legible, styled exactly like a
-                          // real selected pill; nothing here is blurred,
-                          // since nothing here is a filter over the real
-                          // content -- it *is* real (icon+label) content,
-                          // just windowed.
+                          // Owner-reported, three rounds over: a floating
+                          // copy of just the *origin* tab's icon read as
+                          // "stuck" on the wrong tab once dragged
+                          // elsewhere; a follow-up frosted-glass version
+                          // (referencing iOS 26's "Liquid Glass") fixed
+                          // that by hiding its own icon and relying on
+                          // `BackdropFilter` to blur the real row
+                          // underneath -- but blurring the real icons made
+                          // them unreadable, which defeats the point of a
+                          // "preview". This is a reveal window instead, no
+                          // blur: a full second copy of the row, every tab
+                          // drawn in its "selected" look (bright icon/label
+                          // on a translucent glass-tinted pill), laid out
+                          // at the exact same x-offsets as the real row and
+                          // then clipped down to just this `itemWidth`-
+                          // wide, rounded slice at the pill's current
+                          // position (`Positioned(left: -pillLeft, width:
+                          // barWidth)` shifts the *whole* duplicate row
+                          // left so the correct slice of it lands inside
+                          // the clip). Whatever tab(s) the window is over
+                          // -- even straddling two of them mid-drag --
+                          // show through sharp and fully legible, styled
+                          // exactly like a real selected pill; nothing
+                          // here is blurred, since nothing here is a
+                          // filter over the real content -- it *is* real
+                          // (icon+label) content, just windowed. The clip
+                          // window's own height is `pillHeight` (measured
+                          // above), not the full bar height -- a rounded
+                          // window taller than a real pill's own content
+                          // (owner-reported: it was, twice) reads as
+                          // rounded on top but flat/square on the bottom,
+                          // where the clip boundary cuts across empty
+                          // space well below the actual content.
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(
                               AppRadius.control,
@@ -191,23 +262,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
                                   left: -pillLeft,
                                   top: 0,
                                   width: barWidth,
-                                  // No explicit height, deliberately: the
-                                  // base row below (its own `Row`, sized
-                                  // to its own content) isn't stretched to
-                                  // fill the full 80dp bar height either --
-                                  // it's a shorter, content-sized block
-                                  // that the outer `Stack` top-aligns
-                                  // within the bar. Forcing this duplicate
-                                  // `Row` to `BottomNavBar._height` (owner-
-                                  // reported: the pill rendered visibly
-                                  // lower than the real row) made *it*
-                                  // stretch to fill 80dp, which centered
-                                  // its own (shorter) content vertically
-                                  // inside that space instead of matching
-                                  // the base row's top alignment. Letting
-                                  // it size itself the same way the base
-                                  // row does, then top-aligning it here
-                                  // too, lines the two up exactly.
+                                  height: pillHeight,
                                   child: Row(
                                     children: [
                                       for (final destination
