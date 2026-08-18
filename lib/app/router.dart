@@ -55,9 +55,8 @@ final GoRouter appRouter = GoRouter(
   routes: [
     GoRoute(
       path: '/workout/:workoutId',
-      builder: (_, state) => WorkoutEditorScreen(
-        workoutId: state.pathParameters['workoutId']!,
-      ),
+      builder: (_, state) =>
+          WorkoutEditorScreen(workoutId: state.pathParameters['workoutId']!),
       routes: [
         GoRoute(
           path: 'summary',
@@ -178,7 +177,9 @@ final GoRouter appRouter = GoRouter(
                   pageBuilder: (_, state) => MaterialPage(
                     key: state.pageKey,
                     fullscreenDialog: true,
-                    child: const CreateExerciseScreen(ownRoute: '/exercises/new'),
+                    child: const CreateExerciseScreen(
+                      ownRoute: '/exercises/new',
+                    ),
                   ),
                   routes: [
                     GoRoute(
@@ -295,7 +296,8 @@ final GoRouter appRouter = GoRouter(
                                   pageBuilder: (_, state) => MaterialPage(
                                     key: state.pageKey,
                                     fullscreenDialog: true,
-                                    child: const ExerciseCopySourcePickerScreen(),
+                                    child:
+                                        const ExerciseCopySourcePickerScreen(),
                                   ),
                                 ),
                               ],
@@ -320,10 +322,7 @@ final GoRouter appRouter = GoRouter(
                     ),
                   ],
                 ),
-                GoRoute(
-                  path: 'tags',
-                  builder: (_, _) => const TagListScreen(),
-                ),
+                GoRoute(path: 'tags', builder: (_, _) => const TagListScreen()),
                 GoRoute(
                   path: 'measurements',
                   builder: (_, _) => const MeasurementsScreen(),
@@ -416,10 +415,13 @@ final GoRouter appRouter = GoRouter(
 /// not just while `inProgress` -- there's no bottom nav left to hide, and
 /// no URL-watching needed to decide when to hide it.
 ///
-/// A swipe on the [BottomNavBar] itself switches to the neighboring tab,
-/// one swipe = one tab (redesign v3, owner-requested) -- not the current
-/// screen's own content area, so it never fights a screen's own horizontal
-/// gestures (e.g. a chart's period selector, a form field).
+/// Dragging anywhere on the [BottomNavBar] itself, no hold required, tracks
+/// the selection pill live and switches to whichever tab is under the
+/// finger on release (redesign v3, owner-requested -- merges what used to
+/// be two separate gestures, a same-tab-only swipe and a long-press-then-
+/// drag, into this single one; see `BottomNavBar`'s own doc comment) -- not
+/// the current screen's own content area, so it never fights a screen's own
+/// horizontal gestures (e.g. a chart's period selector, a form field).
 class _MainTabScaffold extends StatelessWidget {
   const _MainTabScaffold({required this.navigationShell});
 
@@ -429,28 +431,6 @@ class _MainTabScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final currentIndex = navigationShell.currentIndex;
-    final destinations = [
-      BottomNavBarDestination(
-        icon: Icons.today_outlined,
-        label: l10n.tabToday,
-      ),
-      BottomNavBarDestination(
-        icon: Icons.history_outlined,
-        label: l10n.tabHistory,
-      ),
-      BottomNavBarDestination(
-        icon: Icons.fitness_center_outlined,
-        label: l10n.tabExercises,
-      ),
-      BottomNavBarDestination(
-        icon: Icons.bar_chart_outlined,
-        label: l10n.tabStats,
-      ),
-      BottomNavBarDestination(
-        icon: Icons.more_horiz_outlined,
-        label: l10n.tabMore,
-      ),
-    ];
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: BottomNavBar(
@@ -463,13 +443,28 @@ class _MainTabScaffold extends StatelessWidget {
           // nothing.
           initialLocation: index == currentIndex,
         ),
-        onSwipeLeft: currentIndex < destinations.length - 1
-            ? () => navigationShell.goBranch(currentIndex + 1)
-            : null,
-        onSwipeRight: currentIndex > 0
-            ? () => navigationShell.goBranch(currentIndex - 1)
-            : null,
-        destinations: destinations,
+        destinations: [
+          BottomNavBarDestination(
+            icon: Icons.today_outlined,
+            label: l10n.tabToday,
+          ),
+          BottomNavBarDestination(
+            icon: Icons.history_outlined,
+            label: l10n.tabHistory,
+          ),
+          BottomNavBarDestination(
+            icon: Icons.fitness_center_outlined,
+            label: l10n.tabExercises,
+          ),
+          BottomNavBarDestination(
+            icon: Icons.bar_chart_outlined,
+            label: l10n.tabStats,
+          ),
+          BottomNavBarDestination(
+            icon: Icons.more_horiz_outlined,
+            label: l10n.tabMore,
+          ),
+        ],
       ),
     );
   }

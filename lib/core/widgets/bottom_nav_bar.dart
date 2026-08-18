@@ -26,24 +26,11 @@ class BottomNavBar extends StatefulWidget {
     required this.selectedIndex,
     required this.onDestinationSelected,
     required this.destinations,
-    this.onSwipeLeft,
-    this.onSwipeRight,
   });
 
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
   final List<BottomNavBarDestination> destinations;
-
-  /// A swipe anywhere on the bar switches to the neighboring tab -- one
-  /// swipe, one tab, not a multi-tab fling (redesign v3, owner-requested).
-  /// `null` when there's no neighbor in that direction (already on the
-  /// first/last tab); the drag recognizer still attaches either way, it
-  /// just has nothing to call. The `InkWell`s inside each
-  /// [BottomNavBarItem] keep working alongside this: a plain tap never
-  /// clears the gesture arena's touch-slop, so it's decided as a tap
-  /// before this recognizer would ever see it as a drag.
-  final VoidCallback? onSwipeLeft;
-  final VoidCallback? onSwipeRight;
 
   /// Matches the stock `NavigationBar`'s default total height (icon +
   /// label + padding), so swapping this in doesn't shift the rest of the
@@ -55,37 +42,55 @@ class BottomNavBar extends StatefulWidget {
 }
 
 class _BottomNavBarState extends State<BottomNavBar> {
-  // Below this cumulative horizontal travel (logical px), a drag that
-  // still cleared the gesture arena's touch-slop reads as too small to
-  // count as a deliberate swipe, not an actual "switch tabs" gesture.
-  //
-  // Deciding by *distance* covers the same ground `DragEndDetails.
-  // primaryVelocity` would, without depending on it: `flutter_test`'s
-  // synthetic `drag()` sends its move events with no reliable elapsed
-  // time between them, so the velocity `VelocityTracker` computes from
-  // them reads as ~0 regardless of how far the drag actually travelled --
-  // a velocity-gated version of this passed `flutter analyze` and looked
-  // right by inspection, but silently never fired in `flutter test`
-  // (caught by the swipe tests below, not by eyeballing the diff).
-  static const double _minSwipeDistance = 40;
+  // Drag-the-pill state (redesign v3, owner-requested; merges what used to
+  // be two separate gestures -- a plain swipe to the neighboring tab, and a
+  // long-press-then-drag to any tab -- into one). Any horizontal drag
+  // anywhere on the bar, no hold required, teleports the pill to the
+  // touch point right away and tracks the finger from there; releasing
+  // snaps to whichever tab is currently under it, however far that is from
+  // where the drag started. A plain tap (no meaningful movement) never
+  // reaches these handlers at all -- the gesture arena resolves it as a
+  // tap on the `InkWell` inside the item before this recognizer's own
+  // touch-slop clears, so it keeps switching tabs immediately as before.
+  bool _isDraggingPill = false;
+  double _pillDragLocalX = 0;
+  int _pillTargetIndex = 0;
 
-  double _dragDelta = 0;
-
-  void _handleDragStart(DragStartDetails details) {
-    _dragDelta = 0;
+  int _indexForX(double x, double barWidth) {
+    final itemWidth = barWidth / widget.destinations.length;
+    final index = (x / itemWidth).floor();
+    return index.clamp(0, widget.destinations.length - 1);
   }
 
-  void _handleDragUpdate(DragUpdateDetails details) {
-    _dragDelta += details.delta.dx;
+  void _handleDragStart(DragStartDetails details, double barWidth) {
+    setState(() {
+      _isDraggingPill = true;
+      _pillDragLocalX = details.localPosition.dx;
+      _pillTargetIndex = _indexForX(_pillDragLocalX, barWidth);
+    });
+  }
+
+  void _handleDragUpdate(DragUpdateDetails details, double barWidth) {
+    setState(() {
+      _pillDragLocalX = details.localPosition.dx;
+      _pillTargetIndex = _indexForX(_pillDragLocalX, barWidth);
+    });
   }
 
   void _handleDragEnd(DragEndDetails details) {
-    if (_dragDelta <= -_minSwipeDistance) {
-      widget.onSwipeLeft?.call();
-    } else if (_dragDelta >= _minSwipeDistance) {
-      widget.onSwipeRight?.call();
+    // Release anywhere -- between two tabs, or past either edge -- always
+    // snaps to whichever tab `_pillTargetIndex` already tracked as the
+    // nearest one, so the gesture never "gets lost". A single fast, far
+    // drag can land several tabs away from where it started (owner-
+    // requested): whatever is under the finger at release wins, not just
+    // an immediate neighbor of the tab that was active before the drag.
+    final target = _pillTargetIndex;
+    setState(() {
+      _isDraggingPill = false;
+    });
+    if (target != widget.selectedIndex) {
+      widget.onDestinationSelected(target);
     }
-    _dragDelta = 0;
   }
 
   @override
@@ -97,24 +102,137 @@ class _BottomNavBarState extends State<BottomNavBar> {
       surfaceTintColor: scheme.surfaceTint,
       child: SafeArea(
         top: false,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onHorizontalDragStart: _handleDragStart,
-          onHorizontalDragUpdate: _handleDragUpdate,
-          onHorizontalDragEnd: _handleDragEnd,
-          child: SizedBox(
-            height: BottomNavBar._height,
-            child: Row(
-              children: [
-                for (var i = 0; i < widget.destinations.length; i++)
-                  BottomNavBarItem(
-                    destination: widget.destinations[i],
-                    selected: i == widget.selectedIndex,
-                    onTap: () => widget.onDestinationSelected(i),
-                  ),
-              ],
-            ),
-          ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final barWidth = constraints.maxWidth;
+            final itemWidth = barWidth / widget.destinations.length;
+            final pillLeft = _isDraggingPill
+                ? (_pillDragLocalX - itemWidth / 2).clamp(
+                    0.0,
+                    barWidth - itemWidth,
+                  )
+                : 0.0;
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onHorizontalDragStart: (details) =>
+                  _handleDragStart(details, barWidth),
+              onHorizontalDragUpdate: (details) =>
+                  _handleDragUpdate(details, barWidth),
+              onHorizontalDragEnd: _handleDragEnd,
+              child: SizedBox(
+                height: BottomNavBar._height,
+                child: Stack(
+                  children: [
+                    Row(
+                      children: [
+                        for (var i = 0; i < widget.destinations.length; i++)
+                          Expanded(
+                            child: BottomNavBarItem(
+                              destination: widget.destinations[i],
+                              // The active tab's own pill hides for the
+                              // duration of the drag -- the reveal window
+                              // below takes over showing "selected" style
+                              // content, precisely wherever it's currently
+                              // covering.
+                              selected:
+                                  !_isDraggingPill && i == widget.selectedIndex,
+                              onTap: () => widget.onDestinationSelected(i),
+                            ),
+                          ),
+                      ],
+                    ),
+                    if (_isDraggingPill)
+                      Positioned(
+                        left: pillLeft,
+                        top: 0,
+                        width: itemWidth,
+                        height: BottomNavBar._height,
+                        // Never a tap/hit-test target of its own (the
+                        // drag recognizer above already owns this whole
+                        // gesture) -- also drops it from the semantics
+                        // tree, so it doesn't announce a second,
+                        // momentarily-duplicate "selected" tab alongside
+                        // the one still in the row underneath.
+                        child: IgnorePointer(
+                          // Owner-reported, twice over: a floating copy of
+                          // just the *origin* tab's icon read as "stuck" on
+                          // the wrong tab once dragged elsewhere; a
+                          // follow-up frosted-glass version (referencing
+                          // iOS 26's "Liquid Glass") fixed that by hiding
+                          // its own icon and relying on `BackdropFilter` to
+                          // blur the real row underneath -- but blurring
+                          // the real icons made them unreadable, which
+                          // defeats the point of a "preview".
+                          //
+                          // This is a reveal window instead, no blur: a
+                          // full second copy of the row, every tab drawn in
+                          // its "selected" look (bright icon/label on a
+                          // translucent glass-tinted pill), laid out at the
+                          // exact same x-offsets as the real row and then
+                          // clipped down to just this `itemWidth`-wide,
+                          // rounded slice at the pill's current position
+                          // (`Positioned(left: -pillLeft, width: barWidth)`
+                          // shifts the *whole* duplicate row left so the
+                          // correct slice of it lands inside the clip).
+                          // Whatever tab(s) the window is over -- even
+                          // straddling two of them mid-drag -- show through
+                          // sharp and fully legible, styled exactly like a
+                          // real selected pill; nothing here is blurred,
+                          // since nothing here is a filter over the real
+                          // content -- it *is* real (icon+label) content,
+                          // just windowed.
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.control,
+                            ),
+                            child: Stack(
+                              children: [
+                                Positioned(
+                                  left: -pillLeft,
+                                  top: 0,
+                                  width: barWidth,
+                                  // No explicit height, deliberately: the
+                                  // base row below (its own `Row`, sized
+                                  // to its own content) isn't stretched to
+                                  // fill the full 80dp bar height either --
+                                  // it's a shorter, content-sized block
+                                  // that the outer `Stack` top-aligns
+                                  // within the bar. Forcing this duplicate
+                                  // `Row` to `BottomNavBar._height` (owner-
+                                  // reported: the pill rendered visibly
+                                  // lower than the real row) made *it*
+                                  // stretch to fill 80dp, which centered
+                                  // its own (shorter) content vertically
+                                  // inside that space instead of matching
+                                  // the base row's top alignment. Letting
+                                  // it size itself the same way the base
+                                  // row does, then top-aligning it here
+                                  // too, lines the two up exactly.
+                                  child: Row(
+                                    children: [
+                                      for (final destination
+                                          in widget.destinations)
+                                        Expanded(
+                                          child: BottomNavBarItem(
+                                            destination: destination,
+                                            selected: true,
+                                            glass: true,
+                                            onTap: () {},
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -126,83 +244,106 @@ class _BottomNavBarState extends State<BottomNavBar> {
 /// behind them otherwise. A public top-level widget (not a private class
 /// inside `BottomNavBar`) so tests can assert on it directly, the same way
 /// they used to assert on the stock `NavigationDestination`.
+///
+/// No longer wraps itself in an `Expanded` (redesign v3, owner-requested
+/// pill-drag gesture): `BottomNavBar` now builds two different presentations
+/// of the same item -- one `Expanded` inside the ordinary `Row` of tabs, and
+/// a second copy used (windowed, see `BottomNavBar`'s own doc comment)
+/// inside the reveal window while dragging the selection pill to another
+/// tab -- so the sizing decision belongs to whichever parent is placing it,
+/// not to the item itself.
 class BottomNavBarItem extends StatelessWidget {
   const BottomNavBarItem({
     super.key,
     required this.destination,
     required this.selected,
     required this.onTap,
+    this.glass = false,
   });
 
   final BottomNavBarDestination destination;
   final bool selected;
   final VoidCallback onTap;
 
+  /// A translucent, glass-tinted fill (with a thin light rim) instead of a
+  /// flat, fully-opaque one -- used only for the copies inside the
+  /// mid-drag reveal window (redesign v3, owner-requested, referencing iOS
+  /// 26's "Liquid Glass" material). The icon/label on top are never
+  /// affected by this -- only the background fill's own opacity changes,
+  /// so they stay exactly as sharp and legible as the ordinary (non-glass)
+  /// selected pill's.
+  final bool glass;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final foreground = selected ? scheme.onPrimary : scheme.onSurfaceVariant;
-    return Expanded(
-      child: Semantics(
-        selected: selected,
-        button: true,
-        label: destination.label,
-        child: InkWell(
-          onTap: onTap,
-          // The pill itself (colorScheme.primary once selected) is already
-          // the tap feedback -- owner-reported: the default M3 ripple's
-          // rectangular gray highlight, spanning the full (wider) tap
-          // target rather than the pill, showed as a separate, oddly-
-          // shaped flash behind it.
-          splashFactory: NoSplash.splashFactory,
-          overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-          // Owner-reported: sizing the pill to its own content (via `Center`
-          // hugging a `mainAxisSize.min` child) made every pill a different
-          // width depending on how long its label happened to be -- looked
-          // uneven. The pill now always fills the item's full (equal) slot
-          // width, with a small fixed gap to its neighbors instead of
-          // shrink-wrapping around the text. (Owner-reported: tried
-          // shrinking that gap, then removing it entirely -- neither read
-          // as clearly wider on-device, so this is back to the original
-          // gap; the corner radius is what actually changed this time.)
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-              decoration: BoxDecoration(
-                color: selected ? scheme.primary : Colors.transparent,
-                // Owner-reported: less rounded than the app-wide button
-                // radius (AppRadius.button, 16dp) -- this pill is its own
-                // shape, not a `FilledButton`/etc., so it isn't affected by
-                // reducing the global button radius, and doesn't have to
-                // match it.
-                borderRadius: BorderRadius.circular(AppRadius.control),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(destination.icon, color: foreground, size: 24),
-                  const SizedBox(height: 2),
-                  Text(
-                    destination.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: foreground,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                      // Owner-reported: labelSmall's default (11sp) still
-                      // clips longer RU labels ("Упражнения", "Статистика")
-                      // to an ellipsis on real devices -- shrink by 2sp.
-                      fontSize:
-                          (Theme.of(context).textTheme.labelSmall?.fontSize ??
-                              11) -
-                          2,
-                    ),
+    return Semantics(
+      selected: selected,
+      button: true,
+      label: destination.label,
+      child: InkWell(
+        onTap: onTap,
+        // The pill itself (colorScheme.primary once selected) is already
+        // the tap feedback -- owner-reported: the default M3 ripple's
+        // rectangular gray highlight, spanning the full (wider) tap
+        // target rather than the pill, showed as a separate, oddly-
+        // shaped flash behind it.
+        splashFactory: NoSplash.splashFactory,
+        overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+        // Owner-reported: sizing the pill to its own content (via `Center`
+        // hugging a `mainAxisSize.min` child) made every pill a different
+        // width depending on how long its label happened to be -- looked
+        // uneven. The pill now always fills the item's full (equal) slot
+        // width, with a small fixed gap to its neighbors instead of
+        // shrink-wrapping around the text. (Owner-reported: tried
+        // shrinking that gap, then removing it entirely -- neither read
+        // as clearly wider on-device, so this is back to the original
+        // gap; the corner radius is what actually changed this time.)
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+            decoration: BoxDecoration(
+              color: selected
+                  ? (glass
+                        ? scheme.primary.withValues(alpha: 0.32)
+                        : scheme.primary)
+                  : Colors.transparent,
+              // Owner-reported: less rounded than the app-wide button
+              // radius (AppRadius.button, 16dp) -- this pill is its own
+              // shape, not a `FilledButton`/etc., so it isn't affected by
+              // reducing the global button radius, and doesn't have to
+              // match it.
+              borderRadius: BorderRadius.circular(AppRadius.control),
+              border: glass
+                  ? Border.all(color: Colors.white.withValues(alpha: 0.4))
+                  : null,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(destination.icon, color: foreground, size: 24),
+                const SizedBox(height: 2),
+                Text(
+                  destination.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: foreground,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    // Owner-reported: labelSmall's default (11sp) still
+                    // clips longer RU labels ("Упражнения", "Статистика")
+                    // to an ellipsis on real devices -- shrink by 2sp.
+                    fontSize:
+                        (Theme.of(context).textTheme.labelSmall?.fontSize ??
+                            11) -
+                        2,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

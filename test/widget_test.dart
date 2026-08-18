@@ -9,6 +9,7 @@ import 'package:gymlog/data/repositories_impl/workout_repository_impl.dart';
 import 'package:gymlog/data/repositories_impl/workout_template_repository_impl.dart';
 import 'package:gymlog/domain/enums.dart';
 import 'package:gymlog/core/widgets/bottom_nav_bar.dart';
+import 'package:gymlog/features/exercises/screen.dart';
 import 'package:gymlog/features/history/screen.dart';
 import 'package:gymlog/features/history/template_picker_screen.dart';
 import 'package:gymlog/features/more/screen.dart';
@@ -107,47 +108,46 @@ void main() {
     },
   );
 
-  testWidgets(
-    'finishing a workout started from "Сегодня" and tapping "Готово" '
-    'returns straight to Today, not History (Stage 10, owner-reported)',
-    (tester) async {
-      await WorkoutRepositoryImpl(db).createDraft(date: DateTime.now());
+  testWidgets('finishing a workout started from "Сегодня" and tapping "Готово" '
+      'returns straight to Today, not History (Stage 10, owner-reported)', (
+    tester,
+  ) async {
+    await WorkoutRepositoryImpl(db).createDraft(date: DateTime.now());
 
-      await tester.pumpWidget(appUnderTest());
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(appUnderTest());
+    await tester.pumpAndSettle();
 
-      // Open the editor from the Today tab's own card (not History's).
-      await tester.tap(find.byType(Card).first);
-      await tester.pumpAndSettle();
+    // Open the editor from the Today tab's own card (not History's).
+    await tester.tap(find.byType(Card).first);
+    await tester.pumpAndSettle();
 
-      // Stage 10 redesign: both transitions are now the big primary CTA
-      // button, keyed unambiguously (`workout-status-cta`), not a status
-      // chip's dropdown menu.
-      await tester.tap(find.byKey(const ValueKey('workout-status-cta')));
-      await tester.pumpAndSettle();
+    // Stage 10 redesign: both transitions are now the big primary CTA
+    // button, keyed unambiguously (`workout-status-cta`), not a status
+    // chip's dropdown menu.
+    await tester.tap(find.byKey(const ValueKey('workout-status-cta')));
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const ValueKey('workout-status-cta')));
-      await tester.pumpAndSettle();
-      expect(find.byType(WorkoutSummaryScreen), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('workout-status-cta')));
+    await tester.pumpAndSettle();
+    expect(find.byType(WorkoutSummaryScreen), findsOneWidget);
 
-      // Owner-reported: "Готово" used to hardcode `context.go('/history')`,
-      // so finishing a workout opened from Today always landed on History
-      // instead of back on Today -- the same "wrong tab on exit" bug as
-      // deleting from the editor's own menu (`workout_editor/screen.dart`'s
-      // `_deleteWorkout`) and creating a workout from a template. "Готово"
-      // now pops instead (the editor `pushReplacement`d this screen in its
-      // own spot in the stack, so popping reveals exactly what was
-      // underneath -- Today itself here, not History).
-      await tester.tap(find.text('Done'));
-      await tester.pumpAndSettle();
+    // Owner-reported: "Готово" used to hardcode `context.go('/history')`,
+    // so finishing a workout opened from Today always landed on History
+    // instead of back on Today -- the same "wrong tab on exit" bug as
+    // deleting from the editor's own menu (`workout_editor/screen.dart`'s
+    // `_deleteWorkout`) and creating a workout from a template. "Готово"
+    // now pops instead (the editor `pushReplacement`d this screen in its
+    // own spot in the stack, so popping reveals exactly what was
+    // underneath -- Today itself here, not History).
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
 
-      expect(find.byType(TodayScreen), findsOneWidget);
-      expect(find.byType(HistoryScreen), findsNothing);
-      expect(find.byType(WorkoutSummaryScreen), findsNothing);
+    expect(find.byType(TodayScreen), findsOneWidget);
+    expect(find.byType(HistoryScreen), findsNothing);
+    expect(find.byType(WorkoutSummaryScreen), findsNothing);
 
-      await _unmountAndFlush(tester);
-    },
-  );
+    await _unmountAndFlush(tester);
+  });
 
   testWidgets(
     'creating a workout from a template via "Сегодня", then finishing it, '
@@ -224,42 +224,41 @@ void main() {
     },
   );
 
-  testWidgets(
-    'opening a workout from "Сегодня" and pressing back returns to '
-    '"Сегодня", not "История" (Stage 10 redesign, owner-reported)',
-    (tester) async {
-      await WorkoutRepositoryImpl(db).createDraft(date: DateTime.now());
+  testWidgets('opening a workout from "Сегодня" and pressing back returns to '
+      '"Сегодня", not "История" (Stage 10 redesign, owner-reported)', (
+    tester,
+  ) async {
+    await WorkoutRepositoryImpl(db).createDraft(date: DateTime.now());
 
-      await tester.pumpWidget(appUnderTest());
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(appUnderTest());
+    await tester.pumpAndSettle();
 
-      expect(find.byType(TodayScreen), findsOneWidget);
+    expect(find.byType(TodayScreen), findsOneWidget);
 
-      // Today (not History, which hides drafts by default, Stage 3) shows
-      // the draft's own card straight away.
-      await tester.tap(find.byType(Card).first);
-      await tester.pumpAndSettle();
+    // Today (not History, which hides drafts by default, Stage 3) shows
+    // the draft's own card straight away.
+    await tester.tap(find.byType(Card).first);
+    await tester.pumpAndSettle();
 
-      expect(find.byType(TodayScreen), findsNothing);
+    expect(find.byType(TodayScreen), findsNothing);
 
-      await tester.pageBack();
-      await tester.pumpAndSettle();
+    await tester.pageBack();
+    await tester.pumpAndSettle();
 
-      // The regression: `/history/workout/:id` used to be nested inside
-      // History's own branch, so opening it from any other tab (Today
-      // included) forced `StatefulShellRoute` to switch the active tab to
-      // History -- "back" then landed on History's root, not wherever the
-      // workout was actually opened from.
-      expect(find.byType(TodayScreen), findsOneWidget);
-      expect(find.byType(HistoryScreen), findsNothing);
-      final todayTab = tester.widget<BottomNavBarItem>(
-        find.widgetWithText(BottomNavBarItem, 'Today'),
-      );
-      expect(todayTab.selected, isTrue);
+    // The regression: `/history/workout/:id` used to be nested inside
+    // History's own branch, so opening it from any other tab (Today
+    // included) forced `StatefulShellRoute` to switch the active tab to
+    // History -- "back" then landed on History's root, not wherever the
+    // workout was actually opened from.
+    expect(find.byType(TodayScreen), findsOneWidget);
+    expect(find.byType(HistoryScreen), findsNothing);
+    final todayTab = tester.widget<BottomNavBarItem>(
+      find.widgetWithText(BottomNavBarItem, 'Today'),
+    );
+    expect(todayTab.selected, isTrue);
 
-      await _unmountAndFlush(tester);
-    },
-  );
+    await _unmountAndFlush(tester);
+  });
 
   testWidgets(
     'the workout editor has no bottom nav bar for any workout status, '
@@ -299,82 +298,110 @@ void main() {
     },
   );
 
+  testWidgets('dragging the pill from the active tab onto another tab, then '
+      'releasing, switches to that tab -- no hold needed to start '
+      '(redesign v3, owner-requested: merged the swipe and '
+      'press-and-drag gestures into one)', (tester) async {
+    await tester.pumpWidget(appUnderTest());
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TodayScreen), findsOneWidget);
+
+    final origin = tester.getCenter(
+      find.widgetWithText(BottomNavBarItem, 'Today'),
+    );
+    final target = tester.getCenter(
+      find.widgetWithText(BottomNavBarItem, 'History'),
+    );
+
+    final gesture = await tester.startGesture(origin);
+    await gesture.moveTo(target);
+    await tester.pump();
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(HistoryScreen), findsOneWidget);
+    expect(find.byType(TodayScreen), findsNothing);
+
+    await _unmountAndFlush(tester);
+  });
+
   testWidgets(
-    'swiping left on the bottom nav bar switches to the next tab, one '
-    'swipe = one tab (redesign v3, owner-requested)',
+    'the drag can start anywhere on the bar, not only over the active '
+    'tab (redesign v3, owner-requested)',
     (tester) async {
       await tester.pumpWidget(appUnderTest());
       await tester.pumpAndSettle();
 
       expect(find.byType(TodayScreen), findsOneWidget);
 
-      await tester.drag(find.byType(BottomNavBar), const Offset(-300, 0));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(HistoryScreen), findsOneWidget);
-      expect(find.byType(TodayScreen), findsNothing);
-
-      // One swipe only moves one tab over, not further.
-      await tester.drag(find.byType(BottomNavBar), const Offset(-300, 0));
-      await tester.pumpAndSettle();
-      final exercisesTab = tester.widget<BottomNavBarItem>(
+      // Starts over "History" (not the active tab, "Today"), ends over
+      // "Exercises".
+      final origin = tester.getCenter(
+        find.widgetWithText(BottomNavBarItem, 'History'),
+      );
+      final target = tester.getCenter(
         find.widgetWithText(BottomNavBarItem, 'Exercises'),
       );
-      expect(exercisesTab.selected, isTrue);
+
+      final gesture = await tester.startGesture(origin);
+      await gesture.moveTo(target);
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ExercisesScreen), findsOneWidget);
 
       await _unmountAndFlush(tester);
     },
   );
 
-  testWidgets(
-    'swiping right on the bottom nav bar switches to the previous tab '
-    '(redesign v3, owner-requested)',
-    (tester) async {
-      await tester.pumpWidget(appUnderTest());
-      await tester.pumpAndSettle();
+  testWidgets('a single fast drag can land several tabs away from where it '
+      'started, snapping to whatever is under the finger at release, '
+      'not just an immediate neighbor (redesign v3, owner-requested)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(appUnderTest());
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.text('History'));
-      await tester.pumpAndSettle();
-      expect(find.byType(HistoryScreen), findsOneWidget);
+    final origin = tester.getCenter(
+      find.widgetWithText(BottomNavBarItem, 'Today'),
+    );
+    final target = tester.getCenter(
+      find.widgetWithText(BottomNavBarItem, 'More'),
+    );
 
-      await tester.drag(find.byType(BottomNavBar), const Offset(300, 0));
-      await tester.pumpAndSettle();
+    final gesture = await tester.startGesture(origin);
+    await gesture.moveTo(target);
+    await tester.pump();
+    await gesture.up();
+    await tester.pumpAndSettle();
 
-      expect(find.byType(TodayScreen), findsOneWidget);
-      expect(find.byType(HistoryScreen), findsNothing);
+    expect(find.byType(MoreScreen), findsOneWidget);
 
-      await _unmountAndFlush(tester);
-    },
-  );
+    await _unmountAndFlush(tester);
+  });
 
-  testWidgets(
-    'swiping right on the first tab, or left on the last tab, does '
-    'nothing -- no neighbor in that direction (redesign v3, '
-    'owner-requested)',
-    (tester) async {
-      await tester.pumpWidget(appUnderTest());
-      await tester.pumpAndSettle();
+  testWidgets("releasing past the bar's edge snaps to the last tab instead of "
+      'doing nothing (redesign v3, owner-requested)', (tester) async {
+    await tester.pumpWidget(appUnderTest());
+    await tester.pumpAndSettle();
 
-      // First tab (Today): swipe right, toward a nonexistent "previous"
-      // tab.
-      await tester.drag(find.byType(BottomNavBar), const Offset(300, 0));
-      await tester.pumpAndSettle();
-      expect(find.byType(TodayScreen), findsOneWidget);
+    final origin = tester.getCenter(
+      find.widgetWithText(BottomNavBarItem, 'Today'),
+    );
+    final barRect = tester.getRect(find.byType(BottomNavBar));
 
-      // Last tab (More): swipe left, toward a nonexistent "next" tab --
-      // must not wrap around to Today.
-      await tester.tap(find.text('More'));
-      await tester.pumpAndSettle();
-      expect(find.byType(MoreScreen), findsOneWidget);
+    final gesture = await tester.startGesture(origin);
+    await gesture.moveTo(Offset(barRect.right + 200, origin.dy));
+    await tester.pump();
+    await gesture.up();
+    await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(BottomNavBar), const Offset(-300, 0));
-      await tester.pumpAndSettle();
-      expect(find.byType(MoreScreen), findsOneWidget);
-      expect(find.byType(TodayScreen), findsNothing);
+    expect(find.byType(MoreScreen), findsOneWidget);
 
-      await _unmountAndFlush(tester);
-    },
-  );
+    await _unmountAndFlush(tester);
+  });
 
   testWidgets(
     'AppSettings.locale = ru switches the rendered language on the fly '
